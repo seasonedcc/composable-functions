@@ -6,12 +6,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "qs": "^6.10.3"
+  },
+  "peerDependencies": {
+    "zod": "^3.13.4"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SeasonedSoftware/remix-domains.git"
   },
-  "author": "Gustavo Guichard",
-  "license": "ISC",
+  "author": "Seasoned Software",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/SeasonedSoftware/remix-domains/issues"
   },
