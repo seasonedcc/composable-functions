@@ -3,6 +3,7 @@ import * as z from 'zod'
 import qs from 'qs'
 
 type SuccessResult<T = void> = { success: true; data: T }
+
 type ErrorResult = {
   success: false
   errors: z.ZodIssue[]
@@ -75,3 +76,4 @@ const inputFromUrl = (request: Request) =>
   qs.parse(new URL(request.url).searchParams.toString())
 
 export { makeDomainFunction, formatErrors, inputFromForm, inputFromUrl }
+export type {DomainFunction, Result, SuccessResult, ErrorResult}
