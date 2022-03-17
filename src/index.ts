@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as z from 'zod'
 import qs from 'qs'
+import { Request } from '@remix-run/node'
 
 type SuccessResult<T = void> = { success: true; data: T }
 
