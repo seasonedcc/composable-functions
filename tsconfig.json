@@ -6,7 +6,9 @@
   ],
   "exclude": [
     "**/node_modules",
-    "**/.*/"
+    "dist",
+    "**/.*/",
+    "**/*.test.ts",
   ],
   "compilerOptions": {
     "lib": [
@@ -14,6 +16,8 @@
       "DOM.Iterable",
       "ES2019"
     ],
+    "declaration": true,
+    "declarationDir": "./dist",
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -22,6 +26,7 @@
     "target": "ES2019",
     "strict": true,
     "baseUrl": ".",
-    "noEmit": true
+    "noEmit": false,
+    "outDir": "./dist"
   }
 }
