@@ -1,7 +1,7 @@
 # Remix Domains
 
 Remix Domains helps you to keep your Business Logic appart from your actions/loaders plumbing.
-
+It does this by enforcing the parameters' types in runtime and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
 ## Benefits
 - Easier to test and maintain your business logic
 - Express business logic in the type system
