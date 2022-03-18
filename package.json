@@ -2,7 +2,9 @@
   "name": "remix-domains",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
     "test": "vitest",
     "typecheck": "tsc",
