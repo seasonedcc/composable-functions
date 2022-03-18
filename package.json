@@ -1,10 +1,12 @@
 {
   "name": "remix-domains",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "vitest",
     "typecheck": "tsc",
