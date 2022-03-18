@@ -20,10 +20,8 @@ import { useActionData, redirect } from 'remix'
 import { makeDomainFunction, inputFromForm } from 'remix-domains'
 import * as z from 'zod'
 
-const increment = makeDomainFunction()(
-  z.object({ number: z.preprocess(Number, z.number()) }),
-  async ({ number }) => number + 1,
-)
+const schema = z.object({ number: z.preprocess(Number, z.number()) })
+const increment = makeDomainFunction(schema)(({ number }) => number + 1)
 
 export const action: ActionFunction = async ({ request }) => {
   const result = await increment(await inputFromForm(request))
@@ -33,7 +31,7 @@ export const action: ActionFunction = async ({ request }) => {
   return redirect('/')
 }
 
-export default function NewPassword() {
+export default function Index() {
   const actionData = useActionData()
 
   return (
