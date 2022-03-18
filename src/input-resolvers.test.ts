@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { Request } from '@remix-run/node'
 
 import * as subject from './input-resolvers'
 
