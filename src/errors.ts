@@ -2,15 +2,11 @@ import * as z from 'zod'
 
 type ErrorResult = {
   success: false
-  errors: z.ZodIssue[]
+  errors: z.ZodIssue[] | { message: string }[]
   inputErrors: z.ZodIssue[]
 }
 
-const formatErrors = (
-  errorResult: Omit<ErrorResult, 'errors'> & {
-    errors: z.ZodIssue[] | { message: string }[]
-  },
-) => ({
+const formatErrors = (errorResult: ErrorResult) => ({
   error: errorResult.errors.map((issue) => issue.message).join(', '),
   inputErrors: errorResult.inputErrors,
 })
