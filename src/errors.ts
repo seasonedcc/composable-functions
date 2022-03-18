@@ -2,7 +2,7 @@ import * as z from 'zod'
 
 type ErrorResult = {
   success: false
-  errors: z.ZodIssue[]
+  errors: z.ZodIssue[] | { message: string }[]
   inputErrors: z.ZodIssue[]
 }
 
