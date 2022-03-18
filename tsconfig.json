@@ -19,7 +19,7 @@
     "outDir": "./dist/",
     "isolatedModules": true,
     "esModuleInterop": true,
-    "jsx": "react-jsx",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "target": "ES2019",
