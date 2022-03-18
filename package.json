@@ -1,15 +1,17 @@
 {
   "name": "remix-domains",
   "version": "0.0.1",
-  "description": "",
+  "description": "Keep your Business Logic appart from your actions/loaders plumbing",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
+    "prebuild": "rm -rf dist/",
+    "build": "tsc",
     "test": "vitest",
-    "typecheck": "tsc",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint ./src/*.ts"
   },
   "dependencies": {
