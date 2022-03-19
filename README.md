@@ -137,7 +137,18 @@ failedResult = {
 */
 ```
 
-## Utilities
+## Type Utilities
+
+### UnpackData
+It infers the returned data of a successful domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type LoaderData = UnpackData<typeof fn>
+// LoaderData = string
+```
+
+## Input Utilities
 We export some functions to help you extract values out of your requests before sending them as user input.
 
 ### inputFromForm
