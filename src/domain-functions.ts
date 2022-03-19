@@ -54,5 +54,10 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
+type UnpackData<F extends DomainFunction<unknown>> = Extract<
+  Awaited<ReturnType<F>>,
+  { success: true }
+>['data']
+
 export { makeDomainFunction }
-export type { DomainFunction, Result, SuccessResult }
+export type { DomainFunction, Result, SuccessResult, UnpackData }
