@@ -1,6 +1,6 @@
 {
   "name": "remix-domains",
-  "version": "0.0.1-rc.3",
+  "version": "0.0.1-rc.4",
   "description": "Keep your Business Logic appart from your actions/loaders plumbing",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
