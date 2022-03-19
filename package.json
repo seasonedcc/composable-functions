@@ -8,8 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "rm -rf dist/",
-    "build": "tsc",
+    "prepublishOnly": "rm -rf dist/ && tsc",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ./src/*.ts"
