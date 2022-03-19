@@ -58,6 +58,21 @@ type UnpackData<F extends DomainFunction<unknown>> = Extract<
   Awaited<ReturnType<F>>,
   { success: true }
 >['data']
+type UnpackSuccess<F extends DomainFunction<unknown>> = Extract<
+  Awaited<ReturnType<F>>,
+  { success: true }
+>
+type UnpackError<F extends DomainFunction<unknown>> = Extract<
+  Awaited<ReturnType<F>>,
+  { success: false }
+>
 
 export { makeDomainFunction }
-export type { DomainFunction, Result, SuccessResult, UnpackData }
+export type {
+  DomainFunction,
+  Result,
+  SuccessResult,
+  UnpackData,
+  UnpackSuccess,
+  UnpackError,
+}

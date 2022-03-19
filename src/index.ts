@@ -7,5 +7,7 @@ export type {
   Result,
   SuccessResult,
   UnpackData,
+  UnpackSuccess,
+  UnpackError,
 } from './domain-functions'
 export type { ErrorResult } from './errors'
