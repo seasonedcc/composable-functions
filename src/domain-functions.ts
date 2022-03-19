@@ -5,7 +5,7 @@ type SuccessResult<T = void> = { success: true; data: T }
 
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
-type DomainFunction<Output> = {
+type DomainFunction<Output = unknown> = {
   (input: object, environment?: object): Promise<Result<Output>>
 }
 
@@ -54,18 +54,15 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-type UnpackData<F extends DomainFunction<unknown>> = Extract<
-  Awaited<ReturnType<F>>,
-  { success: true }
->['data']
-type UnpackSuccess<F extends DomainFunction<unknown>> = Extract<
+type UnpackSuccess<F extends DomainFunction> = Extract<
   Awaited<ReturnType<F>>,
   { success: true }
 >
-type UnpackError<F extends DomainFunction<unknown>> = Extract<
+type UnpackError<F extends DomainFunction> = Extract<
   Awaited<ReturnType<F>>,
   { success: false }
 >
+type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
 export { makeDomainFunction }
 export type {
