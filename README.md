@@ -7,7 +7,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 
 ## Benefits
 - End-to-End typesafety all the way from the Backend to the UI
-- Keep your domain functions pure, with the assurance that your values conform to your types
+- Keep your domain functions decoupled from the framework, with the assurance that your values conform to your types
 - Easier to test and maintain business logic
 - Business Logic can be expressed in the type system
 - Removes the plumbing of extracting and parsing structured data from your actions
