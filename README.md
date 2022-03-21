@@ -226,3 +226,11 @@ export const action = async ({ request }) => {
 ```
 
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
+
+## Acknowlegements
+
+We are grateful for [Zod](https://github.com/colinhacks/zod) as it is a great library and informed our design.
+It's worth mentioning two other projects that inspired remix domains:
+
+- [Servant](https://github.com/haskell-servant/servant/)
+- [tRPC](https://trpc.io)
