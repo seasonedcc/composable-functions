@@ -8,6 +8,7 @@ type SuccessResult<T = void> = {
 }
 type ErrorResult = {
   success: false
+  data: null
   errors: z.ZodIssue[] | { message: string }[]
   inputErrors: z.ZodIssue[]
 }

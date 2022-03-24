@@ -25,22 +25,30 @@ const makeDomainFunction: MakeDomainFunction =
       const result = inputSchema.safeParse(input)
 
       if (result.success === false) {
-        return { success: false, errors: [], inputErrors: result.error.issues }
+        return {
+          success: false,
+          errors: [],
+          inputErrors: result.error.issues,
+          data: null,
+        }
       } else if (envResult.success === false) {
         return {
           success: false,
           errors: envResult.error.issues,
           inputErrors: [],
+          data: null,
         }
       }
       try {
         return {
           success: true,
           data: await handler(result.data, envResult.data),
+          errors: [],
+          inputErrors: [],
         }
       } catch (error) {
         const errors = [{ message: (error as Error).message }]
-        return { success: false, errors, inputErrors: [] }
+        return { success: false, errors, inputErrors: [], data: null }
       }
     }) as DomainFunction<Awaited<ReturnType<typeof handler>>>
     return domainFunction

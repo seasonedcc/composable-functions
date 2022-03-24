@@ -38,7 +38,9 @@ const failedResult = await increment({ number: 'foo' })
 /*
 failedResult = {
   success: false,
-  inputErrors: [{ path: ['number'], message: 'Expected number, received nan' }]
+  inputErrors: [{ path: ['number'], message: 'Expected number, received nan' }],
+  errors: [],
+  data: null,
 }
 */
 ```
@@ -128,6 +130,7 @@ type ErrorResult = {
   success: false
   errors: z.ZodIssue[] | { message: string }
   inputErrors: z.ZodIssue[]
+  data: null
 }
 ```
 
@@ -143,7 +146,8 @@ const failedResult = await alwaysFails(someInput)
 failedResult = {
   success: false,
   errors: [{ message: 'Some error' }],
-  inputErrors: []
+  inputErrors: [],
+  data: null,
 }
 */
 ```
@@ -177,7 +181,7 @@ type Result = UnpackResult<typeof fn>
 /*
 Result =
   | { success: true, data: string, errors: [], inputErrors: [] }
-  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[] }
+  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[], data: null }
 
 * Which is the same as:
 Result<string>
