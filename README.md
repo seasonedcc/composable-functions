@@ -25,7 +25,15 @@ import * as z from 'zod'
 const schema = z.object({ number: z.preprocess(Number, z.number()) })
 const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
 
-const result = await increment({ number: 1 }) // result = { data: 2, success: true }
+const result = await increment({ number: 1 })
+/*
+result = {
+  success: true,
+  data: 2,
+  errors: []
+  inputErrors: []
+}
+*/
 const failedResult = await increment({ number: 'foo' })
 /*
 failedResult = {

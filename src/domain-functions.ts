@@ -1,7 +1,12 @@
 import * as z from 'zod'
 import type { ErrorResult } from './errors'
 
-type SuccessResult<T = void> = { success: true; data: T }
+type SuccessResult<T = void> = {
+  success: true
+  data: T
+  errors: []
+  inputErrors: []
+}
 
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
