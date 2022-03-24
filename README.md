@@ -155,9 +155,37 @@ It infers the returned data of a successful domain function:
 ```ts
 const fn = makeDomainFunction()(async () => '')
 
-type LoaderData = UnpackData<typeof fn>
-// LoaderData = string
+type Data = UnpackData<typeof fn>
+// Data = string
 ```
+
+### UnpackSuccess
+It infers the success result of a domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Success = UnpackSuccess<typeof fn>
+// Success = { success: true, data: string, errors: [], inputErrors: [] }
+// Which is the same as: SuccessResult<string>
+```
+### UnpackResult
+It infers the result of a domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Result = UnpackResult<typeof fn>
+/*
+Result =
+  | { success: true, data: string, errors: [], inputErrors: [] }
+  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[] }
+
+* Which is the same as:
+Result<string>
+* Which is the same as:
+SuccessResult<string> | ErrorResult
+*/
+```
+
 
 ## Input Utilities
 We export some functions to help you extract values out of your requests before sending them as user input.
