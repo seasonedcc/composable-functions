@@ -10,7 +10,12 @@ describe('makeDomainFunction', () => {
 
       const handler = makeDomainFunction(parser)(async ({ id }) => id)
 
-      expect(await handler({ id: '1' })).toEqual({ success: true, data: 1 })
+      expect(await handler({ id: '1' })).toEqual({
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+      })
     })
 
     it('returns error when parsing fails', async () => {
@@ -26,6 +31,7 @@ describe('makeDomainFunction', () => {
         success: false,
         inputErrors: expectedError.error.issues,
         errors: [],
+        data: null,
       })
     })
   })
@@ -42,6 +48,8 @@ describe('makeDomainFunction', () => {
     expect(await handler({ id: '1' }, { uid: '2' })).toEqual({
       success: true,
       data: [1, 2],
+      errors: [],
+      inputErrors: [],
     })
   })
 
@@ -61,6 +69,7 @@ describe('makeDomainFunction', () => {
       success: false,
       inputErrors: [],
       errors: expectedError.error.issues,
+      data: null,
     })
   })
 })
