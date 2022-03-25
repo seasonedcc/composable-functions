@@ -1,10 +1,4 @@
-import * as z from 'zod'
-
-type ErrorResult = {
-  success: false
-  errors: z.ZodIssue[] | { message: string }[]
-  inputErrors: z.ZodIssue[]
-}
+import type { ErrorResult } from './types'
 
 const formatErrors = (errorResult: ErrorResult) => ({
   error: errorResult.errors.map((issue) => issue.message).join(', '),

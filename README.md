@@ -25,12 +25,21 @@ import * as z from 'zod'
 const schema = z.object({ number: z.preprocess(Number, z.number()) })
 const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
 
-const result = await increment({ number: 1 }) // result = { data: 2, success: true }
+const result = await increment({ number: 1 })
+/*
+result = {
+  success: true,
+  data: 2,
+  errors: []
+  inputErrors: []
+}
+*/
 const failedResult = await increment({ number: 'foo' })
 /*
 failedResult = {
   success: false,
-  inputErrors: [{ path: ['number'], message: 'Expected number, received nan' }]
+  inputErrors: [{ path: ['number'], message: 'Expected number, received nan' }],
+  errors: [],
 }
 */
 ```
@@ -135,7 +144,7 @@ const failedResult = await alwaysFails(someInput)
 failedResult = {
   success: false,
   errors: [{ message: 'Some error' }],
-  inputErrors: []
+  inputErrors: [],
 }
 */
 ```
@@ -147,9 +156,37 @@ It infers the returned data of a successful domain function:
 ```ts
 const fn = makeDomainFunction()(async () => '')
 
-type LoaderData = UnpackData<typeof fn>
-// LoaderData = string
+type Data = UnpackData<typeof fn>
+// Data = string
 ```
+
+### UnpackSuccess
+It infers the success result of a domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Success = UnpackSuccess<typeof fn>
+// Success = { success: true, data: string, errors: [], inputErrors: [] }
+// Which is the same as: SuccessResult<string>
+```
+### UnpackResult
+It infers the result of a domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Result = UnpackResult<typeof fn>
+/*
+Result =
+  | { success: true, data: string, errors: [], inputErrors: [] }
+  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[] }
+
+* Which is the same as:
+Result<string>
+* Which is the same as:
+SuccessResult<string> | ErrorResult
+*/
+```
+
 
 ## Input Utilities
 We export some functions to help you extract values out of your requests before sending them as user input.

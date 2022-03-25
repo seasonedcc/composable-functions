@@ -1,13 +1,5 @@
 import * as z from 'zod'
-import type { ErrorResult } from './errors'
-
-type SuccessResult<T = void> = { success: true; data: T }
-
-type Result<T = void> = SuccessResult<T> | ErrorResult
-
-type DomainFunction<Output = unknown> = {
-  (input: object, environment?: object): Promise<Result<Output>>
-}
+import { DomainFunction } from './types'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -33,7 +25,11 @@ const makeDomainFunction: MakeDomainFunction =
       const result = inputSchema.safeParse(input)
 
       if (result.success === false) {
-        return { success: false, errors: [], inputErrors: result.error.issues }
+        return {
+          success: false,
+          errors: [],
+          inputErrors: result.error.issues,
+        }
       } else if (envResult.success === false) {
         return {
           success: false,
@@ -45,6 +41,8 @@ const makeDomainFunction: MakeDomainFunction =
         return {
           success: true,
           data: await handler(result.data, envResult.data),
+          errors: [],
+          inputErrors: [],
         }
       } catch (error) {
         const errors = [{ message: (error as Error).message }]
@@ -54,22 +52,4 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-type UnpackSuccess<F extends DomainFunction> = Extract<
-  Awaited<ReturnType<F>>,
-  { success: true }
->
-type UnpackError<F extends DomainFunction> = Extract<
-  Awaited<ReturnType<F>>,
-  { success: false }
->
-type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
-
 export { makeDomainFunction }
-export type {
-  DomainFunction,
-  Result,
-  SuccessResult,
-  UnpackData,
-  UnpackSuccess,
-  UnpackError,
-}
