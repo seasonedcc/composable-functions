@@ -31,7 +31,6 @@ describe('makeDomainFunction', () => {
         success: false,
         inputErrors: expectedError.error.issues,
         errors: [],
-        data: null,
       })
     })
   })
@@ -69,7 +68,6 @@ describe('makeDomainFunction', () => {
       success: false,
       inputErrors: [],
       errors: expectedError.error.issues,
-      data: null,
     })
   })
 })

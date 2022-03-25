@@ -40,7 +40,6 @@ failedResult = {
   success: false,
   inputErrors: [{ path: ['number'], message: 'Expected number, received nan' }],
   errors: [],
-  data: null,
 }
 */
 ```
@@ -130,7 +129,6 @@ type ErrorResult = {
   success: false
   errors: z.ZodIssue[] | { message: string }
   inputErrors: z.ZodIssue[]
-  data: null
 }
 ```
 
@@ -147,7 +145,6 @@ failedResult = {
   success: false,
   errors: [{ message: 'Some error' }],
   inputErrors: [],
-  data: null,
 }
 */
 ```
@@ -181,7 +178,7 @@ type Result = UnpackResult<typeof fn>
 /*
 Result =
   | { success: true, data: string, errors: [], inputErrors: [] }
-  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[], data: null }
+  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[] }
 
 * Which is the same as:
 Result<string>
