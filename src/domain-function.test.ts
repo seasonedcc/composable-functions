@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { makeDomainFunction } from './domain-functions'
+import { all, makeDomainFunction } from './domain-functions'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -68,6 +68,138 @@ describe('makeDomainFunction', () => {
       success: false,
       inputErrors: [],
       errors: expectedError.error.issues,
+    })
+  })
+})
+
+describe('all', () => {
+  it('should combine two domain functions into one', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id - 1,
+    )
+
+    const c = all(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: true,
+      data: [2, 0],
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('should combine many domain functions into one', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
+      String(id),
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
+      Boolean(id),
+    )
+
+    const results = await all(a, b, c)({ id: 1 })
+
+    expect(results).toEqual({
+      success: true,
+      data: ['1', 2, true],
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('should return error when one of the domain functions has input errors', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+
+    const c = all(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: false,
+      inputErrors: [
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'Expected string, received number',
+          path: ['id'],
+          received: 'number',
+        },
+      ],
+      errors: [],
+    })
+  })
+
+  it('should return error when one of the domain functions fails', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw new Error('Error')
+    })
+
+    const c = all(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Error' }],
+      inputErrors: [],
+    })
+  })
+
+  it('should combine the inputError messages of both functions', async () => {
+    const a = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+
+    const c = all(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: false,
+      inputErrors: [
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'Expected string, received number',
+          path: ['id'],
+          received: 'number',
+        },
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'Expected string, received number',
+          path: ['id'],
+          received: 'number',
+        },
+      ],
+      errors: [],
+    })
+  })
+
+  it('should combine the error messages when both functions fail', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw new Error('Error A')
+    })
+    const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw new Error('Error B')
+    })
+
+    const c = all(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Error A' }, { message: 'Error B' }],
+      inputErrors: [],
     })
   })
 })

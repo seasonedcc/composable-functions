@@ -188,6 +188,49 @@ SuccessResult<string> | ErrorResult
 ```
 
 
+## Combining domain functions
+
+### all
+It creates a single domain function out of multiple domain functions.
+It will pass the same input and environment to all given functions.
+The resulting data is going to be a tuple of the results of each function only when __all functions__ are successful.
+```ts
+const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => String(id))
+const b = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => id + 1)
+const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => Boolean(id))
+
+const results = await all(a, b, c)({ id: 1 })
+```
+
+On the exemple above, the result will be of type `Result<[string, number, boolean]>`:
+```ts
+{
+  success: true,
+  data: ['1', 2, true],
+  errors: [],
+  inputErrors: []
+}
+```
+
+If one or more of the functions fails, the errors will be concatenated:
+
+```ts
+const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+  throw new Error('Error A')
+})
+const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+  throw new Error('Error B')
+})
+
+const results = await all(a, b)({ id: 1 })
+
+/*{
+  success: false,
+  errors: [{ message: 'Error A' }, { message: 'Error B' }],
+  inputErrors: [],
+}*/
+```
+
 ## Input Utilities
 We export some functions to help you extract values out of your requests before sending them as user input.
 

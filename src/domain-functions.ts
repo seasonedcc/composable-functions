@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { DomainFunction } from './types'
+import { DomainFunction, Result, SuccessResult } from './types'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -52,4 +52,34 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-export { makeDomainFunction }
+type Unpack<T> = T extends DomainFunction<infer F> ? F : T
+function all<T extends readonly unknown[] | []>(
+  ...fns: T
+): DomainFunction<{ -readonly [P in keyof T]: Unpack<T[P]> }> {
+  return async (input: object, environment?: object) => {
+    const results = await Promise.all(
+      fns.map((fn) => (fn as DomainFunction)(input, environment)),
+    )
+
+    if (!isListOfSuccess(results)) {
+      return {
+        success: false,
+        errors: results.map(({ errors }) => errors).flat(),
+        inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
+      }
+    }
+
+    return {
+      success: true,
+      data: results.map(({ data }) => data),
+      inputErrors: [],
+      errors: [],
+    } as unknown as SuccessResult<{ -readonly [P in keyof T]: Unpack<T[P]> }>
+  }
+}
+
+function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
+  return result.every(({ success }) => success === true)
+}
+
+export { makeDomainFunction, all }
