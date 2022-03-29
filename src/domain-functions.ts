@@ -52,4 +52,31 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-export { makeDomainFunction }
+function compose<A, B>(
+  a: DomainFunction<A>,
+  b: DomainFunction<B>,
+): DomainFunction<[A, B]> {
+  return async (input: object, environment?: object) => {
+    const [resultA, resultB] = await Promise.all([
+      a(input, environment),
+      b(input, environment),
+    ])
+
+    if (!resultA.success || !resultB.success) {
+      return {
+        success: false,
+        errors: [...resultA.errors, ...resultB.errors],
+        inputErrors: [...resultA.inputErrors, ...resultB.inputErrors],
+      }
+    }
+
+    return {
+      success: true,
+      data: [resultA.data, resultB.data],
+      inputErrors: [],
+      errors: [],
+    }
+  }
+}
+
+export { makeDomainFunction, compose }
