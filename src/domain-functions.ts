@@ -52,43 +52,14 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
-  return result.every(({ success }) => success === true)
-}
-
-function all<A, B>(
-  a: DomainFunction<A>,
-  b: DomainFunction<B>,
-): DomainFunction<[A, B]>
-function all<A, B, C>(
-  a: DomainFunction<A>,
-  b: DomainFunction<B>,
-  c: DomainFunction<C>,
-): DomainFunction<[A, B, C]>
-function all<A, B, C, D>(
-  a: DomainFunction<A>,
-  b: DomainFunction<B>,
-  c: DomainFunction<C>,
-  d: DomainFunction<D>,
-): DomainFunction<[A, B, C, D]>
-function all<A, B, C, D, E>(
-  a: DomainFunction<A>,
-  b: DomainFunction<B>,
-  c: DomainFunction<C>,
-  d: DomainFunction<D>,
-  e: DomainFunction<E>,
-): DomainFunction<[A, B, C, D, E]>
-function all<A, B, C, D, E, F>(
-  a: DomainFunction<A>,
-  b: DomainFunction<B>,
-  c: DomainFunction<C>,
-  d: DomainFunction<D>,
-  e: DomainFunction<E>,
-  f: DomainFunction<F>,
-): DomainFunction<[A, B, C, D, E, F]>
-function all(...fns: DomainFunction[]): DomainFunction {
+type Unpack<T> = T extends DomainFunction<infer F> ? F : T
+function all<T extends readonly unknown[] | []>(
+  ...fns: T
+): DomainFunction<{ -readonly [P in keyof T]: Unpack<T[P]> }> {
   return async (input: object, environment?: object) => {
-    const results = await Promise.all(fns.map((fn) => fn(input, environment)))
+    const results = await Promise.all(
+      fns.map((fn) => (fn as DomainFunction)(input, environment)),
+    )
 
     if (!isListOfSuccess(results)) {
       return {
@@ -103,8 +74,12 @@ function all(...fns: DomainFunction[]): DomainFunction {
       data: results.map(({ data }) => data),
       inputErrors: [],
       errors: [],
-    }
+    } as unknown as SuccessResult<{ -readonly [P in keyof T]: Unpack<T[P]> }>
   }
+}
+
+function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
+  return result.every(({ success }) => success === true)
 }
 
 export { makeDomainFunction, all }
