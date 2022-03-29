@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { compose, makeDomainFunction } from './domain-functions'
+import { all, makeDomainFunction } from './domain-functions'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -72,8 +72,8 @@ describe('makeDomainFunction', () => {
   })
 })
 
-describe('compose', () => {
-  it('should compose two domain functions into one', async () => {
+describe('all', () => {
+  it('should combine two domain functions into one', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => id + 1,
     )
@@ -81,11 +81,32 @@ describe('compose', () => {
       async ({ id }) => id - 1,
     )
 
-    const c = compose(a, b)
+    const c = all(a, b)
 
     expect(await c({ id: 1 })).toEqual({
       success: true,
       data: [2, 0],
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('should combine many domain functions into one', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
+      String(id),
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
+      Boolean(id),
+    )
+
+    const results = await all(a, b, c)({ id: 1 })
+
+    expect(results).toEqual({
+      success: true,
+      data: ['1', 2, true],
       errors: [],
       inputErrors: [],
     })
@@ -99,7 +120,7 @@ describe('compose', () => {
       async ({ id }) => id,
     )
 
-    const c = compose(a, b)
+    const c = all(a, b)
 
     expect(await c({ id: 1 })).toEqual({
       success: false,
@@ -124,7 +145,7 @@ describe('compose', () => {
       throw new Error('Error')
     })
 
-    const c = compose(a, b)
+    const c = all(a, b)
 
     expect(await c({ id: 1 })).toEqual({
       success: false,
@@ -133,7 +154,7 @@ describe('compose', () => {
     })
   })
 
-  it('should compose the inputError messages of both functions', async () => {
+  it('should combine the inputError messages of both functions', async () => {
     const a = makeDomainFunction(z.object({ id: z.string() }))(
       async ({ id }) => id,
     )
@@ -141,7 +162,7 @@ describe('compose', () => {
       async ({ id }) => id,
     )
 
-    const c = compose(a, b)
+    const c = all(a, b)
 
     expect(await c({ id: 1 })).toEqual({
       success: false,
@@ -165,7 +186,7 @@ describe('compose', () => {
     })
   })
 
-  it('should compose the error messages when both functions fail', async () => {
+  it('should combine the error messages when both functions fail', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
       throw new Error('Error A')
     })
@@ -173,7 +194,7 @@ describe('compose', () => {
       throw new Error('Error B')
     })
 
-    const c = compose(a, b)
+    const c = all(a, b)
 
     expect(await c({ id: 1 })).toEqual({
       success: false,

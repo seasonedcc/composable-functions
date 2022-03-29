@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { DomainFunction } from './types'
+import { DomainFunction, Result, SuccessResult } from './types'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -52,31 +52,59 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-function compose<A, B>(
+function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
+  return result.every(({ success }) => success === true)
+}
+
+function all<A, B>(
   a: DomainFunction<A>,
   b: DomainFunction<B>,
-): DomainFunction<[A, B]> {
+): DomainFunction<[A, B]>
+function all<A, B, C>(
+  a: DomainFunction<A>,
+  b: DomainFunction<B>,
+  c: DomainFunction<C>,
+): DomainFunction<[A, B, C]>
+function all<A, B, C, D>(
+  a: DomainFunction<A>,
+  b: DomainFunction<B>,
+  c: DomainFunction<C>,
+  d: DomainFunction<D>,
+): DomainFunction<[A, B, C, D]>
+function all<A, B, C, D, E>(
+  a: DomainFunction<A>,
+  b: DomainFunction<B>,
+  c: DomainFunction<C>,
+  d: DomainFunction<D>,
+  e: DomainFunction<E>,
+): DomainFunction<[A, B, C, D, E]>
+function all<A, B, C, D, E, F>(
+  a: DomainFunction<A>,
+  b: DomainFunction<B>,
+  c: DomainFunction<C>,
+  d: DomainFunction<D>,
+  e: DomainFunction<E>,
+  f: DomainFunction<F>,
+): DomainFunction<[A, B, C, D, E, F]>
+function all(...fns: DomainFunction[]): DomainFunction {
   return async (input: object, environment?: object) => {
-    const [resultA, resultB] = await Promise.all([
-      a(input, environment),
-      b(input, environment),
-    ])
+    const results = await Promise.all(fns.map((fn) => fn(input, environment)))
 
-    if (!resultA.success || !resultB.success) {
+    if (!isListOfSuccess(results)) {
       return {
         success: false,
-        errors: [...resultA.errors, ...resultB.errors],
-        inputErrors: [...resultA.inputErrors, ...resultB.inputErrors],
+        errors: results.map(({ errors }) => errors).flat(),
+        inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
       }
     }
 
     return {
       success: true,
-      data: [resultA.data, resultB.data],
+      data: results.map(({ data }) => data),
       inputErrors: [],
       errors: [],
     }
   }
 }
 
-export { makeDomainFunction, compose }
+export { makeDomainFunction, all }
