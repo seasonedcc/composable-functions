@@ -82,4 +82,25 @@ function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
   return result.every(({ success }) => success === true)
 }
 
-export { makeDomainFunction, all }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Last<T extends readonly unknown[]> = T extends [...infer I, infer L]
+  ? L
+  : never
+type Flow = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
+
+const flow: Flow = (...fns) => {
+  const [head, ...tail] = fns
+
+  return ((input: object, environment?: object) => {
+    return tail.reduce(async (memo, fn) => {
+      const resolved = await memo
+      if (resolved.success) {
+        return fn(resolved.data as object, environment)
+      } else {
+        return memo
+      }
+    }, head(input, environment))
+  }) as Last<typeof fns>
+}
+
+export { makeDomainFunction, all, flow }
