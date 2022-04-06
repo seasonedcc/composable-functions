@@ -5,6 +5,26 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 
 ![](example.gif)
 
+## Table of contents
+- [Remix Domains](#remix-domains)
+  - [Table of contents](#table-of-contents)
+  - [Benefits](#benefits)
+  - [Quickstart](#quickstart)
+  - [Create your first action with Remix](#create-your-first-action-with-remix)
+  - [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
+  - [Dealing with errors](#dealing-with-errors)
+  - [Type Utilities](#type-utilities)
+    - [UnpackData](#unpackdata)
+    - [UnpackSuccess](#unpacksuccess)
+    - [UnpackResult](#unpackresult)
+  - [Combining domain functions](#combining-domain-functions)
+    - [all](#all)
+    - [pipe](#pipe)
+  - [Input Utilities](#input-utilities)
+    - [inputFromForm](#inputfromform)
+    - [inputFromUrl](#inputfromurl)
+  - [Acknowlegements](#acknowlegements)
+
 ## Benefits
 - End-to-End typesafety all the way from the Backend to the UI
 - Keep your domain functions decoupled from the framework, with the assurance that your values conform to your types
@@ -83,7 +103,7 @@ export default function Index() {
 
 ## Taking parameters that are not user input
 
-Sometimes you want to ensure the safety of certain values that weren't explicitly sent by the user. We call them environment:
+Sometimes you want to ensure the safety of certain values that weren't explicitly sent by the user. We call them _environment_:
 
 ```tsx
 const sendEmail = makeDomainFunction(
