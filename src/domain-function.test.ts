@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { all, makeDomainFunction } from './domain-functions'
+import { pipe, all, makeDomainFunction } from './domain-functions'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -199,6 +199,157 @@ describe('all', () => {
     expect(await c({ id: 1 })).toEqual({
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
+      inputErrors: [],
+    })
+  })
+})
+
+describe('pipe', () => {
+  it('should compose domain functions from left-to-right', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => ({
+        id: id + 2,
+      }),
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id - 1,
+    )
+
+    const c = pipe(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: true,
+      data: 2,
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('should use the same environment in all composed functions', async () => {
+    const a = makeDomainFunction(
+      z.undefined(),
+      z.object({ env: z.number() }),
+    )(async (_input, { env }) => ({
+      inp: env + 2,
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      z.object({ env: z.number() }),
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c(undefined, { env: 1 })).toEqual({
+      success: true,
+      data: 4,
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('should fail on the first environment parser failure', async () => {
+    const envParser = z.object({ env: z.number() })
+    const expectedError = envParser.safeParse({}) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(
+      z.undefined(),
+      envParser,
+    )(async (_input, { env }) => ({
+      inp: env + 2,
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      envParser,
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c(undefined, {})).toEqual({
+      success: false,
+      errors: expectedError.error.issues,
+      inputErrors: [],
+    })
+  })
+
+  it('should fail on the first input parser failure', async () => {
+    const firstInputParser = z.undefined()
+    const expectedError = firstInputParser.safeParse({
+      inp: 'some invalid input',
+    }) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(
+      firstInputParser,
+      z.object({ env: z.number() }),
+    )(async (_input, { env }) => ({
+      inp: env + 2,
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      z.object({ env: z.number() }),
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c({ inp: 'some invalid input' }, { env: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: expectedError.error.issues,
+    })
+  })
+
+  it('should fail on the second input parser failure', async () => {
+    const secondInputParser = z.object({ inp: z.number() })
+    const expectedError = secondInputParser.safeParse({
+      inp: 'some invalid input',
+    }) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(
+      z.undefined(),
+      z.object({ env: z.number() }),
+    )(async () => ({
+      inp: 'some invalid input',
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      z.object({ env: z.number() }),
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c(undefined, { env: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: expectedError.error.issues,
+    })
+  })
+
+  it('should compose more than 2 functions', async () => {
+    const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
+      async ({ aNumber }) => ({
+        aString: String(aNumber),
+      }),
+    )
+    const b = makeDomainFunction(z.object({ aString: z.string() }))(
+      async ({ aString }) => ({
+        aBoolean: aString == '1',
+      }),
+    )
+    const c = makeDomainFunction(z.object({ aBoolean: z.boolean() }))(
+      async ({ aBoolean }) => !aBoolean,
+    )
+
+    const d = pipe(a, b, c)
+
+    expect(await d({ aNumber: 1 })).toEqual({
+      success: true,
+      data: false,
+      errors: [],
       inputErrors: [],
     })
   })
