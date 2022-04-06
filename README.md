@@ -191,6 +191,7 @@ SuccessResult<string> | ErrorResult
 ## Combining domain functions
 
 ### all
+
 It creates a single domain function out of multiple domain functions.
 It will pass the same input and environment to all given functions.
 The resulting data is going to be a tuple of the results of each function only when __all functions__ are successful.
@@ -230,6 +231,45 @@ const results = await all(a, b)({ id: 1 })
   inputErrors: [],
 }*/
 ```
+
+### pipe
+
+It creates a single domain function out of a composition of multiple domain functions.
+It will pass the same environment to all given functions and pass the output of one to the next's input in left-to-right order.
+The resulting data is going to be the output of the rightmost function.
+
+Note that there is no type-level assurance (yet) that one function output will be succesfully parsed by the next function in the pipeline.
+```ts
+const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
+  async ({ aNumber }) => ({
+    aString: String(aNumber),
+  }),
+)
+const b = makeDomainFunction(z.object({ aString: z.string() }))(
+  async ({ aString }) => ({
+    aBoolean: aString == '1',
+  }),
+)
+const c = makeDomainFunction(z.object({ aBoolean: z.boolean() }))(
+  async ({ aBoolean }) => !aBoolean,
+)
+
+const d = pipe(a, b, c)
+
+const result = await d({ aNumber: 1 })
+```
+
+On the exemple above, the result will be of type `Result<boolean>`:
+```ts
+{
+  success: true,
+  data: false,
+  errors: [],
+  inputErrors: []
+}
+```
+
+If one functions fails, the execution will halt and the error returned.
 
 ## Input Utilities
 We export some functions to help you extract values out of your requests before sending them as user input.

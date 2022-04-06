@@ -328,4 +328,29 @@ describe('pipe', () => {
       inputErrors: expectedError.error.issues,
     })
   })
+
+  it('should compose more than 2 functions', async () => {
+    const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
+      async ({ aNumber }) => ({
+        aString: String(aNumber),
+      }),
+    )
+    const b = makeDomainFunction(z.object({ aString: z.string() }))(
+      async ({ aString }) => ({
+        aBoolean: aString == '1',
+      }),
+    )
+    const c = makeDomainFunction(z.object({ aBoolean: z.boolean() }))(
+      async ({ aBoolean }) => !aBoolean,
+    )
+
+    const d = pipe(a, b, c)
+
+    expect(await d({ aNumber: 1 })).toEqual({
+      success: true,
+      data: false,
+      errors: [],
+      inputErrors: [],
+    })
+  })
 })
