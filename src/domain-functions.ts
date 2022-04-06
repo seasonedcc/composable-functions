@@ -88,7 +88,7 @@ type Last<T extends readonly unknown[]> = T extends [...infer I, infer L]
   : never
 type Flow = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
 
-const flow: Flow = (...fns) => {
+const pipe: Flow = (...fns) => {
   const [head, ...tail] = fns
 
   return ((input: object, environment?: object) => {
@@ -103,4 +103,4 @@ const flow: Flow = (...fns) => {
   }) as Last<typeof fns>
 }
 
-export { makeDomainFunction, all, flow }
+export { makeDomainFunction, all, pipe }

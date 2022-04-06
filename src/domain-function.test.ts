@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { flow, all, makeDomainFunction } from './domain-functions'
+import { pipe, all, makeDomainFunction } from './domain-functions'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -204,7 +204,7 @@ describe('all', () => {
   })
 })
 
-describe('flow', () => {
+describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({
@@ -215,7 +215,7 @@ describe('flow', () => {
       async ({ id }) => id - 1,
     )
 
-    const c = flow(a, b)
+    const c = pipe(a, b)
 
     expect(await c({ id: 1 })).toEqual({
       success: true,
