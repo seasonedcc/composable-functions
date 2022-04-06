@@ -224,4 +224,108 @@ describe('pipe', () => {
       inputErrors: [],
     })
   })
+
+  it('should use the same environment in all composed functions', async () => {
+    const a = makeDomainFunction(
+      z.undefined(),
+      z.object({ env: z.number() }),
+    )(async (_input, { env }) => ({
+      inp: env + 2,
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      z.object({ env: z.number() }),
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c(undefined, { env: 1 })).toEqual({
+      success: true,
+      data: 4,
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('should fail on the first environment parser failure', async () => {
+    const envParser = z.object({ env: z.number() })
+    const expectedError = envParser.safeParse({}) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(
+      z.undefined(),
+      envParser,
+    )(async (_input, { env }) => ({
+      inp: env + 2,
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      envParser,
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c(undefined, {})).toEqual({
+      success: false,
+      errors: expectedError.error.issues,
+      inputErrors: [],
+    })
+  })
+
+  it('should fail on the first input parser failure', async () => {
+    const firstInputParser = z.undefined()
+    const expectedError = firstInputParser.safeParse({
+      inp: 'some invalid input',
+    }) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(
+      firstInputParser,
+      z.object({ env: z.number() }),
+    )(async (_input, { env }) => ({
+      inp: env + 2,
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      z.object({ env: z.number() }),
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c({ inp: 'some invalid input' }, { env: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: expectedError.error.issues,
+    })
+  })
+
+  it('should fail on the second input parser failure', async () => {
+    const secondInputParser = z.object({ inp: z.number() })
+    const expectedError = secondInputParser.safeParse({
+      inp: 'some invalid input',
+    }) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(
+      z.undefined(),
+      z.object({ env: z.number() }),
+    )(async () => ({
+      inp: 'some invalid input',
+    }))
+    const b = makeDomainFunction(
+      z.object({ inp: z.number() }),
+      z.object({ env: z.number() }),
+    )(async ({ inp }, { env }) => inp + env)
+
+    const c = pipe(a, b)
+
+    expect(await c(undefined, { env: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: expectedError.error.issues,
+    })
+  })
 })
