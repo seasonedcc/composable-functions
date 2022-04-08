@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import { toErrorWithMessage } from './errors'
 import { DomainFunction, Result, SuccessResult } from './types'
 
 type MakeDomainFunction = <
@@ -45,7 +46,7 @@ const makeDomainFunction: MakeDomainFunction =
           inputErrors: [],
         }
       } catch (error) {
-        const errors = [{ message: (error as Error).message }]
+        const errors = [toErrorWithMessage(error)]
         return { success: false, errors, inputErrors: [] }
       }
     }) as DomainFunction<Awaited<ReturnType<typeof handler>>>
