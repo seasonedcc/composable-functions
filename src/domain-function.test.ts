@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { pipe, all, makeDomainFunction } from './domain-functions'
+import { map, pipe, all, makeDomainFunction } from './domain-functions'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -350,6 +350,61 @@ describe('pipe', () => {
       success: true,
       data: false,
       errors: [],
+      inputErrors: [],
+    })
+  })
+})
+
+describe('map', () => {
+  it('returns a domain function function that will apply a function over the results of the first one', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const b = (id: number) => id + 1
+
+    const c = map(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: true,
+      data: 3,
+      errors: [],
+      inputErrors: [],
+    })
+  })
+
+  it('returns the error when the domain function fails', async () => {
+    const firstInputParser = z.object({ id: z.number() })
+    const expectedError = firstInputParser.safeParse({
+      inp: 'some invalid input',
+    }) as z.SafeParseError<{
+      env: number
+    }>
+
+    const a = makeDomainFunction(firstInputParser)(async ({ id }) => id + 1)
+    const b = (id: number) => id + 1
+
+    const c = map(a, b)
+
+    expect(await c({ invalidInput: '1' })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: expectedError.error.issues,
+    })
+  })
+
+  it('returns the error when the mapping function fails', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const b = () => {
+      throw 'failed to map'
+    }
+
+    const c = map(a, b)
+
+    expect(await c({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'failed to map' }],
       inputErrors: [],
     })
   })
