@@ -57,7 +57,7 @@ type Unpack<T> = T extends DomainFunction<infer F> ? F : T
 function all<T extends readonly unknown[] | []>(
   ...fns: T
 ): DomainFunction<{ -readonly [P in keyof T]: Unpack<T[P]> }> {
-  return async (input: object, environment?: object) => {
+  return async (input: unknown, environment?: unknown) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
     )
@@ -92,11 +92,11 @@ type Flow = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
 const pipe: Flow = (...fns) => {
   const [head, ...tail] = fns
 
-  return ((input: object, environment?: object) => {
+  return ((input: unknown, environment?: unknown) => {
     return tail.reduce(async (memo, fn) => {
       const resolved = await memo
       if (resolved.success) {
-        return fn(resolved.data as object, environment)
+        return fn(resolved.data as unknown, environment)
       } else {
         return memo
       }
