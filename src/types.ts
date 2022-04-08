@@ -18,7 +18,7 @@ type ErrorResult = {
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
 type DomainFunction<Output = unknown> = {
-  (input: object, environment?: object): Promise<Result<Output>>
+  (input: unknown, environment?: unknown): Promise<Result<Output>>
 }
 
 type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>

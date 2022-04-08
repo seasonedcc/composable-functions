@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
 import { map, pipe, all, makeDomainFunction } from './domain-functions'
+import { SuccessResult } from './types'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -50,6 +51,12 @@ describe('makeDomainFunction', () => {
       errors: [],
       inputErrors: [],
     })
+  })
+
+  it('accepts literals as input of domain functions', async () => {
+    const foo = makeDomainFunction(z.number(), z.string())(async (n) => n + 1)
+    const result = await foo(1, 'not going to be used')
+    expect((result as SuccessResult<number>).data).toEqual(2)
   })
 
   it('returns error when environment parsing fails', async () => {
