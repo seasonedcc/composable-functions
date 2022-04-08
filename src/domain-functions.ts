@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import { toErrorWithMessage } from './errors'
 import { DomainFunction, Result, SuccessResult } from './types'
 
 type MakeDomainFunction = <
@@ -45,7 +46,7 @@ const makeDomainFunction: MakeDomainFunction =
           inputErrors: [],
         }
       } catch (error) {
-        const errors = [{ message: (error as Error).message }]
+        const errors = [toErrorWithMessage(error)]
         return { success: false, errors, inputErrors: [] }
       }
     }) as DomainFunction<Awaited<ReturnType<typeof handler>>>
@@ -103,4 +104,32 @@ const pipe: Flow = (...fns) => {
   }) as Last<typeof fns>
 }
 
-export { makeDomainFunction, all, pipe }
+type Map = <O, R>(
+  dfn: DomainFunction<O>,
+  mapper: (element: O) => R,
+) => DomainFunction<R>
+
+const map: Map = (dfn, mapper) => {
+  return async (input: object, environment?: object) => {
+    const result = await dfn(input, environment)
+    if (!result.success) return result
+
+    try {
+      return {
+        success: true,
+        data: mapper(result.data),
+        errors: [],
+        inputErrors: [],
+      }
+    } catch (error) {
+      const errors = [toErrorWithMessage(error)]
+      return {
+        success: false,
+        errors,
+        inputErrors: [],
+      }
+    }
+  }
+}
+
+export { makeDomainFunction, all, pipe, map }

@@ -6,6 +6,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 ![](example.gif)
 
 ## Table of contents
+
 - [Benefits](#benefits)
 - [Quickstart](#quickstart)
 - [Create your first action with Remix](#create-your-first-action-with-remix)
@@ -18,6 +19,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
   - [pipe](#pipe)
+  - [map](#map)
 - [Input Utilities](#input-utilities)
   - [inputFromForm](#inputfromform)
   - [inputFromUrl](#inputfromurl)
@@ -289,6 +291,44 @@ On the exemple above, the result will be of type `Result<boolean>`:
 ```
 
 If one functions fails, the execution will halt and the error returned.
+
+### map
+
+It creates a single domain function that will apply a transformation over the `result.data` of a successful `DomainFunction`.
+When the given domain function fails, its error is returned wihout changes.
+The resulting data is going to be the output of the second argument.
+
+This could be useful when composing domain functions to align their types:
+
+```ts
+const fetchAsText = makeDomainFunction(z.object({ userId: z.number() }))(
+  ({ userId }) =>
+    fetch(`https://reqres.in/api/users/${String(userId)}`).then((r) =>
+      r.json(),
+    ),
+)
+
+const fullName = makeDomainFunction(
+  z.object({ first_name: z.string(), last_name: z.string() }),
+)(async ({ first_name, last_name }) => `${first_name} ${last_name}`)
+
+const fetchFullName = pipe(
+  map(fetchAsText, ({ data }) => data),
+  fullName,
+)
+
+const result = fetchFullName({ userId: 2 })
+```
+
+On the exemple above, the result will be of type `Result<string>` and tis value something like:
+```ts
+{
+  success: true,
+  data: 'Janet Weaver',
+  errors: [],
+  inputErrors: []
+}
+```
 
 ## Input Utilities
 We export some functions to help you extract values out of your requests before sending them as user input.

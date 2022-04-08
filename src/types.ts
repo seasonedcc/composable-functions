@@ -1,5 +1,9 @@
 import type * as z from 'zod'
 
+type ErrorWithMessage = {
+  message: string
+}
+
 type SuccessResult<T = void> = {
   success: true
   data: T
@@ -8,7 +12,7 @@ type SuccessResult<T = void> = {
 }
 type ErrorResult = {
   success: false
-  errors: z.ZodIssue[] | { message: string }[]
+  errors: z.ZodIssue[] | ErrorWithMessage[]
   inputErrors: z.ZodIssue[]
 }
 type Result<T = void> = SuccessResult<T> | ErrorResult
@@ -32,4 +36,5 @@ export type {
   UnpackResult,
   UnpackSuccess,
   UnpackData,
+  ErrorWithMessage,
 }
