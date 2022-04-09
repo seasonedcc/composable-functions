@@ -1,16 +1,16 @@
 import { json, LoaderFunction } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { formatErrors, inputFromUrl, map, all, UnpackData } from 'remix-domains'
-import { listColors } from '~/domain/colors.server'
-import { listUsers } from '~/domain/users.server'
+import { inputFromUrl, map, all, UnpackData } from 'remix-domains'
+import { listColors } from '~/domain/colors'
+import { listUsers } from '~/domain/users'
+import { serviceUnavailable } from '~/lib'
 
 const parseResponse = <T extends unknown>({ data }: { data: T }): T => data
 const getData = all(map(listColors, parseResponse), listUsers)
 type LoaderData = UnpackData<typeof getData>
 export const loader: LoaderFunction = async ({ request }) => {
   const result = await getData({}, inputFromUrl(request))
-  if (!result.success)
-    throw new Response(formatErrors(result).error, { status: 503 })
+  if (!result.success) throw serviceUnavailable()
 
   return json<LoaderData>(result.data)
 }

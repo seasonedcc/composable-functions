@@ -1,17 +1,13 @@
-import {
+import type {
   ActionFunction,
-  ErrorBoundaryComponent,
-  json,
   LinksFunction,
   LoaderFunction,
   MetaFunction,
+  ErrorBoundaryComponent,
 } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { Links, Form, LiveReload, Meta, Outlet } from '@remix-run/react'
 import {
-  Form,
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
   Scripts,
   ScrollRestoration,
   useActionData,
@@ -19,11 +15,12 @@ import {
 } from '@remix-run/react'
 import * as React from 'react'
 
-import styles from '~/styles/tailwind.css'
-import { envFromCookie } from './domain'
-import { agreeToGPD, cookie, getGPDInfo } from './domain/gpd.server'
+import { envFromCookie, internalError } from '~/lib'
+import { agreeToGPD, cookie, getGPDInfo } from '~/domain/gpd'
 import { UnpackData, UnpackResult, inputFromForm } from 'remix-domains'
 import { useLoaderData } from '@remix-run/react'
+
+import styles from '~/styles/tailwind.css'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -37,8 +34,7 @@ export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }]
 type LoaderData = UnpackData<typeof getGPDInfo>
 export const loader: LoaderFunction = async ({ request }) => {
   const result = await getGPDInfo(null, await envFromCookie(cookie)(request))
-  if (!result.success)
-    throw new Response(result.errors[0].message, { status: 500 })
+  if (!result.success) throw internalError()
   return json<LoaderData>(result.data)
 }
 

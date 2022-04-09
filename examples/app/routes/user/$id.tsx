@@ -1,14 +1,15 @@
 import { json, LoaderFunction } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { pipe, UnpackData } from 'remix-domains'
-import { formatUser, getUser } from '~/domain/users.server'
+import { formatUser, getUser } from '~/domain/users'
+import { notFound } from '~/lib'
 
 const getData = pipe(getUser, formatUser)
 
 type LoaderData = UnpackData<typeof getData>
 export const loader: LoaderFunction = async ({ params }) => {
   const result = await getData(params)
-  if (!result.success) throw new Response('Not found', { status: 404 })
+  if (!result.success) throw notFound()
 
   return json<LoaderData>(result.data)
 }

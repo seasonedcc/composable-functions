@@ -18,4 +18,31 @@ function envFromCookie(cookie: Cookie) {
   }
 }
 
-export { createApi, envFromCookie }
+const notFound = (body?: BodyInit) =>
+  new Response(body ?? 'Not found', {
+    status: 404,
+  })
+
+const internalError = (body?: BodyInit) =>
+  new Response(body ?? 'Internal server error', {
+    status: 500,
+  })
+
+const badParameters = (body?: BodyInit) =>
+  new Response(body ?? 'Bad parameters', {
+    status: 422,
+  })
+
+const serviceUnavailable = (body?: BodyInit) =>
+  new Response(body ?? 'Service unavailable', {
+    status: 503,
+  })
+
+export {
+  createApi,
+  envFromCookie,
+  notFound,
+  internalError,
+  badParameters,
+  serviceUnavailable,
+}

@@ -2,12 +2,13 @@ import { ActionFunction, json, LoaderFunction } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { inputFromForm, UnpackData, UnpackResult } from 'remix-domains'
 import tinycolor from 'tinycolor2'
-import { getColor, mutateColor } from '~/domain/colors.server'
+import { getColor, mutateColor } from '~/domain/colors'
+import { notFound } from '~/lib'
 
 type LoaderData = UnpackData<typeof getColor>
 export const loader: LoaderFunction = async ({ params }) => {
   const result = await getColor(params)
-  if (!result.success) throw new Response('Not found', { status: 404 })
+  if (!result.success) throw notFound()
 
   return json<LoaderData>(result.data)
 }

@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { makeDomainFunction } from 'remix-domains'
-import { createApi } from '.'
+import { createApi } from '~/lib'
 
 const fetchApi = createApi('https://jsonplaceholder.typicode.com')
 
