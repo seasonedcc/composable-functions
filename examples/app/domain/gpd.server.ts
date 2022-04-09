@@ -14,12 +14,7 @@ const getGPDInfo = makeDomainFunction(
 })
 
 const agreeToGPD = makeDomainFunction(
-  z.object({
-    agree: z.preprocess((v) => {
-      console.log(v)
-      return v === 'true'
-    }, z.boolean()),
-  }),
+  z.object({ agree: z.preprocess((v) => v === 'true', z.boolean()) }),
 )(async ({ agree }) => ({ agreed: agree }))
 
 export { cookie, agreeToGPD, getGPDInfo }
