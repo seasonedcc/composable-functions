@@ -13,27 +13,13 @@ type Color = {
   color: string
   pantone_value: string
 }
-type ApiData<T> = {
-  page: number
-  per_page: number
-  total: number
-  total_pages: number
-  data: T
-  support: {
-    url: string
-    text: string
-  }
-}
-
 const listColors = makeDomainFunction(
   z.any(),
   z.object({ page: z.string().optional() }),
-)((_i, { page }) =>
-  fetchApi<ApiData<Color[]>>(page ? `/colors?page=${page}` : '/colors'),
-)
+)((_i, { page = '1' }) => fetchApi<{ data: Color[] }>(`/colors?page=${page}`))
 
 const getColor = makeDomainFunction(z.object({ id: z.string() }))(({ id }) =>
-  fetchApi<ApiData<Color>>('/colors/' + id),
+  fetchApi<{ data: Color }>(`/colors/${id}`),
 )
 
 const mutateColor = makeDomainFunction(
