@@ -7,10 +7,6 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "exclude": [
-    "node_modules",
-    "examples"
-  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
