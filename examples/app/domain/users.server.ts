@@ -1,5 +1,10 @@
 import * as z from 'zod'
 import { makeDomainFunction } from 'remix-domains'
+import { createApi } from '.'
+
+function fetchApi<T>(...args: Parameters<ReturnType<typeof createApi>>) {
+  return createApi<T>('https://jsonplaceholder.typicode.com')(...args)
+}
 
 const userSchema = z.object({
   id: z.number(),
@@ -12,31 +17,11 @@ const userSchema = z.object({
   website: z.string(),
 })
 type User = z.infer<typeof userSchema>
-type Options = Omit<RequestInit, 'body'> & { body?: any }
-function fetchApi(path: string, options?: Options) {
-  return fetch('https://jsonplaceholder.typicode.com' + path, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: options?.body ? JSON.stringify(options.body) : undefined,
-  })
-}
 
-const listUsers = makeDomainFunction(z.any())(async () => {
-  const result = await fetchApi('/users')
-  if (!result.ok) throw new Error('Service unavailable')
+const listUsers = makeDomainFunction(z.any())(() => fetchApi<User[]>('/users'))
 
-  const data = (await result.json()) as User[]
-  return data
-})
-
-const getUser = makeDomainFunction(z.object({ id: z.string() }))(
-  async ({ id }) => {
-    const result = await fetchApi('/users/' + id)
-    if (!result.ok) throw new Error('Not found')
-
-    const data = (await result.json()) as User
-    return data
-  },
+const getUser = makeDomainFunction(z.object({ id: z.string() }))(({ id }) =>
+  fetchApi<User>('/users/' + id),
 )
 
 const formatUser = makeDomainFunction(userSchema)(async (user) => {

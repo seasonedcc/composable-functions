@@ -31,9 +31,7 @@ export default function App() {
       <main className="isolate flex w-full grow flex-col items-center justify-center">
         <Outlet />
       </main>
-      <ScrollRestoration />
       <Scripts />
-      <LiveReload />
     </Document>
   )
 }
@@ -46,12 +44,14 @@ function Document({ children, title }: DocumentProps) {
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        <Meta />
         {title && <title>{title}</title>}
+        <Meta />
         <Links />
       </head>
       <body className="isolate flex min-h-screen w-screen items-center justify-center overflow-y-auto overflow-x-hidden bg-[#282c34] p-12 text-center text-white antialiased">
         {children}
+        <ScrollRestoration />
+        <LiveReload />
       </body>
     </html>
   )
@@ -61,8 +61,10 @@ export const CatchBoundary = () => {
   const caught = useCatch()
   return (
     <Document title={`Error ${caught.status}`}>
-      <h1>{caught.status}</h1>
-      <h3>{caught.statusText}</h3>
+      <div>
+        <h1 className="text-6xl font-bold">{caught.status}</h1>
+        <h3 className="mt-2 text-xl">{caught.statusText}</h3>
+      </div>
     </Document>
   )
 }
@@ -71,8 +73,10 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   console.error(error)
   return (
     <Document title="Oh no!">
-      <h1>500</h1>
-      <h3>Server error</h3>
+      <div>
+        <h1 className="text-6xl font-bold">500</h1>
+        <h3 className="mt-2 text-xl">Server error</h3>
+      </div>
     </Document>
   )
 }
