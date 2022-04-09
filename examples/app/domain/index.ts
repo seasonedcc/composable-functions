@@ -1,6 +1,8 @@
+import { Cookie } from '@remix-run/node'
+
 type Options = Omit<RequestInit, 'body'> & { body?: any }
-function createApi<T = any>(basePath: string) {
-  return async (path: string, options?: Options): Promise<T> =>
+function createApi(basePath: string) {
+  return async <T = any>(path: string, options?: Options): Promise<T> =>
     fetch(basePath + path, {
       ...options,
       headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -8,4 +10,12 @@ function createApi<T = any>(basePath: string) {
     }).then((res) => res.json())
 }
 
-export { createApi }
+function envFromCookie(cookie: Cookie) {
+  return async (request: Request) => {
+    const cookieHeader = request.headers.get('Cookie')
+    const parsedCookie = (await cookie.parse(cookieHeader)) || {}
+    return parsedCookie as Record<string, unknown>
+  }
+}
+
+export { createApi, envFromCookie }

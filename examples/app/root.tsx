@@ -1,20 +1,29 @@
 import {
+  ActionFunction,
   ErrorBoundaryComponent,
+  json,
   LinksFunction,
+  LoaderFunction,
   MetaFunction,
 } from '@remix-run/node'
 import {
+  Form,
   Links,
   LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useActionData,
   useCatch,
 } from '@remix-run/react'
 import * as React from 'react'
 
 import styles from '~/styles/tailwind.css'
+import { envFromCookie } from './domain'
+import { agreeToGPD, cookie, getGPDInfo } from './domain/gpd.server'
+import { UnpackData, UnpackResult, inputFromForm } from 'remix-domains'
+import { useLoaderData } from '@remix-run/react'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -25,11 +34,62 @@ export const meta: MetaFunction = () => ({
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }]
 
+type LoaderData = UnpackData<typeof getGPDInfo>
+export const loader: LoaderFunction = async ({ request }) => {
+  const result = await getGPDInfo(null, await envFromCookie(cookie)(request))
+  if (!result.success)
+    throw new Response(result.errors[0].message, { status: 500 })
+  return json<LoaderData>(result.data)
+}
+
+type ActionData = UnpackResult<typeof agreeToGPD>
+export const action: ActionFunction = async ({ request }) => {
+  const result = await agreeToGPD(await inputFromForm(request))
+  if (!result.success || result.data.agreed === false) {
+    return json<ActionData>(result)
+  }
+  return json<ActionData>(result, {
+    headers: { 'Set-Cookie': await cookie.serialize(result.data) },
+  })
+}
+
 export default function App() {
+  const { agreed } = useLoaderData<LoaderData>()
+  const actionData = useActionData<ActionData>()
   return (
     <Document>
       <main className="isolate flex w-full grow flex-col items-center justify-center">
         <Outlet />
+        {agreed ||
+          (actionData?.success === false ||
+          actionData?.data.agreed === false ? (
+            <p className="fixed bottom-0 max-w-full bg-[#282c34] px-6 py-4 text-2xl text-pink-500 md:bottom-2">
+              You are not good for our marketing stuff 😩
+            </p>
+          ) : (
+            <Form
+              method="post"
+              className="fixed bottom-0 flex w-full max-w-full items-center gap-2 bg-amber-200 px-6 py-4 text-gray-900 shadow-md md:bottom-2 md:w-auto md:rounded"
+            >
+              Want some 🍪 ?
+              <button
+                name="agree"
+                value="true"
+                className="rounded border border-current p-2 hover:bg-gray-900/10"
+                type="submit"
+              >
+                Agree... I guess
+              </button>
+              <button
+                name="agree"
+                value="false"
+                className="rounded border border-current p-2 hover:bg-gray-900/10"
+                type="submit"
+              >
+                No way!
+              </button>
+            </Form>
+          ))}
       </main>
       <Scripts />
     </Document>

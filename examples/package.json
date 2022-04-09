@@ -18,7 +18,8 @@
     "@remix-run/serve": "^1.3.5",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "remix-domains": "link:..",
+    "remix": "^1.3.5",
+    "remix-domains": "0.0.1.rc-10",
     "tinycolor2": "^1.4.2",
     "zod": "^3.14.4"
   },

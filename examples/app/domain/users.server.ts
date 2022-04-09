@@ -2,9 +2,7 @@ import * as z from 'zod'
 import { makeDomainFunction } from 'remix-domains'
 import { createApi } from '.'
 
-function fetchApi<T>(...args: Parameters<ReturnType<typeof createApi>>) {
-  return createApi<T>('https://jsonplaceholder.typicode.com')(...args)
-}
+const fetchApi = createApi('https://jsonplaceholder.typicode.com')
 
 const userSchema = z.object({
   id: z.number(),

@@ -2,9 +2,7 @@ import * as z from 'zod'
 import { makeDomainFunction } from 'remix-domains'
 import { createApi } from '.'
 
-function fetchApi<T>(...args: Parameters<ReturnType<typeof createApi>>) {
-  return createApi<T>('https://reqres.in/api')(...args)
-}
+const fetchApi = createApi('https://reqres.in/api')
 
 type Color = {
   id: number

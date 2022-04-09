@@ -60,9 +60,9 @@ export default function Index() {
           >
             Error
           </button>
-          {actionData && Boolean(actionData.inputErrors.length) && (
+          {actionData && actionData.inputErrors.length > 0 && (
             <small className="block text-sm text-red-500">
-              {actionData.inputErrors.map(({ message }) => message).join(', ')}
+              {actionData.inputErrors[0].message}
             </small>
           )}
         </Form>
