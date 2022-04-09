@@ -12,7 +12,6 @@
     "prebuild": "rm -rf dist/",
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "postinstall": "remix setup",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ./src/*.ts"
