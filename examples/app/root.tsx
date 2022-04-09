@@ -6,12 +6,12 @@ import type {
   ErrorBoundaryComponent,
 } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Links, Form, LiveReload, Meta, Outlet } from '@remix-run/react'
+import { Links, LiveReload, Meta, Outlet, Scripts } from '@remix-run/react'
 import {
-  Scripts,
   ScrollRestoration,
   useActionData,
   useCatch,
+  useFetcher,
 } from '@remix-run/react'
 import * as React from 'react'
 
@@ -51,6 +51,7 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function App() {
   const { agreed } = useLoaderData<LoaderData>()
+  const fetcher = useFetcher()
   const actionData = useActionData<ActionData>()
   const disagreed = actionData?.success && actionData.data.agreed === false
   return (
@@ -63,7 +64,7 @@ export default function App() {
           </p>
         )}
         {disagreed || agreed || (
-          <Form
+          <fetcher.Form
             method="post"
             className="fixed bottom-0 flex w-full max-w-full items-center gap-2 bg-amber-200 px-6 py-4 text-gray-900 shadow-md md:bottom-2 md:w-auto md:rounded"
           >
@@ -84,7 +85,7 @@ export default function App() {
             >
               No way!
             </button>
-          </Form>
+          </fetcher.Form>
         )}
       </main>
       <Scripts />
