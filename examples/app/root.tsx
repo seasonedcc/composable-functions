@@ -61,8 +61,7 @@ export default function App() {
       <main className="isolate flex w-full grow flex-col items-center justify-center">
         <Outlet />
         {agreed ||
-          (actionData?.success === false ||
-          actionData?.data.agreed === false ? (
+          (actionData?.success && actionData.data.agreed === false ? (
             <p className="fixed bottom-0 max-w-full bg-[#282c34] px-6 py-4 text-2xl text-pink-500 md:bottom-2">
               You are not good for our marketing stuff 😩
             </p>
