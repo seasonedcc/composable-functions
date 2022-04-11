@@ -13,6 +13,7 @@ type Color = {
 }
 const listColors = makeDomainFunction(
   z.any(),
+  // The "environment" knows the URL's queryString
   z.object({ page: z.string().optional() }),
 )((_i, { page = '1' }) => fetchApi<{ data: Color[] }>(`/colors?page=${page}`))
 

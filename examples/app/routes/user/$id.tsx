@@ -4,6 +4,7 @@ import { pipe, UnpackData } from 'remix-domains'
 import { formatUser, getUser } from '~/domain/users'
 import { notFound } from '~/lib'
 
+// The output of getUser will be the input of formatUser
 const getData = pipe(getUser, formatUser)
 
 type LoaderData = UnpackData<typeof getData>

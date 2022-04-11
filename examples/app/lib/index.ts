@@ -1,5 +1,8 @@
 import { Cookie } from '@remix-run/node'
 
+/**
+ * A little helper to fetch an external API. It'll stringify any given body and append the given path to the basePath.
+ */
 type Options = Omit<RequestInit, 'body'> & { body?: any }
 function createApi(basePath: string) {
   return async <T = any>(path: string, options?: Options): Promise<T> =>
@@ -10,11 +13,16 @@ function createApi(basePath: string) {
     }).then((res) => res.json())
 }
 
-function envFromCookie(cookie: Cookie) {
+/**
+ * Given a Cookie and a Request it returns the stored cookie's value as an object
+ */
+function envFromCookie(
+  cookie: Cookie,
+): (request: Request) => Promise<Record<string, unknown>> {
   return async (request: Request) => {
     const cookieHeader = request.headers.get('Cookie')
     const parsedCookie = (await cookie.parse(cookieHeader)) || {}
-    return parsedCookie as Record<string, unknown>
+    return parsedCookie
   }
 }
 

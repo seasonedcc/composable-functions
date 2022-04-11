@@ -5,11 +5,17 @@ import { listColors } from '~/domain/colors'
 import { listUsers } from '~/domain/users'
 import { serviceUnavailable } from '~/lib'
 
-const parseResponse = <T extends unknown>({ data }: { data: T }): T => data
-const getData = all(map(listColors, parseResponse), listUsers)
+// We'll run these 2 domain functions in parallel with Promise.all
+const getData = all(
+  // The second argument will transform the successful result of listColors,
+  // we only care about what is in the "data" field
+  map(listColors, ({ data }) => data),
+  listUsers,
+)
 type LoaderData = UnpackData<typeof getData>
 export const loader: LoaderFunction = async ({ request }) => {
-  const result = await getData({}, inputFromUrl(request))
+  // inputFromUrl gets the queryString out of the request and turns it into an object
+  const result = await getData(null, inputFromUrl(request))
   if (!result.success) throw serviceUnavailable()
 
   return json<LoaderData>(result.data)
