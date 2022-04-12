@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import { toErrorWithMessage } from './errors'
-import { DomainFunction, Result, SuccessResult } from './types'
+import { DomainFunction, ErrorData, Result, SuccessResult } from './types'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -130,5 +130,27 @@ const map: Map = (dfn, mapper) => {
     }
   }
 }
+type MapError = <O>(
+  dfn: DomainFunction<O>,
+  mapper: (element: ErrorData) => ErrorData,
+) => DomainFunction<O>
 
-export { makeDomainFunction, all, pipe, map }
+const mapError: MapError = (dfn, mapper) => {
+  return async (input, environment) => {
+    const result = await dfn(input, environment)
+    if (result.success) return result
+
+    try {
+      return { ...mapper(result), success: false }
+    } catch (error) {
+      const errors = [toErrorWithMessage(error)]
+      return {
+        success: false,
+        errors,
+        inputErrors: [],
+      }
+    }
+  }
+}
+
+export { makeDomainFunction, all, pipe, map, mapError }

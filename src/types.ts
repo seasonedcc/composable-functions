@@ -15,6 +15,8 @@ type ErrorResult = {
   errors: z.ZodIssue[] | ErrorWithMessage[]
   inputErrors: z.ZodIssue[]
 }
+type ErrorData = Omit<ErrorResult, 'success'>
+
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
 type DomainFunction<Output = unknown> = {
@@ -33,6 +35,7 @@ export type {
   Result,
   SuccessResult,
   ErrorResult,
+  ErrorData,
   UnpackResult,
   UnpackSuccess,
   UnpackData,
