@@ -1,6 +1,12 @@
 import * as z from 'zod'
 import { toErrorWithMessage } from './errors'
-import { DomainFunction, ErrorData, Result, SuccessResult } from './types'
+import {
+  DomainFunction,
+  ErrorData,
+  Result,
+  SchemaError,
+  SuccessResult,
+} from './types'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -14,6 +20,12 @@ type MakeDomainFunction = <
     environmentSchema: z.infer<EnvSchema>,
   ) => Promise<Output>,
 ) => DomainFunction<Output>
+
+const formatSchemaErrors = (errors: z.ZodIssue[]): SchemaError[] =>
+  errors.map((error) => {
+    const { path, message } = error
+    return { path: path.map(String), message }
+  })
 
 const makeDomainFunction: MakeDomainFunction =
   (
@@ -46,8 +58,12 @@ const makeDomainFunction: MakeDomainFunction =
       return {
         success: false,
         errors: [],
-        inputErrors: result.success ? [] : result.error.issues,
-        environmentErrors: envResult.success ? [] : envResult.error.issues,
+        inputErrors: result.success
+          ? []
+          : formatSchemaErrors(result.error.issues),
+        environmentErrors: envResult.success
+          ? []
+          : formatSchemaErrors(envResult.error.issues),
       }
     }) as DomainFunction<Awaited<ReturnType<typeof handler>>>
     return domainFunction

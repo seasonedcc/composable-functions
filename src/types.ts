@@ -1,5 +1,3 @@
-import type * as z from 'zod'
-
 type ErrorWithMessage = {
   message: string
 }
@@ -14,9 +12,14 @@ type SuccessResult<T = void> = {
 type ErrorResult = {
   success: false
   errors: ErrorWithMessage[]
-  inputErrors: z.ZodIssue[]
-  environmentErrors: z.ZodIssue[]
+  inputErrors: SchemaError[]
+  environmentErrors: SchemaError[]
 }
+type SchemaError = {
+  path: string[]
+  message: string
+}
+
 type ErrorData = Omit<ErrorResult, 'success'>
 
 type Result<T = void> = SuccessResult<T> | ErrorResult
@@ -35,6 +38,7 @@ type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 export type {
   DomainFunction,
   Result,
+  SchemaError,
   SuccessResult,
   ErrorResult,
   ErrorData,
