@@ -15,8 +15,8 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   return { message: String(maybeError) }
 }
 
-const errorByName = (errors: SchemaError[], name: string) =>
-  errors.find(({ path }) => path.includes(name)) ?? null
+const errorsByName = (errors: SchemaError[], name: string) =>
+  errors.filter(({ path }) => path.includes(name)).map(({ message }) => message)
 
 const errorsForSchema = <T extends z.AnyZodObject>(
   errors: SchemaError[],
@@ -26,11 +26,9 @@ const errorsForSchema = <T extends z.AnyZodObject>(
   const mappedErrors = {} as Record<keyof SchemaType, string[]>
   for (const stringKey in schema.shape) {
     const key = stringKey as keyof SchemaType
-    mappedErrors[key] = errors
-      .filter(({ path }) => path.includes(stringKey))
-      .map(({ message }) => message)
+    mappedErrors[key] = errorsByName(errors, stringKey)
   }
   return mappedErrors
 }
 
-export { errorByName, errorsForSchema, toErrorWithMessage }
+export { errorsByName, errorsForSchema, toErrorWithMessage }

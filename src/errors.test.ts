@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { errorByName, errorsForSchema } from './errors'
+import { errorsByName, errorsForSchema } from './errors'
 
 const errors = [
   { path: ['a'], message: 'a' },
@@ -9,13 +9,13 @@ const errors = [
   { path: ['b'], message: 'c' },
 ]
 
-describe('errorByName', () => {
+describe('errorsByName', () => {
   it('returns one SchemaError for a given name', () => {
-    expect(errorByName(errors, 'b').message).toEqual('b')
+    expect(errorsByName(errors, 'b')).toEqual(['b', 'c'])
   })
 
   it('returns null if a SchemaError can not be found for the given name', () => {
-    expect(errorByName(errors, 'c')).toBeNull()
+    expect(errorsByName(errors, 'c')).toEqual([])
   })
 })
 
