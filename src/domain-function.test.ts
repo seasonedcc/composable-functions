@@ -22,6 +22,7 @@ describe('makeDomainFunction', () => {
         data: 1,
         errors: [],
         inputErrors: [],
+        environmentErrors: [],
       })
     })
 
@@ -37,6 +38,7 @@ describe('makeDomainFunction', () => {
       expect(await handler({ missingId: '1' })).toEqual({
         success: false,
         inputErrors: expectedError.error.issues,
+        environmentErrors: [],
         errors: [],
       })
     })
@@ -56,6 +58,7 @@ describe('makeDomainFunction', () => {
       data: [1, 2],
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -80,7 +83,8 @@ describe('makeDomainFunction', () => {
     expect(await handler({ id: '1' }, {})).toEqual({
       success: false,
       inputErrors: [],
-      errors: expectedError.error.issues,
+      environmentErrors: expectedError.error.issues,
+      errors: [],
     })
   })
 })
@@ -101,6 +105,7 @@ describe('all', () => {
       data: [2, 0],
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -122,6 +127,7 @@ describe('all', () => {
       data: ['1', 2, true],
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -147,6 +153,7 @@ describe('all', () => {
         },
       ],
       errors: [],
+      environmentErrors: [],
     })
   })
 
@@ -164,6 +171,7 @@ describe('all', () => {
       success: false,
       errors: [{ message: 'Error' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -195,6 +203,7 @@ describe('all', () => {
           received: 'number',
         },
       ],
+      environmentErrors: [],
       errors: [],
     })
   })
@@ -213,6 +222,7 @@ describe('all', () => {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
@@ -235,6 +245,7 @@ describe('pipe', () => {
       data: 2,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -257,6 +268,7 @@ describe('pipe', () => {
       data: 4,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -281,8 +293,9 @@ describe('pipe', () => {
 
     expect(await c(undefined, {})).toEqual({
       success: false,
-      errors: expectedError.error.issues,
+      errors: [],
       inputErrors: [],
+      environmentErrors: expectedError.error.issues,
     })
   })
 
@@ -311,6 +324,7 @@ describe('pipe', () => {
       success: false,
       errors: [],
       inputErrors: expectedError.error.issues,
+      environmentErrors: [],
     })
   })
 
@@ -339,6 +353,7 @@ describe('pipe', () => {
       success: false,
       errors: [],
       inputErrors: expectedError.error.issues,
+      environmentErrors: [],
     })
   })
 
@@ -364,6 +379,7 @@ describe('pipe', () => {
       data: false,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
@@ -382,6 +398,7 @@ describe('map', () => {
       data: 3,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -402,6 +419,7 @@ describe('map', () => {
       success: false,
       errors: [],
       inputErrors: expectedError.error.issues,
+      environmentErrors: [],
     })
   })
 
@@ -419,6 +437,7 @@ describe('map', () => {
       success: false,
       errors: [{ message: 'failed to map' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
@@ -441,6 +460,7 @@ describe('mapError', () => {
       data: 2,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -479,6 +499,7 @@ describe('mapError', () => {
       success: false,
       errors: [{ message: 'failed to map' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })

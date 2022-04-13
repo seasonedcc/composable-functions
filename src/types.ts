@@ -9,11 +9,13 @@ type SuccessResult<T = void> = {
   data: T
   errors: []
   inputErrors: []
+  environmentErrors: []
 }
 type ErrorResult = {
   success: false
-  errors: z.ZodIssue[] | ErrorWithMessage[]
+  errors: ErrorWithMessage[]
   inputErrors: z.ZodIssue[]
+  environmentErrors: z.ZodIssue[]
 }
 type ErrorData = Omit<ErrorResult, 'success'>
 

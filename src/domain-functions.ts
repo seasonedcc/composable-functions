@@ -25,29 +25,29 @@ const makeDomainFunction: MakeDomainFunction =
       const envResult = environmentSchema.safeParse(environment)
       const result = inputSchema.safeParse(input)
 
-      if (result.success === false) {
-        return {
-          success: false,
-          errors: [],
-          inputErrors: result.error.issues,
-        }
-      } else if (envResult.success === false) {
-        return {
-          success: false,
-          errors: envResult.error.issues,
-          inputErrors: [],
-        }
-      }
       try {
-        return {
-          success: true,
-          data: await handler(result.data, envResult.data),
-          errors: [],
-          inputErrors: [],
+        if (result.success === true && envResult.success === true) {
+          return {
+            success: true,
+            data: await handler(result.data, envResult.data),
+            errors: [],
+            inputErrors: [],
+            environmentErrors: [],
+          }
         }
       } catch (error) {
-        const errors = [toErrorWithMessage(error)]
-        return { success: false, errors, inputErrors: [] }
+        return {
+          success: false,
+          errors: [toErrorWithMessage(error)],
+          inputErrors: [],
+          environmentErrors: [],
+        }
+      }
+      return {
+        success: false,
+        errors: [],
+        inputErrors: result.success ? [] : result.error.issues,
+        environmentErrors: envResult.success ? [] : envResult.error.issues,
       }
     }) as DomainFunction<Awaited<ReturnType<typeof handler>>>
     return domainFunction
@@ -67,6 +67,9 @@ function all<T extends readonly unknown[] | []>(
         success: false,
         errors: results.map(({ errors }) => errors).flat(),
         inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
+        environmentErrors: results
+          .map(({ environmentErrors }) => environmentErrors)
+          .flat(),
       }
     }
 
@@ -74,6 +77,7 @@ function all<T extends readonly unknown[] | []>(
       success: true,
       data: results.map(({ data }) => data),
       inputErrors: [],
+      environmentErrors: [],
       errors: [],
     } as unknown as SuccessResult<{ -readonly [P in keyof T]: Unpack<T[P]> }>
   }
@@ -119,6 +123,7 @@ const map: Map = (dfn, mapper) => {
         data: mapper(result.data),
         errors: [],
         inputErrors: [],
+        environmentErrors: [],
       }
     } catch (error) {
       const errors = [toErrorWithMessage(error)]
@@ -126,6 +131,7 @@ const map: Map = (dfn, mapper) => {
         success: false,
         errors,
         inputErrors: [],
+        environmentErrors: [],
       }
     }
   }
@@ -148,6 +154,7 @@ const mapError: MapError = (dfn, mapper) => {
         success: false,
         errors,
         inputErrors: [],
+        environmentErrors: [],
       }
     }
   }
