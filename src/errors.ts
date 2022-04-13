@@ -1,4 +1,5 @@
-import type { ErrorResult, ErrorWithMessage } from './types'
+import * as z from 'zod'
+import type { ErrorWithMessage, SchemaError } from './types'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
@@ -14,9 +15,22 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   return { message: String(maybeError) }
 }
 
-const formatErrors = (errorResult: ErrorResult) => ({
-  error: errorResult.errors.map((issue) => issue.message).join(', '),
-  inputErrors: errorResult.inputErrors,
-})
+const errorByName = (errors: SchemaError[], name: string) =>
+  errors.find(({ path }) => path.includes(name)) ?? null
 
-export { formatErrors, toErrorWithMessage }
+const errorsForSchema = <T extends z.AnyZodObject>(
+  errors: SchemaError[],
+  schema: T,
+) => {
+  type SchemaType = z.infer<T>
+  const mappedErrors = {} as Record<keyof SchemaType, string[]>
+  for (const stringKey in schema.shape) {
+    const key = stringKey as keyof SchemaType
+    mappedErrors[key] = errors
+      .filter(({ path }) => path.includes(stringKey))
+      .map(({ message }) => message)
+  }
+  return mappedErrors
+}
+
+export { errorByName, errorsForSchema, toErrorWithMessage }
