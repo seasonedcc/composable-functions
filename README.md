@@ -20,6 +20,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [all](#all)
   - [pipe](#pipe)
   - [map](#map)
+  - [mapError](#mapError)
 - [Input Utilities](#input-utilities)
   - [inputFromForm](#inputfromform)
   - [inputFromUrl](#inputfromurl)
@@ -327,6 +328,41 @@ On the exemple above, the result will be of type `Result<string>` and tis value 
   data: 'Janet Weaver',
   errors: [],
   inputErrors: []
+}
+```
+
+### mapError
+
+It creates a single domain function that will apply a transformation over the `ErrorResult` of a failed `DomainFunction`.
+When the given domain function suceeds, its result is returned wihout changes.
+
+This could be useful when adding any layer of error handling.
+In the example bellow we are discarding the contents of the errors but keeping a tally of how many there were:
+
+```ts
+const increment = makeDomainFunction(z.object({ id: z.number() }))(
+  async ({ id }) => id + 1,
+)
+
+const summarizeErrors = (result: ErrorData) =>
+  ({
+    errors: [{ message: 'Number of errors: ' + result.errors.length }],
+    inputErrors: [
+      { message: 'Number of input errors: ' + result.inputErrors.length },
+    ],
+  } as ErrorData)
+
+const incrementWithErrorSummary = mapError(increment, summarizeErrors)
+
+const result = await incrementWithErrorSummary({ invalidInput: '1' })
+```
+
+On the exemple above, the `result` will be:
+```ts
+{
+  success: false,
+  errors: [{ message: 'Number of errors: 0' }],
+  inputErrors: [{ message: 'Number of input errors: 1' }],
 }
 ```
 
