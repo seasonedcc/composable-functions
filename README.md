@@ -7,25 +7,29 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 
 ## Table of contents
 
-- [Benefits](#benefits)
-- [Quickstart](#quickstart)
-- [Create your first action with Remix](#create-your-first-action-with-remix)
-- [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
-- [Dealing with errors](#dealing-with-errors)
-  - [UnpackSuccess](#unpacksuccess)
-  - [UnpackResult](#unpackresult)
-- [Combining domain functions](#combining-domain-functions)
-  - [all](#all)
-  - [pipe](#pipe)
-  - [map](#map)
-  - [mapError](#maperror)
-- [Input Utilities](#input-utilities)
-  - [inputFromForm](#inputfromform)
-  - [inputFromUrl](#inputfromurl)
-- [Error Utilities](#error-utilities)
-  - [errorMessagesFor](#errorMessagesFor)
-  - [errorMessagesForSchema](#errorMessagesForSchema)
-- [Acknowlegements](#acknowlegements)
+- [Remix Domains](#remix-domains)
+  - [Table of contents](#table-of-contents)
+  - [Benefits](#benefits)
+  - [Quickstart](#quickstart)
+  - [Create your first action with Remix](#create-your-first-action-with-remix)
+  - [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
+  - [Dealing with errors](#dealing-with-errors)
+    - [UnpackSuccess](#unpacksuccess)
+    - [UnpackResult](#unpackresult)
+  - [Combining domain functions](#combining-domain-functions)
+    - [all](#all)
+    - [pipe](#pipe)
+    - [map](#map)
+    - [mapError](#maperror)
+  - [Input Utilities](#input-utilities)
+    - [inputFromForm](#inputfromform)
+    - [inputFromFormData](#inputfromformdata)
+    - [inputFromUrl](#inputfromurl)
+    - [inputFromSearch](#inputfromsearch)
+  - [Error Utilities](#error-utilities)
+    - [errorMessagesFor](#errormessagesfor)
+    - [errorMessagesForSchema](#errormessagesforschema)
+  - [Acknowlegements](#acknowlegements)
 
 ## Benefits
 - End-to-End typesafety all the way from the Backend to the UI
@@ -408,6 +412,18 @@ export const action = async ({ request }) => {
 }
 ```
 
+### inputFromFormData
+
+Extracts a structured objecto from a `FormData`:
+```tsx
+const formData = new FormData()
+formData.append('email', 'john@doe.com')
+formData.append('tasks[]', 'one')
+formData.append('tasks[]', 'two')
+const values = inputFromFormData(formData)
+// values = { email: 'john@doe.com', tasks: ['one', 'two'] }
+```
+
 ### inputFromUrl
 Extracts values sent in a request through the URL as an object of values:
 ```tsx
@@ -427,8 +443,18 @@ export const action = async ({ request }) => {
   // values = { page: '2' }
 }
 ```
+### inputFromSearch
+Extracts a structured object from a `URLSearchParams` object:
+```tsx
+const qs = new URLSearchParams()
+qs.append('colors[]', 'red')
+qs.append('colors[]', 'green')
+qs.append('colors[]', 'blue')
+const values = inputFromSearch(qs)
+// values = { colors: ['red', 'green', 'blue'] }
+```
 
-Both of these functions will parse the input using [`qs`](https://www.npmjs.com/package/qs):
+All of the functions above will parse the input using [`qs`](https://www.npmjs.com/package/qs), thus allowing structured data as follows:
 ```tsx
 // Given the following form:
 function Form() {
