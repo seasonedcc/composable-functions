@@ -462,7 +462,7 @@ To better understand how to structure your data, refer to [qs documentation](htt
 To improve DX when dealing with errors we do export a couple of utilities.
 
 ### errorMessagesFor
-Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a name, it returns the first error with that name in its path.
+Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a name, it returns a list of error messages with that name in their path.
 
 ```tsx
 const result = {
