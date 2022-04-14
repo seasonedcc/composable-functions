@@ -1,9 +1,15 @@
 import qs from 'qs'
 
+const inputFromSearch = (queryString: URLSearchParams) =>
+  qs.parse(queryString.toString())
+
+const inputFromFormData = (formData: FormData) =>
+  inputFromSearch(new URLSearchParams(formData as URLSearchParams))
+
 const inputFromForm = async (request: Request) =>
-  qs.parse(await request.clone().text())
+  inputFromFormData(await request.clone().formData())
 
 const inputFromUrl = (request: Request) =>
-  qs.parse(new URL(request.url).searchParams.toString())
+  inputFromSearch(new URL(request.url).searchParams)
 
-export { inputFromForm, inputFromUrl }
+export { inputFromForm, inputFromUrl, inputFromFormData, inputFromSearch }

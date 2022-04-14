@@ -98,3 +98,58 @@ describe('inputFromUrl', () => {
     })
   })
 })
+
+describe('inputFromFormData', () => {
+  it('extracts a structured object from a FormData', async () => {
+    const request = makePost([
+      ['person[0][name]', 'John'],
+      ['person[0][email]', 'john@email.com'],
+      ['person[1][name]', 'Bill'],
+      ['person[1][email]', 'bill@email.com'],
+    ])
+    expect(subject.inputFromFormData(await request.formData())).toEqual({
+      person: [
+        { name: 'John', email: 'john@email.com' },
+        { name: 'Bill', email: 'bill@email.com' },
+      ],
+    })
+  })
+
+  it('accepts manually constructed FormData', () => {
+    const formData = new FormData()
+    formData.append('email', 'john@doe.com')
+    formData.append('tasks[]', 'one')
+    formData.append('tasks[]', 'two')
+    expect(subject.inputFromFormData(formData)).toEqual({
+      email: 'john@doe.com',
+      tasks: ['one', 'two'],
+    })
+  })
+})
+
+describe('inputFromSearch', () => {
+  it('extracts a structured object from a URLSearchParams', () => {
+    const request = makeGet([
+      ['person[0][name]', 'John'],
+      ['person[0][email]', 'john@email.com'],
+      ['person[1][name]', 'Bill'],
+      ['person[1][email]', 'bill@email.com'],
+    ])
+    expect(subject.inputFromSearch(new URL(request.url).searchParams)).toEqual({
+      person: [
+        { email: 'john@email.com', name: 'John' },
+        { name: 'Bill', email: 'bill@email.com' },
+      ],
+    })
+  })
+
+  it('accepts manually constructed URLSearchParams', () => {
+    const qs = new URLSearchParams()
+    qs.append('colors[]', 'red')
+    qs.append('colors[]', 'green')
+    qs.append('colors[]', 'blue')
+    expect(subject.inputFromSearch(qs)).toEqual({
+      colors: ['red', 'green', 'blue'],
+    })
+  })
+})
