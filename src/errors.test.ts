@@ -1,32 +1,37 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { formatErrors } from './errors'
+import { errorMessagesFor, errorMessagesForSchema } from './errors'
 
-describe('formatErrors', () => {
-  it('takes an error result with input errors and return them', () => {
-    const parser = z.object({ id: z.preprocess(Number, z.number()) })
-    const body = { missingId: '1' }
-    const errorResult = parser.safeParse({
-      body,
-    }) as z.SafeParseError<{ id: number }>
+const errors = [
+  { path: ['a'], message: 'a' },
+  { path: ['b'], message: 'b' },
+  { path: ['b'], message: 'c' },
+]
 
-    const result = formatErrors({
-      success: false,
-      errors: [],
-      inputErrors: errorResult.error.issues,
-    })
-
-    expect(result).toHaveProperty('inputErrors', errorResult.error.issues)
+describe('errorMessagesFor', () => {
+  it('returns one SchemaError for a given name', () => {
+    expect(errorMessagesFor(errors, 'b')).toEqual(['b', 'c'])
   })
 
-  it('takes an error result with errors and return just a global error message', () => {
-    const result = formatErrors({
-      success: false,
-      errors: [{ message: 'some error message' }],
-      inputErrors: [],
-    })
+  it('returns null if a SchemaError can not be found for the given name', () => {
+    expect(errorMessagesFor(errors, 'c')).toEqual([])
+  })
+})
 
-    expect(result).toHaveProperty('error', 'some error message')
+const schema = z.object({
+  a: z.string(),
+  b: z.string(),
+})
+describe('errorMessagesForSchema', () => {
+  it('returns an object with error messages for every key of the given schema', () => {
+    expect(errorMessagesForSchema(errors, schema)).toEqual({
+      a: ['a'],
+      b: ['b', 'c'],
+    })
+  })
+
+  it('has type inference for the results of this function', () => {
+    expect(errorMessagesForSchema(errors, schema).a).toEqual(['a'])
   })
 })

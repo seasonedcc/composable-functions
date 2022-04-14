@@ -12,18 +12,19 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 - [Create your first action with Remix](#create-your-first-action-with-remix)
 - [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
 - [Dealing with errors](#dealing-with-errors)
-- [Type Utilities](#type-utilities)
-  - [UnpackData](#unpackdata)
   - [UnpackSuccess](#unpacksuccess)
   - [UnpackResult](#unpackresult)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
   - [pipe](#pipe)
   - [map](#map)
-  - [mapError](#mapError)
+  - [mapError](#maperror)
 - [Input Utilities](#input-utilities)
   - [inputFromForm](#inputfromform)
   - [inputFromUrl](#inputfromurl)
+- [Error Utilities](#error-utilities)
+  - [errorMessagesFor](#errorMessagesFor)
+  - [errorMessagesForSchema](#errorMessagesForSchema)
 - [Acknowlegements](#acknowlegements)
 
 ## Benefits
@@ -54,6 +55,7 @@ result = {
   data: 2,
   errors: []
   inputErrors: []
+  environmentErrors: []
 }
 */
 const failedResult = await increment({ number: 'foo' })
@@ -61,6 +63,7 @@ const failedResult = await increment({ number: 'foo' })
 failedResult = {
   success: false,
   inputErrors: [{ path: ['number'], message: 'Expected number, received nan' }],
+  environmentErrors: []
   errors: [],
 }
 */
@@ -149,12 +152,13 @@ The error result has the following structure:
 ```ts
 type ErrorResult = {
   success: false
-  errors: z.ZodIssue[] | { message: string }
-  inputErrors: z.ZodIssue[]
+  errors: { message: string }[]
+  inputErrors: SchemaError[]
+  environmentErrors: SchemaError[]
 }
 ```
 
-Where `inputErrors` will be the errors from parsing the user input and `errors` will be either from parsing the environment or any exceptions thrown inside the domain function:
+Where `inputErrors` and `environmentErrors` will be the errors from parsing the corresponding Zod schemas and `errors` will be for any exceptions thrown inside the domain function:
 
 ```ts
 const alwaysFails = makeDomainFunction(input, environment)(async () => {
@@ -167,9 +171,13 @@ failedResult = {
   success: false,
   errors: [{ message: 'Some error' }],
   inputErrors: [],
+  environmentErrors: [],
 }
 */
 ```
+
+
+```tsx
 
 ## Type Utilities
 
@@ -188,7 +196,7 @@ It infers the success result of a domain function:
 const fn = makeDomainFunction()(async () => '')
 
 type Success = UnpackSuccess<typeof fn>
-// Success = { success: true, data: string, errors: [], inputErrors: [] }
+// Success = { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [] }
 // Which is the same as: SuccessResult<string>
 ```
 ### UnpackResult
@@ -199,8 +207,8 @@ const fn = makeDomainFunction()(async () => '')
 type Result = UnpackResult<typeof fn>
 /*
 Result =
-  | { success: true, data: string, errors: [], inputErrors: [] }
-  | { success: false, errors: z.ZodIssue[], inputErrors: z.ZodIssue[] }
+  | { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [], }
+  | { success: false, errors: { message: string }[], inputErrors: SchemaError[], environmentErrors: SchemaError[] }
 
 * Which is the same as:
 Result<string>
@@ -231,7 +239,8 @@ On the exemple above, the result will be of type `Result<[string, number, boolea
   success: true,
   data: ['1', 2, true],
   errors: [],
-  inputErrors: []
+  inputErrors: [],
+  environmentErrors: [],
 }
 ```
 
@@ -251,6 +260,7 @@ const results = await all(a, b)({ id: 1 })
   success: false,
   errors: [{ message: 'Error A' }, { message: 'Error B' }],
   inputErrors: [],
+  environmentErrors: [],
 }*/
 ```
 
@@ -287,7 +297,8 @@ On the exemple above, the result will be of type `Result<boolean>`:
   success: true,
   data: false,
   errors: [],
-  inputErrors: []
+  inputErrors: [],
+  environmentErrors: [],
 }
 ```
 
@@ -327,7 +338,8 @@ On the exemple above, the result will be of type `Result<string>` and tis value 
   success: true,
   data: 'Janet Weaver',
   errors: [],
-  inputErrors: []
+  inputErrors: [],
+  environmentErrors: [],
 }
 ```
 
@@ -350,6 +362,9 @@ const summarizeErrors = (result: ErrorData) =>
     inputErrors: [
       { message: 'Number of input errors: ' + result.inputErrors.length },
     ],
+    environmentErrors: [
+      { message: 'Number of environment errors: ' + result.environmentErrors.length },
+    ],
   } as ErrorData)
 
 const incrementWithErrorSummary = mapError(increment, summarizeErrors)
@@ -363,6 +378,7 @@ On the exemple above, the `result` will be:
   success: false,
   errors: [{ message: 'Number of errors: 0' }],
   inputErrors: [{ message: 'Number of input errors: 1' }],
+  environmentErrors: [{ message: 'Number of environment errors: 0' }],
 }
 ```
 
@@ -441,6 +457,44 @@ export const action = async ({ request }) => {
 ```
 
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
+
+## Error Utilities
+To improve DX when dealing with errors we do export a couple of utilities.
+
+### errorMessagesFor
+Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a name, it returns a list of error messages with that name in their path.
+
+```tsx
+const result = {
+  success: false,
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [{ message: 'Must not be empty', path: ['host'] }, { message: 'Must be a fully qualified domain', path: ['host'] }]
+}
+
+errorMessagesFor(result.inputErrors, 'email') === null
+errorMessagesFor(result.environmentErrors, 'host').message === 'Must not be empty'
+```
+### errorMessagesForSchema
+Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a Zod Schema, it returns an object with a list of error messages for each key in the schema shape.
+
+```tsx
+const schema = z.object({ email: z.string().nonEmpty(), password: z.string().nonEmpty() })
+const result = {
+  success: false,
+  errors: [],
+  inputErrors: [{ message: 'Must not be empty', path: ['email'] }, { message: 'Must be a string', path: ['email'] }, { message: 'Must not be empty', path: ['password'] }],
+  environmentErrors: []
+}
+
+errorForSchema(result.inputErrors, schema)
+/*
+{
+  email: ['Must not be empty', 'Must be a string'],
+  password: ['Must not be empty']
+}
+*/
+```
 
 ## Acknowlegements
 

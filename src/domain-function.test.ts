@@ -22,21 +22,20 @@ describe('makeDomainFunction', () => {
         data: 1,
         errors: [],
         inputErrors: [],
+        environmentErrors: [],
       })
     })
 
     it('returns error when parsing fails', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
-      const body = { missingId: '1' }
-      const expectedError = parser.safeParse({
-        body,
-      }) as z.SafeParseError<{ id: number }>
-
       const handler = makeDomainFunction(parser)(async ({ id }) => id)
 
       expect(await handler({ missingId: '1' })).toEqual({
         success: false,
-        inputErrors: expectedError.error.issues,
+        inputErrors: [
+          { message: 'Expected number, received nan', path: ['id'] },
+        ],
+        environmentErrors: [],
         errors: [],
       })
     })
@@ -56,6 +55,7 @@ describe('makeDomainFunction', () => {
       data: [1, 2],
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -68,9 +68,6 @@ describe('makeDomainFunction', () => {
   it('returns error when environment parsing fails', async () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
-    const expectedError = envParser.safeParse({}) as z.SafeParseError<{
-      uid: number
-    }>
 
     const handler = makeDomainFunction(
       parser,
@@ -80,7 +77,10 @@ describe('makeDomainFunction', () => {
     expect(await handler({ id: '1' }, {})).toEqual({
       success: false,
       inputErrors: [],
-      errors: expectedError.error.issues,
+      environmentErrors: [
+        { message: 'Expected number, received nan', path: ['uid'] },
+      ],
+      errors: [],
     })
   })
 })
@@ -101,6 +101,7 @@ describe('all', () => {
       data: [2, 0],
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -122,6 +123,7 @@ describe('all', () => {
       data: ['1', 2, true],
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -139,14 +141,12 @@ describe('all', () => {
       success: false,
       inputErrors: [
         {
-          code: 'invalid_type',
-          expected: 'string',
           message: 'Expected string, received number',
           path: ['id'],
-          received: 'number',
         },
       ],
       errors: [],
+      environmentErrors: [],
     })
   })
 
@@ -164,6 +164,7 @@ describe('all', () => {
       success: false,
       errors: [{ message: 'Error' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -181,20 +182,15 @@ describe('all', () => {
       success: false,
       inputErrors: [
         {
-          code: 'invalid_type',
-          expected: 'string',
           message: 'Expected string, received number',
           path: ['id'],
-          received: 'number',
         },
         {
-          code: 'invalid_type',
-          expected: 'string',
           message: 'Expected string, received number',
           path: ['id'],
-          received: 'number',
         },
       ],
+      environmentErrors: [],
       errors: [],
     })
   })
@@ -213,6 +209,7 @@ describe('all', () => {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
@@ -235,6 +232,7 @@ describe('pipe', () => {
       data: 2,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -257,15 +255,12 @@ describe('pipe', () => {
       data: 4,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
   it('should fail on the first environment parser failure', async () => {
     const envParser = z.object({ env: z.number() })
-    const expectedError = envParser.safeParse({}) as z.SafeParseError<{
-      env: number
-    }>
-
     const a = makeDomainFunction(
       z.undefined(),
       envParser,
@@ -281,18 +276,14 @@ describe('pipe', () => {
 
     expect(await c(undefined, {})).toEqual({
       success: false,
-      errors: expectedError.error.issues,
+      errors: [],
       inputErrors: [],
+      environmentErrors: [{ message: 'Required', path: ['env'] }],
     })
   })
 
   it('should fail on the first input parser failure', async () => {
     const firstInputParser = z.undefined()
-    const expectedError = firstInputParser.safeParse({
-      inp: 'some invalid input',
-    }) as z.SafeParseError<{
-      env: number
-    }>
 
     const a = makeDomainFunction(
       firstInputParser,
@@ -310,18 +301,14 @@ describe('pipe', () => {
     expect(await c({ inp: 'some invalid input' }, { env: 1 })).toEqual({
       success: false,
       errors: [],
-      inputErrors: expectedError.error.issues,
+      inputErrors: [
+        { message: 'Expected undefined, received object', path: [] },
+      ],
+      environmentErrors: [],
     })
   })
 
   it('should fail on the second input parser failure', async () => {
-    const secondInputParser = z.object({ inp: z.number() })
-    const expectedError = secondInputParser.safeParse({
-      inp: 'some invalid input',
-    }) as z.SafeParseError<{
-      env: number
-    }>
-
     const a = makeDomainFunction(
       z.undefined(),
       z.object({ env: z.number() }),
@@ -338,7 +325,10 @@ describe('pipe', () => {
     expect(await c(undefined, { env: 1 })).toEqual({
       success: false,
       errors: [],
-      inputErrors: expectedError.error.issues,
+      inputErrors: [
+        { message: 'Expected number, received string', path: ['inp'] },
+      ],
+      environmentErrors: [],
     })
   })
 
@@ -364,6 +354,7 @@ describe('pipe', () => {
       data: false,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
@@ -382,17 +373,12 @@ describe('map', () => {
       data: 3,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
   it('returns the error when the domain function fails', async () => {
     const firstInputParser = z.object({ id: z.number() })
-    const expectedError = firstInputParser.safeParse({
-      inp: 'some invalid input',
-    }) as z.SafeParseError<{
-      env: number
-    }>
-
     const a = makeDomainFunction(firstInputParser)(async ({ id }) => id + 1)
     const b = (id: number) => id + 1
 
@@ -401,7 +387,8 @@ describe('map', () => {
     expect(await c({ invalidInput: '1' })).toEqual({
       success: false,
       errors: [],
-      inputErrors: expectedError.error.issues,
+      inputErrors: [{ message: 'Required', path: ['id'] }],
+      environmentErrors: [],
     })
   })
 
@@ -419,6 +406,7 @@ describe('map', () => {
       success: false,
       errors: [{ message: 'failed to map' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
@@ -441,6 +429,7 @@ describe('mapError', () => {
       data: 2,
       errors: [],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 
@@ -479,6 +468,7 @@ describe('mapError', () => {
       success: false,
       errors: [{ message: 'failed to map' }],
       inputErrors: [],
+      environmentErrors: [],
     })
   })
 })
