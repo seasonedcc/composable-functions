@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { errorsByName, errorsForSchema } from './errors'
+import { errorMessagesFor, errorMessagesForSchema } from './errors'
 
 const errors = [
   { path: ['a'], message: 'a' },
@@ -9,13 +9,13 @@ const errors = [
   { path: ['b'], message: 'c' },
 ]
 
-describe('errorsByName', () => {
+describe('errorMessagesFor', () => {
   it('returns one SchemaError for a given name', () => {
-    expect(errorsByName(errors, 'b')).toEqual(['b', 'c'])
+    expect(errorMessagesFor(errors, 'b')).toEqual(['b', 'c'])
   })
 
   it('returns null if a SchemaError can not be found for the given name', () => {
-    expect(errorsByName(errors, 'c')).toEqual([])
+    expect(errorMessagesFor(errors, 'c')).toEqual([])
   })
 })
 
@@ -23,12 +23,15 @@ const schema = z.object({
   a: z.string(),
   b: z.string(),
 })
-describe('errorsForSchema', () => {
+describe('errorMessagesForSchema', () => {
   it('returns an object with error messages for every key of the given schema', () => {
-    expect(errorsForSchema(errors, schema)).toEqual({ a: ['a'], b: ['b', 'c'] })
+    expect(errorMessagesForSchema(errors, schema)).toEqual({
+      a: ['a'],
+      b: ['b', 'c'],
+    })
   })
 
   it('has type inference for the results of this function', () => {
-    expect(errorsForSchema(errors, schema).a).toEqual(['a'])
+    expect(errorMessagesForSchema(errors, schema).a).toEqual(['a'])
   })
 })

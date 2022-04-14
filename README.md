@@ -23,8 +23,8 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [inputFromForm](#inputfromform)
   - [inputFromUrl](#inputfromurl)
 - [Error Utilities](#error-utilities)
-  - [errorsByName](#errorsByName)
-  - [errorsForSchema](#errorsforschema)
+  - [errorMessagesFor](#errorMessagesFor)
+  - [errorMessagesForSchema](#errorMessagesForSchema)
 - [Acknowlegements](#acknowlegements)
 
 ## Benefits
@@ -461,7 +461,7 @@ To better understand how to structure your data, refer to [qs documentation](htt
 ## Error Utilities
 To improve DX when dealing with errors we do export a couple of utilities.
 
-### errorsByName
+### errorMessagesFor
 Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a name, it returns the first error with that name in its path.
 
 ```tsx
@@ -472,10 +472,10 @@ const result = {
   environmentErrors: [{ message: 'Must not be empty', path: ['host'] }, { message: 'Must be a fully qualified domain', path: ['host'] }]
 }
 
-errorsByName(result.inputErrors, 'email') === null
-errorsByName(result.environmentErrors, 'host').message === 'Must not be empty'
+errorMessagesFor(result.inputErrors, 'email') === null
+errorMessagesFor(result.environmentErrors, 'host').message === 'Must not be empty'
 ```
-### errorsForSchema
+### errorMessagesForSchema
 Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a Zod Schema, it returns an object with a list of error messages for each key in the schema shape.
 
 ```tsx
