@@ -16,7 +16,9 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
 }
 
 const errorMessagesFor = (errors: SchemaError[], name: string) =>
-  errors.filter(({ path }) => path.includes(name)).map(({ message }) => message)
+  errors
+    .filter(({ path }) => path.join('.') === name)
+    .map(({ message }) => message)
 
 const errorMessagesForSchema = <T extends z.AnyZodObject>(
   errors: SchemaError[],

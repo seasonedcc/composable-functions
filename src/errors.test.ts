@@ -10,12 +10,17 @@ const errors = [
 ]
 
 describe('errorMessagesFor', () => {
-  it('returns one SchemaError for a given name', () => {
+  it('returns a list of error messages for a given name', () => {
     expect(errorMessagesFor(errors, 'b')).toEqual(['b', 'c'])
   })
 
-  it('returns null if a SchemaError can not be found for the given name', () => {
+  it('returns an empty list if no error messages can be found', () => {
     expect(errorMessagesFor(errors, 'c')).toEqual([])
+  })
+
+  it('returns a list of error messages for a deep property of the formData', async () => {
+    const err = [{ path: ['person', '0', 'email'], message: 'Invalid email' }]
+    expect(errorMessagesFor(err, 'person.0.email')).toEqual(['Invalid email'])
   })
 })
 
