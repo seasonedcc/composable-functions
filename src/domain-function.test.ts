@@ -83,6 +83,129 @@ describe('makeDomainFunction', () => {
       errors: [],
     })
   })
+
+  it('returns error when the domain function throws an Error', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw new Error('Error')
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Error' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('returns error when the domain function throws a string', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw 'Error'
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Error' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('returns error when the domain function throws an object with message', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw { message: 'Error' }
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Error' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('returns errors when the domain function throws an object with errors', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw {
+          errors: [{ message: 'Custom error' }],
+        }
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Custom error' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('returns inputErrors when the domain function throws an object with inputErrors', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw {
+          inputErrors: [{ message: 'Custom input error', path: ['id'] }],
+        }
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: [{ message: 'Custom input error', path: ['id'] }],
+      environmentErrors: [],
+    })
+  })
+
+  it('returns environmentErrors when the domain function throws an object with environmentErrors', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw {
+          environmentErrors: [
+            { message: 'Custom environment error', path: ['id'] },
+          ],
+        }
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [
+        { message: 'Custom environment error', path: ['id'] },
+      ],
+    })
+  })
+
+  it('returns error data when the domain function throws an object with error data', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw {
+          errors: [{ message: 'Custom error' }],
+          inputErrors: [{ message: 'Custom input error', path: ['id'] }],
+          environmentErrors: [
+            { message: 'Custom environment error', path: ['id'] },
+          ],
+        }
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [{ message: 'Custom error' }],
+      inputErrors: [{ message: 'Custom input error', path: ['id'] }],
+      environmentErrors: [
+        { message: 'Custom environment error', path: ['id'] },
+      ],
+    })
+  })
 })
 
 describe('all', () => {
