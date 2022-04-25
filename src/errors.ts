@@ -1,31 +1,5 @@
 import * as z from 'zod'
-import type { ErrorData, ErrorWithMessage, SchemaError } from './types'
-
-function parseError(error: unknown): ErrorData {
-  if (isErrorWithErrorData(error)) {
-    return {
-      errors: error.errors || [],
-      inputErrors: error.inputErrors || [],
-      environmentErrors: error.environmentErrors || [],
-    }
-  }
-
-  return {
-    errors: [toErrorWithMessage(error)],
-    inputErrors: [],
-    environmentErrors: [],
-  }
-}
-
-function isErrorWithErrorData(error: unknown): error is Partial<ErrorData> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    ('errors' in error ||
-      'inputErrors' in error ||
-      'environmentErrors' in error)
-  )
-}
+import type { ErrorWithMessage, SchemaError } from './types'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
@@ -63,10 +37,31 @@ const errorMessagesForSchema = <T extends z.AnyZodObject>(
   return mappedErrors
 }
 
+class InputError extends Error {
+  path: string
+
+  constructor(message: string, path: string) {
+    super(message)
+    this.name = 'InputError'
+    this.path = path
+  }
+}
+
+class EnvironmentError extends Error {
+  path: string
+
+  constructor(message: string, path: string) {
+    super(message)
+    this.name = 'EnvironmentError'
+    this.path = path
+  }
+}
+
 export {
   errorMessagesFor,
   errorMessagesForSchema,
-  parseError,
   schemaError,
   toErrorWithMessage,
+  InputError,
+  EnvironmentError,
 }
