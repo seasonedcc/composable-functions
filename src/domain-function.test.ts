@@ -129,23 +129,6 @@ describe('makeDomainFunction', () => {
     })
   })
 
-  it('returns errors when the domain function throws an object with errors', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw {
-          errors: [{ message: 'Custom error' }],
-        }
-      },
-    )
-
-    expect(await domainFunction({ id: 1 })).toEqual({
-      success: false,
-      errors: [{ message: 'Custom error' }],
-      inputErrors: [],
-      environmentErrors: [],
-    })
-  })
-
   it('returns inputErrors when the domain function throws an object with inputErrors', async () => {
     const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
       async () => {
