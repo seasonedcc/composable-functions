@@ -41,6 +41,10 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   return { message: String(maybeError) }
 }
 
+function schemaError(message: string, path: string): SchemaError {
+  return { message, path: path.split('.') }
+}
+
 const errorMessagesFor = (errors: SchemaError[], name: string) =>
   errors
     .filter(({ path }) => path.join('.') === name)
@@ -63,5 +67,6 @@ export {
   errorMessagesFor,
   errorMessagesForSchema,
   parseError,
+  schemaError,
   toErrorWithMessage,
 }
