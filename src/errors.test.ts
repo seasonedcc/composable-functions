@@ -1,13 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import * as z from 'zod'
 
-import { errorMessagesFor, errorMessagesForSchema } from './errors'
+import { errorMessagesFor, errorMessagesForSchema, schemaError } from './errors'
 
 const errors = [
   { path: ['a'], message: 'a' },
   { path: ['b'], message: 'b' },
   { path: ['b'], message: 'c' },
 ]
+
+describe('schemaError', () => {
+  it('returns a SchemaError from a message and a path using dot notation', () => {
+    expect(schemaError('this is an error message', 'b.c')).toEqual({
+      message: 'this is an error message',
+      path: ['b', 'c'],
+    })
+  })
+})
 
 describe('errorMessagesFor', () => {
   it('returns a list of error messages for a given name', () => {

@@ -1,5 +1,10 @@
 import * as z from 'zod'
-import { toErrorWithMessage } from './errors'
+import {
+  EnvironmentError,
+  InputError,
+  schemaError,
+  toErrorWithMessage,
+} from './errors'
 import {
   DomainFunction,
   ErrorData,
@@ -48,6 +53,22 @@ const makeDomainFunction: MakeDomainFunction =
           }
         }
       } catch (error) {
+        if (error instanceof InputError) {
+          return {
+            success: false,
+            errors: [],
+            environmentErrors: [],
+            inputErrors: [schemaError(error.message, error.path)],
+          }
+        }
+        if (error instanceof EnvironmentError) {
+          return {
+            success: false,
+            errors: [],
+            environmentErrors: [schemaError(error.message, error.path)],
+            inputErrors: [],
+          }
+        }
         return {
           success: false,
           errors: [toErrorWithMessage(error)],

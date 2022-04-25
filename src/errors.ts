@@ -15,6 +15,10 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   return { message: String(maybeError) }
 }
 
+function schemaError(message: string, path: string): SchemaError {
+  return { message, path: path.split('.') }
+}
+
 const errorMessagesFor = (errors: SchemaError[], name: string) =>
   errors
     .filter(({ path }) => path.join('.') === name)
@@ -33,4 +37,31 @@ const errorMessagesForSchema = <T extends z.AnyZodObject>(
   return mappedErrors
 }
 
-export { errorMessagesFor, errorMessagesForSchema, toErrorWithMessage }
+class InputError extends Error {
+  path: string
+
+  constructor(message: string, path: string) {
+    super(message)
+    this.name = 'InputError'
+    this.path = path
+  }
+}
+
+class EnvironmentError extends Error {
+  path: string
+
+  constructor(message: string, path: string) {
+    super(message)
+    this.name = 'EnvironmentError'
+    this.path = path
+  }
+}
+
+export {
+  errorMessagesFor,
+  errorMessagesForSchema,
+  schemaError,
+  toErrorWithMessage,
+  InputError,
+  EnvironmentError,
+}
