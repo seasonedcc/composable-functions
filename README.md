@@ -1,6 +1,6 @@
-# Remix Domains
+# Keep your business logic clean with Remix Domains
 
-Remix Domains helps you to keep your Business Logic appart from your Remix Actions/Loaders plumbing and gives you first class type inference from end to end.
+Remix Domains helps you decouple your business logic from your Remix actions and loaders. With first-class type inference from end to end.
 It does this by enforcing the parameters' types in runtime (through [zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
 
 ![](example.gif)
