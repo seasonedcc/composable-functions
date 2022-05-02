@@ -39,8 +39,8 @@ const makeDomainFunction: MakeDomainFunction =
   ) =>
   (handler) => {
     const domainFunction = (async (input, environment = {}) => {
-      const envResult = environmentSchema.safeParse(environment)
-      const result = inputSchema.safeParse(input)
+      const envResult = await environmentSchema.safeParseAsync(environment)
+      const result = await inputSchema.safeParseAsync(input)
 
       try {
         if (result.success === true && envResult.success === true) {
