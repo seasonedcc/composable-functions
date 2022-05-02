@@ -60,6 +60,32 @@ describe('makeDomainFunction', () => {
     })
   })
 
+  it('applies async validations', async () => {
+    const parser = z.object({
+      id: z
+        .preprocess(Number, z.number())
+        .refine(async (value) => value !== 1, { message: 'ID already taken' }),
+    })
+
+    const envParser = z.object({
+      uid: z
+        .preprocess(Number, z.number())
+        .refine(async (value) => value !== 2, { message: 'UID already taken' }),
+    })
+
+    const handler = makeDomainFunction(
+      parser,
+      envParser,
+    )(async ({ id }, { uid }) => [id, uid])
+
+    expect(await handler({ id: '1' }, { uid: '2' })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: [{ message: 'ID already taken', path: ['id'] }],
+      environmentErrors: [{ message: 'UID already taken', path: ['uid'] }],
+    })
+  })
+
   it('accepts literals as input of domain functions', async () => {
     const foo = makeDomainFunction(z.number(), z.string())(async (n) => n + 1)
     const result = await foo(1, 'not going to be used')
