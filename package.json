@@ -1,6 +1,6 @@
 {
   "name": "remix-domains",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Decouple your business logic from your Remix actions and loaders. With first-class type inference from end to end.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
