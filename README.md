@@ -116,6 +116,7 @@ export default function Index() {
 Sometimes you want to ensure the safety of certain values that weren't explicitly sent by the user. We call them _environment_:
 
 ```tsx
+// In some app/domain/*.server.ts file
 const sendEmail = makeDomainFunction(
   z.object({ email: z.string().email() }), // user input schema
   z.object({ origin: z.string() }) // environment schema
