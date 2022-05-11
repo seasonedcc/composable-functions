@@ -30,6 +30,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [UnpackData](#unpackdata)
   - [UnpackSuccess](#unpacksuccess)
   - [UnpackResult](#unpackresult)
+- [Resources](#resources)
 - [Acknowlegements](#acknowlegements)
 
 ## Benefits
@@ -542,6 +543,9 @@ Result<string>
 SuccessResult<string> | ErrorResult
 */
 ```
+
+## Resources
+- Blog post: [How remix-domains improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
 
 ## Acknowlegements
 
