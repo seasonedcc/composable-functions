@@ -208,7 +208,7 @@ To throw several input errors in one shot you can use the pluralized version `In
 
 ```ts
 const alwaysFails = makeDomainFunction(input, environment)(async () => {
-  throw new InputErrors([{message: 'Email already taken', path: 'email'}, message: 'Password too short', path: 'password'}])
+  throw new InputErrors([{message: 'Email already taken', path: 'email'}, {message: 'Password too short', path: 'password'}])
 })
 
 const failedResult = await alwaysFails(someInput)
