@@ -2,6 +2,7 @@ import * as z from 'zod'
 import {
   EnvironmentError,
   InputError,
+  InputErrors,
   schemaError,
   toErrorWithMessage,
 } from './errors'
@@ -67,6 +68,16 @@ const makeDomainFunction: MakeDomainFunction =
             errors: [],
             environmentErrors: [schemaError(error.message, error.path)],
             inputErrors: [],
+          }
+        }
+        if (error instanceof InputErrors) {
+          return {
+            success: false,
+            errors: [],
+            environmentErrors: [],
+            inputErrors: error.errors.map((e) =>
+              schemaError(e.message, e.path),
+            ),
           }
         }
         return {

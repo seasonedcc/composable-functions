@@ -47,6 +47,15 @@ class InputError extends Error {
   }
 }
 
+class InputErrors extends Error {
+  errors: { message: string; path: string }[]
+
+  constructor(errors: { message: string; path: string }[]) {
+    super(`${errors.length} errors`)
+    this.errors = errors
+  }
+}
+
 class EnvironmentError extends Error {
   path: string
 
@@ -64,4 +73,5 @@ export {
   toErrorWithMessage,
   InputError,
   EnvironmentError,
+  InputErrors,
 }
