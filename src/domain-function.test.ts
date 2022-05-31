@@ -8,7 +8,7 @@ import {
   all,
   makeDomainFunction,
 } from './domain-functions'
-import { EnvironmentError, InputError } from './errors'
+import { EnvironmentError, InputError, InputErrors } from './errors'
 import { ErrorData, SuccessResult } from './types'
 
 describe('makeDomainFunction', () => {
@@ -167,6 +167,27 @@ describe('makeDomainFunction', () => {
       success: false,
       errors: [],
       inputErrors: [{ message: 'Custom input error', path: ['contact', 'id'] }],
+      environmentErrors: [],
+    })
+  })
+
+  it('returns multiple inputErrors when the domain function throws an InputErrors', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw new InputErrors([
+          { message: 'Custom input error', path: 'contact.id' },
+          { message: 'Another input error', path: 'contact.id' },
+        ])
+      },
+    )
+
+    expect(await domainFunction({ id: 1 })).toEqual({
+      success: false,
+      errors: [],
+      inputErrors: [
+        { message: 'Custom input error', path: ['contact', 'id'] },
+        { message: 'Another input error', path: ['contact', 'id'] },
+      ],
       environmentErrors: [],
     })
   })

@@ -204,7 +204,25 @@ failedResult = {
 */
 ```
 
-The same can be done for environment errors by throwing an `EnvironmentError`.
+To throw several input errors in one shot you can use the pluralized version `InputErrors` as in:
+
+```ts
+const alwaysFails = makeDomainFunction(input, environment)(async () => {
+  throw new InputErrors([{message: 'Email already taken', path: 'email'}, message: 'Password too short', path: 'password'}])
+})
+
+const failedResult = await alwaysFails(someInput)
+/*
+failedResult = {
+  success: false,
+  errors: [],
+  inputErrors: [{ message: 'Email already taken', path: ['email'] }, { message: 'Password too short', path: ['password'] }],
+  environmentErrors: [],
+}
+*/
+```
+
+You can also return a custom environment error by throwing an `EnvironmentError`.
 
 ### Using error messages in the UI
 To improve DX when dealing with errors we do export a couple of utilities.
