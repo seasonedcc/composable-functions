@@ -24,15 +24,33 @@ const errorMessagesFor = (errors: SchemaError[], name: string) =>
     .filter(({ path }) => path.join('.') === name)
     .map(({ message }) => message)
 
+type NestedErrors<SchemaType> = {
+  [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType>
+}
+
 const errorMessagesForSchema = <T extends z.AnyZodObject>(
   errors: SchemaError[],
   schema: T,
+  path: string[] = [],
 ) => {
   type SchemaType = z.infer<T>
-  const mappedErrors = {} as Record<keyof SchemaType, string[]>
-  for (const stringKey in schema.shape) {
+
+  const mappedErrors = {} as NestedErrors<SchemaType>
+  for (const [stringKey, unknownDef] of Object.entries(schema.shape)) {
     const key = stringKey as keyof SchemaType
-    mappedErrors[key] = errorMessagesFor(errors, stringKey)
+    const def = unknownDef as SchemaType
+    if (def.shape !== undefined) {
+      mappedErrors[key] = errorMessagesForSchema(
+        errors,
+        def as z.AnyZodObject,
+        [...path, key as string],
+      ) as NestedErrors<SchemaType>
+    } else {
+      mappedErrors[key] = errorMessagesFor(
+        errors,
+        [...path, stringKey].join('.'),
+      )
+    }
   }
   return mappedErrors
 }
