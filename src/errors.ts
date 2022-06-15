@@ -39,17 +39,18 @@ const errorMessagesForSchema = <T extends z.AnyZodObject>(
   for (const [stringKey, unknownDef] of Object.entries(schema.shape)) {
     const key = stringKey as keyof SchemaType
     const def = unknownDef as SchemaType
-    if (def.shape !== undefined) {
+    const errorsForPath = errorMessagesFor(
+      errors,
+      [...path, stringKey].join('.'),
+    )
+    if (def.shape !== undefined && errorsForPath.length == 0) {
       mappedErrors[key] = errorMessagesForSchema(
         errors,
         def as z.AnyZodObject,
         [...path, key as string],
       ) as NestedErrors<SchemaType>
     } else {
-      mappedErrors[key] = errorMessagesFor(
-        errors,
-        [...path, stringKey].join('.'),
-      )
+      mappedErrors[key] = errorsForPath
     }
   }
   return mappedErrors
