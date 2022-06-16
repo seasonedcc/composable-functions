@@ -82,7 +82,6 @@ describe('errorMessagesForSchema', () => {
     const domainFn = makeDomainFunction(schema)(async (data) => data)
     const result = await domainFn(data)
 
-    console.warn(result.inputErrors)
     const errors = errorMessagesForSchema(result.inputErrors, schema)
     expect(errors).toEqual({
       a: [],
