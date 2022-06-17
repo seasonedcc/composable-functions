@@ -454,7 +454,7 @@ export const action = async ({ request }) => {
 
 ### inputFromFormData
 
-Extracts a structured objecto from a `FormData`:
+Extracts a structured object from a `FormData`:
 ```tsx
 const formData = new FormData()
 formData.append('email', 'john@doe.com')
