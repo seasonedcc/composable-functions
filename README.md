@@ -136,7 +136,7 @@ export const action = async ({ request }) => {
     origin: new URL(request.url).origin,
   })
 
-  await sendResetToken(
+  await sendEmail(
     await inputFromForm(request),
     environment(request),
   )
