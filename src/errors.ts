@@ -32,7 +32,7 @@ const errorMessagesForSchema = <T extends z.AnyZodObject>(
   errors: SchemaError[],
   schema: T,
   path: string[] = [],
-) => {
+): NestedErrors<z.infer<T>> => {
   type SchemaType = z.infer<T>
 
   const mappedErrors = {} as NestedErrors<SchemaType>
