@@ -87,6 +87,9 @@ const makeDomainFunction: MakeDomainFunction =
           environmentErrors: [],
         }
       }
+      if (result.success == false) {
+        console.log(JSON.stringify(result.error.format()))
+      }
       return {
         success: false,
         errors: [],
