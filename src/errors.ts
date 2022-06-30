@@ -33,52 +33,51 @@ const errorMessagesForSchema = <T extends z.AnyZodObject>(
   schema: T,
 ): NestedErrors<z.infer<typeof schema>> => {
   type SchemaType = z.infer<typeof schema>
+  type ErrorObject = { path: string[]; messages: string[] }
 
   const nest = (
-    { path, messages }: { path: string[]; messages: string[] },
+    { path, messages }: ErrorObject,
     root: Record<string, unknown>,
   ) => {
-    if (path.length === 1) {
-      root[path[0]] = [...messages]
-      return root
-    } else {
-      root[path[0]] = nest(
-        { path: path.slice(1), messages },
-        (root[path[0]] as Record<string, unknown>) || {},
-      )
-      return root
-    }
+    const [head, ...tail] = path
+    root[head] =
+      tail.length === 0
+        ? messages
+        : nest(
+            { path: tail, messages },
+            (root[head] as Record<string, unknown>) ?? {},
+          )
+    return root
   }
 
-  const unifyPaths = (errors: SchemaError[]) => {
-    const coercedErrors: { path: string[]; messages: string[] }[] = errors.map(
-      ({ path, message }) => ({
-        path,
-        messages: [message],
-      }),
-    )
-    const unifiedErrors = [] as typeof coercedErrors
-    return coercedErrors.reduce((memo, error) => {
-      const existingPath = memo.find(
-        ({ path }) => JSON.stringify(path) === JSON.stringify(error.path),
-      )
-      if (existingPath) {
-        return memo.map(({ path, messages }) =>
-          JSON.stringify(path) === JSON.stringify(error.path)
-            ? { path, messages: [...messages, ...error.messages] }
-            : { path, messages },
-        )
-      } else {
-        return [...memo, error]
-      }
-    }, unifiedErrors)
-  }
+  const compareStringArrays = (a: string[]) => (b: string[]) =>
+    JSON.stringify(a) === JSON.stringify(b)
 
-  const unifiedErrors = unifyPaths(errors)
-  return unifiedErrors.reduce(
-    (memo, schemaError) => ({ ...memo, ...nest(schemaError, memo) }),
-    {},
-  ) as NestedErrors<SchemaType>
+  const toErrorObject = (errors: SchemaError[]): ErrorObject[] =>
+    errors.map(({ path, message }) => ({
+      path,
+      messages: [message],
+    }))
+
+  const unifyPaths = (errors: SchemaError[]) =>
+    toErrorObject(errors).reduce((memo, error) => {
+      const comparePath = compareStringArrays(error.path)
+      const mergeErrorMessages = ({ path, messages }: ErrorObject) =>
+        comparePath(path)
+          ? { path, messages: [...messages, ...error.messages] }
+          : { path, messages }
+      const existingPath = memo.find(({ path }) => comparePath(path))
+
+      return existingPath ? memo.map(mergeErrorMessages) : [...memo, error]
+    }, [] as ErrorObject[])
+
+  const errorTree = unifyPaths(errors).reduce((memo, schemaError) => {
+    const errorBranch = nest(schemaError, memo)
+
+    return { ...memo, ...errorBranch }
+  }, {}) as NestedErrors<SchemaType>
+
+  return errorTree
 }
 
 class InputError extends Error {
