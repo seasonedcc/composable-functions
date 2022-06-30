@@ -25,7 +25,7 @@ const errorMessagesFor = (errors: SchemaError[], name: string) =>
     .map(({ message }) => message)
 
 type NestedErrors<SchemaType> = {
-  [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType>
+  [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType[Property]>
 }
 
 const errorMessagesForSchema = <T extends z.AnyZodObject>(
