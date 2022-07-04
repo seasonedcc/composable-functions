@@ -28,7 +28,7 @@ type NestedErrors<SchemaType> = {
   [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType[Property]>
 }
 
-const errorMessagesForSchema = <T extends z.AnyZodObject>(
+const errorMessagesForSchema = <T extends z.ZodTypeAny>(
   errors: SchemaError[],
   schema: T,
 ): NestedErrors<z.infer<typeof schema>> => {
