@@ -3,7 +3,7 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, formatSchemaErrors, mergeObjects } from './utils.ts'
-import type { DomainFunction, ErrorData, MergeObjs } from './types.ts'
+import type { DomainFunction, ErrorData, MergeObjs, Result } from './types.ts'
 import type { Last, List, ListToResultData } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
@@ -178,6 +178,33 @@ const pipe: Pipe = (...fns) => {
   }) as Last<typeof fns>
 }
 
+type Sequence = <Fns extends DomainFunction[]>(
+  ...fns: Fns
+) => DomainFunction<List.Map<ListToResultData, Fns>>
+const sequence: Sequence = (...fns) => {
+  return async function (input: unknown, environment?: unknown) {
+    const results = []
+    let currResult: undefined | Result<unknown>
+    for await (const fn of fns as DomainFunction[]) {
+      const result = await fn(
+        currResult?.success ? currResult.data : input,
+        environment,
+      )
+      if (!result.success) return result
+      currResult = result
+      results.push(result.data)
+    }
+
+    return {
+      success: true,
+      data: results,
+      inputErrors: [],
+      environmentErrors: [],
+      errors: [],
+    } as SuccessResult<List.Map<ListToResultData, typeof fns>>
+  }
+}
+
 type Map = <O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R,
@@ -230,4 +257,4 @@ const mapError: MapError = (dfn, mapper) => {
   }
 }
 
-export { makeDomainFunction, all, pipe, map, mapError, merge }
+export { makeDomainFunction, all, pipe, sequence, map, mapError, merge }
