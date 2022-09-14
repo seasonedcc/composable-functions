@@ -1,6 +1,6 @@
-# Keep your business logic clean with Remix Domains
+# Keep your business logic clean with Domain Functions
 
-Remix Domains helps you decouple your business logic from your Remix actions and loaders. With first-class type inference from end to end.
+Domain Functions helps you decouple your business logic from your controllers. With first-class type inference from end to end.
 It does this by enforcing the parameters' types in runtime (through [zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
 
 ![](example.gif)
@@ -35,7 +35,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 
 ## Benefits
 - End-to-End typesafety all the way from the Backend to the UI
-- Keep your Remix Actions and Loaders slim and tidy
+- Keep your controllers slim and tidy
 - Removes the plumbing of extracting and parsing structured data from your Requests
 - Keep your domain functions decoupled from the framework, with the assurance that your values conform to your types
 - Easier to test and maintain business logic
@@ -44,11 +44,11 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 ## Quickstart
 
 ```
-npm i remix-domains zod
+npm i domain-functions zod
 ```
 
 ```tsx
-import { makeDomainFunction, inputFromForm } from 'remix-domains'
+import { makeDomainFunction, inputFromForm } from 'domain-functions'
 import * as z from 'zod'
 
 const schema = z.object({ number: z.preprocess(Number, z.number()) })
@@ -81,13 +81,13 @@ To understand how to build the schemas, refer to [Zod documentation](https://git
 ```tsx
 import type { ActionFunction } from 'remix'
 import { useActionData, redirect } from 'remix'
-import { makeDomainFunction, inputFromForm } from 'remix-domains'
+import { makeDomainFunction, inputFromForm } from 'domain-functions'
 import * as z from 'zod'
 
 const schema = z.object({ number: z.preprocess(Number, z.number()) })
-const increment = makeDomainFunction(schema)(({ number }) => number + 1)
 
 export const action: ActionFunction = async ({ request }) => {
+  const increment = makeDomainFunction(schema)(({ number }) => number + 1)
   const result = await increment(await inputFromForm(request))
 
   if (!result.success) return result
@@ -130,8 +130,8 @@ const sendEmail = makeDomainFunction(
   }
 )
 
-// In your Remix action:
-export const action = async ({ request }) => {
+// In your controller:
+async ({ request }) => {
   const environment = (request: Request) => ({
     origin: new URL(request.url).origin,
   })
@@ -563,12 +563,12 @@ SuccessResult<string> | ErrorResult
 ```
 
 ## Resources
-- Blog post: [How remix-domains improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
+- Blog post: [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
 
 ## Acknowlegements
 
 We are grateful for [Zod](https://github.com/colinhacks/zod) as it is a great library and informed our design.
-It's worth mentioning two other projects that inspired remix domains:
+It's worth mentioning two other projects that inspired domain-functions:
 
 - [Servant](https://github.com/haskell-servant/servant/)
 - [tRPC](https://trpc.io)
