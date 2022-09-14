@@ -35,7 +35,6 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 
 ## Benefits
 - End-to-End typesafety all the way from the Backend to the UI
-- Keep your controllers slim and tidy
 - Removes the plumbing of extracting and parsing structured data from your Requests
 - Keep your domain functions decoupled from the framework, with the assurance that your values conform to your types
 - Easier to test and maintain business logic
@@ -314,7 +313,7 @@ It creates a single domain function out of a composition of multiple domain func
 It will pass the same environment to all given functions and pass the output of one to the next's input in left-to-right order.
 The resulting data is going to be the output of the rightmost function.
 
-Note that there is no type-level assurance (yet) that one function output will be succesfully parsed by the next function in the pipeline.
+Note that there is no type-level assurance that one function output will be succesfully parsed by the next function in the pipeline.
 ```ts
 const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
   async ({ aNumber }) => ({
@@ -446,7 +445,7 @@ function Form() {
   )
 }
 
-export const action = async ({ request }) => {
+async (request: Request) => {
   const values = await inputFromForm(request)
   // values = { email: 'john@doe.com', password: '1234' }
 }
@@ -478,7 +477,7 @@ function Form() {
   )
 }
 
-export const action = async ({ request }) => {
+async (request: Request) => {
   const values = inputFromUrl(request)
   // values = { page: '2' }
 }
@@ -511,7 +510,7 @@ function Form() {
   )
 }
 
-export const action = async ({ request }) => {
+async (request: Request) => {
   const values = await inputFromForm(request)
   /*
   values = {
