@@ -1,5 +1,5 @@
-import * as z from 'zod'
-import type { ErrorWithMessage, SchemaError } from './types'
+import { z } from 'https://deno.land/x/zod/mod.ts'
+import type { ErrorWithMessage, SchemaError } from './types.ts'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (

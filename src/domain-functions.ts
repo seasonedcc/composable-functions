@@ -1,18 +1,19 @@
-import * as z from 'zod'
+import { z } from 'https://deno.land/x/zod/mod.ts'
+
 import {
   EnvironmentError,
   InputError,
   InputErrors,
   schemaError,
   toErrorWithMessage,
-} from './errors'
+} from './errors.ts'
 import {
   DomainFunction,
   ErrorData,
   Result,
   SchemaError,
   SuccessResult,
-} from './types'
+} from './types.ts'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,

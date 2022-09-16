@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest'
-import * as z from 'zod'
+import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
+import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
+import { z } from 'https://deno.land/x/zod/mod.ts'
 
-import { makeDomainFunction } from './domain-functions'
-import { errorMessagesFor, errorMessagesForSchema, schemaError } from './errors'
+import { makeDomainFunction } from './domain-functions.ts'
+
+import {
+  errorMessagesFor,
+  errorMessagesForSchema,
+  schemaError,
+} from './errors.ts'
 
 const errors = [
   { path: ['a'], message: 'a' },
@@ -12,7 +18,7 @@ const errors = [
 
 describe('schemaError', () => {
   it('returns a SchemaError from a message and a path using dot notation', () => {
-    expect(schemaError('this is an error message', 'b.c')).toEqual({
+    assertEquals(schemaError('this is an error message', 'b.c'), {
       message: 'this is an error message',
       path: ['b', 'c'],
     })
@@ -21,16 +27,16 @@ describe('schemaError', () => {
 
 describe('errorMessagesFor', () => {
   it('returns a list of error messages for a given name', () => {
-    expect(errorMessagesFor(errors, 'b')).toEqual(['b', 'c'])
+    assertEquals(errorMessagesFor(errors, 'b'), ['b', 'c'])
   })
 
   it('returns an empty list if no error messages can be found', () => {
-    expect(errorMessagesFor(errors, 'c')).toEqual([])
+    assertEquals(errorMessagesFor(errors, 'c'), [])
   })
 
   it('returns a list of error messages for a deep property of the formData', async () => {
     const err = [{ path: ['person', '0', 'email'], message: 'Invalid email' }]
-    expect(errorMessagesFor(err, 'person.0.email')).toEqual(['Invalid email'])
+    assertEquals(errorMessagesFor(err, 'person.0.email'), ['Invalid email'])
   })
 })
 
@@ -40,14 +46,14 @@ const schema = z.object({
 })
 describe('errorMessagesForSchema', () => {
   it('returns an object with error messages for every key of the given schema', () => {
-    expect(errorMessagesForSchema(errors, schema)).toEqual({
+    assertEquals(errorMessagesForSchema(errors, schema), {
       a: ['a'],
       b: ['b', 'c'],
     })
   })
 
   it('has type inference for the results of this function', () => {
-    expect(errorMessagesForSchema(errors, schema).a).toEqual(['a'])
+    assertEquals(errorMessagesForSchema(errors, schema).a, ['a'])
   })
 
   it('handles nested data errors', async () => {
@@ -83,7 +89,7 @@ describe('errorMessagesForSchema', () => {
     const result = await domainFn(data)
 
     const errors = errorMessagesForSchema(result.inputErrors, schema)
-    expect(errors).toEqual({
+    assertEquals(errors, {
       c: { c2: ['Expected array, received string'] },
       d: {
         d1: ['Expected object, received string'],
@@ -125,7 +131,7 @@ describe('errorMessagesForSchema', () => {
     const result = await domainFn(data)
 
     const errors = errorMessagesForSchema(result.inputErrors, schema)
-    expect(errors).toEqual({
+    assertEquals(errors, {
       c: {
         c2: {
           '1': ['Expected string, received number'],
@@ -172,7 +178,7 @@ describe('errorMessagesForSchema', () => {
     const result = await domainFn(data)
 
     const errors = errorMessagesForSchema(result.inputErrors, schema)
-    expect(errors).toEqual({
+    assertEquals(errors, {
       c: {
         c2: {
           '0': ['Expected object, received string'],
