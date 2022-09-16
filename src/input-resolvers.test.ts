@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
+import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
 
-import * as subject from './input-resolvers'
+import * as subject from './input-resolvers.ts'
 
 const makePost: (entries: Array<[string, string]>, url?: string) => Request = (
   entries,
@@ -28,7 +29,7 @@ describe('inputFromForm', () => {
       ['foo', 'bar'],
       ['fizz', 'buzz'],
     ])
-    expect(await subject.inputFromForm(request)).toEqual({
+    assertEquals(await subject.inputFromForm(request), {
       foo: 'bar',
       fizz: 'buzz',
     })
@@ -40,7 +41,7 @@ describe('inputFromForm', () => {
       ['arr[]', '1'],
       ['arr[]', '2'],
     ])
-    expect(await subject.inputFromForm(request)).toEqual({
+    assertEquals(await subject.inputFromForm(request), {
       foo: 'bar',
       arr: ['1', '2'],
     })
@@ -53,7 +54,7 @@ describe('inputFromForm', () => {
       ['person[1][name]', 'Bill'],
       ['person[1][email]', 'bill@email.com'],
     ])
-    expect(await subject.inputFromForm(request)).toEqual({
+    assertEquals(await subject.inputFromForm(request), {
       person: [
         { name: 'John', email: 'john@email.com' },
         { name: 'Bill', email: 'bill@email.com' },
@@ -68,7 +69,7 @@ describe('inputFromUrl', () => {
       ['foo', 'bar'],
       ['fizz', 'buzz'],
     ])
-    expect(subject.inputFromUrl(request)).toEqual({ foo: 'bar', fizz: 'buzz' })
+    assertEquals(subject.inputFromUrl(request), { foo: 'bar', fizz: 'buzz' })
   })
 
   it('accepts array-like values', async () => {
@@ -77,7 +78,7 @@ describe('inputFromUrl', () => {
       ['arr[]', '1'],
       ['arr[]', '2'],
     ])
-    expect(await subject.inputFromUrl(request)).toEqual({
+    assertEquals(await subject.inputFromUrl(request), {
       foo: 'bar',
       arr: ['1', '2'],
     })
@@ -90,7 +91,7 @@ describe('inputFromUrl', () => {
       ['person[1][name]', 'Bill'],
       ['person[1][email]', 'bill@email.com'],
     ])
-    expect(await subject.inputFromUrl(request)).toEqual({
+    assertEquals(await subject.inputFromUrl(request), {
       person: [
         { email: 'john@email.com', name: 'John' },
         { name: 'Bill', email: 'bill@email.com' },
@@ -107,7 +108,7 @@ describe('inputFromFormData', () => {
       ['person[1][name]', 'Bill'],
       ['person[1][email]', 'bill@email.com'],
     ])
-    expect(subject.inputFromFormData(await request.formData())).toEqual({
+    assertEquals(subject.inputFromFormData(await request.formData()), {
       person: [
         { name: 'John', email: 'john@email.com' },
         { name: 'Bill', email: 'bill@email.com' },
@@ -120,7 +121,7 @@ describe('inputFromFormData', () => {
     formData.append('email', 'john@doe.com')
     formData.append('tasks[]', 'one')
     formData.append('tasks[]', 'two')
-    expect(subject.inputFromFormData(formData)).toEqual({
+    assertEquals(subject.inputFromFormData(formData), {
       email: 'john@doe.com',
       tasks: ['one', 'two'],
     })
@@ -135,7 +136,7 @@ describe('inputFromSearch', () => {
       ['person[1][name]', 'Bill'],
       ['person[1][email]', 'bill@email.com'],
     ])
-    expect(subject.inputFromSearch(new URL(request.url).searchParams)).toEqual({
+    assertEquals(subject.inputFromSearch(new URL(request.url).searchParams), {
       person: [
         { email: 'john@email.com', name: 'John' },
         { name: 'Bill', email: 'bill@email.com' },
@@ -148,7 +149,7 @@ describe('inputFromSearch', () => {
     qs.append('colors[]', 'red')
     qs.append('colors[]', 'green')
     qs.append('colors[]', 'blue')
-    expect(subject.inputFromSearch(qs)).toEqual({
+    assertEquals(subject.inputFromSearch(qs), {
       colors: ['red', 'green', 'blue'],
     })
   })

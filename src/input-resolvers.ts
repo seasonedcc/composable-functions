@@ -1,4 +1,4 @@
-import qs from 'qs'
+import { qs } from 'https://deno.land/x/deno_qs/mod.ts'
 
 const inputFromSearch = (queryString: URLSearchParams) =>
   qs.parse(queryString.toString())
