@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import * as z from 'zod'
+import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
+import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
+import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import {
   mapError,
@@ -7,9 +8,9 @@ import {
   pipe,
   all,
   makeDomainFunction,
-} from './domain-functions'
-import { EnvironmentError, InputError, InputErrors } from './errors'
-import { ErrorData, SuccessResult } from './types'
+} from './domain-functions.ts'
+import { EnvironmentError, InputError, InputErrors } from './errors.ts'
+import { ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {
@@ -18,7 +19,7 @@ describe('makeDomainFunction', () => {
 
       const handler = makeDomainFunction(parser)(async ({ id }) => id)
 
-      expect(await handler({ id: '1' })).toEqual({
+      assertEquals(await handler({ id: '1' }), {
         success: true,
         data: 1,
         errors: [],
@@ -31,7 +32,7 @@ describe('makeDomainFunction', () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
       const handler = makeDomainFunction(parser)(async ({ id }) => id)
 
-      expect(await handler({ missingId: '1' })).toEqual({
+      assertEquals(await handler({ missingId: '1' }), {
         success: false,
         inputErrors: [
           { message: 'Expected number, received nan', path: ['id'] },
@@ -51,7 +52,7 @@ describe('makeDomainFunction', () => {
       envParser,
     )(async ({ id }, { uid }) => [id, uid])
 
-    expect(await handler({ id: '1' }, { uid: '2' })).toEqual({
+    assertEquals(await handler({ id: '1' }, { uid: '2' }), {
       success: true,
       data: [1, 2],
       errors: [],
@@ -78,7 +79,7 @@ describe('makeDomainFunction', () => {
       envParser,
     )(async ({ id }, { uid }) => [id, uid])
 
-    expect(await handler({ id: '1' }, { uid: '2' })).toEqual({
+    assertEquals(await handler({ id: '1' }, { uid: '2' }), {
       success: false,
       errors: [],
       inputErrors: [{ message: 'ID already taken', path: ['id'] }],
@@ -89,7 +90,7 @@ describe('makeDomainFunction', () => {
   it('accepts literals as input of domain functions', async () => {
     const foo = makeDomainFunction(z.number(), z.string())(async (n) => n + 1)
     const result = await foo(1, 'not going to be used')
-    expect((result as SuccessResult<number>).data).toEqual(2)
+    assertEquals((result as SuccessResult<number>).data, 2)
   })
 
   it('returns error when environment parsing fails', async () => {
@@ -101,7 +102,7 @@ describe('makeDomainFunction', () => {
       envParser,
     )(async ({ id }, { uid }) => [id, uid])
 
-    expect(await handler({ id: '1' }, {})).toEqual({
+    assertEquals(await handler({ id: '1' }, {}), {
       success: false,
       inputErrors: [],
       environmentErrors: [
@@ -118,7 +119,7 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    expect(await domainFunction({ id: 1 })).toEqual({
+    assertEquals(await domainFunction({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error' }],
       inputErrors: [],
@@ -133,7 +134,7 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    expect(await domainFunction({ id: 1 })).toEqual({
+    assertEquals(await domainFunction({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error' }],
       inputErrors: [],
@@ -148,7 +149,7 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    expect(await domainFunction({ id: 1 })).toEqual({
+    assertEquals(await domainFunction({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error' }],
       inputErrors: [],
@@ -163,7 +164,7 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    expect(await domainFunction({ id: 1 })).toEqual({
+    assertEquals(await domainFunction({ id: 1 }), {
       success: false,
       errors: [],
       inputErrors: [{ message: 'Custom input error', path: ['contact', 'id'] }],
@@ -181,7 +182,7 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    expect(await domainFunction({ id: 1 })).toEqual({
+    assertEquals(await domainFunction({ id: 1 }), {
       success: false,
       errors: [],
       inputErrors: [
@@ -199,7 +200,7 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    expect(await domainFunction({ id: 1 })).toEqual({
+    assertEquals(await domainFunction({ id: 1 }), {
       success: false,
       errors: [],
       inputErrors: [],
@@ -221,7 +222,7 @@ describe('all', () => {
 
     const c = all(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: true,
       data: [2, 0],
       errors: [],
@@ -243,7 +244,7 @@ describe('all', () => {
 
     const results = await all(a, b, c)({ id: 1 })
 
-    expect(results).toEqual({
+    assertEquals(results, {
       success: true,
       data: ['1', 2, true],
       errors: [],
@@ -262,7 +263,7 @@ describe('all', () => {
 
     const c = all(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: false,
       inputErrors: [
         {
@@ -285,7 +286,7 @@ describe('all', () => {
 
     const c = all(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error' }],
       inputErrors: [],
@@ -303,7 +304,7 @@ describe('all', () => {
 
     const c = all(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: false,
       inputErrors: [
         {
@@ -330,7 +331,7 @@ describe('all', () => {
 
     const c = all(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
@@ -352,7 +353,7 @@ describe('pipe', () => {
 
     const c = pipe(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: true,
       data: 2,
       errors: [],
@@ -375,7 +376,7 @@ describe('pipe', () => {
 
     const c = pipe(a, b)
 
-    expect(await c(undefined, { env: 1 })).toEqual({
+    assertEquals(await c(undefined, { env: 1 }), {
       success: true,
       data: 4,
       errors: [],
@@ -399,7 +400,7 @@ describe('pipe', () => {
 
     const c = pipe(a, b)
 
-    expect(await c(undefined, {})).toEqual({
+    assertEquals(await c(undefined, {}), {
       success: false,
       errors: [],
       inputErrors: [],
@@ -423,7 +424,7 @@ describe('pipe', () => {
 
     const c = pipe(a, b)
 
-    expect(await c({ inp: 'some invalid input' }, { env: 1 })).toEqual({
+    assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
       success: false,
       errors: [],
       inputErrors: [
@@ -447,7 +448,7 @@ describe('pipe', () => {
 
     const c = pipe(a, b)
 
-    expect(await c(undefined, { env: 1 })).toEqual({
+    assertEquals(await c(undefined, { env: 1 }), {
       success: false,
       errors: [],
       inputErrors: [
@@ -474,7 +475,7 @@ describe('pipe', () => {
 
     const d = pipe(a, b, c)
 
-    expect(await d({ aNumber: 1 })).toEqual({
+    assertEquals(await d({ aNumber: 1 }), {
       success: true,
       data: false,
       errors: [],
@@ -493,7 +494,7 @@ describe('map', () => {
 
     const c = map(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: true,
       data: 3,
       errors: [],
@@ -509,7 +510,7 @@ describe('map', () => {
 
     const c = map(a, b)
 
-    expect(await c({ invalidInput: '1' })).toEqual({
+    assertEquals(await c({ invalidInput: '1' }), {
       success: false,
       errors: [],
       inputErrors: [{ message: 'Required', path: ['id'] }],
@@ -527,7 +528,7 @@ describe('map', () => {
 
     const c = map(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: false,
       errors: [{ message: 'failed to map' }],
       inputErrors: [],
@@ -549,7 +550,7 @@ describe('mapError', () => {
 
     const c = mapError(a, b)
 
-    expect(await c({ id: 1 })).toEqual({
+    assertEquals(await c({ id: 1 }), {
       success: true,
       data: 2,
       errors: [],
@@ -572,7 +573,7 @@ describe('mapError', () => {
 
     const c = mapError(a, b)
 
-    expect(await c({ invalidInput: '1' })).toEqual({
+    assertEquals(await c({ invalidInput: '1' }), {
       success: false,
       errors: [{ message: 'Number of errors: 0' }],
       inputErrors: [{ message: 'Number of input errors: 1' }],
@@ -589,7 +590,7 @@ describe('mapError', () => {
 
     const c = mapError(a, b)
 
-    expect(await c({ invalidInput: '1' })).toEqual({
+    assertEquals(await c({ invalidInput: '1' }), {
       success: false,
       errors: [{ message: 'failed to map' }],
       inputErrors: [],
