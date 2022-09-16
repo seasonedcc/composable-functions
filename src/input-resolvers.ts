@@ -1,7 +1,10 @@
-import { qs } from 'https://deno.land/x/deno_qs/mod.ts'
+import * as qsModule from 'https://deno.land/x/deno_qs@0.0.1/mod.ts'
+
+// Little hack to ensure we are compatible with the default export of qs in NPM
+const qs = qsModule.qs ? qsModule.qs : qsModule
 
 const inputFromSearch = (queryString: URLSearchParams) =>
-  qs.parse(queryString.toString())
+  (qs as typeof qsModule.qs).parse(queryString.toString())
 
 const inputFromFormData = (formData: FormData) =>
   inputFromSearch(new URLSearchParams(formData as URLSearchParams))
