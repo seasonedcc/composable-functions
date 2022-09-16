@@ -1,4 +1,4 @@
-import { z } from 'https://deno.land/x/zod/mod.ts'
+import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 import type { ErrorWithMessage, SchemaError } from './types.ts'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
