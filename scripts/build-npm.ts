@@ -1,5 +1,6 @@
 // ex. scripts/build_npm.ts
 import { build, emptyDir } from 'https://deno.land/x/dnt@0.25.2/mod.ts'
+import pkg from '../package.json' assert { type: 'json' }
 
 await emptyDir('./npm')
 
@@ -25,7 +26,7 @@ await build({
   },
   package: {
     name: 'domain-functions',
-    version: Deno.args[0],
+    version: pkg.version,
     description:
       'Decouple your business logic from your controllers. With first-class type inference from end to end.',
     license: 'MIT',

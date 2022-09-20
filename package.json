@@ -11,8 +11,8 @@
     "test": "deno test --allow-env --allow-net --unstable src/*.test.ts",
     "build": "deno bundle src/index.ts dist/index.min.js",
     "cli": "deno run --allow-env --allow-net --unstable src/cli.ts",
-    "prepublishOnly": "npm run build",
-    "npm-build": "deno run -A scripts/build-npm.ts 0.0.1"
+    "prepublishOnly": "npm run npm-build && cd npm/",
+    "npm-build": "deno run -A scripts/build-npm.ts"
   },
   "repository": {
     "type": "git",
