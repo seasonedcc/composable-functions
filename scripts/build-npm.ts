@@ -5,7 +5,7 @@ await emptyDir('./npm')
 
 await build({
   typeCheck: false,
-  declaration: false,
+  declaration: true,
   entryPoints: ['./src/index.ts'],
   outDir: './npm',
   shims: {
