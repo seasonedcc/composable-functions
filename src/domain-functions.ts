@@ -3,7 +3,8 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, formatSchemaErrors } from './utils.ts'
-import type { DomainFunction, ErrorData, Last } from './types.ts'
+import type { DomainFunction, ErrorData } from './types.ts'
+import type { Last, List, ListToResultData } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
 type MakeDomainFunction = <
@@ -87,10 +88,10 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-type Unpack<T> = T extends DomainFunction<infer F> ? F : T
-function all<T extends readonly unknown[] | []>(
-  ...fns: T
-): DomainFunction<{ -readonly [P in keyof T]: Unpack<T[P]> }> {
+type All = <Fns extends DomainFunction[]>(
+  ...fns: Fns
+) => DomainFunction<List.Map<ListToResultData, Fns>>
+const all: All = (...fns) => {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -113,7 +114,7 @@ function all<T extends readonly unknown[] | []>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as unknown as SuccessResult<{ -readonly [P in keyof T]: Unpack<T[P]> }>
+    } as SuccessResult<List.Map<ListToResultData, typeof fns>>
   }
 }
 
