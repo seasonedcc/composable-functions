@@ -19,6 +19,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
     - [errorMessagesForSchema](#errormessagesforschema)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
+  - [merge](#merge)
   - [pipe](#pipe)
   - [map](#map)
   - [mapError](#maperror)
@@ -316,6 +317,40 @@ const results = await all(a, b)({ id: 1 })
   inputErrors: [],
   environmentErrors: [],
 }*/
+```
+
+### merge
+
+It works exactly like the `all` function __but the shape of the result__ is different.
+Instead of a tuple, it will merge every result into an object.
+
+The reasoning behind this is that it's easier to work with objects with named variables than long tuples when composing many domain functions.
+```ts
+const a = makeDomainFunction(z.object({}))(async () => ({ resultA: '1' }))
+const b = makeDomainFunction(z.object({}))(async () => ({ resultB: 2 }))
+const c = makeDomainFunction(z.object({}))(async () => ({ resultC: true }))
+
+const results = await merge(a, b, c)({})
+```
+
+On the exemple above, the result will be of type `Result<{ resultA: string, resultB: number, resultC: boolean }>`:
+```ts
+{
+  success: true,
+  data: { resultA: '1', resultB: 2, resultC: true },
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+__Make sure you respect__ the shape of every domain function's return. If any domain function return is not an object, the resulting domain function will return an `ErrorResult` like so:
+```ts
+{
+  success: false,
+  errors: [{ message: 'Invalid data format returned from some domain functions' }],
+  inputErrors: [],
+  environmentErrors: [],
+}
 ```
 
 ### pipe
