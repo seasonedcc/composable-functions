@@ -10,7 +10,7 @@ const inputFromFormData = (formData: FormData) =>
   inputFromSearch(new URLSearchParams(formData as URLSearchParams))
 
 const inputFromForm = async (request: {
-  clone: () => { formData: () => FormData }
+  clone: () => { formData: () => Promise<FormData> }
 }) => inputFromFormData(await request.clone().formData())
 
 const inputFromUrl = (request: { url: string }) =>
