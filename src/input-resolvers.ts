@@ -9,10 +9,11 @@ const inputFromSearch = (queryString: URLSearchParams) =>
 const inputFromFormData = (formData: FormData) =>
   inputFromSearch(new URLSearchParams(formData as URLSearchParams))
 
-const inputFromForm = async (request: Request) =>
-  inputFromFormData(await request.clone().formData())
+const inputFromForm = async (request: {
+  clone: () => { formData: () => FormData }
+}) => inputFromFormData(await request.clone().formData())
 
-const inputFromUrl = (request: Request) =>
+const inputFromUrl = (request: { url: string }) =>
   inputFromSearch(new URL(request.url).searchParams)
 
 export { inputFromForm, inputFromUrl, inputFromFormData, inputFromSearch }
