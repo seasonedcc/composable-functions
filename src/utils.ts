@@ -1,6 +1,6 @@
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import type { Result, SchemaError, SuccessResult } from './types.ts'
+import type { MergeObjs, Result, SchemaError, SuccessResult } from './types.ts'
 
 const formatSchemaErrors = (errors: z.ZodIssue[]): SchemaError[] =>
   errors.map((error) => {
@@ -12,4 +12,7 @@ function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
   return result.every(({ success }) => success === true)
 }
 
-export { formatSchemaErrors, isListOfSuccess }
+const mergeObjects = <T extends unknown[] = unknown[]>(objs: T) =>
+  Object.assign({}, ...objs) as MergeObjs<T>
+
+export { formatSchemaErrors, mergeObjects, isListOfSuccess }

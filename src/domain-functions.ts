@@ -2,8 +2,8 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
-import { isListOfSuccess, formatSchemaErrors } from './utils.ts'
-import type { DomainFunction, ErrorData } from './types.ts'
+import { isListOfSuccess, formatSchemaErrors, mergeObjects } from './utils.ts'
+import type { DomainFunction, ErrorData, MergeObjs } from './types.ts'
 import type { Last, List, ListToResultData } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
@@ -118,6 +118,50 @@ const all: All = (...fns) => {
   }
 }
 
+type Merge = <Fns extends DomainFunction[]>(
+  ...fns: Fns
+) => DomainFunction<MergeObjs<List.Map<ListToResultData, Fns>>>
+const merge: Merge = (...fns) => {
+  return async (input, environment) => {
+    const results = await Promise.all(
+      fns.map((fn) => (fn as DomainFunction)(input, environment)),
+    )
+
+    if (!isListOfSuccess(results)) {
+      return {
+        success: false,
+        errors: results.map(({ errors }) => errors).flat(),
+        inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
+        environmentErrors: results
+          .map(({ environmentErrors }) => environmentErrors)
+          .flat(),
+      }
+    }
+
+    const collectedResults = results.map(({ data }) => data)
+
+    const resultSchema = z.array(z.object({}))
+    if (!resultSchema.safeParse(collectedResults).success) {
+      return {
+        success: false,
+        errors: [
+          { message: 'Invalid data format returned from some domainFunction' },
+        ],
+        inputErrors: [],
+        environmentErrors: [],
+      }
+    }
+
+    return {
+      success: true,
+      data: mergeObjects(collectedResults),
+      inputErrors: [],
+      environmentErrors: [],
+      errors: [],
+    } as SuccessResult<MergeObjs<List.Map<ListToResultData, typeof fns>>>
+  }
+}
+
 type Pipe = <T extends DomainFunction[]>(...fns: T) => Last<T>
 const pipe: Pipe = (...fns) => {
   const [head, ...tail] = fns
@@ -186,4 +230,4 @@ const mapError: MapError = (dfn, mapper) => {
   }
 }
 
-export { makeDomainFunction, all, pipe, map, mapError }
+export { makeDomainFunction, all, pipe, map, mapError, merge }
