@@ -9,6 +9,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 
 - [Benefits](#benefits)
 - [Quickstart](#quickstart)
+- [Using Deno](#using-deno)
 - [Create your first action with Remix](#create-your-first-action-with-remix)
 - [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
 - [Dealing with errors](#dealing-with-errors)
@@ -75,6 +76,16 @@ failedResult = {
 ```
 
 To understand how to build the schemas, refer to [Zod documentation](https://github.com/colinhacks/zod#defining-schemas).
+
+## Using Deno
+
+If you are using [Deno](https://deno.land/) just import directly the functions you need from [deno.land/x](https://deno.land/x) as in
+
+```ts
+import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts";
+```
+
+This documentation will use Node.JS imports by convention, just replace `domain-functions` with `https://deno.land/x/domain_functions/mod.ts` when using [Deno](https://deno.land/).
 
 ## Create your first action with Remix
 ```tsx
