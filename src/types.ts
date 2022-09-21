@@ -35,7 +35,6 @@ type UnpackSuccess<F extends DomainFunction> = Extract<
 >
 type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
-
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
@@ -52,6 +51,4 @@ export type {
   UnpackData,
   UnpackResult,
   UnpackSuccess,
-  UnpackData,
-  ErrorWithMessage,
 }

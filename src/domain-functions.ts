@@ -2,8 +2,9 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
-import type { DomainFunction, ErrorData, SchemaError } from './types.ts'
-import type { Result, SuccessResult } from './types.ts'
+import { isListOfSuccess, formatSchemaErrors } from './utils.ts'
+import type { DomainFunction, ErrorData, Last } from './types.ts'
+import type { SuccessResult } from './types.ts'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -17,12 +18,6 @@ type MakeDomainFunction = <
     environmentSchema: z.infer<EnvSchema>,
   ) => Promise<Output>,
 ) => DomainFunction<Output>
-
-const formatSchemaErrors = (errors: z.ZodIssue[]): SchemaError[] =>
-  errors.map((error) => {
-    const { path, message } = error
-    return { path: path.map(String), message }
-  })
 
 const makeDomainFunction: MakeDomainFunction =
   (
@@ -122,16 +117,8 @@ function all<T extends readonly unknown[] | []>(
   }
 }
 
-function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
-  return result.every(({ success }) => success === true)
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Last<T extends readonly unknown[]> = T extends [...infer I, infer L]
-  ? L
-  : never
-type Flow = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
-const pipe: Flow = (...fns) => {
+type Pipe = <T extends DomainFunction[]>(...fns: T) => Last<T>
+const pipe: Pipe = (...fns) => {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -150,7 +137,6 @@ type Map = <O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R,
 ) => DomainFunction<R>
-
 const map: Map = (dfn, mapper) => {
   return async (input, environment) => {
     const result = await dfn(input, environment)
@@ -175,11 +161,11 @@ const map: Map = (dfn, mapper) => {
     }
   }
 }
+
 type MapError = <O>(
   dfn: DomainFunction<O>,
   mapper: (element: ErrorData) => ErrorData,
 ) => DomainFunction<O>
-
 const mapError: MapError = (dfn, mapper) => {
   return async (input, environment) => {
     const result = await dfn(input, environment)
