@@ -1,19 +1,11 @@
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import {
-  EnvironmentError,
-  InputError,
-  InputErrors,
-  schemaError,
-  toErrorWithMessage,
-} from './errors.ts'
-import {
-  DomainFunction,
-  ErrorData,
-  Result,
-  SchemaError,
-  SuccessResult,
-} from './types.ts'
+import { EnvironmentError, InputError, InputErrors } from './errors.ts'
+import { schemaError, toErrorWithMessage } from './errors.ts'
+import { isListOfSuccess, formatSchemaErrors } from './utils.ts'
+import type { DomainFunction, ErrorData } from './types.ts'
+import type { Last, List, ListToResultData } from './types.ts'
+import type { SuccessResult } from './types.ts'
 
 type MakeDomainFunction = <
   Schema extends z.ZodTypeAny,
@@ -27,12 +19,6 @@ type MakeDomainFunction = <
     environmentSchema: z.infer<EnvSchema>,
   ) => Promise<Output>,
 ) => DomainFunction<Output>
-
-const formatSchemaErrors = (errors: z.ZodIssue[]): SchemaError[] =>
-  errors.map((error) => {
-    const { path, message } = error
-    return { path: path.map(String), message }
-  })
 
 const makeDomainFunction: MakeDomainFunction =
   (
@@ -102,10 +88,10 @@ const makeDomainFunction: MakeDomainFunction =
     return domainFunction
   }
 
-type Unpack<T> = T extends DomainFunction<infer F> ? F : T
-function all<T extends readonly unknown[] | []>(
-  ...fns: T
-): DomainFunction<{ -readonly [P in keyof T]: Unpack<T[P]> }> {
+type All = <Fns extends DomainFunction[]>(
+  ...fns: Fns
+) => DomainFunction<List.Map<ListToResultData, Fns>>
+const all: All = (...fns) => {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -128,20 +114,12 @@ function all<T extends readonly unknown[] | []>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as unknown as SuccessResult<{ -readonly [P in keyof T]: Unpack<T[P]> }>
+    } as SuccessResult<List.Map<ListToResultData, typeof fns>>
   }
 }
 
-function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
-  return result.every(({ success }) => success === true)
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Last<T extends readonly unknown[]> = T extends [...infer I, infer L]
-  ? L
-  : never
-type Flow = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
-const pipe: Flow = (...fns) => {
+type Pipe = <T extends DomainFunction[]>(...fns: T) => Last<T>
+const pipe: Pipe = (...fns) => {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -160,7 +138,6 @@ type Map = <O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R,
 ) => DomainFunction<R>
-
 const map: Map = (dfn, mapper) => {
   return async (input, environment) => {
     const result = await dfn(input, environment)
@@ -185,11 +162,11 @@ const map: Map = (dfn, mapper) => {
     }
   }
 }
+
 type MapError = <O>(
   dfn: DomainFunction<O>,
   mapper: (element: ErrorData) => ErrorData,
 ) => DomainFunction<O>
-
 const mapError: MapError = (dfn, mapper) => {
   return async (input, environment) => {
     const result = await dfn(input, environment)

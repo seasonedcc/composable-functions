@@ -2,15 +2,10 @@ import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import {
-  mapError,
-  map,
-  pipe,
-  all,
-  makeDomainFunction,
-} from './domain-functions.ts'
+import { mapError, makeDomainFunction } from './domain-functions.ts'
+import { map, pipe, all } from './domain-functions.ts'
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
-import { ErrorData, SuccessResult } from './types.ts'
+import type { ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no environment', () => {

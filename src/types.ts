@@ -35,15 +35,55 @@ type UnpackSuccess<F extends DomainFunction> = Extract<
 >
 type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
+namespace List {
+  type PopList<T extends unknown[]> = T extends [...infer R, unknown] ? R : T
+  type PopItem<T extends unknown[]> = T extends [...unknown[], infer A]
+    ? A
+    : unknown
+  type IntMapItem<L extends unknown[], M extends Mapper> = M & {
+    Value: PopItem<L>
+    Index: PopList<L>['length']
+  }
+  type IntMapList<
+    MapToType extends Mapper,
+    ListItems extends unknown[],
+    Collected extends unknown[] = [],
+  > = ListItems['length'] extends 0
+    ? Collected
+    : IntMapList<
+        MapToType,
+        PopList<ListItems>,
+        [IntMapItem<ListItems, MapToType>['Return'], ...Collected]
+      >
+
+  export type Mapper<I = unknown, O = unknown> = {
+    Index: number
+    Value: I
+    Return: O
+  }
+  export type Map<M extends Mapper, L extends unknown[]> = IntMapList<M, L, []>
+}
+
+interface ListToResultData extends List.Mapper<DomainFunction> {
+  Return: UnpackData<this['Value']>
+}
+
+type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
+  ? L
+  : never
+
 export type {
   DomainFunction,
+  ErrorData,
+  ErrorResult,
+  ErrorWithMessage,
+  Last,
+  List,
+  ListToResultData,
   Result,
   SchemaError,
   SuccessResult,
-  ErrorResult,
-  ErrorData,
+  UnpackData,
   UnpackResult,
   UnpackSuccess,
-  UnpackData,
-  ErrorWithMessage,
 }
