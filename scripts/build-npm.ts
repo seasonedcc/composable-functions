@@ -5,22 +5,14 @@ import pkg from '../package.json' assert { type: 'json' }
 await emptyDir('./npm')
 
 await build({
-  scriptModule: false,
+  scriptModule: 'cjs',
   typeCheck: false,
   declaration: true,
   entryPoints: ['./src/index.ts'],
   outDir: './npm',
   shims: {
     deno: true,
-    custom: [
-      {
-        package: {
-          name: 'node-fetch',
-          version: '^3.2.10',
-        },
-        globalNames: [{ name: 'Request' }, { name: 'FormData' }],
-      },
-    ],
+    undici: true,
   },
   mappings: {
     'https://deno.land/x/zod@v3.19.1/mod.ts': {
