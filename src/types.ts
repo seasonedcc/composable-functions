@@ -35,6 +35,13 @@ type UnpackSuccess<F extends DomainFunction> = Extract<
 >
 type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
+type MergeObjs<Objs extends unknown[]> = Objs extends [
+  infer First,
+  ...infer Rest,
+]
+  ? First & MergeObjs<Rest>
+  : {}
+
 namespace List {
   type PopList<T extends unknown[]> = T extends [...infer R, unknown] ? R : T
   type PopItem<T extends unknown[]> = T extends [...unknown[], infer A]
@@ -80,6 +87,7 @@ export type {
   Last,
   List,
   ListToResultData,
+  MergeObjs,
   Result,
   SchemaError,
   SuccessResult,
