@@ -21,17 +21,19 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [all](#all)
   - [merge](#merge)
   - [pipe](#pipe)
+  - [sequence](#sequence)
   - [map](#map)
   - [mapError](#maperror)
+- [Improve type inference with Utility Types](#improve-type-inference-with-utility-types)
+  - [mergeObjects](#mergeobjects)
+  - [UnpackData](#unpackdata)
+  - [UnpackSuccess](#unpacksuccess)
+  - [UnpackResult](#unpackresult)
 - [Extracting input values for domain functions](#extracting-input-values-for-domain-functions)
   - [inputFromForm](#inputfromform)
   - [inputFromFormData](#inputfromformdata)
   - [inputFromUrl](#inputfromurl)
   - [inputFromSearch](#inputfromsearch)
-- [Improve type inference with Utility Types](#improve-type-inference-with-utility-types)
-  - [UnpackData](#unpackdata)
-  - [UnpackSuccess](#unpacksuccess)
-  - [UnpackResult](#unpackresult)
 - [Resources](#resources)
 - [Acknowlegements](#acknowlegements)
 
@@ -393,6 +395,48 @@ On the exemple above, the result will be of type `Result<boolean>`:
 
 If one functions fails, the execution will halt and the error returned.
 
+### sequence
+
+It works exactly like the `pipe` function __but the shape of the result__ is different.
+Instead of returning only the result of the last domain function, it will save every result along the way, returning them all in a tuple similar to the `all` function.
+
+```ts
+const a = makeDomainFunction(z.number())(async (aNumber) => String(aNumber))
+const b = makeDomainFunction(z.string())(async (aString) => aString === '1')
+
+const c = sequence(a, b)
+
+const result = await c(1)
+```
+
+On the exemple above, the result will be of type `Result<[string, boolean]>`:
+```ts
+{
+  success: true,
+  data: ['1', true],
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+If you'd rather have an object instead of a tuple (in the same fashion as the `merge` function), you can use the `map` along with the `mergeObjects` method like so:
+```ts
+import { mergeObjects } from 'domain-functions'
+
+const a = makeDomainFunction(z.number())(async (aNumber) => ({
+  aString: String(aNumber)
+}))
+const b = makeDomainFunction(z.object({ aString: z.string() }))(
+  async ({ aString }) => ({ aBoolean: aString === '1' })
+)
+
+const c = map(sequence(a, b), mergeObjects)
+
+const result = await c(1)
+```
+On the exemple above, the result will be of type `Result<{ aString: string, aBoolean: boolean }>`.
+
 ### map
 
 It creates a single domain function that will apply a transformation over the `result.data` of a successful `DomainFunction`.
@@ -470,6 +514,61 @@ On the exemple above, the `result` will be:
   environmentErrors: [{ message: 'Number of environment errors: 0' }],
 }
 ```
+
+## Improve type inference with Utility Types
+
+### mergeObjects
+
+It merges an array of objects into one object keeping the type inference all the way.
+Object properties from the rightmost object will take precedence over the leftmost ones.
+
+```ts
+const a = { a: 1, b: 2 }
+const b = { b: '3', c: '4' }
+const result = mergeObjects([a, b])
+```
+The resulting object will be:
+```ts
+{ a: 1, b: '3', c: '4' }
+// inferred as { a: number, b: string, c: string }
+```
+
+### UnpackData
+It infers the returned data of a successful domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Data = UnpackData<typeof fn>
+// Data = string
+```
+
+### UnpackSuccess
+It infers the success result of a domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Success = UnpackSuccess<typeof fn>
+// Success = { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [] }
+// Which is the same as: SuccessResult<string>
+```
+### UnpackResult
+It infers the result of a domain function:
+```ts
+const fn = makeDomainFunction()(async () => '')
+
+type Result = UnpackResult<typeof fn>
+/*
+Result =
+  | { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [], }
+  | { success: false, errors: { message: string }[], inputErrors: SchemaError[], environmentErrors: SchemaError[] }
+
+* Which is the same as:
+Result<string>
+* Which is the same as:
+SuccessResult<string> | ErrorResult
+*/
+```
+
 
 ## Extracting input values for domain functions
 We export some functions to help you extract values out of your requests before sending them as user input.
@@ -568,44 +667,6 @@ async (request: Request) => {
 ```
 
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
-
-## Improve type inference with Utility Types
-
-### UnpackData
-It infers the returned data of a successful domain function:
-```ts
-const fn = makeDomainFunction()(async () => '')
-
-type Data = UnpackData<typeof fn>
-// Data = string
-```
-
-### UnpackSuccess
-It infers the success result of a domain function:
-```ts
-const fn = makeDomainFunction()(async () => '')
-
-type Success = UnpackSuccess<typeof fn>
-// Success = { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [] }
-// Which is the same as: SuccessResult<string>
-```
-### UnpackResult
-It infers the result of a domain function:
-```ts
-const fn = makeDomainFunction()(async () => '')
-
-type Result = UnpackResult<typeof fn>
-/*
-Result =
-  | { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [], }
-  | { success: false, errors: { message: string }[], inputErrors: SchemaError[], environmentErrors: SchemaError[] }
-
-* Which is the same as:
-Result<string>
-* Which is the same as:
-SuccessResult<string> | ErrorResult
-*/
-```
 
 ## Resources
 - Blog post: [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
