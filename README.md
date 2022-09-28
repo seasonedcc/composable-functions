@@ -398,7 +398,7 @@ If one functions fails, the execution will halt and the error returned.
 ### sequence
 
 It works exactly like the `pipe` function __but the shape of the result__ is different.
-Instead of returning only the result of the last domain function, it will save every result along the way, resulting them all in a tuple similar to the `all` function.
+Instead of returning only the result of the last domain function, it will save every result along the way, returning them all in a tuple similar to the `all` function.
 
 ```ts
 const a = makeDomainFunction(z.number())(async (aNumber) => String(aNumber))
