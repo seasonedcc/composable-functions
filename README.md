@@ -23,6 +23,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [pipe](#pipe)
   - [map](#map)
   - [mapError](#maperror)
+  - [mergeObjects](#mergeobjects)
 - [Extracting input values for domain functions](#extracting-input-values-for-domain-functions)
   - [inputFromForm](#inputfromform)
   - [inputFromFormData](#inputfromformdata)
@@ -469,6 +470,24 @@ On the exemple above, the `result` will be:
   inputErrors: [{ message: 'Number of input errors: 1' }],
   environmentErrors: [{ message: 'Number of environment errors: 0' }],
 }
+```
+
+### mergeObjects
+
+This method does not result in a domain function.
+It merges an array of objects into one object keeping the type inference all the way.
+
+Object properties from the rightmost object will take precedence over the leftmost ones.
+
+```ts
+const a = { a: 1, b: 2 }
+const b = { b: '3', c: '4' }
+const result = mergeObjects([a, b])
+```
+The resulting object will be:
+```ts
+{ a: 1, b: '3', c: '4' }
+// inferred as { a: number, b: string, c: string }
 ```
 
 ## Extracting input values for domain functions
