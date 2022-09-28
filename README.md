@@ -21,6 +21,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [all](#all)
   - [merge](#merge)
   - [pipe](#pipe)
+  - [sequence](#sequence)
   - [map](#map)
   - [mapError](#maperror)
   - [mergeObjects](#mergeobjects)
@@ -393,6 +394,48 @@ On the exemple above, the result will be of type `Result<boolean>`:
 ```
 
 If one functions fails, the execution will halt and the error returned.
+
+### sequence
+
+It works exactly like the `pipe` function __but the shape of the result__ is different.
+Instead of returning only the result of the last domain function, it will save every result along the way, resulting them all in a tuple similar to the `all` function.
+
+```ts
+const a = makeDomainFunction(z.number())(async (aNumber) => String(aNumber))
+const b = makeDomainFunction(z.string())(async (aString) => aString === '1')
+
+const c = sequence(a, b)
+
+const result = await c(1)
+```
+
+On the exemple above, the result will be of type `Result<[string, boolean]>`:
+```ts
+{
+  success: true,
+  data: ['1', true],
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+If you'd rather have an object instead of a tuple (in the same fashion as the `merge` function), you can use the `map` along with the `mergeObjects` method like so:
+```ts
+import { mergeObjects } from 'domain-functions'
+
+const a = makeDomainFunction(z.number())(async (aNumber) => ({
+  aString: String(aNumber)
+}))
+const b = makeDomainFunction(z.object({ aString: z.string() }))(
+  async ({ aString }) => ({ aBoolean: aString === '1' })
+)
+
+const c = map(sequence(a, b), mergeObjects)
+
+const result = await c(1)
+```
+On the exemple above, the result will be of type `Result<{ aString: string, aBoolean: boolean }>`.
 
 ### map
 
