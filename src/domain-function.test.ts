@@ -4,7 +4,12 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import { mapError, makeDomainFunction } from './domain-functions.ts'
 import { map, pipe, all, first, merge, sequence } from './domain-functions.ts'
-import { EnvironmentError, InputError, InputErrors } from './errors.ts'
+import {
+  EnvironmentError,
+  ResultError,
+  InputError,
+  InputErrors,
+} from './errors.ts'
 import type { ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
@@ -202,6 +207,28 @@ describe('makeDomainFunction', () => {
       environmentErrors: [
         { message: 'Custom env error', path: ['currentUser', 'role'] },
       ],
+    })
+  })
+
+  it('returns an error result when the domain function throws an ResultError', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw new ResultError({
+          success: false,
+          errors: [],
+          inputErrors: [
+            { message: 'Custom input error', path: ['contact', 'id'] },
+          ],
+          environmentErrors: [],
+        })
+      },
+    )
+
+    assertEquals(await domainFunction({ id: 1 }), {
+      success: false,
+      errors: [],
+      inputErrors: [{ message: 'Custom input error', path: ['contact', 'id'] }],
+      environmentErrors: [],
     })
   })
 })

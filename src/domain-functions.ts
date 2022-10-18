@@ -1,6 +1,11 @@
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import { EnvironmentError, InputError, InputErrors } from './errors.ts'
+import {
+  EnvironmentError,
+  InputError,
+  InputErrors,
+  ResultError,
+} from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, formatSchemaErrors, mergeObjects } from './utils.ts'
 import type {
@@ -73,6 +78,8 @@ const makeDomainFunction: MakeDomainFunction =
             ),
           }
         }
+        if (error instanceof ResultError) return error.result
+
         return {
           success: false,
           errors: [toErrorWithMessage(error)],
@@ -271,6 +278,16 @@ const map: Map = (dfn, mapper) => {
   }
 }
 
+type FromSuccess = <R, T extends DomainFunction<R>>(
+  df: T,
+) => (input: unknown, environment?: unknown) => Promise<R>
+const fromSuccess: FromSuccess = (df) => async (input, environment) => {
+  const result = await df(input, environment)
+
+  if (!result.success) throw new ResultError(result)
+  return result.data
+}
+
 type MapError = <O>(
   dfn: DomainFunction<O>,
   mapper: (element: ErrorData) => ErrorData,
@@ -294,4 +311,14 @@ const mapError: MapError = (dfn, mapper) => {
   }
 }
 
-export { all, first, makeDomainFunction, map, mapError, merge, pipe, sequence }
+export {
+  all,
+  first,
+  fromSuccess,
+  makeDomainFunction,
+  map,
+  mapError,
+  merge,
+  pipe,
+  sequence,
+}

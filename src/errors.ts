@@ -1,5 +1,5 @@
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
-import type { ErrorWithMessage, SchemaError } from './types.ts'
+import type { ErrorWithMessage, SchemaError, ErrorResult } from './types.ts'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
@@ -109,6 +109,16 @@ class EnvironmentError extends Error {
   }
 }
 
+class ResultError extends Error {
+  result: ErrorResult
+
+  constructor(result: ErrorResult) {
+    super('ResultError')
+    this.name = 'ResultError'
+    this.result = result
+  }
+}
+
 export {
   errorMessagesFor,
   errorMessagesForSchema,
@@ -117,4 +127,5 @@ export {
   InputError,
   EnvironmentError,
   InputErrors,
+  ResultError,
 }
