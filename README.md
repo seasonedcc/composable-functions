@@ -19,6 +19,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
     - [errorMessagesForSchema](#errormessagesforschema)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
+  - [first](#first)
   - [merge](#merge)
   - [pipe](#pipe)
   - [sequence](#sequence)
