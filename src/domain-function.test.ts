@@ -3,7 +3,7 @@ import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import { mapError, makeDomainFunction } from './domain-functions.ts'
-import { map, pipe, all, merge, sequence } from './domain-functions.ts'
+import { map, pipe, all, first, merge, sequence } from './domain-functions.ts'
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
 import type { ErrorData, SuccessResult } from './types.ts'
 
@@ -330,6 +330,72 @@ describe('all', () => {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+})
+
+describe('first', () => {
+  it('should return the result of the first successful domain function', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
+      String(id),
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
+      Boolean(id),
+    )
+
+    const results = await first(a, b, c)({ id: 1 })
+
+    assertEquals(results, {
+      success: true,
+      data: '1',
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('should return a successful result even if one of the domain functions fails', async () => {
+    const a = makeDomainFunction(
+      z.object({ n: z.number(), operation: z.literal('increment') }),
+    )(async ({ n }) => n + 1)
+    const b = makeDomainFunction(
+      z.object({ n: z.number(), operation: z.literal('decrement') }),
+    )(async ({ n }) => n - 1)
+
+    const c = first(a, b)
+
+    assertEquals(await c({ n: 1, operation: 'increment' }), {
+      success: true,
+      data: 2,
+      inputErrors: [],
+      errors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('should return error when all of the domain functions fails', async () => {
+    const a = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw new Error('Error')
+    })
+
+    const c = first(a, b)
+
+    assertEquals(await c({ id: 1 }), {
+      success: false,
+      errors: [{ message: 'Error' }],
+      inputErrors: [
+        {
+          message: 'Expected string, received number',
+          path: ['id'],
+        },
+      ],
       environmentErrors: [],
     })
   })
