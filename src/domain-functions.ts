@@ -3,7 +3,13 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 import { EnvironmentError, InputError, InputErrors } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, formatSchemaErrors, mergeObjects } from './utils.ts'
-import type { DomainFunction, ErrorData, MergeObjs, Result } from './types.ts'
+import type {
+  DomainFunction,
+  ErrorData,
+  MergeObjs,
+  Result,
+  TupleToUnion,
+} from './types.ts'
 import type { Last, List, ListToResultData } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
@@ -115,6 +121,37 @@ const all: All = (...fns) => {
       environmentErrors: [],
       errors: [],
     } as SuccessResult<List.Map<ListToResultData, typeof fns>>
+  }
+}
+
+type First = <Fns extends DomainFunction[]>(
+  ...fns: Fns
+) => DomainFunction<TupleToUnion<List.Map<ListToResultData, Fns>>>
+const first: First = (...fns) => {
+  return async (input, environment) => {
+    const results = await Promise.all(
+      fns.map((fn) => (fn as DomainFunction)(input, environment)),
+    )
+
+    const result = results.find((r) => r.success) as SuccessResult | undefined
+    if (result) {
+      return {
+        success: true,
+        data: result.data,
+        inputErrors: [],
+        environmentErrors: [],
+        errors: [],
+      } as SuccessResult<TupleToUnion<List.Map<ListToResultData, typeof fns>>>
+    }
+
+    return {
+      success: false,
+      errors: results.map(({ errors }) => errors).flat(),
+      inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
+      environmentErrors: results
+        .map(({ environmentErrors }) => environmentErrors)
+        .flat(),
+    }
   }
 }
 
@@ -257,4 +294,4 @@ const mapError: MapError = (dfn, mapper) => {
   }
 }
 
-export { makeDomainFunction, all, pipe, sequence, map, mapError, merge }
+export { all, first, makeDomainFunction, map, mapError, merge, pipe, sequence }

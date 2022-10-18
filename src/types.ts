@@ -75,6 +75,8 @@ interface ListToResultData extends List.Mapper<DomainFunction> {
   Return: UnpackData<this['Value']>
 }
 
+type TupleToUnion<T extends any[]> = T[number]
+
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
@@ -91,6 +93,7 @@ export type {
   Result,
   SchemaError,
   SuccessResult,
+  TupleToUnion,
   UnpackData,
   UnpackResult,
   UnpackSuccess,
