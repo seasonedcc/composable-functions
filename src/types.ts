@@ -81,7 +81,10 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
 
+type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
+
 export type {
+  AtLeastOne,
   DomainFunction,
   ErrorData,
   ErrorResult,

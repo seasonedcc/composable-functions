@@ -4,6 +4,7 @@ import type {
   SchemaError,
   ErrorResult,
   ErrorData,
+  AtLeastOne,
 } from './types.ts'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
@@ -117,7 +118,7 @@ class EnvironmentError extends Error {
 class ResultError extends Error {
   result: ErrorResult
 
-  constructor(result: Partial<ErrorData>) {
+  constructor(result: AtLeastOne<ErrorData>) {
     super('ResultError')
     this.name = 'ResultError'
     this.result = {
