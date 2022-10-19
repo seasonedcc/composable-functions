@@ -280,7 +280,7 @@ const map: Map = (dfn, mapper) => {
 
 type FromSuccess = <R, T extends DomainFunction<R>>(
   df: T,
-) => (input: unknown, environment?: unknown) => Promise<R>
+) => (...args: Parameters<DomainFunction>) => Promise<R>
 const fromSuccess: FromSuccess = (df) => async (input, environment) => {
   const result = await df(input, environment)
 

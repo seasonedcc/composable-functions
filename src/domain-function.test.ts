@@ -214,7 +214,6 @@ describe('makeDomainFunction', () => {
     const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
       async () => {
         throw new ResultError({
-          success: false,
           errors: [],
           inputErrors: [
             { message: 'Custom input error', path: ['contact', 'id'] },
