@@ -19,6 +19,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
     - [errorMessagesForSchema](#errormessagesforschema)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
+  - [first](#first)
   - [merge](#merge)
   - [pipe](#pipe)
   - [sequence](#sequence)
@@ -312,6 +313,68 @@ const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
 })
 
 const results = await all(a, b)({ id: 1 })
+
+/*{
+  success: false,
+  errors: [{ message: 'Error A' }, { message: 'Error B' }],
+  inputErrors: [],
+  environmentErrors: [],
+}*/
+```
+
+### first
+
+It will return the result of the first successful domain function. It handles inputs and environments like the `all` function.
+__It is important to notice__ that all domain functions will be executed in parallel so keep an eye on the side effects.
+```ts
+const a = makeDomainFunction(
+  z.object({ n: z.number(), operation: z.literal('increment') }),
+)(async ({ n }) => n + 1)
+const b = makeDomainFunction(
+  z.object({ n: z.number(), operation: z.literal('decrement') }),
+)(async ({ n }) => n - 1)
+
+const result = await first(a, b)({ n: 1, operation: 'increment' })
+```
+
+On the exemple above, the result will be of type `Result<number>`:
+```ts
+{
+  success: true,
+  data: 2,
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+The resulting type is going to be a union of the results of each domain function.
+```ts
+const a = makeDomainFunction(z.object({ operation: z.literal('A') }))(async () => ({
+  resultA: 'A',
+}))
+const b = makeDomainFunction(z.object({ operation: z.literal('B') }))(async () => ({
+  resultB: 'B',
+}))
+
+const result = await first(a, b)({ operation: 'A' })
+//       ^-- Result<{ resultA: string } | { resultB: string }>
+if (!result.success) return console.log('No function was successful')
+if ('resultA' in result.data) return console.log('function A succeeded')
+return console.log('function B succeeded')
+```
+
+If every domain function fails, the errors will be concatenated:
+
+```ts
+const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+  throw new Error('Error A')
+})
+const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+  throw new Error('Error B')
+})
+
+const result = await first(a, b)({ id: 1 })
 
 /*{
   success: false,
