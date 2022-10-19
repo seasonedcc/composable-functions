@@ -14,31 +14,25 @@ import type {
   MergeObjs,
   Result,
   TupleToUnion,
+  UnpackData,
 } from './types.ts'
 import type { Last, List, ListToResultData } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
-type MakeDomainFunction = <
+function makeDomainFunction<
   Schema extends z.ZodTypeAny,
   EnvSchema extends z.ZodTypeAny,
->(
-  inputSchema: Schema,
-  environmentSchema?: EnvSchema,
-) => <Output>(
-  handler: (
-    inputSchema: z.infer<Schema>,
-    environmentSchema: z.infer<EnvSchema>,
-  ) => Promise<Output>,
-) => DomainFunction<Output>
-
-const makeDomainFunction: MakeDomainFunction =
-  (
-    inputSchema: z.ZodTypeAny = z.object({}),
-    environmentSchema: z.ZodTypeAny = z.object({}),
-  ) =>
-  (handler) => {
-    const domainFunction = (async (input, environment = {}) => {
-      const envResult = await environmentSchema.safeParseAsync(environment)
+>(inputSchema: Schema, environmentSchema?: EnvSchema) {
+  return function <Output>(
+    handler: (
+      input: z.infer<Schema>,
+      environment: z.infer<EnvSchema>,
+    ) => Promise<Output>,
+  ) {
+    return async function (input, environment = {}) {
+      const envResult = await (
+        environmentSchema ?? z.object({})
+      ).safeParseAsync(environment)
       const result = await inputSchema.safeParseAsync(input)
 
       try {
@@ -97,14 +91,13 @@ const makeDomainFunction: MakeDomainFunction =
           ? []
           : formatSchemaErrors(envResult.error.issues),
       }
-    }) as DomainFunction<Awaited<ReturnType<typeof handler>>>
-    return domainFunction
+    } as DomainFunction<Output>
   }
+}
 
-type All = <Fns extends DomainFunction[]>(
+function all<Fns extends DomainFunction[]>(
   ...fns: Fns
-) => DomainFunction<List.Map<ListToResultData, Fns>>
-const all: All = (...fns) => {
+): DomainFunction<List.Map<ListToResultData, Fns>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -127,14 +120,13 @@ const all: All = (...fns) => {
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<List.Map<ListToResultData, typeof fns>>
+    } as SuccessResult<List.Map<ListToResultData, Fns>>
   }
 }
 
-type First = <Fns extends DomainFunction[]>(
+function first<Fns extends DomainFunction[]>(
   ...fns: Fns
-) => DomainFunction<TupleToUnion<List.Map<ListToResultData, Fns>>>
-const first: First = (...fns) => {
+): DomainFunction<TupleToUnion<List.Map<ListToResultData, Fns>>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -148,7 +140,7 @@ const first: First = (...fns) => {
         inputErrors: [],
         environmentErrors: [],
         errors: [],
-      } as SuccessResult<TupleToUnion<List.Map<ListToResultData, typeof fns>>>
+      } as SuccessResult<TupleToUnion<List.Map<ListToResultData, Fns>>>
     }
 
     return {
@@ -162,10 +154,9 @@ const first: First = (...fns) => {
   }
 }
 
-type Merge = <Fns extends DomainFunction[]>(
+function merge<Fns extends DomainFunction[]>(
   ...fns: Fns
-) => DomainFunction<MergeObjs<List.Map<ListToResultData, Fns>>>
-const merge: Merge = (...fns) => {
+): DomainFunction<MergeObjs<List.Map<ListToResultData, Fns>>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -202,12 +193,11 @@ const merge: Merge = (...fns) => {
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<MergeObjs<List.Map<ListToResultData, typeof fns>>>
+    } as SuccessResult<MergeObjs<List.Map<ListToResultData, Fns>>>
   }
 }
 
-type Pipe = <T extends DomainFunction[]>(...fns: T) => Last<T>
-const pipe: Pipe = (...fns) => {
+function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -219,13 +209,12 @@ const pipe: Pipe = (...fns) => {
         return memo
       }
     }, head(input, environment))
-  }) as Last<typeof fns>
+  }) as Last<T>
 }
 
-type Sequence = <Fns extends DomainFunction[]>(
+function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
-) => DomainFunction<List.Map<ListToResultData, Fns>>
-const sequence: Sequence = (...fns) => {
+): DomainFunction<List.Map<ListToResultData, Fns>> {
   return async function (input: unknown, environment?: unknown) {
     const results = []
     let currResult: undefined | Result<unknown>
@@ -245,15 +234,14 @@ const sequence: Sequence = (...fns) => {
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<List.Map<ListToResultData, typeof fns>>
+    } as SuccessResult<List.Map<ListToResultData, Fns>>
   }
 }
 
-type Map = <O, R>(
+function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R,
-) => DomainFunction<R>
-const map: Map = (dfn, mapper) => {
+): DomainFunction<R> {
   return async (input, environment) => {
     const result = await dfn(input, environment)
     if (!result.success) return result
@@ -278,21 +266,21 @@ const map: Map = (dfn, mapper) => {
   }
 }
 
-type FromSuccess = <R, T extends DomainFunction<R>>(
-  df: T,
-) => (...args: Parameters<DomainFunction>) => Promise<R>
-const fromSuccess: FromSuccess = (df) => async (input, environment) => {
-  const result = await df(input, environment)
+function fromSuccess<T extends DomainFunction>(df: T) {
+  return async function (
+    ...args: Parameters<DomainFunction>
+  ): Promise<UnpackData<T>> {
+    const result = await df(...args)
+    if (!result.success) throw new ResultError(result)
 
-  if (!result.success) throw new ResultError(result)
-  return result.data
+    return result.data
+  }
 }
 
-type MapError = <O>(
+function mapError<O>(
   dfn: DomainFunction<O>,
   mapper: (element: ErrorData) => ErrorData,
-) => DomainFunction<O>
-const mapError: MapError = (dfn, mapper) => {
+): DomainFunction<O> {
   return async (input, environment) => {
     const result = await dfn(input, environment)
     if (result.success) return result
