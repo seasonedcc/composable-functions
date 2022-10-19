@@ -25,20 +25,21 @@ function schemaError(message: string, path: string): SchemaError {
   return { message, path: path.split('.') }
 }
 
-const errorMessagesFor = (errors: SchemaError[], name: string) =>
-  errors
+function errorMessagesFor(errors: SchemaError[], name: string) {
+  return errors
     .filter(({ path }) => path.join('.') === name)
     .map(({ message }) => message)
+}
 
 type NestedErrors<SchemaType> = {
   [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType[Property]>
 }
 
-const errorMessagesForSchema = <T extends z.ZodTypeAny>(
+function errorMessagesForSchema<T extends z.ZodTypeAny>(
   errors: SchemaError[],
-  schema: T,
-): NestedErrors<z.infer<typeof schema>> => {
-  type SchemaType = z.infer<typeof schema>
+  _schema: T,
+): NestedErrors<z.infer<T>> {
+  type SchemaType = z.infer<T>
   type ErrorObject = { path: string[]; messages: string[] }
 
   const nest = (
