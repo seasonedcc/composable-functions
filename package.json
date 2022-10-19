@@ -1,6 +1,6 @@
 {
   "name": "domain-functions",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Decouple your business logic from your controllers. With first-class type inference from end to end.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
