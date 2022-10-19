@@ -1,8 +1,16 @@
+// deno-lint-ignore-file require-await
 import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
-import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
+import {
+  assertEquals,
+  assertRejects,
+} from 'https://deno.land/std@0.160.0/testing/asserts.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import { mapError, makeDomainFunction } from './domain-functions.ts'
+import {
+  mapError,
+  makeDomainFunction,
+  fromSuccess,
+} from './domain-functions.ts'
 import { map, pipe, all, first, merge, sequence } from './domain-functions.ts'
 import {
   EnvironmentError,
@@ -947,8 +955,12 @@ describe('mapError', () => {
     const b = (result: ErrorData) =>
       ({
         errors: [{ message: 'Number of errors: ' + result.errors.length }],
+        environmentErrors: [],
         inputErrors: [
-          { message: 'Number of input errors: ' + result.inputErrors.length },
+          {
+            message: 'Number of input errors: ' + result.inputErrors.length,
+            path: [],
+          },
         ],
       } as ErrorData)
 
@@ -957,7 +969,8 @@ describe('mapError', () => {
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
       errors: [{ message: 'Number of errors: 0' }],
-      inputErrors: [{ message: 'Number of input errors: 1' }],
+      environmentErrors: [],
+      inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
     })
   })
 
@@ -977,5 +990,29 @@ describe('mapError', () => {
       inputErrors: [],
       environmentErrors: [],
     })
+  })
+})
+
+describe('fromSuccess', () => {
+  it('returns the result.data when the domain function suceeds', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+
+    const c = fromSuccess(a)
+
+    assertEquals(await c({ id: 1 }), 2)
+  })
+
+  it('throws an exception when the domain function fails', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+
+    const c = fromSuccess(a)
+
+    assertRejects(async () => {
+      await c({ invalidInput: 'should error' })
+    }, ResultError)
   })
 })
