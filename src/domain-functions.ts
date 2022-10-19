@@ -266,10 +266,10 @@ function map<O, R>(
   }
 }
 
-function fromSuccess<T extends DomainFunction>(df: T) {
-  return async function (
-    ...args: Parameters<DomainFunction>
-  ): Promise<UnpackData<T>> {
+function fromSuccess<T extends DomainFunction>(
+  df: T,
+): (...args: Parameters<DomainFunction>) => Promise<UnpackData<T>> {
+  return async function (...args) {
     const result = await df(...args)
     if (!result.success) throw new ResultError(result)
 
