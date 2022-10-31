@@ -22,8 +22,8 @@ jobs:
 
       - name: ⚡ Run tests
         run: |
-          deno test --allow-env --allow-net --unstable src/*.test.ts
+          deno task test
 
       - name: 📥 Generate npm package
         run: |
-          deno run -A scripts/build-npm.ts 1.0.0
+          deno task build-npm
