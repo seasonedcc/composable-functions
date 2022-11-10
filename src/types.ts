@@ -1,5 +1,6 @@
 type ErrorWithMessage = {
   message: string
+  exception?: unknown
 }
 
 type SuccessResult<T = void> = {

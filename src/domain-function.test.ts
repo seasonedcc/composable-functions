@@ -2,6 +2,7 @@
 import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import {
   assertEquals,
+  assertObjectMatch,
   assertRejects,
 } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
@@ -10,8 +11,13 @@ import {
   mapError,
   makeDomainFunction,
   fromSuccess,
+  map,
+  pipe,
+  all,
+  first,
+  merge,
+  sequence,
 } from './domain-functions.ts'
-import { map, pipe, all, first, merge, sequence } from './domain-functions.ts'
 import {
   EnvironmentError,
   ResultError,
@@ -127,9 +133,32 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    assertEquals(await domainFunction({ id: 1 }), {
+    assertObjectMatch(await domainFunction({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('preserves entire original exception when the domain function throws an Error', async () => {
+    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
+      async () => {
+        throw new Error('Some message', { cause: { someUnknownFields: true } })
+      },
+    )
+
+    assertObjectMatch(await domainFunction({ id: 1 }), {
+      success: false,
+      errors: [
+        {
+          message: 'Some message',
+          exception: {
+            message: 'Some message',
+            cause: { someUnknownFields: true },
+          },
+        },
+      ],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -142,9 +171,9 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    assertEquals(await domainFunction({ id: 1 }), {
+    assertObjectMatch(await domainFunction({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error' }],
+      errors: [{ message: 'Error', exception: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -159,7 +188,7 @@ describe('makeDomainFunction', () => {
 
     assertEquals(await domainFunction({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error' }],
+      errors: [{ message: 'Error', exception: { message: 'Error' } }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -310,14 +339,14 @@ describe('all', () => {
       async ({ id }) => id,
     )
     const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
-      throw new Error('Error')
+      throw 'Error'
     })
 
     const c = all(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error' }],
+      errors: [{ message: 'Error', exception: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -360,7 +389,7 @@ describe('all', () => {
 
     const c = all(a, b)
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
@@ -416,14 +445,14 @@ describe('first', () => {
       async ({ id }) => id,
     )
     const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
-      throw new Error('Error')
+      throw 'Error'
     })
 
     const c = first(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error' }],
+      errors: [{ message: 'Error', exception: 'Error' }],
       inputErrors: [
         {
           message: 'Expected string, received number',
@@ -505,14 +534,14 @@ describe('merge', () => {
       async ({ id }) => id,
     )
     const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
-      throw new Error('Error')
+      throw 'Error'
     })
 
     const c = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error' }],
+      errors: [{ message: 'Error', exception: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -555,9 +584,12 @@ describe('merge', () => {
 
     const c = merge(a, b)
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error A' }, { message: 'Error B' }],
+      errors: [
+        { message: 'Error A', exception: { message: 'Error A' } },
+        { message: 'Error B', exception: { message: 'Error B' } },
+      ],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -919,7 +951,7 @@ describe('map', () => {
 
     assertEquals(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'failed to map' }],
+      errors: [{ message: 'failed to map', exception: 'failed to map' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -986,7 +1018,7 @@ describe('mapError', () => {
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
-      errors: [{ message: 'failed to map' }],
+      errors: [{ message: 'failed to map', exception: 'failed to map' }],
       inputErrors: [],
       environmentErrors: [],
     })
