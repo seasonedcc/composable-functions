@@ -178,13 +178,13 @@ The error result has the following structure:
 ```ts
 type ErrorResult = {
   success: false
-  errors: { message: string }[]
+  errors: ErrorWithMessage[]
   inputErrors: SchemaError[]
   environmentErrors: SchemaError[]
 }
 ```
 
-Where `inputErrors` and `environmentErrors` will be the errors from parsing the corresponding Zod schemas and `errors` will be for any exceptions thrown inside the domain function:
+Where `inputErrors` and `environmentErrors` will be the errors from parsing the corresponding Zod schemas and `errors` will be for any exceptions thrown inside the domain function (in which case we keep a reference to the original exception):
 
 ```ts
 const alwaysFails = makeDomainFunction(input, environment)(async () => {
@@ -195,7 +195,7 @@ const failedResult = await alwaysFails(someInput)
 /*
 failedResult = {
   success: false,
-  errors: [{ message: 'Some error' }],
+  errors: [{ message: 'Some error', exception: instanceOfError }],
   inputErrors: [],
   environmentErrors: [],
 }
@@ -336,7 +336,10 @@ const results = await all(a, b)({ id: 1 })
 
 /*{
   success: false,
-  errors: [{ message: 'Error A' }, { message: 'Error B' }],
+  errors: [
+    { message: 'Error A', exception: instanceOfErrorA },
+    { message: 'Error B', exception: instanceOfErrorB }
+  ],
   inputErrors: [],
   environmentErrors: [],
 }*/
@@ -398,7 +401,10 @@ const result = await first(a, b)({ id: 1 })
 
 /*{
   success: false,
-  errors: [{ message: 'Error A' }, { message: 'Error B' }],
+  errors: [
+    { message: 'Error A', exception: instanceOfErrorA },
+    { message: 'Error B', exception: instanceOfErrorB }
+  ],
   inputErrors: [],
   environmentErrors: [],
 }*/
