@@ -17,8 +17,13 @@ function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
 }
 
 function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
-  if (isErrorWithMessage(maybeError)) return { message: maybeError.message }
-  return { message: String(maybeError) }
+  const message = isErrorWithMessage(maybeError)
+    ? maybeError.message
+    : String(maybeError)
+  return {
+    message,
+    exception: maybeError,
+  }
 }
 
 function schemaError(message: string, path: string): SchemaError {
