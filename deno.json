@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "tasks": {
     "test": "deno test --allow-env --allow-net --unstable src",
     "publish": "deno task build-npm && cd npm/ && npm publish",
