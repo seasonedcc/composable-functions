@@ -105,7 +105,7 @@ import * as z from 'zod'
 const schema = z.object({ number: z.preprocess(Number, z.number()) })
 
 export const action: ActionFunction = async ({ request }) => {
-  const increment = makeDomainFunction(schema)(({ number }) => number + 1)
+  const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
   const result = await increment(await inputFromForm(request))
 
   if (!result.success) return result
