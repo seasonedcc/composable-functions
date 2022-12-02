@@ -778,6 +778,7 @@ async (request: Request) => {
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
 
 ## Resources
+- Join our [Discord community](https://discord.gg/BkTEqq3nX8)!
 - Blog post: [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
 
 ## Acknowlegements
