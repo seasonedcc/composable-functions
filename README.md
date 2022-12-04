@@ -272,7 +272,7 @@ const result = {
 }
 
 errorMessagesFor(result.inputErrors, 'email') === null
-errorMessagesFor(result.environmentErrors, 'host').message === 'Must not be empty'
+errorMessagesFor(result.environmentErrors, 'host')[0] === 'Must not be empty'
 ```
 #### errorMessagesForSchema
 Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a Zod Schema, it returns an object with a list of error messages for each key in the schema shape.
