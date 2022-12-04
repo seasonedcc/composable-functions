@@ -271,7 +271,7 @@ const result = {
   environmentErrors: [{ message: 'Must not be empty', path: ['host'] }, { message: 'Must be a fully qualified domain', path: ['host'] }]
 }
 
-errorMessagesFor(result.inputErrors, 'email') === null
+errorMessagesFor(result.inputErrors, 'email') // will be an empty array: []
 errorMessagesFor(result.environmentErrors, 'host').message === 'Must not be empty'
 ```
 #### errorMessagesForSchema
