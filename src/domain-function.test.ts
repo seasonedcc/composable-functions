@@ -27,6 +27,20 @@ import {
 import type { ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
+  describe('when it has no input', async () => {
+      const parser = z.undefined()
+
+      const handler = makeDomainFunction(parser)(async () => 'no input!')
+
+      assertEquals(await handler(), {
+        success: true,
+        data: 'no input!',
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+  })
+
   describe('when it has no environment', () => {
     it('uses zod parser to create parse the input and call the domain function', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
