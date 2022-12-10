@@ -22,7 +22,7 @@ import type { SuccessResult } from './types.ts'
 function makeDomainFunction<
   Schema extends z.ZodTypeAny,
   EnvSchema extends z.ZodTypeAny,
->(inputSchema: Schema, environmentSchema?: EnvSchema) {
+>(inputSchema?: Schema , environmentSchema?: EnvSchema) {
   return function <Output>(
     handler: (
       input: z.infer<Schema>,
@@ -33,7 +33,7 @@ function makeDomainFunction<
       const envResult = await (
         environmentSchema ?? z.object({})
       ).safeParseAsync(environment)
-      const result = await inputSchema.safeParseAsync(input)
+        const result = await (inputSchema ?? z.undefined()).safeParseAsync(input)
 
       try {
         if (result.success === true && envResult.success === true) {

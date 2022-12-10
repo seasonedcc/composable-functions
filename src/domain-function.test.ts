@@ -28,9 +28,7 @@ import type { ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', async () => {
-      const parser = z.undefined()
-
-      const handler = makeDomainFunction(parser)(async () => 'no input!')
+      const handler = makeDomainFunction()(async () => 'no input!')
 
       assertEquals(await handler(), {
         success: true,
