@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { makeDomainFunction } from 'remix-domains'
+import { makeDomainFunction } from 'domain-functions'
 import { createCookie } from '@remix-run/node'
 
 const cookie = createCookie('gpd', {

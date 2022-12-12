@@ -1,4 +1,5 @@
-import { Cookie } from '@remix-run/node'
+import { Cookie, json, TypedResponse } from '@remix-run/node'
+import { Result } from 'domain-functions'
 
 /**
  * A little helper to fetch an external API. It'll stringify any given body and append the given path to the basePath.
@@ -26,31 +27,31 @@ function envFromCookie(
   }
 }
 
-const notFound = (body?: BodyInit) =>
-  new Response(body ?? 'Not found', {
-    status: 404,
-  })
-
 const internalError = (body?: BodyInit) =>
   new Response(body ?? 'Internal server error', {
     status: 500,
   })
 
-const badParameters = (body?: BodyInit) =>
-  new Response(body ?? 'Bad parameters', {
-    status: 422,
-  })
+const actionResponse = <T extends Result<X>, X>(
+  result: T,
+  opts?: RequestInit,
+) => json(result, { status: result.success ? 200 : 422, ...opts })
 
-const serviceUnavailable = (body?: BodyInit) =>
-  new Response(body ?? 'Service unavailable', {
-    status: 503,
-  })
+const loaderResponseOrThrow = <T extends Result<unknown>>(
+  result: T,
+  opts?: RequestInit,
+): T extends { data: infer X } ? TypedResponse<X> : never => {
+  if (!result.success) {
+    throw internalError(result.errors[0]?.message)
+  }
+
+  return json(result.data, { status: 200, ...opts }) as any
+}
 
 export {
   createApi,
   envFromCookie,
-  notFound,
   internalError,
-  badParameters,
-  serviceUnavailable,
+  actionResponse,
+  loaderResponseOrThrow,
 }

@@ -1,33 +1,30 @@
-import { json, LoaderFunction } from '@remix-run/node'
+import { LoaderArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { inputFromUrl, map, all, UnpackData } from 'remix-domains'
+import { inputFromUrl, map, merge } from 'domain-functions'
 import { listColors } from '~/domain/colors'
 import { listUsers } from '~/domain/users'
-import { serviceUnavailable } from '~/lib'
+import { loaderResponseOrThrow } from '~/lib'
 
 // We'll run these 2 domain functions in parallel with Promise.all
-const getData = all(
+const getData = merge(
   // The second argument will transform the successful result of listColors,
   // we only care about what is in the "data" field
-  map(listColors, ({ data }) => data),
+  map(listColors, ({ colors }) => ({ colors: colors.data })),
   listUsers,
 )
-type LoaderData = UnpackData<typeof getData>
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader = async ({ request }: LoaderArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
   const result = await getData(null, inputFromUrl(request))
-  if (!result.success) throw serviceUnavailable()
-
-  return json<LoaderData>(result.data)
+  return loaderResponseOrThrow(result)
 }
 
 export default function Index() {
-  const [colors, users] = useLoaderData<LoaderData>()
+  const { users, colors } = useLoaderData<typeof loader>()
   const location = useLocation()
   const qs = new URLSearchParams(location.search)
   return (
     <>
-      <h1 className="text-6xl font-extrabold">Remix Domains</h1>
+      <h1 className="text-6xl font-extrabold">Domain Functions</h1>
       <ul className="flex flex-col gap-8 py-10">
         {colors.map(({ id, name, color }) => (
           <li key={id}>

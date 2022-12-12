@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { makeDomainFunction } from 'remix-domains'
+import { makeDomainFunction } from 'domain-functions'
 import { createApi } from '~/lib'
 
 const fetchApi = createApi('https://reqres.in/api')
@@ -15,18 +15,25 @@ const listColors = makeDomainFunction(
   z.any(),
   // The "environment" knows the URL's queryString
   z.object({ page: z.string().optional() }),
-)((_i, { page = '1' }) => fetchApi<{ data: Color[] }>(`/colors?page=${page}`))
+)(async (_i, { page = '1' }) => ({
+  colors: await fetchApi<{ data: Color[] }>(`/colors?page=${page}`),
+}))
 
-const getColor = makeDomainFunction(z.object({ id: z.string() }))(({ id }) =>
-  fetchApi<{ data: Color }>(`/colors/${id}`),
+const getColor = makeDomainFunction(z.object({ id: z.string() }))(
+  async ({ id }) => {
+    const color = await fetchApi<{ data: Color }>(`/colors/${id}`)
+    return {
+      colorData: color.data,
+    }
+  },
 )
 
 const mutateColor = makeDomainFunction(
   z.object({
     id: z.string(),
-    color: z.string().nonempty('Color is required'),
+    color: z.string().min(1, 'Color is required'),
   }),
-)(({ id, color }) =>
+)(async ({ id, color }) =>
   fetchApi<Color>('/colors/' + id, {
     method: 'POST',
     body: { color },
