@@ -1,5 +1,5 @@
 // ex. scripts/build_npm.ts
-import { build, emptyDir } from 'https://deno.land/x/dnt@0.25.2/mod.ts'
+import { build, emptyDir } from 'https://deno.land/x/dnt@0.31.0/mod.ts'
 import pkg from '../deno.json' assert { type: 'json' }
 
 await emptyDir('./npm')
@@ -18,6 +18,7 @@ await build({
     'https://deno.land/x/zod@v3.19.1/mod.ts': {
       name: 'zod',
       version: '^3.19.1',
+      peerDependency: true,
     },
     'https://deno.land/x/deno_qs@0.0.1/mod.ts': {
       name: 'qs',
