@@ -1,24 +1,27 @@
 import type {
-  ActionFunction,
+  ActionArgs,
   LinksFunction,
-  LoaderFunction,
+  LoaderArgs,
   MetaFunction,
   ErrorBoundaryComponent,
 } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Links, LiveReload, Meta, Outlet, Scripts } from '@remix-run/react'
 import {
-  ScrollRestoration,
+  Form,
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
   useActionData,
-  useCatch,
-  useFetcher,
+  useLoaderData,
 } from '@remix-run/react'
+import { ScrollRestoration, useCatch } from '@remix-run/react'
 import * as React from 'react'
 
-import { envFromCookie, internalError } from '~/lib'
+import { envFromCookie, loaderResponseOrThrow } from '~/lib'
 import { agreeToGPD, cookie, getGPDInfo } from '~/domain/gpd'
-import { UnpackData, UnpackResult, inputFromForm } from 'remix-domains'
-import { useLoaderData } from '@remix-run/react'
+import { inputFromForm } from 'domain-functions'
 
 import styles from '~/styles/tailwind.css'
 
@@ -31,28 +34,24 @@ export const meta: MetaFunction = () => ({
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }]
 
-type LoaderData = UnpackData<typeof getGPDInfo>
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader = async ({ request }: LoaderArgs) => {
   const result = await getGPDInfo(null, await envFromCookie(cookie)(request))
-  if (!result.success) throw internalError()
-  return json<LoaderData>(result.data)
+  return loaderResponseOrThrow(result)
 }
 
-type ActionData = UnpackResult<typeof agreeToGPD>
-export const action: ActionFunction = async ({ request }) => {
+export const action = async ({ request }: ActionArgs) => {
   const result = await agreeToGPD(await inputFromForm(request))
   if (!result.success || result.data.agreed === false) {
-    return json<ActionData>(result)
+    return json(result)
   }
-  return json<ActionData>(result, {
+  return json(result, {
     headers: { 'Set-Cookie': await cookie.serialize(result.data) },
   })
 }
 
 export default function App() {
-  const { agreed } = useLoaderData<LoaderData>()
-  const fetcher = useFetcher()
-  const actionData = useActionData<ActionData>()
+  const { agreed } = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
   const disagreed = actionData?.success && actionData.data.agreed === false
   return (
     <Document>
@@ -64,7 +63,7 @@ export default function App() {
           </p>
         )}
         {disagreed || agreed || (
-          <fetcher.Form
+          <Form
             method="post"
             className="fixed bottom-0 flex w-full max-w-full items-center gap-2 bg-amber-200 px-6 py-4 text-gray-900 shadow-md md:bottom-2 md:w-auto md:rounded"
           >
@@ -85,7 +84,7 @@ export default function App() {
             >
               No way!
             </button>
-          </fetcher.Form>
+          </Form>
         )}
       </main>
       <Scripts />

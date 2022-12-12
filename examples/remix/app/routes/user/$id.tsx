@@ -1,22 +1,19 @@
-import { json, LoaderFunction } from '@remix-run/node'
+import { LoaderArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
-import { pipe, UnpackData } from 'remix-domains'
+import { pipe } from 'domain-functions'
 import { formatUser, getUser } from '~/domain/users'
-import { notFound } from '~/lib'
+import { loaderResponseOrThrow } from '~/lib'
 
 // The output of getUser will be the input of formatUser
 const getData = pipe(getUser, formatUser)
 
-type LoaderData = UnpackData<typeof getData>
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader = async ({ params }: LoaderArgs) => {
   const result = await getData(params)
-  if (!result.success) throw notFound()
-
-  return json<LoaderData>(result.data)
+  return loaderResponseOrThrow(result)
 }
 
 export default function Index() {
-  const user = useLoaderData<LoaderData>()
+  const { user } = useLoaderData<typeof loader>()
   return (
     <>
       <a

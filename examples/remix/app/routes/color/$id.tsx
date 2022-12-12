@@ -1,28 +1,24 @@
-import { ActionFunction, json, LoaderFunction } from '@remix-run/node'
+import { ActionArgs, json, LoaderArgs } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { inputFromForm, UnpackData, UnpackResult } from 'remix-domains'
+import { inputFromForm } from 'domain-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/domain/colors'
-import { notFound } from '~/lib'
+import { actionResponse, loaderResponseOrThrow } from '~/lib'
 
-type LoaderData = UnpackData<typeof getColor>
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader = async ({ params }: LoaderArgs) => {
   const result = await getColor(params)
-  if (!result.success) throw notFound()
-
-  return json<LoaderData>(result.data)
+  return loaderResponseOrThrow(result)
 }
 
-type ActionData = UnpackResult<typeof mutateColor>
-export const action: ActionFunction = async ({ request }) => {
+export const action = async ({ request }: ActionArgs) => {
   const result = await mutateColor(await inputFromForm(request))
-  return json<ActionData>(result, { status: result.success ? 200 : 422 })
+  return actionResponse(result)
 }
 
 export default function Index() {
-  const { data } = useLoaderData<LoaderData>()
-  const actionData = useActionData<ActionData>()
-  const color = actionData?.success ? actionData.data.color : data.color
+  const { colorData } = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
+  const color = actionData?.success ? actionData.data.color : colorData.color
   return (
     <>
       <h1
@@ -31,11 +27,11 @@ export default function Index() {
         }}
         className="text-6xl font-extrabold"
       >
-        {data.name}
+        {colorData.name}
       </h1>
       <div className="mt-6 text-xl">
         <Form method="post" className="mt-6 text-3xl">
-          <input type="hidden" name="id" value={data.id} />
+          <input type="hidden" name="id" value={colorData.id} />
           <button
             name="color"
             value={tinycolor(color).lighten().toHexString()}
