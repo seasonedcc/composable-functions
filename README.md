@@ -287,7 +287,7 @@ const result = {
   environmentErrors: []
 }
 
-errorForSchema(result.inputErrors, schema)
+errorMessagesForSchema(result.inputErrors, schema)
 /*
 {
   email: ['Must not be empty', 'Must be a string'],
