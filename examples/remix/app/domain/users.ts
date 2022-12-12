@@ -19,7 +19,7 @@ const userSchema = z.object({
 type User = z.infer<typeof userSchema>
 
 const listUsers = makeDomainFunction(z.any())(async () => ({
-  users: await fetchApi<User[]>('/users'),
+  users: await fetchApi<User['user'][]>('/users'),
 }))
 
 const getUser = makeDomainFunction(z.object({ id: z.string() }))(
