@@ -299,6 +299,22 @@ function mapError<O>(
   }
 }
 
+function trace<T>(
+  traceFn: (
+    { input, environment, result }: {
+      input: unknown;
+      environment: unknown;
+      result: Result<T>;
+    },
+  ) => void,
+): (fn: DomainFunction<T>) => DomainFunction<T> {
+  return (fn) => async (input, environment) => {
+    const result = await fn(input, environment);
+    traceFn({ input, environment, result });
+    return result;
+  };
+}
+
 export {
   all,
   first,
@@ -309,4 +325,5 @@ export {
   merge,
   pipe,
   sequence,
+  trace,
 }
