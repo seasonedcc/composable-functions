@@ -17,6 +17,7 @@ import {
   first,
   merge,
   sequence,
+trace,
 } from './domain-functions.ts'
 import {
   EnvironmentError,
@@ -24,7 +25,7 @@ import {
   InputError,
   InputErrors,
 } from './errors.ts'
-import type { ErrorData, SuccessResult } from './types.ts'
+import type { ErrorData, Result, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', async () => {
@@ -1058,5 +1059,33 @@ describe('fromSuccess', () => {
     assertRejects(async () => {
       await c({ invalidInput: 'should error' })
     }, ResultError)
+  })
+})
+
+describe('trace', () => {
+  it('intercepts inputs and outputs of a given domain function', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+
+    let contextFromFunctionA: { input: unknown, environment: unknown, result: Result<unknown> } | null = null
+
+    const c = trace<unknown>((context) => { contextFromFunctionA = context })(a)
+
+    assertEquals(await fromSuccess(c)({ id: 1 }), 2)
+    assertEquals(
+      contextFromFunctionA, 
+      { 
+        input: { id: 1 }, 
+        environment: undefined, 
+        result: { 
+          success: true, 
+          errors: [], 
+          inputErrors: [], 
+          environmentErrors: [], 
+          data:2
+        }
+      }
+    )
   })
 })
