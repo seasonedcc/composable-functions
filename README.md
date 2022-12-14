@@ -19,6 +19,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [Using error messages in the UI](#using-error-messages-in-the-ui)
     - [errorMessagesFor](#errormessagesfor)
     - [errorMessagesForSchema](#errormessagesforschema)
+  - [Tracing](#tracing)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
   - [first](#first)
@@ -294,6 +295,35 @@ errorMessagesForSchema(result.inputErrors, schema)
   password: ['Must not be empty']
 }
 */
+```
+
+### Tracing
+Whenever you need to intercept inputs and the result of a domain function without changing them, there is a function to help you that called `trace`.
+
+The most common use case is to log things to the console. Let's say you want to log failed domain functions, you could create a function such as:
+
+```ts
+const traceToConsole = trace((context) => {
+  if(!context.result.success) {
+    console.trace("Domain Function Failure ", context)
+  }
+})
+```
+
+Then, assuming you want to trace all failures in a `someOtherDomainFunction`, you just need to pass that domain function to our `tracetoConsole`:
+
+```ts
+traceToConsole(someOtherDomainFunction)()
+```
+
+It would be also simple to create a function that will send the errors to some error tracking service upon certain conditions:
+
+```ts
+const trackErrors = trace(({ input, output, result }) => {
+  if(!result.success && someOtherConditions(result)) {
+    sendToExternalService({ input, output, result })
+  }
+})
 ```
 
 ## Combining domain functions
