@@ -298,9 +298,9 @@ errorMessagesForSchema(result.inputErrors, schema)
 ```
 
 ### Tracing
-Whenever you need to intercept inputs and the result of a domain function without changing them, there is a function to help you that called `trace`.
+Whenever you need to intercept inputs and the result of a domain function without changing them, there is a function called `trace` that can help you..
 
-The most common use case is to log things to the console. Let's say you want to log failed domain functions, you could create a function such as:
+The most common use case is to log failures to the console or to an external service. Let's say you want to log failed domain functions, you could create a function such as:
 
 ```ts
 const traceToConsole = trace((context) => {
