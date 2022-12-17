@@ -38,16 +38,19 @@ type UnpackSuccess<F extends DomainFunction> = Extract<
 
 type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
-type UnpackAll<List> = List extends [DomainFunction<infer first>, ...infer rest]
-  ? [first, ...UnpackAll<rest>]
-  : []
-
-type MergeObjs<Objs extends unknown[]> = Objs extends [
-  infer First,
-  ...infer Rest,
+type UnpackAll<List, output extends unknown[] = []> = List extends [
+  DomainFunction<infer first>,
+  ...infer rest,
 ]
-  ? First & MergeObjs<Rest>
-  : {}
+  ? UnpackAll<rest, [...output, first]>
+  : output
+
+type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
+  infer first,
+  ...infer rest,
+]
+  ? MergeObjs<rest, output & first>
+  : output
 
 type TupleToUnion<T extends unknown[]> = T[number]
 
