@@ -78,14 +78,11 @@ namespace AtLeastOne {
   const error2: Result = { a: 1, c: 3 }
 }
 
-namespace ListToResultData {
+namespace UnpackAll {
   const dfA = makeDomainFunction()(async () => ({ a: 1 } as const))
   const dfB = makeDomainFunction()(async () => ({ b: 2 } as const))
 
-  type Result = Subject.List.Map<
-    Subject.ListToResultData,
-    [typeof dfA, typeof dfB]
-  >
+  type Result = Subject.UnpackAll<[typeof dfA, typeof dfB]>
 
   type test = Expect<Equal<Result, [{ readonly a: 1 }, { readonly b: 2 }]>>
 }

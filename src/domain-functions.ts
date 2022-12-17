@@ -14,10 +14,11 @@ import type {
   MergeObjs,
   Result,
   TupleToUnion,
+  UnpackAll,
   UnpackData,
   UnpackResult,
 } from './types.ts'
-import type { Last, List, ListToResultData } from './types.ts'
+import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
 function makeDomainFunction<
@@ -98,7 +99,7 @@ function makeDomainFunction<
 
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
-): DomainFunction<List.Map<ListToResultData, Fns>> {
+): DomainFunction<UnpackAll<Fns>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -121,13 +122,13 @@ function all<Fns extends DomainFunction[]>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<List.Map<ListToResultData, Fns>>
+    } as SuccessResult<UnpackAll<Fns>>
   }
 }
 
 function first<Fns extends DomainFunction[]>(
   ...fns: Fns
-): DomainFunction<TupleToUnion<List.Map<ListToResultData, Fns>>> {
+): DomainFunction<TupleToUnion<UnpackAll<Fns>>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -141,7 +142,7 @@ function first<Fns extends DomainFunction[]>(
         inputErrors: [],
         environmentErrors: [],
         errors: [],
-      } as SuccessResult<TupleToUnion<List.Map<ListToResultData, Fns>>>
+      } as SuccessResult<TupleToUnion<UnpackAll<Fns>>>
     }
 
     return {
@@ -157,7 +158,7 @@ function first<Fns extends DomainFunction[]>(
 
 function merge<Fns extends DomainFunction[]>(
   ...fns: Fns
-): DomainFunction<MergeObjs<List.Map<ListToResultData, Fns>>> {
+): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),
@@ -194,7 +195,7 @@ function merge<Fns extends DomainFunction[]>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<MergeObjs<List.Map<ListToResultData, Fns>>>
+    } as SuccessResult<MergeObjs<UnpackAll<Fns>>>
   }
 }
 
@@ -215,7 +216,7 @@ function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
 
 function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
-): DomainFunction<List.Map<ListToResultData, Fns>> {
+): DomainFunction<UnpackAll<Fns>> {
   return async function (input: unknown, environment?: unknown) {
     const results = []
     let currResult: undefined | Result<unknown>
@@ -235,7 +236,7 @@ function sequence<Fns extends DomainFunction[]>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<List.Map<ListToResultData, Fns>>
+    } as SuccessResult<UnpackAll<Fns>>
   }
 }
 

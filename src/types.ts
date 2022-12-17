@@ -30,11 +30,17 @@ type DomainFunction<Output = unknown> = {
 }
 
 type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
+
 type UnpackSuccess<F extends DomainFunction> = Extract<
   UnpackResult<F>,
   { success: true }
 >
+
 type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
+
+type UnpackAll<List> = List extends [DomainFunction<infer first>, ...infer rest]
+  ? [first, ...UnpackAll<rest>]
+  : []
 
 type MergeObjs<Objs extends unknown[]> = Objs extends [
   infer First,
@@ -43,40 +49,7 @@ type MergeObjs<Objs extends unknown[]> = Objs extends [
   ? First & MergeObjs<Rest>
   : {}
 
-namespace List {
-  type PopList<T extends unknown[]> = T extends [...infer R, unknown] ? R : T
-  type PopItem<T extends unknown[]> = T extends [...unknown[], infer A]
-    ? A
-    : unknown
-  type IntMapItem<L extends unknown[], M extends Mapper> = M & {
-    Value: PopItem<L>
-    Index: PopList<L>['length']
-  }
-  type IntMapList<
-    MapToType extends Mapper,
-    ListItems extends unknown[],
-    Collected extends unknown[] = [],
-  > = ListItems['length'] extends 0
-    ? Collected
-    : IntMapList<
-        MapToType,
-        PopList<ListItems>,
-        [IntMapItem<ListItems, MapToType>['Return'], ...Collected]
-      >
-
-  export type Mapper<I = unknown, O = unknown> = {
-    Index: number
-    Value: I
-    Return: O
-  }
-  export type Map<M extends Mapper, L extends unknown[]> = IntMapList<M, L, []>
-}
-
-interface ListToResultData extends List.Mapper<DomainFunction> {
-  Return: UnpackData<this['Value']>
-}
-
-type TupleToUnion<T extends any[]> = T[number]
+type TupleToUnion<T extends unknown[]> = T[number]
 
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
@@ -91,13 +64,12 @@ export type {
   ErrorResult,
   ErrorWithMessage,
   Last,
-  List,
-  ListToResultData,
   MergeObjs,
   Result,
   SchemaError,
   SuccessResult,
   TupleToUnion,
+  UnpackAll,
   UnpackData,
   UnpackResult,
   UnpackSuccess,
