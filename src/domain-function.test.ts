@@ -1259,6 +1259,11 @@ describe('trace', () => {
     const c = trace<unknown>((context) => {
       contextFromFunctionA = context
     })(a)
+    {
+      // TODO: fix this
+      // @ts-ignore
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await fromSuccess(c)({ id: 1 }), 2)
     assertEquals(contextFromFunctionA, {
