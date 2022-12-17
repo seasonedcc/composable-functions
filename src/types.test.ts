@@ -4,8 +4,8 @@ import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
 import * as Subject from './types.ts'
 
-type Expect<T extends true> = T
-type Equal<A, B> =
+export type Expect<T extends true> = T
+export type Equal<A, B> =
   // prettier is removing the parens thus worsening readability
   // prettier-ignore
   (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2)

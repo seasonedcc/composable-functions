@@ -17,7 +17,7 @@ import {
   first,
   merge,
   sequence,
-trace,
+  trace,
 } from './domain-functions.ts'
 import {
   EnvironmentError,
@@ -25,19 +25,28 @@ import {
   InputError,
   InputErrors,
 } from './errors.ts'
-import type { ErrorData, Result, SuccessResult } from './types.ts'
+import type { Equal, Expect } from './types.test.ts'
+import type {
+  DomainFunction,
+  ErrorData,
+  Result,
+  SuccessResult,
+} from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', async () => {
-      const handler = makeDomainFunction()(async () => 'no input!')
+    const handler = makeDomainFunction()(async () => 'no input!')
+    {
+      type test = Expect<Equal<typeof handler, DomainFunction<string>>>
+    }
 
-      assertEquals(await handler(), {
-        success: true,
-        data: 'no input!',
-        errors: [],
-        inputErrors: [],
-        environmentErrors: [],
-      })
+    assertEquals(await handler(), {
+      success: true,
+      data: 'no input!',
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    })
   })
 
   describe('when it has no environment', () => {
@@ -45,6 +54,9 @@ describe('makeDomainFunction', () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
       const handler = makeDomainFunction(parser)(async ({ id }) => id)
+      {
+        type test = Expect<Equal<typeof handler, DomainFunction<number>>>
+      }
 
       assertEquals(await handler({ id: '1' }), {
         success: true,
@@ -77,7 +89,12 @@ describe('makeDomainFunction', () => {
     const handler = makeDomainFunction(
       parser,
       envParser,
-    )(async ({ id }, { uid }) => [id, uid])
+    )(async ({ id }, { uid }) => [id, uid] as const)
+    {
+      type test = Expect<
+        Equal<typeof handler, DomainFunction<readonly [number, number]>>
+      >
+    }
 
     assertEquals(await handler({ id: '1' }, { uid: '2' }), {
       success: true,
@@ -145,6 +162,9 @@ describe('makeDomainFunction', () => {
         throw new Error('Error')
       },
     )
+    {
+      type test = Expect<Equal<typeof domainFunction, DomainFunction<never>>>
+    }
 
     assertObjectMatch(await domainFunction({ id: 1 }), {
       success: false,
@@ -292,6 +312,9 @@ describe('all', () => {
     )
 
     const c = all(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<[number, number]>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -314,6 +337,11 @@ describe('all', () => {
     )
 
     const results = await all(a, b, c)({ id: 1 })
+    {
+      type test = Expect<
+        Equal<typeof results, Result<[string, number, boolean]>>
+      >
+    }
 
     assertEquals(results, {
       success: true,
@@ -333,6 +361,9 @@ describe('all', () => {
     )
 
     const c = all(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<[number, string]>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -356,6 +387,9 @@ describe('all', () => {
     })
 
     const c = all(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<[number, never]>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -374,6 +408,9 @@ describe('all', () => {
     )
 
     const c = all(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<[string, string]>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -401,6 +438,9 @@ describe('all', () => {
     })
 
     const c = all(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<[never, never]>>>
+    }
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
@@ -424,6 +464,11 @@ describe('first', () => {
     )
 
     const results = await first(a, b, c)({ id: 1 })
+    {
+      type test = Expect<
+        Equal<typeof results, Result<string | number | boolean>>
+      >
+    }
 
     assertEquals(results, {
       success: true,
@@ -443,6 +488,9 @@ describe('first', () => {
     )(async ({ n }) => n - 1)
 
     const c = first(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ n: 1, operation: 'increment' }), {
       success: true,
@@ -462,6 +510,9 @@ describe('first', () => {
     })
 
     const c = first(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<string>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -487,6 +538,14 @@ describe('merge', () => {
     )
 
     const c = merge(a, b)
+    {
+      type test = Expect<
+        Equal<
+          typeof c,
+          DomainFunction<{ resultA: number } & { resultB: number }>
+        >
+      >
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -509,6 +568,16 @@ describe('merge', () => {
     )
 
     const results = await merge(a, b, c)({ id: 1 })
+    {
+      type test = Expect<
+        Equal<
+          typeof results,
+          Result<
+            { resultA: string } & { resultB: number } & { resultC: boolean }
+          >
+        >
+      >
+    }
 
     assertEquals(results, {
       success: true,
@@ -528,6 +597,9 @@ describe('merge', () => {
     )
 
     const c = merge(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<never>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -551,6 +623,9 @@ describe('merge', () => {
     })
 
     const c = merge(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<never>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -562,13 +637,21 @@ describe('merge', () => {
 
   it('should combine the inputError messages of both functions', async () => {
     const a = makeDomainFunction(z.object({ id: z.string() }))(
-      async ({ id }) => id,
+      async ({ id }) => ({ resultA: id }),
     )
     const b = makeDomainFunction(z.object({ id: z.string() }))(
-      async ({ id }) => id,
+      async ({ id }) => ({ resultB: id }),
     )
 
     const c = merge(a, b)
+    {
+      type test = Expect<
+        Equal<
+          typeof c,
+          DomainFunction<{ resultA: string } & { resultB: string }>
+        >
+      >
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -596,6 +679,9 @@ describe('merge', () => {
     })
 
     const c = merge(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<never>>>
+    }
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
@@ -617,6 +703,11 @@ describe('merge', () => {
     )
 
     const c = merge(a, b)
+    {
+      type test = Expect<
+        Equal<typeof c, DomainFunction<number & { resultB: number }>>
+      >
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -641,6 +732,9 @@ describe('pipe', () => {
     )
 
     const c = pipe(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -664,6 +758,9 @@ describe('pipe', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: true,
@@ -688,6 +785,9 @@ describe('pipe', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c(undefined, {}), {
       success: false,
@@ -712,6 +812,9 @@ describe('pipe', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
       success: false,
@@ -736,6 +839,9 @@ describe('pipe', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
@@ -763,6 +869,9 @@ describe('pipe', () => {
     )
 
     const d = pipe(a, b, c)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<boolean>>>
+    }
 
     assertEquals(await d({ aNumber: 1 }), {
       success: true,
@@ -786,6 +895,11 @@ describe('sequence', () => {
     )
 
     const c = sequence(a, b)
+    {
+      type test = Expect<
+        Equal<typeof c, DomainFunction<[{ id: number }, { result: number }]>>
+      >
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -809,6 +923,11 @@ describe('sequence', () => {
     )(async ({ inp }, { env }) => ({ result: inp + env }))
 
     const c = sequence(a, b)
+    {
+      type test = Expect<
+        Equal<typeof c, DomainFunction<[{ inp: number }, { result: number }]>>
+      >
+    }
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: true,
@@ -833,6 +952,11 @@ describe('sequence', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = sequence(a, b)
+    {
+      type test = Expect<
+        Equal<typeof c, DomainFunction<[{ inp: number }, number]>>
+      >
+    }
 
     assertEquals(await c(undefined, {}), {
       success: false,
@@ -857,6 +981,11 @@ describe('sequence', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = sequence(a, b)
+    {
+      type test = Expect<
+        Equal<typeof c, DomainFunction<[{ inp: number }, number]>>
+      >
+    }
 
     assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
       success: false,
@@ -881,6 +1010,11 @@ describe('sequence', () => {
     )(async ({ inp }, { env }) => inp + env)
 
     const c = sequence(a, b)
+    {
+      type test = Expect<
+        Equal<typeof c, DomainFunction<[{ inp: string }, number]>>
+      >
+    }
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
@@ -908,6 +1042,20 @@ describe('sequence', () => {
     )
 
     const d = sequence(a, b, c)
+    {
+      type test = Expect<
+        Equal<
+          typeof d,
+          DomainFunction<
+            [
+              { aString: string },
+              { aBoolean: boolean },
+              { anotherBoolean: boolean },
+            ]
+          >
+        >
+      >
+    }
 
     assertEquals(await d({ aNumber: 1 }), {
       success: true,
@@ -927,6 +1075,9 @@ describe('map', () => {
     const b = (id: number) => id + 1
 
     const c = map(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -943,6 +1094,9 @@ describe('map', () => {
     const b = (id: number) => id + 1
 
     const c = map(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
@@ -961,6 +1115,9 @@ describe('map', () => {
     }
 
     const c = map(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<never>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -983,6 +1140,9 @@ describe('mapError', () => {
       } as ErrorData)
 
     const c = mapError(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -1010,6 +1170,9 @@ describe('mapError', () => {
       } as ErrorData)
 
     const c = mapError(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
@@ -1028,6 +1191,9 @@ describe('mapError', () => {
     }
 
     const c = mapError(a, b)
+    {
+      type test = Expect<Equal<typeof c, DomainFunction<number>>>
+    }
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
@@ -1045,6 +1211,14 @@ describe('fromSuccess', () => {
     )
 
     const c = fromSuccess(a)
+    {
+      type test = Expect<
+        Equal<
+          typeof c,
+          (input?: unknown, environment?: unknown) => Promise<number>
+        >
+      >
+    }
 
     assertEquals(await c({ id: 1 }), 2)
   })
@@ -1055,6 +1229,14 @@ describe('fromSuccess', () => {
     )
 
     const c = fromSuccess(a)
+    {
+      type test = Expect<
+        Equal<
+          typeof c,
+          (input?: unknown, environment?: unknown) => Promise<number>
+        >
+      >
+    }
 
     assertRejects(async () => {
       await c({ invalidInput: 'should error' })
@@ -1068,24 +1250,27 @@ describe('trace', () => {
       async ({ id }) => id + 1,
     )
 
-    let contextFromFunctionA: { input: unknown, environment: unknown, result: Result<unknown> } | null = null
+    let contextFromFunctionA: {
+      input: unknown
+      environment: unknown
+      result: Result<unknown>
+    } | null = null
 
-    const c = trace<unknown>((context) => { contextFromFunctionA = context })(a)
+    const c = trace<unknown>((context) => {
+      contextFromFunctionA = context
+    })(a)
 
     assertEquals(await fromSuccess(c)({ id: 1 }), 2)
-    assertEquals(
-      contextFromFunctionA, 
-      { 
-        input: { id: 1 }, 
-        environment: undefined, 
-        result: { 
-          success: true, 
-          errors: [], 
-          inputErrors: [], 
-          environmentErrors: [], 
-          data:2
-        }
-      }
-    )
+    assertEquals(contextFromFunctionA, {
+      input: { id: 1 },
+      environment: undefined,
+      result: {
+        success: true,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+        data: 2,
+      },
+    })
   })
 })

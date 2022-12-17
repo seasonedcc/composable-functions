@@ -2,15 +2,8 @@
 import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
 import * as subject from './utils.ts'
-import { Result, SuccessResult } from './types.ts'
-
-type Expect<T extends true> = T
-type Equal<A, B> =
-  // prettier is removing the parens thus worsening readability
-  // prettier-ignore
-  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2)
-    ? true
-    : false
+import type { Result, SuccessResult } from './types.ts'
+import type { Equal, Expect } from './types.test.ts'
 
 namespace isListOfSuccess {
   const results = [
