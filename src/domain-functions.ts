@@ -307,7 +307,7 @@ function trace(
   }: {
     input: unknown
     environment: unknown
-    result: unknown
+    result: Result<unknown>
   }) => void,
 ): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
