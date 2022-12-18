@@ -1221,15 +1221,13 @@ describe('trace', () => {
     let contextFromFunctionA: {
       input: unknown
       environment: unknown
-      result: Result<unknown>
+      result: unknown
     } | null = null
 
-    const c = trace<unknown>((context) => {
+    const c = trace((context) => {
       contextFromFunctionA = context
     })(a)
     {
-      // TODO: fix this
-      // @ts-ignore
       type test = ExpectDF<typeof c, number>
     }
 
