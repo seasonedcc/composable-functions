@@ -25,24 +25,11 @@ import {
   InputError,
   InputErrors,
 } from './errors.ts'
-import type { Equal, Expect } from './types.test.ts'
-import type {
-  DomainFunction,
-  ErrorData,
-  Result,
-  SuccessResult,
-} from './types.ts'
-
-type ExpectDF<D extends DomainFunction<V>, V> = Expect<
-  DomainFunction<V> extends D ? true : never
->
+import type { DomainFunction, ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', async () => {
     const handler = makeDomainFunction()(async () => 'no input!')
-    {
-      type test = ExpectDF<typeof handler, string>
-    }
 
     assertEquals(await handler(), {
       success: true,
@@ -57,10 +44,9 @@ describe('makeDomainFunction', () => {
     it('uses zod parser to create parse the input and call the domain function', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
-      const handler = makeDomainFunction(parser)(async ({ id }) => id)
-      {
-        type test = ExpectDF<typeof handler, number>
-      }
+      const handler: DomainFunction<number> = makeDomainFunction(parser)(
+        async ({ id }) => id,
+      )
 
       assertEquals(await handler({ id: '1' }), {
         success: true,
@@ -73,7 +59,9 @@ describe('makeDomainFunction', () => {
 
     it('returns error when parsing fails', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
-      const handler = makeDomainFunction(parser)(async ({ id }) => id)
+      const handler: DomainFunction<number> = makeDomainFunction(parser)(
+        async ({ id }) => id,
+      )
 
       assertEquals(await handler({ missingId: '1' }), {
         success: false,
@@ -90,13 +78,11 @@ describe('makeDomainFunction', () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
-    const handler = makeDomainFunction(
-      parser,
-      envParser,
-    )(async ({ id }, { uid }) => [id, uid] as const)
-    {
-      type test = ExpectDF<typeof handler, readonly [number, number]>
-    }
+    const handler: DomainFunction<readonly [number, number]> =
+      makeDomainFunction(
+        parser,
+        envParser,
+      )(async ({ id }, { uid }) => [id, uid] as const)
 
     assertEquals(await handler({ id: '1' }, { uid: '2' }), {
       success: true,
@@ -120,7 +106,7 @@ describe('makeDomainFunction', () => {
         .refine(async (value) => value !== 2, { message: 'UID already taken' }),
     })
 
-    const handler = makeDomainFunction(
+    const handler: DomainFunction<number[]> = makeDomainFunction(
       parser,
       envParser,
     )(async ({ id }, { uid }) => [id, uid])
@@ -134,8 +120,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('accepts literals as input of domain functions', async () => {
-    const foo = makeDomainFunction(z.number(), z.string())(async (n) => n + 1)
-    const result = await foo(1, 'not going to be used')
+    const handler: DomainFunction<number> = makeDomainFunction(
+      z.number(),
+      z.string(),
+    )(async (n) => n + 1)
+    const result = await handler(1, 'not going to be used')
     assertEquals((result as SuccessResult<number>).data, 2)
   })
 
@@ -143,7 +132,7 @@ describe('makeDomainFunction', () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
-    const handler = makeDomainFunction(
+    const handler: DomainFunction<number[]> = makeDomainFunction(
       parser,
       envParser,
     )(async ({ id }, { uid }) => [id, uid])
@@ -159,14 +148,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns error when the domain function throws an Error', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw new Error('Error')
-      },
-    )
-    {
-      type test = ExpectDF<typeof domainFunction, never>
-    }
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw new Error('Error')
+    })
 
     assertObjectMatch(await domainFunction({ id: 1 }), {
       success: false,
@@ -177,11 +163,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('preserves entire original exception when the domain function throws an Error', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw new Error('Some message', { cause: { someUnknownFields: true } })
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw new Error('Some message', { cause: { someUnknownFields: true } })
+    })
 
     assertObjectMatch(await domainFunction({ id: 1 }), {
       success: false,
@@ -200,11 +186,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns error when the domain function throws a string', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw 'Error'
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw 'Error'
+    })
 
     assertObjectMatch(await domainFunction({ id: 1 }), {
       success: false,
@@ -215,11 +201,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns error when the domain function throws an object with message', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw { message: 'Error' }
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw { message: 'Error' }
+    })
 
     assertEquals(await domainFunction({ id: 1 }), {
       success: false,
@@ -230,11 +216,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns inputErrors when the domain function throws an InputError', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw new InputError('Custom input error', 'contact.id')
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw new InputError('Custom input error', 'contact.id')
+    })
 
     assertEquals(await domainFunction({ id: 1 }), {
       success: false,
@@ -245,14 +231,14 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns multiple inputErrors when the domain function throws an InputErrors', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw new InputErrors([
-          { message: 'Custom input error', path: 'contact.id' },
-          { message: 'Another input error', path: 'contact.id' },
-        ])
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw new InputErrors([
+        { message: 'Custom input error', path: 'contact.id' },
+        { message: 'Another input error', path: 'contact.id' },
+      ])
+    })
 
     assertEquals(await domainFunction({ id: 1 }), {
       success: false,
@@ -266,11 +252,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns environmentErrors when the domain function throws an EnvironmentError', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw new EnvironmentError('Custom env error', 'currentUser.role')
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw new EnvironmentError('Custom env error', 'currentUser.role')
+    })
 
     assertEquals(await domainFunction({ id: 1 }), {
       success: false,
@@ -283,17 +269,17 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns an error result when the domain function throws an ResultError', async () => {
-    const domainFunction = makeDomainFunction(z.object({ id: z.number() }))(
-      async () => {
-        throw new ResultError({
-          errors: [],
-          inputErrors: [
-            { message: 'Custom input error', path: ['contact', 'id'] },
-          ],
-          environmentErrors: [],
-        })
-      },
-    )
+    const domainFunction: DomainFunction<never> = makeDomainFunction(
+      z.object({ id: z.number() }),
+    )(async () => {
+      throw new ResultError({
+        errors: [],
+        inputErrors: [
+          { message: 'Custom input error', path: ['contact', 'id'] },
+        ],
+        environmentErrors: [],
+      })
+    })
 
     assertEquals(await domainFunction({ id: 1 }), {
       success: false,
@@ -313,10 +299,7 @@ describe('all', () => {
       async ({ id }) => id - 1,
     )
 
-    const c = all(a, b)
-    {
-      type test = ExpectDF<typeof c, [number, number]>
-    }
+    const c: DomainFunction<[number, number]> = all(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -337,10 +320,7 @@ describe('all', () => {
     const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
       Boolean(id),
     )
-    const d = all(a, b, c)
-    {
-      type test = ExpectDF<typeof d, [string, number, boolean]>
-    }
+    const d: DomainFunction<[string, number, boolean]> = all(a, b, c)
 
     const results = await d({ id: 1 })
     assertEquals(results, {
@@ -360,10 +340,7 @@ describe('all', () => {
       async ({ id }) => id,
     )
 
-    const c = all(a, b)
-    {
-      type test = ExpectDF<typeof c, [number, string]>
-    }
+    const c: DomainFunction<[number, string]> = all(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -386,10 +363,7 @@ describe('all', () => {
       throw 'Error'
     })
 
-    const c = all(a, b)
-    {
-      type test = ExpectDF<typeof c, [number, never]>
-    }
+    const c: DomainFunction<[number, never]> = all(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -407,10 +381,7 @@ describe('all', () => {
       async ({ id }) => id,
     )
 
-    const c = all(a, b)
-    {
-      type test = ExpectDF<typeof c, [string, string]>
-    }
+    const c: DomainFunction<[string, string]> = all(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -437,10 +408,7 @@ describe('all', () => {
       throw new Error('Error B')
     })
 
-    const c = all(a, b)
-    {
-      type test = ExpectDF<typeof c, [never, never]>
-    }
+    const c: DomainFunction<[never, never]> = all(a, b)
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
@@ -462,10 +430,7 @@ describe('first', () => {
     const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
       Boolean(id),
     )
-    const d = first(a, b, c)
-    {
-      type test = ExpectDF<typeof d, string | number | boolean>
-    }
+    const d: DomainFunction<string | number | boolean> = first(a, b, c)
 
     const results = await d({ id: 1 })
     assertEquals(results, {
@@ -485,10 +450,7 @@ describe('first', () => {
       z.object({ n: z.number(), operation: z.literal('decrement') }),
     )(async ({ n }) => n - 1)
 
-    const c = first(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = first(a, b)
 
     assertEquals(await c({ n: 1, operation: 'increment' }), {
       success: true,
@@ -507,10 +469,7 @@ describe('first', () => {
       throw 'Error'
     })
 
-    const c = first(a, b)
-    {
-      type test = ExpectDF<typeof c, string>
-    }
+    const c: DomainFunction<string> = first(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -535,10 +494,10 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id - 1 }),
     )
 
-    const c = merge(a, b)
-    {
-      type test = ExpectDF<typeof c, { resultA: number } & { resultB: number }>
-    }
+    const c: DomainFunction<{ resultA: number } & { resultB: number }> = merge(
+      a,
+      b,
+    )
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -559,13 +518,9 @@ describe('merge', () => {
     const c = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({ resultC: Boolean(id) }),
     )
-    const d = merge(a, b, c)
-    {
-      type test = ExpectDF<
-        typeof d,
-        { resultA: string } & { resultB: number } & { resultC: boolean }
-      >
-    }
+    const d: DomainFunction<
+      { resultA: string } & { resultB: number } & { resultC: boolean }
+    > = merge(a, b, c)
 
     const results = await d({ id: 1 })
     assertEquals(results, {
@@ -585,10 +540,7 @@ describe('merge', () => {
       async ({ id }) => ({ id }),
     )
 
-    const c = merge(a, b)
-    {
-      type test = ExpectDF<typeof c, { id: number }>
-    }
+    const c: DomainFunction<{ id: number }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -611,10 +563,7 @@ describe('merge', () => {
       throw 'Error'
     })
 
-    const c = merge(a, b)
-    {
-      type test = ExpectDF<typeof c, never>
-    }
+    const c: DomainFunction<never> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -632,10 +581,10 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id }),
     )
 
-    const c = merge(a, b)
-    {
-      type test = ExpectDF<typeof c, { resultA: string } & { resultB: string }>
-    }
+    const c: DomainFunction<{ resultA: string } & { resultB: string }> = merge(
+      a,
+      b,
+    )
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -662,10 +611,7 @@ describe('merge', () => {
       throw new Error('Error B')
     })
 
-    const c = merge(a, b)
-    {
-      type test = ExpectDF<typeof c, never>
-    }
+    const c: DomainFunction<never> = merge(a, b)
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
@@ -686,10 +632,7 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id - 1 }),
     )
 
-    const c = merge(a, b)
-    {
-      type test = ExpectDF<typeof c, number & { resultB: number }>
-    }
+    const c: DomainFunction<number & { resultB: number }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -713,10 +656,7 @@ describe('pipe', () => {
       async ({ id }) => id - 1,
     )
 
-    const c = pipe(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = pipe(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -739,10 +679,7 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = pipe(a, b)
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: true,
@@ -766,10 +703,7 @@ describe('pipe', () => {
       envParser,
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = pipe(a, b)
 
     assertEquals(await c(undefined, {}), {
       success: false,
@@ -793,10 +727,7 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = pipe(a, b)
 
     assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
       success: false,
@@ -820,10 +751,7 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = pipe(a, b)
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
@@ -850,10 +778,7 @@ describe('pipe', () => {
       async ({ aBoolean }) => !aBoolean,
     )
 
-    const d = pipe(a, b, c)
-    {
-      type test = ExpectDF<typeof c, boolean>
-    }
+    const d: DomainFunction<boolean> = pipe(a, b, c)
 
     assertEquals(await d({ aNumber: 1 }), {
       success: true,
@@ -876,10 +801,10 @@ describe('sequence', () => {
       async ({ id }) => ({ result: id - 1 }),
     )
 
-    const c = sequence(a, b)
-    {
-      type test = ExpectDF<typeof c, [{ id: number }, { result: number }]>
-    }
+    const c: DomainFunction<[{ id: number }, { result: number }]> = sequence(
+      a,
+      b,
+    )
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -902,10 +827,10 @@ describe('sequence', () => {
       z.object({ env: z.number() }),
     )(async ({ inp }, { env }) => ({ result: inp + env }))
 
-    const c = sequence(a, b)
-    {
-      type test = ExpectDF<typeof c, [{ inp: number }, { result: number }]>
-    }
+    const c: DomainFunction<[{ inp: number }, { result: number }]> = sequence(
+      a,
+      b,
+    )
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: true,
@@ -929,10 +854,7 @@ describe('sequence', () => {
       envParser,
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = sequence(a, b)
-    {
-      type test = ExpectDF<typeof c, [{ inp: number }, number]>
-    }
+    const c: DomainFunction<[{ inp: number }, number]> = sequence(a, b)
 
     assertEquals(await c(undefined, {}), {
       success: false,
@@ -956,10 +878,7 @@ describe('sequence', () => {
       z.object({ env: z.number() }),
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = sequence(a, b)
-    {
-      type test = ExpectDF<typeof c, [{ inp: number }, number]>
-    }
+    const c: DomainFunction<[{ inp: number }, number]> = sequence(a, b)
 
     assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
       success: false,
@@ -983,10 +902,7 @@ describe('sequence', () => {
       z.object({ env: z.number() }),
     )(async ({ inp }, { env }) => inp + env)
 
-    const c = sequence(a, b)
-    {
-      type test = ExpectDF<typeof c, [{ inp: string }, number]>
-    }
+    const c: DomainFunction<[{ inp: string }, number]> = sequence(a, b)
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
@@ -1013,17 +929,9 @@ describe('sequence', () => {
       async ({ aBoolean }) => ({ anotherBoolean: !aBoolean }),
     )
 
-    const d = sequence(a, b, c)
-    {
-      type test = ExpectDF<
-        typeof d,
-        [
-          { aString: string },
-          { aBoolean: boolean },
-          { anotherBoolean: boolean },
-        ]
-      >
-    }
+    const d: DomainFunction<
+      [{ aString: string }, { aBoolean: boolean }, { anotherBoolean: boolean }]
+    > = sequence(a, b, c)
 
     assertEquals(await d({ aNumber: 1 }), {
       success: true,
@@ -1042,10 +950,7 @@ describe('map', () => {
     )
     const b = (id: number) => id + 1
 
-    const c = map(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = map(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -1061,10 +966,7 @@ describe('map', () => {
     const a = makeDomainFunction(firstInputParser)(async ({ id }) => id + 1)
     const b = (id: number) => id + 1
 
-    const c = map(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = map(a, b)
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
@@ -1082,10 +984,7 @@ describe('map', () => {
       throw 'failed to map'
     }
 
-    const c = map(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = map(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -1107,10 +1006,7 @@ describe('mapError', () => {
         inputErrors: [{ message: 'New Input Error Message' }],
       } as ErrorData)
 
-    const c = mapError(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = mapError(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -1137,10 +1033,7 @@ describe('mapError', () => {
         ],
       } as ErrorData)
 
-    const c = mapError(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = mapError(a, b)
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
@@ -1158,10 +1051,7 @@ describe('mapError', () => {
       throw 'failed to map'
     }
 
-    const c = mapError(a, b)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
+    const c: DomainFunction<number> = mapError(a, b)
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
@@ -1178,15 +1068,8 @@ describe('fromSuccess', () => {
       async ({ id }) => id + 1,
     )
 
-    const c = fromSuccess(a)
-    {
-      type test = Expect<
-        Equal<
-          typeof c,
-          (input?: unknown, environment?: unknown) => Promise<number>
-        >
-      >
-    }
+    const c: (input?: unknown, environment?: unknown) => Promise<number> =
+      fromSuccess(a)
 
     assertEquals(await c({ id: 1 }), 2)
   })
@@ -1196,15 +1079,8 @@ describe('fromSuccess', () => {
       async ({ id }) => id + 1,
     )
 
-    const c = fromSuccess(a)
-    {
-      type test = Expect<
-        Equal<
-          typeof c,
-          (input?: unknown, environment?: unknown) => Promise<number>
-        >
-      >
-    }
+    const c: (input?: unknown, environment?: unknown) => Promise<number> =
+      fromSuccess(a)
 
     assertRejects(async () => {
       await c({ invalidInput: 'should error' })
@@ -1224,12 +1100,9 @@ describe('trace', () => {
       result: unknown
     } | null = null
 
-    const c = trace((context) => {
+    const c: DomainFunction<number> = trace((context) => {
       contextFromFunctionA = context
     })(a)
-    {
-      type test = ExpectDF<typeof c, number>
-    }
 
     assertEquals(await fromSuccess(c)({ id: 1 }), 2)
     assertEquals(contextFromFunctionA, {
