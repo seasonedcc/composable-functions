@@ -810,7 +810,8 @@ To better understand how to structure your data, refer to [qs documentation](htt
 
 ## Resources
 - Join our [Discord community](https://discord.gg/BkTEqq3nX8)!
-- Blog post: [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
+- [The case for domain-functions](https://dev.to/diogob/the-case-for-domain-functions-f4e)
+- [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
 
 ## Acknowlegements
 
