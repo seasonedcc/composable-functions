@@ -1,5 +1,6 @@
 export * from './domain-functions.ts'
 export * from './input-resolvers.ts'
 export * from './errors.ts'
+export * from './deprecated-types.ts'
 export * from './types.ts'
 export { mergeObjects } from './utils.ts'
