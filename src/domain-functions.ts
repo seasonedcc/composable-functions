@@ -15,6 +15,7 @@ import type {
   Result,
   TupleToUnion,
   UnpackData,
+  UnpackResult,
 } from './types.ts'
 import type { Last, List, ListToResultData } from './types.ts'
 import type { SuccessResult } from './types.ts'
@@ -22,7 +23,7 @@ import type { SuccessResult } from './types.ts'
 function makeDomainFunction<
   Schema extends z.ZodTypeAny,
   EnvSchema extends z.ZodTypeAny,
->(inputSchema?: Schema , environmentSchema?: EnvSchema) {
+>(inputSchema?: Schema, environmentSchema?: EnvSchema) {
   return function <Output>(
     handler: (
       input: z.infer<Schema>,
@@ -33,7 +34,7 @@ function makeDomainFunction<
       const envResult = await (
         environmentSchema ?? z.object({})
       ).safeParseAsync(environment)
-        const result = await (inputSchema ?? z.undefined()).safeParseAsync(input)
+      const result = await (inputSchema ?? z.undefined()).safeParseAsync(input)
 
       try {
         if (result.success === true && envResult.success === true) {
@@ -299,20 +300,19 @@ function mapError<O>(
   }
 }
 
-function trace<T>(
-  traceFn: (
-    { input, environment, result }: {
-      input: unknown;
-      environment: unknown;
-      result: Result<T>;
-    },
-  ) => void,
-): (fn: DomainFunction<T>) => DomainFunction<T> {
+type TraceData<T> = {
+  input: unknown
+  environment: unknown
+  result: T
+}
+function trace<D extends DomainFunction = DomainFunction<unknown>>(
+  traceFn: ({ input, environment, result }: TraceData<UnpackResult<D>>) => void,
+): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
-    const result = await fn(input, environment);
-    traceFn({ input, environment, result });
-    return result;
-  };
+    const result = await fn(input, environment)
+    traceFn({ input, environment, result } as TraceData<UnpackResult<D>>)
+    return result
+  }
 }
 
 export {
