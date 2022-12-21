@@ -21,6 +21,23 @@ import type {
 import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
+function typedEnv<D, T extends DomainFunction<D>, Env extends z.ZodTypeAny>(
+  df: T,
+  envSchema: Env,
+): DomainFunction<D, z.input<Env>> {
+  return async (input: unknown, environment: z.input<Env>) => {
+    const envResult = await envSchema.safeParseAsync(environment)
+    if (envResult.success === true) return df(input, envResult.data)
+
+    return {
+      success: false,
+      errors: [],
+      inputErrors: [],
+      environmentErrors: formatSchemaErrors(envResult.error.issues),
+    }
+  }
+}
+
 function makeDomainFunction<
   Schema extends z.ZodTypeAny,
   EnvSchema extends z.ZodTypeAny,
@@ -31,7 +48,7 @@ function makeDomainFunction<
       environment: z.infer<EnvSchema>,
     ) => Promise<Output>,
   ) {
-    return async function (input, environment = {}) {
+    return async function (input = undefined, environment = {}) {
       const envResult = await (
         environmentSchema ?? z.object({})
       ).safeParseAsync(environment)
@@ -327,4 +344,5 @@ export {
   pipe,
   sequence,
   trace,
+  typedEnv,
 }

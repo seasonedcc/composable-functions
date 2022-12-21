@@ -18,6 +18,7 @@ import {
   merge,
   sequence,
   trace,
+  typedEnv,
 } from './domain-functions.ts'
 import {
   EnvironmentError,
@@ -78,11 +79,16 @@ describe('makeDomainFunction', () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
-    const handler: DomainFunction<readonly [number, number]> =
+    const handler: DomainFunction<
+      readonly [number, number],
+      { uid?: unknown }
+    > = typedEnv(
       makeDomainFunction(
         parser,
         envParser,
-      )(async ({ id }, { uid }) => [id, uid] as const)
+      )(async ({ id }, { uid }) => [id, uid] as const),
+      envParser,
+    )
 
     assertEquals(await handler({ id: '1' }, { uid: '2' }), {
       success: true,
@@ -311,18 +317,20 @@ describe('all', () => {
   })
 
   it('should combine many domain functions into one', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
-      String(id),
-    )
+    const a = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.object({ uid: z.number() }),
+    )(async ({ id }) => String(id))
     const b = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => id + 1,
     )
     const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
       Boolean(id),
     )
-    const d: DomainFunction<[string, number, boolean]> = all(a, b, c)
+    const d: DomainFunction<[string, number, boolean], { uid: number }> =
+      typedEnv(all(a, b, c), z.object({ uid: z.number() }))
 
-    const results = await d({ id: 1 })
+    const results = await d({ id: 1 }, { uid: 1 })
     assertEquals(results, {
       success: true,
       data: ['1', 2, true],

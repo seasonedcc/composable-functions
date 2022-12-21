@@ -25,8 +25,8 @@ type ErrorData = Omit<ErrorResult, 'success'>
 
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
-type DomainFunction<Output = unknown> = {
-  (input?: unknown, environment?: unknown): Promise<Result<Output>>
+type DomainFunction<Output = unknown, Env = unknown> = {
+  (input?: unknown, environment?: Env): Promise<Result<Output>>
 }
 
 type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
