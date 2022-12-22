@@ -40,6 +40,7 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
   - [inputFromFormData](#inputfromformdata)
   - [inputFromUrl](#inputfromurl)
   - [inputFromSearch](#inputfromsearch)
+- [Need help?](#need-help)
 - [Resources](#resources)
 - [Acknowlegements](#acknowlegements)
 
@@ -807,6 +808,9 @@ async (request: Request) => {
 ```
 
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
+
+## Need help?
+We provide [DX as a service](https://dx.seasoned.cc).
 
 ## Resources
 - Join our [Discord community](https://discord.gg/BkTEqq3nX8)!
