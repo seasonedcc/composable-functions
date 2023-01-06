@@ -31,11 +31,11 @@ await build({
     description:
       'Decouple your business logic from your controllers. With first-class type inference from end to end.',
     license: 'MIT',
-    author: 'Seasoned Software',
+    author: 'Seasoned',
     bugs: {
-      url: 'https://github.com/SeasonedSoftware/domain-functions/issues',
+      url: 'https://github.com/seasonedcc/domain-functions/issues',
     },
-    homepage: 'https://github.com/SeasonedSoftware/domain-functions',
+    homepage: 'https://github.com/seasonedcc/domain-functions',
   },
 })
 
