@@ -809,9 +809,6 @@ async (request: Request) => {
 
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
 
-## Need help?
-We provide [DX as a service](https://dx.seasoned.cc).
-
 ## Resources
 - Join our [Discord community](https://discord.gg/BkTEqq3nX8)!
 - [The case for domain-functions](https://dev.to/diogob/the-case-for-domain-functions-f4e)
