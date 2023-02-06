@@ -1,7 +1,7 @@
 # Keep your business logic clean with Domain Functions
 
-Domain Functions helps you decouple your business logic from your controllers. With first-class type inference from end to end.
-It does this by enforcing the parameters' types in runtime (through [zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
+Domain Functions helps you decouple your business logic from your controllers, with first-class type inference from end to end.
+It does this by enforcing the parameters' types at runtime (through [zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
 
 ![](example.gif)
 
@@ -45,11 +45,12 @@ It does this by enforcing the parameters' types in runtime (through [zod](https:
 - [Acknowlegements](#acknowlegements)
 
 ## Benefits
-- End-to-End typesafety all the way from the Backend to the UI
-- Removes the plumbing of extracting and parsing structured data from your Requests
-- Keep your domain functions decoupled from the framework, with the assurance that your values conform to your types
-- Easier to test and maintain business logic
-- Business Logic can be expressed in the type system
+
+- Provides end-to-end type safety, all the way from the Backend to the UI
+- Removes the "plumbing": Extracting and parsing structured data from your Requests
+- Keeps your domain functions decoupled from the framework, with the assurance that your values conform to your types
+- Facilitates easier testing and maintainence of business logic
+- Allows business logic to be expressed in the type system
 
 ## Quickstart
 
@@ -61,7 +62,7 @@ npm i domain-functions zod
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
 import * as z from 'zod'
 
-const schema = z.object({ number: z.preprocess(Number, z.number()) })
+const schema = z.object({ number: z.coerce.number() })
 const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
 
 const result = await increment({ number: 1 })
@@ -89,7 +90,7 @@ To understand how to build the schemas, refer to [Zod documentation](https://git
 
 ## Using Deno
 
-If you are using [Deno](https://deno.land/) just import directly the functions you need from [deno.land/x](https://deno.land/x) as in
+If you are using [Deno](https://deno.land/), just directly import the functions you need from [deno.land/x](https://deno.land/x):
 
 ```ts
 import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts";
@@ -98,13 +99,14 @@ import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts"
 This documentation will use Node.JS imports by convention, just replace `domain-functions` with `https://deno.land/x/domain_functions/mod.ts` when using [Deno](https://deno.land/).
 
 ## Create your first action with Remix
+
 ```tsx
 import type { ActionFunction } from 'remix'
 import { useActionData, redirect } from 'remix'
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
 import * as z from 'zod'
 
-const schema = z.object({ number: z.preprocess(Number, z.number()) })
+const schema = z.object({ number: z.coerce.number() })
 
 export const action: ActionFunction = async ({ request }) => {
   const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
@@ -165,6 +167,7 @@ async ({ request }) => {
 
 We usually use the environment for ensuring authenticated requests.
 In this case, assume you have a `currentUser` function that returns the authenticated user:
+
 ```tsx
 const dangerousFunction = makeDomainFunction(
   someInputSchema,
@@ -177,6 +180,7 @@ const dangerousFunction = makeDomainFunction(
 ## Dealing with errors
 
 The error result has the following structure:
+
 ```ts
 type ErrorResult = {
   success: false
@@ -186,7 +190,7 @@ type ErrorResult = {
 }
 ```
 
-Where `inputErrors` and `environmentErrors` will be the errors from parsing the corresponding Zod schemas and `errors` will be for any exceptions thrown inside the domain function (in which case we keep a reference to the original exception):
+The `inputErrors` and `environmentErrors` fields will be the errors from parsing the corresponding Zod schemas, and the `errors` field will be for any exceptions thrown inside the domain function (in which case we keep a reference to the original exception):
 
 ```ts
 const alwaysFails = makeDomainFunction(input, environment)(async () => {
@@ -207,7 +211,8 @@ failedResult = {
 ### Changing the ErrorResult with Custom Errors
 
 ### ResultError constructor
-Whenever you want more controll of the `ErrorResult` of a domain function you can throw a `ResultError` from it. Therefore you'll be able to add multiple error messages to the structure:
+
+Whenever you want more control over the domain function's `ErrorResult`, you can throw a `ResultError` from the domain function's handler. You will then be able to add multiple error messages to the structure:
 
 ```ts
 const alwaysFails = makeDomainFunction(inputSchema)(async () => {
@@ -221,7 +226,7 @@ const alwaysFails = makeDomainFunction(inputSchema)(async () => {
 
 ### Other error constructors
 
-Or you can throw an `InputError` whenever you want a custom input error that cannot be generated by your schema.
+You can also throw an `InputError` whenever you want a custom input error that cannot be generated by your schema.
 
 ```ts
 const alwaysFails = makeDomainFunction(input, environment)(async () => {
@@ -239,7 +244,7 @@ failedResult = {
 */
 ```
 
-To throw several input errors in one shot you can use the pluralized version `InputErrors` as in:
+To throw several input errors at once, you can use the pluralized version `InputErrors` like this:
 
 ```ts
 const alwaysFails = makeDomainFunction(input, environment)(async () => {
@@ -260,10 +265,12 @@ failedResult = {
 You can also return a custom environment error by throwing an `EnvironmentError`.
 
 ### Using error messages in the UI
-To improve DX when dealing with errors we do export a couple of utilities.
+
+To improve DX when dealing with errors, we export a couple of utilities.
 
 #### errorMessagesFor
-Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a name, it returns a list of error messages with that name in their path.
+
+Given an array of `SchemaError` -- be it from `inputErrors` or `environmentErrors` -- and a name, `errorMessagesFor` returns an array of error messages with that name in their path.
 
 ```tsx
 const result = {
@@ -278,7 +285,8 @@ errorMessagesFor(result.environmentErrors, 'host')[0] === 'Must not be empty'
 ```
 
 #### errorMessagesForSchema
-Given a array of `SchemaError` be it from `inputErrors` or `environmentErrors` and a Zod Schema, it returns an object with a list of error messages for each key in the schema shape.
+
+Given an array of `SchemaError` -- be it from `inputErrors` or `environmentErrors` -- and a Zod Schema, `errorMessagesForSchema` returns an object with a list of error messages for each key in the schema's shape.
 
 ```tsx
 const schema = z.object({ email: z.string().nonEmpty(), password: z.string().nonEmpty() })
@@ -299,9 +307,10 @@ errorMessagesForSchema(result.inputErrors, schema)
 ```
 
 ### Tracing
-Whenever you need to intercept inputs and the result of a domain function without changing them, there is a function called `trace` that can help you..
 
-The most common use case is to log failures to the console or to an external service. Let's say you want to log failed domain functions, you could create a function such as:
+Whenever you need to intercept inputs and a domain function result without changing them, there is a function called `trace` that can help you.
+
+The most common use case is to log failures to the console or to an external service. Let's say you want to log failed domain functions, you could create a function such as this:
 
 ```ts
 const traceToConsole = trace((context) => {
@@ -311,13 +320,13 @@ const traceToConsole = trace((context) => {
 })
 ```
 
-Then, assuming you want to trace all failures in a `someOtherDomainFunction`, you just need to pass that domain function to our `tracetoConsole`:
+Then, assuming you want to trace all failures in a `someOtherDomainFunction`, you just need to pass that domain function to our `tracetoConsole` function:
 
 ```ts
 traceToConsole(someOtherDomainFunction)()
 ```
 
-It would be also simple to create a function that will send the errors to some error tracking service upon certain conditions:
+It would also be simple to create a function that will send the errors to some error tracking service under certain conditions:
 
 ```ts
 const trackErrors = trace(({ input, output, result }) => {
@@ -328,13 +337,15 @@ const trackErrors = trace(({ input, output, result }) => {
 ```
 
 ## Combining domain functions
-These combinators are useful for composing domain functions. The returning type of all of them is another `DomainFunction` thus allowing further application in more compositions.
+
+These combinators are useful for composing domain functions. They all return another `DomainFunction`, thus allowing further application in more compositions.
 
 ### all
 
-It creates a single domain function out of multiple domain functions.
-It will pass the same input and environment to all given functions.
-The resulting data is going to be a tuple of the results of each function only when __all functions__ are successful.
+`all` creates a single domain function out of multiple domain functions.
+It will pass the same input and environment to each provided function.
+If __all constituent functions__ are successful, The `data` field (on the composite domain function's result) will be a tuple containing each function's output.
+
 ```ts
 const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => String(id))
 const b = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => id + 1)
@@ -343,7 +354,8 @@ const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => Boo
 const results = await all(a, b, c)({ id: 1 })
 ```
 
-On the exemple above, the result will be of type `Result<[string, number, boolean]>`:
+For the example above, the result type will be `Result<[string, number, boolean]>`:
+
 ```ts
 {
   success: true,
@@ -354,7 +366,7 @@ On the exemple above, the result will be of type `Result<[string, number, boolea
 }
 ```
 
-If one or more of the functions fails, the errors will be concatenated:
+If any of the constituent functions fail, the `errors` field (on the composite domain function's result) will be an array of the concatenated errors from each failing function:
 
 ```ts
 const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
@@ -379,8 +391,9 @@ const results = await all(a, b)({ id: 1 })
 
 ### first
 
-It will return the result of the first successful domain function. It handles inputs and environments like the `all` function.
-__It is important to notice__ that all domain functions will be executed in parallel so keep an eye on the side effects.
+`first` will create a composite domain function that will return the result of the first successful constituent domain function. It handles inputs and environments like the `all` function.
+__It is important to notice__ that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
+
 ```ts
 const a = makeDomainFunction(
   z.object({ n: z.number(), operation: z.literal('increment') }),
@@ -392,7 +405,8 @@ const b = makeDomainFunction(
 const result = await first(a, b)({ n: 1, operation: 'increment' })
 ```
 
-On the exemple above, the result will be of type `Result<number>`:
+For the example above, the result type will be `Result<number>`:
+
 ```ts
 {
   success: true,
@@ -403,7 +417,8 @@ On the exemple above, the result will be of type `Result<number>`:
 }
 ```
 
-The resulting type is going to be a union of the results of each domain function.
+The composite domain function's result type will be a union of each constituent domain function's result type.
+
 ```ts
 const a = makeDomainFunction(z.object({ operation: z.literal('A') }))(async () => ({
   resultA: 'A',
@@ -419,7 +434,7 @@ if ('resultA' in result.data) return console.log('function A succeeded')
 return console.log('function B succeeded')
 ```
 
-If every domain function fails, the errors will be concatenated:
+If every constituent domain function fails, the `errors` field will contain the concatenated errors from each failing function's result:
 
 ```ts
 const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
@@ -444,10 +459,11 @@ const result = await first(a, b)({ id: 1 })
 
 ### merge
 
-It works exactly like the `all` function __but the shape of the result__ is different.
-Instead of a tuple, it will merge every result into an object.
+`merge` works exactly like the `all` function, except __the shape of the result__ is different.
+Instead of returning a tuple, it will return a merged object.
 
-The reasoning behind this is that it's easier to work with objects with named variables than long tuples when composing many domain functions.
+The motivation for this is that an object with named fields is often preferable to long tuples, when composing many domain functions.
+
 ```ts
 const a = makeDomainFunction(z.object({}))(async () => ({ resultA: '1' }))
 const b = makeDomainFunction(z.object({}))(async () => ({ resultB: 2 }))
@@ -456,7 +472,8 @@ const c = makeDomainFunction(z.object({}))(async () => ({ resultC: true }))
 const results = await merge(a, b, c)({})
 ```
 
-On the exemple above, the result will be of type `Result<{ resultA: string, resultB: number, resultC: boolean }>`:
+For the example above, the result type will be `Result<{ resultA: string, resultB: number, resultC: boolean }>`:
+
 ```ts
 {
   success: true,
@@ -466,7 +483,9 @@ On the exemple above, the result will be of type `Result<{ resultA: string, resu
   environmentErrors: [],
 }
 ```
-__Make sure you respect__ the shape of every domain function's return. If any domain function return is not an object, the resulting domain function will return an `ErrorResult` like so:
+
+__Be mindful of__ each constituent domain function's return type. If any domain function returns something other than an object, the composite domain function will return an `ErrorResult`:
+
 ```ts
 {
   success: false,
@@ -478,11 +497,12 @@ __Make sure you respect__ the shape of every domain function's return. If any do
 
 ### pipe
 
-It creates a single domain function out of a composition of multiple domain functions.
-It will pass the same environment to all given functions and pass the output of one to the next's input in left-to-right order.
-The resulting data is going to be the output of the rightmost function.
+`pipe` creates a single domain function out of a chain of multiple domain functions.
+It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order.
+The resulting data will be the output of the rightmost function.
 
-Note that there is no type-level assurance that one function output will be succesfully parsed by the next function in the pipeline.
+Note that there is no type-level assurance that a function's output will align with and be succesfully parsed by the next function in the pipeline.
+
 ```ts
 const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
   async ({ aNumber }) => ({
@@ -503,7 +523,8 @@ const d = pipe(a, b, c)
 const result = await d({ aNumber: 1 })
 ```
 
-On the exemple above, the result will be of type `Result<boolean>`:
+For the example above, the result type will be `Result<boolean>`:
+
 ```ts
 {
   success: true,
@@ -514,12 +535,12 @@ On the exemple above, the result will be of type `Result<boolean>`:
 }
 ```
 
-If one functions fails, the execution will halt and the error returned.
+If one functions fails, execution halts and the error is returned.
 
 ### sequence
 
-It works exactly like the `pipe` function __but the shape of the result__ is different.
-Instead of returning only the result of the last domain function, it will save every result along the way, returning them all in a tuple similar to the `all` function.
+`sequence` works exactly like the `pipe` function, except __the shape of the result__ is different.
+Instead of the `data` field being the output of the last domain function, it will be a tuple containing each intermediate output (similar to the `all` function).
 
 ```ts
 const a = makeDomainFunction(z.number())(async (aNumber) => String(aNumber))
@@ -530,7 +551,8 @@ const c = sequence(a, b)
 const result = await c(1)
 ```
 
-On the exemple above, the result will be of type `Result<[string, boolean]>`:
+For the example above, the result type will be `Result<[string, boolean]>`:
+
 ```ts
 {
   success: true,
@@ -541,7 +563,8 @@ On the exemple above, the result will be of type `Result<[string, boolean]>`:
 }
 ```
 
-If you'd rather have an object instead of a tuple (in the same fashion as the `merge` function), you can use the `map` along with the `mergeObjects` method like so:
+If you'd rather have an object instead of a tuple (similar to the `merge` function), you can use the `map` and `mergeObjects` functions like so:
+
 ```ts
 import { mergeObjects } from 'domain-functions'
 
@@ -556,15 +579,16 @@ const c = map(sequence(a, b), mergeObjects)
 
 const result = await c(1)
 ```
-On the exemple above, the result will be of type `Result<{ aString: string, aBoolean: boolean }>`.
+
+For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
 
 ### map
 
-It creates a single domain function that will apply a transformation over the `result.data` of a successful `DomainFunction`.
+`map` creates a single domain function that will apply a transformation over the `result.data` of a successful `DomainFunction`.
 When the given domain function fails, its error is returned wihout changes.
-The resulting data is going to be the output of the second argument.
+If successful, the `data` field will contain the output of the first function argument, mapped using the second function argument.
 
-This could be useful when composing domain functions to align their types:
+This can be useful when composing domain functions. For example, you might need to align input/output types in a pipeline:
 
 ```ts
 const fetchAsText = makeDomainFunction(z.object({ userId: z.number() }))(
@@ -586,7 +610,8 @@ const fetchFullName = pipe(
 const result = fetchFullName({ userId: 2 })
 ```
 
-On the exemple above, the result will be of type `Result<string>` and tis value something like:
+For the example above, the result type will be `Result<string>` and its value something like this:
+
 ```ts
 {
   success: true,
@@ -599,11 +624,11 @@ On the exemple above, the result will be of type `Result<string>` and tis value 
 
 ### mapError
 
-It creates a single domain function that will apply a transformation over the `ErrorResult` of a failed `DomainFunction`.
-When the given domain function suceeds, its result is returned wihout changes.
+`mapError` creates a single domain function that will apply a transformation over the `ErrorResult` of a failed `DomainFunction`.
+When the given domain function succeeds, its result is returned without changes.
 
 This could be useful when adding any layer of error handling.
-In the example bellow we are discarding the contents of the errors but keeping a tally of how many there were:
+In the example below, we are counting the errors but disregarding the contents:
 
 ```ts
 const increment = makeDomainFunction(z.object({ id: z.number() }))(
@@ -626,7 +651,8 @@ const incrementWithErrorSummary = mapError(increment, summarizeErrors)
 const result = await incrementWithErrorSummary({ invalidInput: '1' })
 ```
 
-On the exemple above, the `result` will be:
+For the example above, the `result` will be:
+
 ```ts
 {
   success: false,
@@ -637,8 +663,11 @@ On the exemple above, the `result` will be:
 ```
 
 ## Runtime utilities
+
 ### fromSuccess
-Whenever the composition utilities fall short and you want to call other domain functions inside your current one, you can use the `fromSuccess` function to create a domain function that is expected to always succeed.
+
+Whenever the composition utilities fall short, and you want to call other domain functions from inside your current one, you can use the `fromSuccess` function to create a domain function that is expected to always succeed.
+
 ```ts
 const domainFunctionA = makeDomainFunction(
   z.object({ id: z.string() }),
@@ -652,11 +681,11 @@ const domainFunctionA = makeDomainFunction(
 })
 ```
 
-Otherwise, if the domain function applied to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
+Otherwise, if the domain function passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
 
 ### mergeObjects
 
-It merges an array of objects into one object keeping the type inference all the way.
+`mergeObjects` merges an array of objects into one object, preserving type inference completely.
 Object properties from the rightmost object will take precedence over the leftmost ones.
 
 ```ts
@@ -675,7 +704,9 @@ The resulting object will be:
 ## Improve type inference with Utility Types
 
 ### UnpackData
-It infers the returned data of a successful domain function:
+
+`UnpackData` infers the returned data of a successful domain function:
+
 ```ts
 const fn = makeDomainFunction()(async () => '')
 
@@ -684,7 +715,9 @@ type Data = UnpackData<typeof fn>
 ```
 
 ### UnpackSuccess
-It infers the success result of a domain function:
+
+`UnpackSuccess` infers the success result of a domain function:
+
 ```ts
 const fn = makeDomainFunction()(async () => '')
 
@@ -693,7 +726,9 @@ type Success = UnpackSuccess<typeof fn>
 // Which is the same as: SuccessResult<string>
 ```
 ### UnpackResult
-It infers the result of a domain function:
+
+`UnpackResult` infers the result of a domain function:
+
 ```ts
 const fn = makeDomainFunction()(async () => '')
 
@@ -712,11 +747,13 @@ SuccessResult<string> | ErrorResult
 
 
 ## Extracting input values for domain functions
+
 We export some functions to help you extract values out of your requests before sending them as user input.
 
 ### inputFromForm
 
-Extracts values sent in a request through the `FormData` as an object of values:
+`inputFromForm` will read a request's `FormData` and extract its values into a structured object:
+
 ```tsx
 // Given the following form:
 function Form() {
@@ -739,7 +776,8 @@ async (request: Request) => {
 
 ### inputFromFormData
 
-Extracts a structured object from a `FormData`:
+`inputFromFormData` extracts values from a `FormData` object into a structured object:
+
 ```tsx
 const formData = new FormData()
 formData.append('email', 'john@doe.com')
@@ -750,7 +788,9 @@ const values = inputFromFormData(formData)
 ```
 
 ### inputFromUrl
-Extracts values sent in a request through the URL as an object of values:
+
+`inputFromUrl` will read a request's query params and extract its values into a structured object:
+
 ```tsx
 // Given the following form:
 function Form() {
@@ -769,7 +809,9 @@ async (request: Request) => {
 }
 ```
 ### inputFromSearch
-Extracts a structured object from a `URLSearchParams` object:
+
+`inputFromSearch` extracts values from a `URLSearchParams` object into a structured object:
+
 ```tsx
 const qs = new URLSearchParams()
 qs.append('colors[]', 'red')
@@ -780,6 +822,7 @@ const values = inputFromSearch(qs)
 ```
 
 All of the functions above will parse the input using [`qs`](https://www.npmjs.com/package/qs), thus allowing structured data as follows:
+
 ```tsx
 // Given the following form:
 function Form() {
@@ -810,13 +853,14 @@ async (request: Request) => {
 To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
 
 ## Resources
+
 - Join our [Discord community](https://discord.gg/BkTEqq3nX8)!
 - [The case for domain-functions](https://dev.to/diogob/the-case-for-domain-functions-f4e)
 - [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
 
 ## Acknowlegements
 
-We are grateful for [Zod](https://github.com/colinhacks/zod) as it is a great library and informed our design.
+We are grateful for [Zod](https://github.com/colinhacks/zod), as it is a great library and it informed our design.
 It's worth mentioning two other projects that inspired domain-functions:
 
 - [Servant](https://github.com/haskell-servant/servant/)
