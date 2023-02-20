@@ -1,4 +1,15 @@
-export * from './domain-functions.ts'
+export {
+  all,
+  first,
+  fromSuccess,
+  makeDomainFunction,
+  map,
+  mapError,
+  merge,
+  pipe,
+  sequence,
+  trace,
+} from './domain-functions.ts'
 export * from './input-resolvers.ts'
 export * from './errors.ts'
 export * from './deprecated-types.ts'
