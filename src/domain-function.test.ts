@@ -9,13 +9,13 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import {
   all,
-  combine,
   first,
   fromSuccess,
   makeDomainFunction,
   map,
   mapError,
   merge,
+  oldMerge,
   pipe,
   sequence,
   trace,
@@ -420,7 +420,7 @@ describe('all', () => {
   })
 })
 
-describe('combine', () => {
+describe('merge', () => {
   it('should combine an object of domain functions', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => id + 1,
@@ -429,7 +429,7 @@ describe('combine', () => {
       async ({ id }) => id - 1,
     )
 
-    const c: DomainFunction<{ a: number; b: number }> = combine({ a, b })
+    const c: DomainFunction<{ a: number; b: number }> = merge({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -448,7 +448,7 @@ describe('combine', () => {
       async ({ id }) => id,
     )
 
-    const c: DomainFunction<{ a: number; b: string }> = combine({ a, b })
+    const c: DomainFunction<{ a: number; b: string }> = merge({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -471,7 +471,7 @@ describe('combine', () => {
       throw 'Error'
     })
 
-    const c: DomainFunction<{ a: number; b: never }> = combine({ a, b })
+    const c: DomainFunction<{ a: number; b: never }> = merge({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -489,7 +489,7 @@ describe('combine', () => {
       async ({ id }) => id,
     )
 
-    const c: DomainFunction<{ a: string; b: string }> = combine({ a, b })
+    const c: DomainFunction<{ a: string; b: string }> = merge({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -516,7 +516,7 @@ describe('combine', () => {
       throw new Error('Error B')
     })
 
-    const c: DomainFunction<{ a: never; b: never }> = combine({ a, b })
+    const c: DomainFunction<{ a: never; b: never }> = merge({ a, b })
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
@@ -596,7 +596,7 @@ describe('first', () => {
   })
 })
 
-describe('merge', () => {
+describe('oldMerge through merge', () => {
   it('should combine two domain functions results into one object', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({ resultA: id + 1 }),

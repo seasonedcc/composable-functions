@@ -127,9 +127,32 @@ function all<Fns extends DomainFunction[]>(
   }
 }
 
-function combine<Fns extends Record<string, DomainFunction>>(
+function isRecordOfDF(
+  fns: DomainFunction | Record<string, DomainFunction>,
+): fns is Record<string, DomainFunction> {
+  return (
+    typeof fns === 'object' &&
+    Object.values(fns).every((fn) => fn instanceof Function)
+  )
+}
+
+/**
+ * @deprecated Using this function with multiple domain function arguments will be removed in 2.0.0.
+ * You should give it a single object of type Record<string, DomainFunction> instead.
+ */
+function merge<Fn extends DomainFunction, Fns extends DomainFunction[]>(
+  fn: Fn,
+  ...fns: Fns
+): DomainFunction<MergeObjs<UnpackAll<[Fn, ...Fns]>>>
+function merge<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
-): DomainFunction<UnpackDFObject<Fns>> {
+): DomainFunction<UnpackDFObject<Fns>>
+function merge<Fns extends DomainFunction | Record<string, DomainFunction>>(
+  fns: Fns,
+  ...rest: unknown[]
+): DomainFunction {
+  if (!isRecordOfDF(fns)) return oldMerge(fns, ...(rest as DomainFunction[]))
+
   return async (input, environment) => {
     const results = await Promise.all(
       Object.entries(fns).map(
@@ -162,7 +185,7 @@ function combine<Fns extends Record<string, DomainFunction>>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<UnpackDFObject<Fns>>
+    } as SuccessResult<UnpackDFObject<typeof fns>>
   }
 }
 
@@ -196,7 +219,7 @@ function first<Fns extends DomainFunction[]>(
   }
 }
 
-function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
+function oldMerge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
   return async (input, environment) => {
@@ -358,13 +381,13 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
 
 export {
   all,
-  combine,
   first,
   fromSuccess,
   makeDomainFunction,
   map,
   mapError,
   merge,
+  oldMerge,
   pipe,
   sequence,
   trace,
