@@ -8,14 +8,15 @@ import {
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import {
-  mapError,
-  makeDomainFunction,
-  fromSuccess,
-  map,
-  pipe,
   all,
+  combine,
   first,
+  fromSuccess,
+  makeDomainFunction,
+  map,
+  mapError,
   merge,
+  pipe,
   sequence,
   trace,
 } from './domain-functions.ts'
@@ -413,6 +414,116 @@ describe('all', () => {
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+})
+
+describe('combine', () => {
+  it('should combine an object of domain functions', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id + 1,
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id - 1,
+    )
+
+    const c: DomainFunction<{ a: number; b: number }> = combine({ a, b })
+
+    assertEquals(await c({ id: 1 }), {
+      success: true,
+      data: { a: 2, b: 0 },
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('should return error when one of the domain functions has input errors', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+
+    const c: DomainFunction<{ a: number; b: string }> = combine({ a, b })
+
+    assertEquals(await c({ id: 1 }), {
+      success: false,
+      inputErrors: [
+        {
+          message: 'Expected string, received number',
+          path: ['id'],
+        },
+      ],
+      errors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('should return error when one of the domain functions fails', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw 'Error'
+    })
+
+    const c: DomainFunction<{ a: number; b: never }> = combine({ a, b })
+
+    assertEquals(await c({ id: 1 }), {
+      success: false,
+      errors: [{ message: 'Error', exception: 'Error' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('should combine the inputError messages of both functions', async () => {
+    const a = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+    const b = makeDomainFunction(z.object({ id: z.string() }))(
+      async ({ id }) => id,
+    )
+
+    const c: DomainFunction<{ a: string; b: string }> = combine({ a, b })
+
+    assertEquals(await c({ id: 1 }), {
+      success: false,
+      inputErrors: [
+        {
+          message: 'Expected string, received number',
+          path: ['id'],
+        },
+        {
+          message: 'Expected string, received number',
+          path: ['id'],
+        },
+      ],
+      environmentErrors: [],
+      errors: [],
+    })
+  })
+
+  it('should combine the error messages when both functions fail', async () => {
+    const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw new Error('Error A')
+    })
+    const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+      throw new Error('Error B')
+    })
+
+    const c: DomainFunction<{ a: never; b: never }> = combine({ a, b })
+
+    assertObjectMatch(await c({ id: 1 }), {
+      success: false,
+      errors: [
+        { message: 'Error A', exception: { message: 'Error A' } },
+        { message: 'Error B', exception: { message: 'Error B' } },
+      ],
       inputErrors: [],
       environmentErrors: [],
     })
