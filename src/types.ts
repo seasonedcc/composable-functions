@@ -45,12 +45,15 @@ type UnpackAll<List, output extends unknown[] = []> = List extends [
   ? UnpackAll<rest, [...output, first]>
   : output
 
-type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
-  infer first,
-  ...infer rest,
-]
-  ? MergeObjs<rest, output & first>
-  : output
+type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
+  Objs extends [infer first, ...infer rest]
+    ? MergeObjs<rest, output & first>
+    : output
+>
+
+type Prettify<T> = {
+  [K in keyof T]: T[K]
+} & {}
 
 type TupleToUnion<T extends unknown[]> = T[number]
 

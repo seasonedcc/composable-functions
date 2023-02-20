@@ -494,10 +494,7 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id - 1 }),
     )
 
-    const c: DomainFunction<{ resultA: number } & { resultB: number }> = merge(
-      a,
-      b,
-    )
+    const c: DomainFunction<{ resultA: number; resultB: number }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -518,9 +515,11 @@ describe('merge', () => {
     const c = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({ resultC: Boolean(id) }),
     )
-    const d: DomainFunction<
-      { resultA: string } & { resultB: number } & { resultC: boolean }
-    > = merge(a, b, c)
+    const d: DomainFunction<{
+      resultA: string
+      resultB: number
+      resultC: boolean
+    }> = merge(a, b, c)
 
     const results = await d({ id: 1 })
     assertEquals(results, {
@@ -581,10 +580,7 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id }),
     )
 
-    const c: DomainFunction<{ resultA: string } & { resultB: string }> = merge(
-      a,
-      b,
-    )
+    const c: DomainFunction<{ resultA: string; resultB: string }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -632,6 +628,7 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id - 1 }),
     )
 
+    // @ts-expect-error the inferred type is huge bc it has all properties from the number primitive
     const c: DomainFunction<number & { resultB: number }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
