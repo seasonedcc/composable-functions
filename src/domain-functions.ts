@@ -8,8 +8,10 @@ import type {
   ErrorData,
   MergeObjs,
   Result,
+  TupleToIntersection,
   TupleToUnion,
   UnpackAll,
+  UnpackAllInputs,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
@@ -19,7 +21,7 @@ import type { SuccessResult } from './types.ts'
 
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
-): DomainFunction<UnpackAll<Fns>> {
+): DomainFunction<UnpackAll<Fns>, TupleToIntersection<UnpackAllInputs<Fns>>> {
   return async (input, environment) => {
     const results = await Promise.all(
       fns.map((fn) => (fn as DomainFunction)(input, environment)),

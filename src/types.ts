@@ -44,7 +44,7 @@ type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
 type UnpackAll<List, output extends unknown[] = []> = List extends [
   DomainFunction<infer first>,
-  ...infer rest,
+  ...infer rest
 ]
   ? UnpackAll<rest, [...output, first]>
   : output
@@ -52,6 +52,13 @@ type UnpackAll<List, output extends unknown[] = []> = List extends [
 type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
   | { [K in keyof Obj]: UnpackData<Obj[K]> }
   | never
+
+type UnpackAllInputs<List, output extends unknown[] = []> = List extends [
+  DomainFunction<unknown, infer first>,
+  ...infer rest
+]
+  ? UnpackAllInputs<rest, [...output, first]>
+  : output
 
 type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
   Objs extends [infer first, ...infer rest]
@@ -90,9 +97,10 @@ export type {
   Result,
   SchemaError,
   SuccessResult,
-  TupleToUnion,
   TupleToIntersection,
+  TupleToUnion,
   UnpackAll,
+  UnpackAllInputs,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
