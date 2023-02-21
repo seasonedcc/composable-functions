@@ -47,7 +47,7 @@ type UnpackAll<List, output extends unknown[] = []> = List extends [
 
 type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
   Objs extends [infer first, ...infer rest]
-    ? MergeObjs<rest, output & first>
+    ? MergeObjs<rest, Omit<output, keyof first> & first>
     : output
 >
 

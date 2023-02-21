@@ -507,7 +507,11 @@ describe('merge', () => {
 
   it('should combine many domain functions into one', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
-      async ({ id }) => ({ resultA: String(id) }),
+      async ({ id }) => ({
+        resultA: String(id),
+        resultB: String(id),
+        resultC: String(id),
+      }),
     )
     const b = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({ resultB: id + 1 }),
@@ -524,7 +528,11 @@ describe('merge', () => {
     const results = await d({ id: 1 })
     assertEquals(results, {
       success: true,
-      data: { resultA: '1', resultB: 2, resultC: true },
+      data: {
+        resultA: '1',
+        resultB: 2,
+        resultC: true,
+      },
       errors: [],
       inputErrors: [],
       environmentErrors: [],
@@ -539,7 +547,7 @@ describe('merge', () => {
       async ({ id }) => ({ id }),
     )
 
-    const c: DomainFunction<{ id: number }> = merge(a, b)
+    const c: DomainFunction<{ id: string }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
