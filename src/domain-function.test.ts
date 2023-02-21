@@ -507,7 +507,11 @@ describe('merge', () => {
 
   it('should combine many domain functions into one', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
-      async ({ id }) => ({ resultA: String(id) }),
+      async ({ id }) => ({
+        resultA: String(id),
+        resultB: String(id),
+        resultC: String(id),
+      }),
     )
     const b = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({ resultB: id + 1 }),
@@ -524,7 +528,11 @@ describe('merge', () => {
     const results = await d({ id: 1 })
     assertEquals(results, {
       success: true,
-      data: { resultA: '1', resultB: 2, resultC: true },
+      data: {
+        resultA: '1',
+        resultB: 2,
+        resultC: true,
+      },
       errors: [],
       inputErrors: [],
       environmentErrors: [],
@@ -539,7 +547,7 @@ describe('merge', () => {
       async ({ id }) => ({ id }),
     )
 
-    const c: DomainFunction<{ id: number }> = merge(a, b)
+    const c: DomainFunction<{ id: string }> = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -628,8 +636,8 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id - 1 }),
     )
 
-    // @ts-expect-error the inferred type is huge bc it has all properties from the number primitive
-    const c: DomainFunction<number & { resultB: number }> = merge(a, b)
+    // @ts-expect-error - DF a is not DomainFunction<Record<string, unknown>>
+    const c = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,

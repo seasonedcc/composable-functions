@@ -156,7 +156,7 @@ function first<Fns extends DomainFunction[]>(
   }
 }
 
-function merge<Fns extends DomainFunction[]>(
+function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
   return async (input, environment) => {
