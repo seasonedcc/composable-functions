@@ -387,7 +387,6 @@ export {
   map,
   mapError,
   merge,
-  oldMerge,
   pipe,
   sequence,
   trace,
