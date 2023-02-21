@@ -15,6 +15,7 @@ import {
   map,
   mapError,
   merge,
+  namedAll,
   pipe,
   sequence,
   trace,
@@ -419,7 +420,7 @@ describe('all', () => {
   })
 })
 
-describe('merge', () => {
+describe('namedAll', () => {
   it('should combine an object of domain functions', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => id + 1,
@@ -428,7 +429,7 @@ describe('merge', () => {
       async ({ id }) => id - 1,
     )
 
-    const c: DomainFunction<{ a: number; b: number }> = merge({ a, b })
+    const c: DomainFunction<{ a: number; b: number }> = namedAll({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -447,7 +448,7 @@ describe('merge', () => {
       async ({ id }) => id,
     )
 
-    const c: DomainFunction<{ a: number; b: string }> = merge({ a, b })
+    const c: DomainFunction<{ a: number; b: string }> = namedAll({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -470,7 +471,7 @@ describe('merge', () => {
       throw 'Error'
     })
 
-    const c: DomainFunction<{ a: number; b: never }> = merge({ a, b })
+    const c: DomainFunction<{ a: number; b: never }> = namedAll({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -488,7 +489,7 @@ describe('merge', () => {
       async ({ id }) => id,
     )
 
-    const c: DomainFunction<{ a: string; b: string }> = merge({ a, b })
+    const c: DomainFunction<{ a: string; b: string }> = namedAll({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -515,7 +516,7 @@ describe('merge', () => {
       throw new Error('Error B')
     })
 
-    const c: DomainFunction<{ a: never; b: never }> = merge({ a, b })
+    const c: DomainFunction<{ a: never; b: never }> = namedAll({ a, b })
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
@@ -595,7 +596,7 @@ describe('first', () => {
   })
 })
 
-describe('oldMerge through merge', () => {
+describe('merge', () => {
   it('should combine two domain functions results into one object', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => ({ resultA: id + 1 }),
