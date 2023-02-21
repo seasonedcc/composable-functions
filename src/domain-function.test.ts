@@ -636,8 +636,8 @@ describe('merge', () => {
       async ({ id }) => ({ resultB: id - 1 }),
     )
 
-    // @ts-expect-error the inferred type is huge bc it has all properties from the number primitive
-    const c: DomainFunction<number & { resultB: number }> = merge(a, b)
+    // @ts-expect-error - DF a is not DomainFunction<Record<string, unknown>>
+    const c = merge(a, b)
 
     assertEquals(await c({ id: 1 }), {
       success: false,
