@@ -82,7 +82,7 @@ function makeDomainFunction<
           ? []
           : formatSchemaErrors(envResult.error.issues),
       }
-    } as DomainFunction<Awaited<Output>, z.infer<Schema>>
+    } as DomainFunction<Awaited<Output>, z.infer<Schema>, z.infer<EnvSchema>>
   }
 }
 
