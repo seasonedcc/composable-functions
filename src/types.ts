@@ -25,7 +25,11 @@ type ErrorData = Omit<ErrorResult, 'success'>
 
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
-type DomainFunction<Output = unknown, Input = unknown, Environment = unknown> = {
+type DomainFunction<
+  Output = unknown,
+  Input = unknown,
+  Environment = unknown,
+> = {
   (input?: unknown, environment?: unknown): Promise<Result<Output>>
 }
 
@@ -62,6 +66,13 @@ type Prettify<T> = {
 
 type TupleToUnion<T extends unknown[]> = T[number]
 
+type TupleToIntersection<
+  T extends unknown[],
+  output extends unknown = unknown,
+> = T extends [infer first, ...infer rest]
+  ? TupleToIntersection<rest, output & first>
+  : Prettify<output>
+
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
@@ -80,6 +91,7 @@ export type {
   SchemaError,
   SuccessResult,
   TupleToUnion,
+  TupleToIntersection,
   UnpackAll,
   UnpackData,
   UnpackDFObject,
