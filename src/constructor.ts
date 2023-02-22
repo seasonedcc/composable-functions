@@ -11,8 +11,8 @@ import { formatSchemaErrors } from './utils.ts'
 import type { DomainFunction } from './types.ts'
 
 function makeDomainFunction<
-  Schema extends z.ZodTypeAny,
-  EnvSchema extends z.ZodTypeAny,
+  Schema extends z.ZodTypeAny = z.ZodUndefined,
+  EnvSchema extends z.ZodTypeAny = z.ZodUndefined,
 >(inputSchema?: Schema, environmentSchema?: EnvSchema) {
   return function <Output>(
     handler: (

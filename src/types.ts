@@ -60,6 +60,13 @@ type UnpackAllInputs<List, output extends unknown[] = []> = List extends [
   ? UnpackAllInputs<rest, [...output, first]>
   : output
 
+type UnpackAllEnvironments<List, output extends unknown[] = []> = List extends [
+  DomainFunction<unknown, unknown, infer first>,
+  ...infer rest
+]
+  ? UnpackAllEnvironments<rest, [...output, first]>
+  : output
+
 type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
   Objs extends [infer first, ...infer rest]
     ? MergeObjs<rest, Omit<output, keyof first> & first>
@@ -104,6 +111,7 @@ export type {
   TypedEnvironment,
   UnpackAll,
   UnpackAllInputs,
+  UnpackAllEnvironments,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
