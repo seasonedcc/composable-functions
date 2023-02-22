@@ -80,6 +80,8 @@ type TupleToIntersection<
   ? TupleToIntersection<rest, output & first>
   : Prettify<output>
 
+type TypedEnvironment<DF extends DomainFunction> = DF extends DomainFunction<infer O, unknown, infer E> ? (input: unknown, environment: E) => Promise<Result<O>> : never
+
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
@@ -99,6 +101,7 @@ export type {
   SuccessResult,
   TupleToIntersection,
   TupleToUnion,
+  TypedEnvironment,
   UnpackAll,
   UnpackAllInputs,
   UnpackData,
