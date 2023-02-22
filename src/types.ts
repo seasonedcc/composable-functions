@@ -45,6 +45,10 @@ type UnpackAll<List, output extends unknown[] = []> = List extends [
   ? UnpackAll<rest, [...output, first]>
   : output
 
+type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
+  | { [K in keyof Obj]: UnpackData<Obj[K]> }
+  | never
+
 type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
   Objs extends [infer first, ...infer rest]
     ? MergeObjs<rest, Omit<output, keyof first> & first>
@@ -53,6 +57,7 @@ type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
 
 type Prettify<T> = {
   [K in keyof T]: T[K]
+  // deno-lint-ignore ban-types
 } & {}
 
 type TupleToUnion<T extends unknown[]> = T[number]
@@ -77,6 +82,7 @@ export type {
   TupleToUnion,
   UnpackAll,
   UnpackData,
+  UnpackDFObject,
   UnpackResult,
   UnpackSuccess,
 }

@@ -22,8 +22,9 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [Tracing](#tracing)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
-  - [first](#first)
+  - [collect](#collect)
   - [merge](#merge)
+  - [first](#first)
   - [pipe](#pipe)
   - [sequence](#sequence)
   - [map](#map)
@@ -40,7 +41,6 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [inputFromFormData](#inputfromformdata)
   - [inputFromUrl](#inputfromurl)
   - [inputFromSearch](#inputfromsearch)
-- [Need help?](#need-help)
 - [Resources](#resources)
 - [Acknowlegements](#acknowlegements)
 
@@ -389,6 +389,79 @@ const results = await all(a, b)({ id: 1 })
 }*/
 ```
 
+### collect
+
+`collect` works like the `all` function but receives its constituent functions inside a record with string keys that identify each one. The shape of this record will be preserved for the `data` property in successful results.
+
+The motivation for this is that an object with named fields is often preferable to long tuples, when composing many domain functions.
+
+```ts
+const a = makeDomainFunction(z.object({}))(async () => '1')
+const b = makeDomainFunction(z.object({}))(async () => 2)
+const c = makeDomainFunction(z.object({}))(async () => true)
+
+const results = await collect({ a, b, c })({})
+```
+
+For the example above, the result type will be `Result<{ a: string, b: number, c: boolean }>`:
+
+```ts
+{
+  success: true,
+  data: { a: '1', b: 2, c: true },
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+As with the `all` function, in case any function fails their errors will be concatenated.
+
+### merge
+
+`merge` works exactly like the `all` function, except __the shape of the result__ is different.
+Instead of returning a tuple, it will return a merged object which is equivalent to:
+```ts
+map(all(a, b, c), mergeObjects)
+```
+
+The resulting data of every domain function will be merged into one object. __This could potentially lead to values of the leftmost functions being overwritten by the rightmost ones__.
+
+```ts
+const a = makeDomainFunction(z.object({}))(async () => ({
+  resultA: 'string',
+  resultB: 'string',
+  resultC: 'string',
+}))
+const b = makeDomainFunction(z.object({}))(async () => ({ resultB: 2 }))
+const c = makeDomainFunction(z.object({}))(async () => ({ resultC: true }))
+
+const results = await merge(a, b, c)({})
+```
+
+For the example above, the result type will be `Result<{ resultA: string, resultB: number, resultC: boolean }>`:
+
+```ts
+{
+  success: true,
+  data: { resultA: 'string', resultB: 2, resultC: true },
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+__Be mindful of__ each constituent domain function's return type. If any domain function returns something other than an object, the composite domain function will return an `ErrorResult`:
+
+```ts
+{
+  success: false,
+  errors: [{ message: 'Invalid data format returned from some domain functions' }],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
 ### first
 
 `first` will create a composite domain function that will return the result of the first successful constituent domain function. It handles inputs and environments like the `all` function.
@@ -455,44 +528,6 @@ const result = await first(a, b)({ id: 1 })
   inputErrors: [],
   environmentErrors: [],
 }*/
-```
-
-### merge
-
-`merge` works exactly like the `all` function, except __the shape of the result__ is different.
-Instead of returning a tuple, it will return a merged object.
-
-The motivation for this is that an object with named fields is often preferable to long tuples, when composing many domain functions.
-
-```ts
-const a = makeDomainFunction(z.object({}))(async () => ({ resultA: '1' }))
-const b = makeDomainFunction(z.object({}))(async () => ({ resultB: 2 }))
-const c = makeDomainFunction(z.object({}))(async () => ({ resultC: true }))
-
-const results = await merge(a, b, c)({})
-```
-
-For the example above, the result type will be `Result<{ resultA: string, resultB: number, resultC: boolean }>`:
-
-```ts
-{
-  success: true,
-  data: { resultA: '1', resultB: 2, resultC: true },
-  errors: [],
-  inputErrors: [],
-  environmentErrors: [],
-}
-```
-
-__Be mindful of__ each constituent domain function's return type. If any domain function returns something other than an object, the composite domain function will return an `ErrorResult`:
-
-```ts
-{
-  success: false,
-  errors: [{ message: 'Invalid data format returned from some domain functions' }],
-  inputErrors: [],
-  environmentErrors: [],
-}
 ```
 
 ### pipe
