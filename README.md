@@ -22,7 +22,7 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [Tracing](#tracing)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
-  - [namedAll](#namedall)
+  - [collect](#collect)
   - [merge](#merge)
   - [first](#first)
   - [pipe](#pipe)
@@ -389,9 +389,9 @@ const results = await all(a, b)({ id: 1 })
 }*/
 ```
 
-### namedAll
+### collect
 
-`namedAll` works like the `all` function but receives its constituent functions inside a record with string keys that identify each one. The shape of this record will be preserved for the `data` property in successful results.
+`collect` works like the `all` function but receives its constituent functions inside a record with string keys that identify each one. The shape of this record will be preserved for the `data` property in successful results.
 
 The motivation for this is that an object with named fields is often preferable to long tuples, when composing many domain functions.
 
@@ -400,7 +400,7 @@ const a = makeDomainFunction(z.object({}))(async () => '1')
 const b = makeDomainFunction(z.object({}))(async () => 2)
 const c = makeDomainFunction(z.object({}))(async () => true)
 
-const results = await namedAll({ a, b, c })({})
+const results = await collect({ a, b, c })({})
 ```
 
 For the example above, the result type will be `Result<{ a: string, b: number, c: boolean }>`:
