@@ -9,13 +9,13 @@ import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import {
   all,
+  collect,
   first,
   fromSuccess,
   makeDomainFunction,
   map,
   mapError,
   merge,
-  namedAll,
   pipe,
   sequence,
   trace,
@@ -420,7 +420,7 @@ describe('all', () => {
   })
 })
 
-describe('namedAll', () => {
+describe('collect', () => {
   it('should combine an object of domain functions', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(
       async ({ id }) => id + 1,
@@ -429,7 +429,7 @@ describe('namedAll', () => {
       async ({ id }) => id - 1,
     )
 
-    const c: DomainFunction<{ a: number; b: number }> = namedAll({ a, b })
+    const c: DomainFunction<{ a: number; b: number }> = collect({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: true,
@@ -448,7 +448,7 @@ describe('namedAll', () => {
       async ({ id }) => id,
     )
 
-    const c: DomainFunction<{ a: number; b: string }> = namedAll({ a, b })
+    const c: DomainFunction<{ a: number; b: string }> = collect({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -471,7 +471,7 @@ describe('namedAll', () => {
       throw 'Error'
     })
 
-    const c: DomainFunction<{ a: number; b: never }> = namedAll({ a, b })
+    const c: DomainFunction<{ a: number; b: never }> = collect({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -489,7 +489,7 @@ describe('namedAll', () => {
       async ({ id }) => id,
     )
 
-    const c: DomainFunction<{ a: string; b: string }> = namedAll({ a, b })
+    const c: DomainFunction<{ a: string; b: string }> = collect({ a, b })
 
     assertEquals(await c({ id: 1 }), {
       success: false,
@@ -516,7 +516,7 @@ describe('namedAll', () => {
       throw new Error('Error B')
     })
 
-    const c: DomainFunction<{ a: never; b: never }> = namedAll({ a, b })
+    const c: DomainFunction<{ a: never; b: never }> = collect({ a, b })
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,

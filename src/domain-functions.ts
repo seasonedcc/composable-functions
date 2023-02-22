@@ -127,7 +127,7 @@ function all<Fns extends DomainFunction[]>(
   }
 }
 
-function namedAll<Fns extends Record<string, DomainFunction>>(
+function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): DomainFunction<UnpackDFObject<Fns>> {
   return async (input, environment) => {
@@ -358,13 +358,13 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
 
 export {
   all,
+  collect,
   first,
   fromSuccess,
   makeDomainFunction,
   map,
   mapError,
   merge,
-  namedAll,
   pipe,
   sequence,
   trace,
