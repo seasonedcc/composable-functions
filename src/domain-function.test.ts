@@ -30,7 +30,7 @@ import type { DomainFunction, ErrorData, SuccessResult } from './types.ts'
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', async () => {
-    const handler = makeDomainFunction()(async () => 'no input!')
+    const handler = makeDomainFunction()(() => 'no input!')
 
     assertEquals(await handler(), {
       success: true,
@@ -126,6 +126,14 @@ describe('makeDomainFunction', () => {
       z.string(),
     )(async (n) => n + 1)
     const result = await handler(1, 'not going to be used')
+    assertEquals((result as SuccessResult<number>).data, 2)
+  })
+
+  it('accepts sync functions', async () => {
+    const handler: DomainFunction<number> = makeDomainFunction(z.number())(
+      (n) => n + 1,
+    )
+    const result = await handler(1)
     assertEquals((result as SuccessResult<number>).data, 2)
   })
 
