@@ -30,7 +30,7 @@ function makeDomainFunction<
     handler: (
       input: z.infer<Schema>,
       environment: z.infer<EnvSchema>,
-    ) => Promise<Output>,
+    ) => Output,
   ) {
     return async function (input, environment = {}) {
       const envResult = await (
@@ -94,7 +94,7 @@ function makeDomainFunction<
           ? []
           : formatSchemaErrors(envResult.error.issues),
       }
-    } as DomainFunction<Output>
+    } as DomainFunction<Awaited<Output>>
   }
 }
 
