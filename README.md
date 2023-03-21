@@ -63,7 +63,7 @@ import { makeDomainFunction, inputFromForm } from 'domain-functions'
 import * as z from 'zod'
 
 const schema = z.object({ number: z.coerce.number() })
-const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
+const increment = makeDomainFunction(schema)(({ number }) => number + 1)
 
 const result = await increment({ number: 1 })
 /*
@@ -109,7 +109,7 @@ import * as z from 'zod'
 const schema = z.object({ number: z.coerce.number() })
 
 export const action: ActionFunction = async ({ request }) => {
-  const increment = makeDomainFunction(schema)(async ({ number }) => number + 1)
+  const increment = makeDomainFunction(schema)(({ number }) => number + 1)
   const result = await increment(await inputFromForm(request))
 
   if (!result.success) return result
@@ -347,9 +347,9 @@ It will pass the same input and environment to each provided function.
 If __all constituent functions__ are successful, The `data` field (on the composite domain function's result) will be a tuple containing each function's output.
 
 ```ts
-const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => String(id))
-const b = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => id + 1)
-const c = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) => Boolean(id))
+const a = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => String(id))
+const b = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => id + 1)
+const c = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => Boolean(id))
 
 const results = await all(a, b, c)({ id: 1 })
 ```
@@ -369,10 +369,10 @@ For the example above, the result type will be `Result<[string, number, boolean]
 If any of the constituent functions fail, the `errors` field (on the composite domain function's result) will be an array of the concatenated errors from each failing function:
 
 ```ts
-const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+const a = makeDomainFunction(z.object({ id: z.number() }))(() => {
   throw new Error('Error A')
 })
-const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+const b = makeDomainFunction(z.object({ id: z.number() }))(() => {
   throw new Error('Error B')
 })
 
@@ -396,9 +396,9 @@ const results = await all(a, b)({ id: 1 })
 The motivation for this is that an object with named fields is often preferable to long tuples, when composing many domain functions.
 
 ```ts
-const a = makeDomainFunction(z.object({}))(async () => '1')
-const b = makeDomainFunction(z.object({}))(async () => 2)
-const c = makeDomainFunction(z.object({}))(async () => true)
+const a = makeDomainFunction(z.object({}))(() => '1')
+const b = makeDomainFunction(z.object({}))(() => 2)
+const c = makeDomainFunction(z.object({}))(() => true)
 
 const results = await collect({ a, b, c })({})
 ```
@@ -428,12 +428,12 @@ map(all(a, b, c), mergeObjects)
 The resulting data of every domain function will be merged into one object. __This could potentially lead to values of the leftmost functions being overwritten by the rightmost ones__.
 
 ```ts
-const a = makeDomainFunction(z.object({}))(async () => ({
+const a = makeDomainFunction(z.object({}))(() => ({
   resultA: 'string',
   resultB: 'string',
   resultC: 'string',
 }))
-const b = makeDomainFunction(z.object({}))(async () => ({ resultB: 2 }))
+const b = makeDomainFunction(z.object({}))(() => ({ resultB: 2 }))
 const c = makeDomainFunction(z.object({}))(async () => ({ resultC: true }))
 
 const results = await merge(a, b, c)({})
@@ -470,10 +470,10 @@ __It is important to notice__ that all constituent domain functions will be exec
 ```ts
 const a = makeDomainFunction(
   z.object({ n: z.number(), operation: z.literal('increment') }),
-)(async ({ n }) => n + 1)
+)(({ n }) => n + 1)
 const b = makeDomainFunction(
   z.object({ n: z.number(), operation: z.literal('decrement') }),
-)(async ({ n }) => n - 1)
+)(({ n }) => n - 1)
 
 const result = await first(a, b)({ n: 1, operation: 'increment' })
 ```
@@ -493,10 +493,10 @@ For the example above, the result type will be `Result<number>`:
 The composite domain function's result type will be a union of each constituent domain function's result type.
 
 ```ts
-const a = makeDomainFunction(z.object({ operation: z.literal('A') }))(async () => ({
+const a = makeDomainFunction(z.object({ operation: z.literal('A') }))(() => ({
   resultA: 'A',
 }))
-const b = makeDomainFunction(z.object({ operation: z.literal('B') }))(async () => ({
+const b = makeDomainFunction(z.object({ operation: z.literal('B') }))(() => ({
   resultB: 'B',
 }))
 
@@ -510,10 +510,10 @@ return console.log('function B succeeded')
 If every constituent domain function fails, the `errors` field will contain the concatenated errors from each failing function's result:
 
 ```ts
-const a = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+const a = makeDomainFunction(z.object({ id: z.number() }))(() => {
   throw new Error('Error A')
 })
-const b = makeDomainFunction(z.object({ id: z.number() }))(async () => {
+const b = makeDomainFunction(z.object({ id: z.number() }))(() => {
   throw new Error('Error B')
 })
 
@@ -540,12 +540,12 @@ Note that there is no type-level assurance that a function's output will align w
 
 ```ts
 const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
-  async ({ aNumber }) => ({
+  ({ aNumber }) => ({
     aString: String(aNumber),
   }),
 )
 const b = makeDomainFunction(z.object({ aString: z.string() }))(
-  async ({ aString }) => ({
+  ({ aString }) => ({
     aBoolean: aString == '1',
   }),
 )
@@ -578,8 +578,8 @@ If one functions fails, execution halts and the error is returned.
 Instead of the `data` field being the output of the last domain function, it will be a tuple containing each intermediate output (similar to the `all` function).
 
 ```ts
-const a = makeDomainFunction(z.number())(async (aNumber) => String(aNumber))
-const b = makeDomainFunction(z.string())(async (aString) => aString === '1')
+const a = makeDomainFunction(z.number())((aNumber) => String(aNumber))
+const b = makeDomainFunction(z.string())((aString) => aString === '1')
 
 const c = sequence(a, b)
 
@@ -603,11 +603,11 @@ If you'd rather have an object instead of a tuple (similar to the `merge` functi
 ```ts
 import { mergeObjects } from 'domain-functions'
 
-const a = makeDomainFunction(z.number())(async (aNumber) => ({
+const a = makeDomainFunction(z.number())((aNumber) => ({
   aString: String(aNumber)
 }))
 const b = makeDomainFunction(z.object({ aString: z.string() }))(
-  async ({ aString }) => ({ aBoolean: aString === '1' })
+  ({ aString }) => ({ aBoolean: aString === '1' })
 )
 
 const c = map(sequence(a, b), mergeObjects)
@@ -635,7 +635,7 @@ const fetchAsText = makeDomainFunction(z.object({ userId: z.number() }))(
 
 const fullName = makeDomainFunction(
   z.object({ first_name: z.string(), last_name: z.string() }),
-)(async ({ first_name, last_name }) => `${first_name} ${last_name}`)
+)(({ first_name, last_name }) => `${first_name} ${last_name}`)
 
 const fetchFullName = pipe(
   map(fetchAsText, ({ data }) => data),
@@ -667,7 +667,7 @@ In the example below, we are counting the errors but disregarding the contents:
 
 ```ts
 const increment = makeDomainFunction(z.object({ id: z.number() }))(
-  async ({ id }) => id + 1,
+  ({ id }) => id + 1,
 )
 
 const summarizeErrors = (result: ErrorData) =>
