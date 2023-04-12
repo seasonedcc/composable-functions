@@ -33,6 +33,23 @@ type DomainFunction<
   (input?: unknown, environment?: unknown): Promise<Result<Output>>
 }
 
+type StrictDomainFunction<
+  Output = unknown,
+  Input = unknown,
+  Environment = unknown,
+> = {
+  (input?: Input, environment?: Environment): Promise<Result<Output>>
+}
+
+type StrictEnvironmentDomainFunction<
+  Output = unknown,
+  Input = unknown,
+  Environment = unknown,
+> = {
+  (input?: unknown, environment?: Environment): Promise<Result<Output>>
+}
+
+
 type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
 
 type UnpackSuccess<F extends DomainFunction> = Extract<
@@ -98,6 +115,8 @@ type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 export type {
   AtLeastOne,
   DomainFunction,
+  StrictDomainFunction,
+  StrictEnvironmentDomainFunction,
   ErrorData,
   ErrorResult,
   ErrorWithMessage,

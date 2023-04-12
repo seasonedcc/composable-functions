@@ -8,6 +8,8 @@ import type {
   ErrorData,
   MergeObjs,
   Result,
+  StrictDomainFunction,
+  StrictEnvironmentDomainFunction,
   TupleToIntersection,
   TupleToUnion,
   UnpackAll,
@@ -282,6 +284,14 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
   }
 }
 
+function strict<O,I,E>(df: DomainFunction<O,I,E>){
+  return df as StrictDomainFunction<O,I,E>
+}
+
+function strictEnvironment<O,I,E>(df: DomainFunction<O,I,E>){
+  return df as StrictEnvironmentDomainFunction<O,I,E>
+}
+
 export {
   all,
   collect,
@@ -293,4 +303,6 @@ export {
   pipe,
   sequence,
   trace,
+  strict,
+  strictEnvironment
 }
