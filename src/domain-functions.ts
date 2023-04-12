@@ -6,6 +6,7 @@ import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
   DomainFunction,
   ErrorData,
+  First,
   MergeObjs,
   Result,
   StrictDomainFunction,
@@ -167,7 +168,12 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   }
 }
 
-function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
+type PipeResult<T extends DomainFunction[]> = 
+  Last<T> extends DomainFunction<infer O>
+  ? First<T> extends DomainFunction<infer _O, infer I, infer E> ? DomainFunction<O, I, E> : never
+  : never
+
+function pipe<T extends DomainFunction[]>(...fns: T): PipeResult<T> {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -179,7 +185,7 @@ function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
         return memo
       }
     }, head(input, environment))
-  }) as Last<T>
+  }) as PipeResult<T>
 }
 
 function sequence<Fns extends DomainFunction[]>(

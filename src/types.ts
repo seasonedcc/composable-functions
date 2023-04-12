@@ -49,7 +49,6 @@ type StrictEnvironmentDomainFunction<
   (input?: unknown, environment?: Environment): Promise<Result<Output>>
 }
 
-
 type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
 
 type UnpackSuccess<F extends DomainFunction> = Extract<
@@ -61,7 +60,7 @@ type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
 
 type UnpackAll<List, output extends unknown[] = []> = List extends [
   DomainFunction<infer first>,
-  ...infer rest
+  ...infer rest,
 ]
   ? UnpackAll<rest, [...output, first]>
   : output
@@ -72,14 +71,14 @@ type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
 
 type UnpackAllInputs<List, output extends unknown[] = []> = List extends [
   DomainFunction<unknown, infer first>,
-  ...infer rest
+  ...infer rest,
 ]
   ? UnpackAllInputs<rest, [...output, first]>
   : output
 
 type UnpackAllEnvironments<List, output extends unknown[] = []> = List extends [
   DomainFunction<unknown, unknown, infer first>,
-  ...infer rest
+  ...infer rest,
 ]
   ? UnpackAllEnvironments<rest, [...output, first]>
   : output
@@ -104,10 +103,20 @@ type TupleToIntersection<
   ? TupleToIntersection<rest, output & first>
   : Prettify<output>
 
-type TypedEnvironment<DF extends DomainFunction> = DF extends DomainFunction<infer O, unknown, infer E> ? (input: unknown, environment: E) => Promise<Result<O>> : never
+type TypedEnvironment<DF extends DomainFunction> = DF extends DomainFunction<
+  infer O,
+  unknown,
+  infer E
+>
+  ? (input: unknown, environment: E) => Promise<Result<O>>
+  : never
 
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
+  : never
+
+type First<T extends readonly unknown[]> = T extends [infer I, ...infer _L]
+  ? I
   : never
 
 type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
@@ -115,22 +124,23 @@ type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 export type {
   AtLeastOne,
   DomainFunction,
-  StrictDomainFunction,
-  StrictEnvironmentDomainFunction,
   ErrorData,
   ErrorResult,
   ErrorWithMessage,
+  First,
   Last,
   MergeObjs,
   Result,
   SchemaError,
+  StrictDomainFunction,
+  StrictEnvironmentDomainFunction,
   SuccessResult,
   TupleToIntersection,
   TupleToUnion,
   TypedEnvironment,
   UnpackAll,
-  UnpackAllInputs,
   UnpackAllEnvironments,
+  UnpackAllInputs,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
