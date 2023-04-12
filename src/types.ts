@@ -103,6 +103,18 @@ type TupleToIntersection<
   ? TupleToIntersection<rest, output & first>
   : Prettify<output>
 
+type ChainIntersection<T extends unknown> = T extends [
+  DomainFunction<infer FO, infer FI, infer FE>,
+  DomainFunction<infer SO, infer SI, infer SE>,
+  ...infer rest,
+]
+  ? FO extends SI
+    ? ChainIntersection<[DomainFunction<SO, FI, FE & SE>, ...rest]>
+    : void
+  : T extends [DomainFunction<infer O, infer I, infer E>]
+  ? DomainFunction<O, I, E>
+  : void
+
 type TypedEnvironment<DF extends DomainFunction> = DF extends DomainFunction<
   infer O,
   unknown,
@@ -123,6 +135,7 @@ type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 
 export type {
   AtLeastOne,
+  ChainIntersection,
   DomainFunction,
   ErrorData,
   ErrorResult,

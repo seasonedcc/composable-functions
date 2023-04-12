@@ -4,6 +4,7 @@ import { ResultError } from './errors.ts'
 import { toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
+  ChainIntersection,
   DomainFunction,
   ErrorData,
   First,
@@ -168,12 +169,7 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   }
 }
 
-type PipeResult<T extends DomainFunction[]> = 
-  Last<T> extends DomainFunction<infer O>
-  ? First<T> extends DomainFunction<infer _O, infer I, infer E> ? DomainFunction<O, I, E> : never
-  : never
-
-function pipe<T extends DomainFunction[]>(...fns: T): PipeResult<T> {
+function pipe<T extends DomainFunction[]>(...fns: T): ChainIntersection<T> {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -185,7 +181,7 @@ function pipe<T extends DomainFunction[]>(...fns: T): PipeResult<T> {
         return memo
       }
     }, head(input, environment))
-  }) as PipeResult<T>
+  }) as ChainIntersection<T>
 }
 
 function sequence<Fns extends DomainFunction[]>(
@@ -290,12 +286,12 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
   }
 }
 
-function strict<O,I,E>(df: DomainFunction<O,I,E>){
-  return df as StrictDomainFunction<O,I,E>
+function strict<O, I, E>(df: DomainFunction<O, I, E>) {
+  return df as StrictDomainFunction<O, I, E>
 }
 
-function strictEnvironment<O,I,E>(df: DomainFunction<O,I,E>){
-  return df as StrictEnvironmentDomainFunction<O,I,E>
+function strictEnvironment<O, I, E>(df: DomainFunction<O, I, E>) {
+  return df as StrictEnvironmentDomainFunction<O, I, E>
 }
 
 export {
@@ -308,7 +304,7 @@ export {
   merge,
   pipe,
   sequence,
-  trace,
   strict,
-  strictEnvironment
+  strictEnvironment,
+  trace,
 }
