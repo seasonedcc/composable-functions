@@ -2,7 +2,7 @@ import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.117.0/testing/asserts.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import { makeDomainFunction } from './domain-functions.ts'
+import { makeDomainFunction } from './constructor.ts'
 
 import {
   errorMessagesFor,
@@ -34,7 +34,7 @@ describe('errorMessagesFor', () => {
     assertEquals(errorMessagesFor(errors, 'c'), [])
   })
 
-  it('returns a list of error messages for a deep property of the formData', async () => {
+  it('returns a list of error messages for a deep property of the formData', () => {
     const err = [{ path: ['person', '0', 'email'], message: 'Invalid email' }]
     assertEquals(errorMessagesFor(err, 'person.0.email'), ['Invalid email'])
   })
@@ -85,7 +85,7 @@ describe('errorMessagesForSchema', () => {
         d2: z.array(z.string()),
       }),
     })
-    const domainFn = makeDomainFunction(schema)(async (data) => data)
+    const domainFn = makeDomainFunction(schema)((data) => data)
     const result = await domainFn(data)
 
     const errors = errorMessagesForSchema(result.inputErrors, schema)
@@ -127,7 +127,7 @@ describe('errorMessagesForSchema', () => {
         d2: z.array(z.string()),
       }),
     })
-    const domainFn = makeDomainFunction(schema)(async (data) => data)
+    const domainFn = makeDomainFunction(schema)((data) => data)
     const result = await domainFn(data)
 
     const errors = errorMessagesForSchema(result.inputErrors, schema)
@@ -174,7 +174,7 @@ describe('errorMessagesForSchema', () => {
         d2: z.array(z.string()),
       }),
     })
-    const domainFn = makeDomainFunction(schema)(async (data) => data)
+    const domainFn = makeDomainFunction(schema)((data) => data)
     const result = await domainFn(data)
 
     const errors = errorMessagesForSchema(result.inputErrors, schema)
