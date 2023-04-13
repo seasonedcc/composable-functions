@@ -4,11 +4,10 @@ import { ResultError } from './errors.ts'
 import { toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
-  ChainIntersection,
   DomainFunction,
   ErrorData,
-  First,
   MergeObjs,
+  PipeReturn,
   Result,
   StrictDomainFunction,
   StrictEnvironmentDomainFunction,
@@ -21,7 +20,6 @@ import type {
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
 
 function all<Fns extends DomainFunction[]>(
@@ -169,7 +167,7 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   }
 }
 
-function pipe<T extends DomainFunction[]>(...fns: T): ChainIntersection<T> {
+function pipe<T extends DomainFunction[]>(...fns: T): PipeReturn<T> {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -181,7 +179,7 @@ function pipe<T extends DomainFunction[]>(...fns: T): ChainIntersection<T> {
         return memo
       }
     }, head(input, environment))
-  }) as ChainIntersection<T>
+  }) as PipeReturn<T>
 }
 
 function sequence<Fns extends DomainFunction[]>(

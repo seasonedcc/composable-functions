@@ -103,15 +103,15 @@ type TupleToIntersection<
   ? TupleToIntersection<rest, output & first>
   : Prettify<output>
 
-type ChainIntersection<T extends unknown> = T extends [
+type PipeReturn<DFs extends unknown> = DFs extends [
   DomainFunction<infer FO, infer FI, infer FE>,
   DomainFunction<infer SO, infer SI, infer SE>,
   ...infer rest,
 ]
   ? FO extends SI
-    ? ChainIntersection<[DomainFunction<SO, FI, FE & SE>, ...rest]>
+    ? PipeReturn<[DomainFunction<SO, FI, FE & SE>, ...rest]>
     : void
-  : T extends [DomainFunction<infer O, infer I, infer E>]
+  : DFs extends [DomainFunction<infer O, infer I, infer E>]
   ? DomainFunction<O, I, E>
   : void
 
@@ -135,7 +135,6 @@ type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 
 export type {
   AtLeastOne,
-  ChainIntersection,
   DomainFunction,
   ErrorData,
   ErrorResult,
@@ -143,6 +142,7 @@ export type {
   First,
   Last,
   MergeObjs,
+  PipeReturn,
   Result,
   SchemaError,
   StrictDomainFunction,
