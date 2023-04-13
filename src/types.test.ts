@@ -1,5 +1,5 @@
-// deno-lint-ignore-file ban-ts-comment no-namespace no-unused-vars require-await
-import { makeDomainFunction } from './domain-functions.ts'
+// deno-lint-ignore-file ban-ts-comment no-namespace no-unused-vars
+import { makeDomainFunction } from './constructor.ts'
 import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
 import * as Subject from './types.ts'
@@ -13,7 +13,7 @@ export type Equal<A, B> =
     : false
 
 namespace UnpackData {
-  const result = makeDomainFunction()(async () => ({ name: 'foo' } as const))
+  const result = makeDomainFunction()(() => ({ name: 'foo' } as const))
 
   type test = Expect<
     Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>
@@ -25,7 +25,7 @@ namespace UnpackData {
 }
 
 namespace UnpackResult {
-  const result = makeDomainFunction()(async () => ({ name: 'foo' }))
+  const result = makeDomainFunction()(() => ({ name: 'foo' }))
 
   type test = Expect<
     Equal<Subject.UnpackResult<typeof result>, Subject.Result<{ name: string }>>
@@ -33,7 +33,7 @@ namespace UnpackResult {
 }
 
 namespace UnpackSuccess {
-  const result = makeDomainFunction()(async () => ({ name: 'foo' }))
+  const result = makeDomainFunction()(() => ({ name: 'foo' }))
 
   type test = Expect<
     Equal<
@@ -79,8 +79,8 @@ namespace AtLeastOne {
 }
 
 namespace UnpackAll {
-  const dfA = makeDomainFunction()(async () => ({ a: 1 } as const))
-  const dfB = makeDomainFunction()(async () => ({ b: 2 } as const))
+  const dfA = makeDomainFunction()(() => ({ a: 1 } as const))
+  const dfB = makeDomainFunction()(() => ({ b: 2 } as const))
 
   type Result = Subject.UnpackAll<[typeof dfA, typeof dfB]>
 
