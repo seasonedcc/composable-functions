@@ -6,8 +6,8 @@ import {
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
 import { makeDomainFunction } from './constructor.ts'
-import { all } from './domain-functions.ts'
-import type { DomainFunction } from './types.ts'
+import { all, strict } from './domain-functions.ts'
+import type { DomainFunction, StrictDomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('all', () => {
@@ -129,6 +129,63 @@ describe('all', () => {
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
       errors: [{ message: 'Error A' }, { message: 'Error B' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
+  it('does not type check when input intersection is never on strict version', () => {
+    const a = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.string(),
+    )(({ id }) => String(id))
+    const b = makeDomainFunction(
+      z.object({ id: z.string() }),
+      z.string(),
+    )(({ id }) => id + 1)
+    const d = strict(all(a, b))
+
+    type _R = Expect<
+      Equal<
+        typeof d,
+        StrictDomainFunction<[string, string], { id: never }, string>
+      >
+    >
+
+    //@ts-expect-error: The code below does not type check since our combination of inputs can never be parsed
+    d({ id: 1 }, 'the environment type checks')
+  })
+
+  it('should derive proper types for strict version', async () => {
+    const a = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.string(),
+    )(({ id }) => String(id))
+    const b = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.string(),
+    )(({ id }) => id + 1)
+    const c = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.string(),
+    )(({ id }) => Boolean(id))
+    const d = strict(all(a, b, c))
+
+    type _R = Expect<
+      Equal<
+        typeof d,
+        StrictDomainFunction<[string, number, boolean], { id: number }, string>
+      >
+    >
+
+    //@ts-expect-error: The code below does not type check since our environment parser won't take a number
+    let results = await d({ id: 1 }, 1)
+
+    results = await d({ id: 1 }, 'proper environment for parser')
+    assertEquals(results, {
+      success: true,
+      data: ['1', 2, true],
+      errors: [],
       inputErrors: [],
       environmentErrors: [],
     })
