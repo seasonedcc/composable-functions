@@ -116,8 +116,9 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<Equal<typeof c, void>>
 
+    //@ts-expect-error: when pipe cannot compose functions it should resolve to a void type
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
       errors: [],
