@@ -2,10 +2,10 @@ import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import { makeDomainFunction } from './constructor.ts'
-import { pipe } from './domain-functions.ts'
-import type { DomainFunction } from './types.ts'
-import type { Equal, Expect } from './types.test.ts'
+import { makeDomainFunction } from '../constructor.ts'
+import { pipe } from './index.ts'
+import type { DomainFunction } from '../types.ts'
+import type { Equal, Expect } from '../types.test.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
@@ -116,10 +116,9 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
-    type _R = Expect<
-      Equal<typeof c, DomainFunction<number, undefined, { env: number }>>
-    >
+    type _R = Expect<Equal<typeof c, void>>
 
+    //@ts-expect-error: when pipe cannot compose functions it should resolve to a void type
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
       errors: [],

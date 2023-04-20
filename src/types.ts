@@ -87,17 +87,10 @@ type TupleToIntersection<
   ? TupleToIntersection<rest, output & first>
   : Prettify<output>
 
-type PipeReturn<DFs extends unknown> = DFs extends [
-  DomainFunction<infer FO, infer FI, infer FE>,
-  DomainFunction<infer SO, infer SI, infer SE>,
-  ...infer rest,
-]
-  ? FO extends SI
-    ? PipeReturn<[DomainFunction<SO, FI, FE & SE>, ...rest]>
-    : void
-  : DFs extends [DomainFunction<infer O, infer I, infer E>]
-  ? DomainFunction<O, I, E>
-  : void
+type PipeReturn<T extends DomainFunction[]> = 
+  Last<T> extends DomainFunction<infer O>
+  ? First<T> extends DomainFunction<infer _O, infer I, infer E> ? DomainFunction<O, I, E> : never
+  : never
 
 type TypedEnvironment<DF extends DomainFunction> = DF extends DomainFunction<
   infer O,
