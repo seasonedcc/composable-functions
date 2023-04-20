@@ -1,8 +1,8 @@
 import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
 
-import { makeDomainFunction } from './constructor.ts'
-import { strict, strictEnvironment } from './domain-functions.ts'
+import { makeDomainFunction } from '../constructor.ts'
+import { strict, strictEnvironment } from './index.ts'
 
 describe('strict', () => {
   it('returns a function with an input and environment typed with the result of tbheir parsers', () => {

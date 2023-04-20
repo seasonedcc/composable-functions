@@ -9,8 +9,7 @@ import type {
   MergeObjs,
   PipeReturn,
   Result,
-  StrictDomainFunction,
-  StrictEnvironmentDomainFunction,
+  SuccessResult,
   TupleToIntersection,
   TupleToUnion,
   UnpackAll,
@@ -20,7 +19,6 @@ import type {
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import type { SuccessResult } from './types.ts'
 
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
@@ -284,14 +282,6 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
   }
 }
 
-function strict<O, I, E>(df: DomainFunction<O, I, E>) {
-  return df as StrictDomainFunction<O, I, E>
-}
-
-function strictEnvironment<O, I, E>(df: DomainFunction<O, I, E>) {
-  return df as StrictEnvironmentDomainFunction<O, I, E>
-}
-
 export {
   all,
   collect,
@@ -302,7 +292,5 @@ export {
   merge,
   pipe,
   sequence,
-  strict,
-  strictEnvironment,
   trace,
 }

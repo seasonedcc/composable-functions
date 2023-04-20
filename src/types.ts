@@ -33,22 +33,6 @@ type DomainFunction<
   (input?: unknown, environment?: unknown): Promise<Result<Output>>
 }
 
-type StrictDomainFunction<
-  Output = unknown,
-  Input = unknown,
-  Environment = unknown,
-> = {
-  (input?: Input, environment?: Environment): Promise<Result<Output>>
-}
-
-type StrictEnvironmentDomainFunction<
-  Output = unknown,
-  Input = unknown,
-  Environment = unknown,
-> = {
-  (input?: unknown, environment?: Environment): Promise<Result<Output>>
-}
-
 type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
 
 type UnpackSuccess<F extends DomainFunction> = Extract<
@@ -145,8 +129,6 @@ export type {
   PipeReturn,
   Result,
   SchemaError,
-  StrictDomainFunction,
-  StrictEnvironmentDomainFunction,
   SuccessResult,
   TupleToIntersection,
   TupleToUnion,
