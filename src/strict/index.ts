@@ -1,4 +1,5 @@
 import { DomainFunction, Result } from '../types.ts'
+import * as df from '../domain-functions.ts'
 
 type StrictDomainFunction<
   Output = unknown,
@@ -37,18 +38,7 @@ function strictEnvironment<O, I, E>(df: DomainFunction<O, I, E>) {
 }
 
 function pipe<T extends DomainFunction[]>(...fns: T): PipeReturn<T> {
-  const [head, ...tail] = fns
-
-  return ((input: unknown, environment?: unknown) => {
-    return tail.reduce(async (memo, fn) => {
-      const resolved = await memo
-      if (resolved.success) {
-        return fn(resolved.data as unknown, environment)
-      } else {
-        return memo
-      }
-    }, head(input, environment))
-  }) as PipeReturn<T>
+  return df.pipe(...fns) as unknown as PipeReturn<T>
 }
 
 export { pipe, strict, strictEnvironment }
