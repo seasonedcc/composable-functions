@@ -49,8 +49,8 @@ type UnpackAll<List, output extends unknown[] = []> = List extends [
   ? UnpackAll<rest, [...output, first]>
   : output
 
-type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
-  | { [K in keyof Obj]: UnpackData<Obj[K]> }
+type CollectReturn<Obj extends Record<string, DomainFunction>> =
+  | DomainFunction<{ [K in keyof Obj]: UnpackData<Obj[K]> }>
   | never
 
 type UnpackAllInputs<List, output extends unknown[] = []> = List extends [
@@ -130,7 +130,7 @@ export type {
   UnpackAllEnvironments,
   UnpackAllInputs,
   UnpackData,
-  UnpackDFObject,
+  CollectReturn,
   UnpackResult,
   UnpackSuccess,
 }

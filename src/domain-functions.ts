@@ -4,6 +4,7 @@ import { ResultError } from './errors.ts'
 import { toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
+  CollectReturn,
   DomainFunction,
   ErrorData,
   MergeObjs,
@@ -16,7 +17,6 @@ import type {
   UnpackAllEnvironments,
   UnpackAllInputs,
   UnpackData,
-  UnpackDFObject,
   UnpackResult,
 } from './types.ts'
 
@@ -55,8 +55,8 @@ function all<Fns extends DomainFunction[]>(
 
 function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
-): DomainFunction<UnpackDFObject<Fns>> {
-  return async (input, environment) => {
+): CollectReturn<Fns> {
+  return (async (input, environment) => {
     const results = await Promise.all(
       Object.entries(fns).map(
         async ([key, fn]) =>
@@ -88,8 +88,8 @@ function collect<Fns extends Record<string, DomainFunction>>(
       inputErrors: [],
       environmentErrors: [],
       errors: [],
-    } as SuccessResult<UnpackDFObject<Fns>>
-  }
+    }
+  }) as CollectReturn<Fns>
 }
 
 function first<Fns extends DomainFunction[]>(
