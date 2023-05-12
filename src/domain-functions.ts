@@ -53,6 +53,14 @@ function all<Fns extends DomainFunction[]>(
   }
 }
 
+/*
+function all<Fns extends DomainFunction[]>(
+  ...fns: Fns
+): DomainFunction<
+  UnpackAll<Fns>,
+  TupleToIntersection<UnpackAllInputs<Fns>>,
+  TupleToIntersection<UnpackAllEnvironments<Fns>>
+  */
 function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): CollectReturn<Fns> {
@@ -89,7 +97,7 @@ function collect<Fns extends Record<string, DomainFunction>>(
       environmentErrors: [],
       errors: [],
     }
-  }) as CollectReturn<Fns>
+  })
 }
 
 function first<Fns extends DomainFunction[]>(

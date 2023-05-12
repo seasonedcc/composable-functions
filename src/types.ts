@@ -49,8 +49,28 @@ type UnpackAll<List, output extends unknown[] = []> = List extends [
   ? UnpackAll<rest, [...output, first]>
   : output
 
+type UnionToIntersection<U> = (
+  U extends unknown ? (arg: U) => 0 : never
+) extends (arg: infer I) => 0
+  ? I
+  : never;
+
+type LastInUnion<U> = UnionToIntersection<
+  U extends unknown ? (x: U) => 0 : never
+> extends (x: infer L) => 0
+  ? L
+  : never;
+
+type UnionToTuple<T, Last = LastInUnion<T>> = [T] extends [never]
+  ? []
+  : [Last,...UnionToTuple<Exclude<T, Last>>]
+
+
+type DFsFromObject<DFs extends Record<string, DomainFunction>> = 
+  UnionToTuple<DFs[keyof DFs]>
+
 type CollectReturn<Obj extends Record<string, DomainFunction>> =
-  | DomainFunction<{ [K in keyof Obj]: UnpackData<Obj[K]> }>
+  | DomainFunction<{ [K in keyof Obj]: UnpackData<Obj[K]> }, TupleToIntersection<UnpackAllInputs<DFsFromObject<Obj>>>, TupleToIntersection<UnpackAllEnvironments<DFsFromObject<Obj>>>>
   | never
 
 type UnpackAllInputs<List, output extends unknown[] = []> = List extends [
