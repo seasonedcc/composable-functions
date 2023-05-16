@@ -1,4 +1,4 @@
-import { z } from 'https://deno.land/x/zod@v3.19.1/mod.ts'
+import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 import type {
   ErrorWithMessage,
   SchemaError,
