@@ -15,9 +15,9 @@ await build({
     undici: true,
   },
   mappings: {
-    'https://deno.land/x/zod@v3.19.1/mod.ts': {
+    'https://deno.land/x/zod@v3.21.4/mod.ts': {
       name: 'zod',
-      version: '^3.19.1',
+      version: '^3.21.4',
       peerDependency: true,
     },
     'https://deno.land/x/deno_qs@0.0.1/mod.ts': {

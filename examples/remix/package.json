@@ -21,7 +21,7 @@
     "react-dom": "^18.2.0",
     "remix": "^1.8.2",
     "tinycolor2": "^1.4.2",
-    "zod": "^3.19.1"
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@remix-run/dev": "^1.8.2",
