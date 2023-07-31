@@ -26,6 +26,7 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [merge](#merge)
   - [first](#first)
   - [pipe](#pipe)
+  - [branch](#branch)
   - [sequence](#sequence)
   - [map](#map)
   - [mapError](#maperror)
@@ -616,6 +617,58 @@ const result = await c(1)
 ```
 
 For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
+
+### branch
+
+Use `branch` to add conditional logic to your domain functions' compositions.
+
+It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output.
+
+```ts
+const getIdOrEmail = makeDomainFunction(z.object({ id: z.number().optional, email: z.string().optional() }))((data) => {
+  return data.id ?? data.email
+})
+const findUserById = makeDomainFunction(z.number())((id) => {
+  return db.users.find({ id })
+})
+const findUserByEmail = makeDomainFunction(z.string().email())((email) => {
+  return db.users.find({ email })
+})
+const findUserByIdOrEmail = branch(
+  getIdOrEmail,
+  (output) => (typeof output === "number" ? findUserById : findUserByEmail),
+)
+const result = await findUserByIdOrEmail({ id: 1 })
+```
+For the example above, the result type will be `Result<User>`:
+```ts
+{
+  success: true,
+  data: { id: 1, email: 'john@doe.com' },
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+If any function fails, execution halts and the error is returned.
+The predicate function will return an `ErrorResult` type in case it throws:
+```ts
+const findUserByIdOrEmail = branch(
+  getIdOrEmail,
+  (output) => {
+    throw new Error("Invalid input")
+  },
+)
+```
+For the example above, the result type will be `ErrorResult`:
+```ts
+{
+  success: false,
+  errors: [{ message: 'Invalid input' }],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
 
 ### map
 
