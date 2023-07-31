@@ -20,10 +20,6 @@ await build({
       version: '^3.21.4',
       peerDependency: true,
     },
-    'https://deno.land/x/deno_qs@0.0.1/mod.ts': {
-      name: 'qs',
-      version: '^6.10.3',
-    },
   },
   package: {
     name: 'domain-functions',
