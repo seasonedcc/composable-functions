@@ -227,6 +227,29 @@ function map<O, R>(
   }
 }
 
+function branch<T, Df extends DomainFunction>(
+  dfn: DomainFunction<T>,
+  resolver: (o: T) => Promise<Df> | Df,
+): DomainFunction<UnpackData<Df>> {
+  return async (input, environment) => {
+    const result = await dfn(input, environment)
+    if (!result.success) return result
+
+    try {
+      const nextDf = await resolver(result.data)
+      return nextDf(result.data, environment)
+    } catch (error) {
+      const errors = [toErrorWithMessage(error)]
+      return {
+        success: false,
+        errors,
+        inputErrors: [],
+        environmentErrors: [],
+      }
+    }
+  }
+}
+
 function fromSuccess<T extends DomainFunction>(
   df: T,
 ): (...args: Parameters<DomainFunction>) => Promise<UnpackData<T>> {
@@ -277,6 +300,7 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
 
 export {
   all,
+  branch,
   collect,
   first,
   fromSuccess,
