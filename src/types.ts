@@ -49,11 +49,10 @@ type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
   | { [K in keyof Obj]: UnpackData<Obj[K]> }
   | never
 
-type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
+type MergeObjs<Objs extends unknown[], output = {}> =
   Objs extends [infer first, ...infer rest]
-    ? MergeObjs<rest, Omit<output, keyof first> & first>
+    ? MergeObjs<rest, Prettify<Omit<output, keyof first> & first>>
     : output
->
 
 type Prettify<T> = {
   [K in keyof T]: T[K]
