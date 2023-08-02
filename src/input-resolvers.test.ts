@@ -144,13 +144,88 @@ describe('inputFromSearch', () => {
     })
   })
 
+  it('creates flat objects', () => {
+    const qs = new URLSearchParams()
+    qs.append('person[name]', 'John')
+    qs.append('person[address]', '6 Some Rd')
+    assertEquals(subject.inputFromSearch(qs), {
+      person: { name: 'John', address: '6 Some Rd' },
+    })
+  })
+
+  it('creates nested objects', () => {
+    const qs = new URLSearchParams()
+    qs.append('person[name]', 'John')
+    qs.append('person[address][street]', 'Some Rd')
+    qs.append('person[address][unit]', '6')
+    assertEquals(subject.inputFromSearch(qs), {
+      person: { name: 'John', address: { street: 'Some Rd', unit: '6' } },
+    })
+  })
+
+  it('creates nested objects in arrays', () => {
+    const qs = new URLSearchParams()
+    qs.append('person[0][name]', 'John')
+    qs.append('person[0][address][street]', 'Some Rd')
+    qs.append('person[0][address][unit]', '6')
+    assertEquals(subject.inputFromSearch(qs), {
+      person: [{ name: 'John', address: { street: 'Some Rd', unit: '6' } }],
+    })
+  })
+
+  it('square brackets are unnecessary to build lists', () => {
+    const qs = new URLSearchParams()
+    qs.append('colors', 'red')
+    qs.append('colors', 'green')
+    qs.append('colors', 'blue')
+    assertEquals(subject.inputFromSearch(qs), {
+      colors: ['red', 'green', 'blue'],
+    })
+  })
+
+  it('creates array with one element', () => {
+    const qs = new URLSearchParams()
+    qs.append('colors[0]', 'blue')
+    assertEquals(subject.inputFromSearch(qs), {
+      colors: ['blue'],
+    })
+  })
+
+  it('orders elements according to index in query string', () => {
+    const qs = new URLSearchParams()
+    qs.append('colors[1]', 'red')
+    qs.append('colors[0]', 'blue')
+    assertEquals(subject.inputFromSearch(qs), {
+      colors: ['blue', 'red'],
+    })
+  })
+
+  it('takes keys encoded as URI components', () => {
+    const qs = new URLSearchParams()
+    qs.append('some%20colors[0]', 'blue')
+    qs.append('some%20colors[1]', 'red%20ish')
+    assertEquals(subject.inputFromSearch(qs), {
+      'some colors': ['blue', 'red ish'],
+    })
+  })
+
+  it('takes values encoded as URI components', () => {
+    const qs = new URLSearchParams()
+    qs.append('colors[0]', 'blue')
+    qs.append('colors[1]', 'red%20ish')
+    qs.append('person[name]', 'Average%20Joe')
+    assertEquals(subject.inputFromSearch(qs), {
+      colors: ['blue', 'red ish'],
+      person: { name: 'Average Joe' },
+    })
+  })
+
   it('accepts manually constructed URLSearchParams', () => {
     const qs = new URLSearchParams()
     qs.append('colors[]', 'red')
-    qs.append('colors[]', 'green')
     qs.append('colors[]', 'blue')
     assertEquals(subject.inputFromSearch(qs), {
-      colors: ['red', 'green', 'blue'],
+      colors: ['red', 'blue'],
     })
   })
 })
