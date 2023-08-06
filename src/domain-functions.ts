@@ -52,8 +52,9 @@ function collect<Fns extends Record<string, DomainFunction>>(
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
     map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<UnpackDFObject<Fns>>
-
+  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<
+    UnpackDFObject<Fns>
+  >
 }
 
 function first<Fns extends DomainFunction[]>(
@@ -101,19 +102,11 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   })
 }
 
-function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
-  const [head, ...tail] = fns
-
-  return ((input: unknown, environment?: unknown) => {
-    return tail.reduce(async (memo, fn) => {
-      const resolved = await memo
-      if (resolved.success) {
-        return fn(resolved.data as unknown, environment)
-      } else {
-        return memo
-      }
-    }, head(input, environment))
-  }) as Last<T>
+function pipe<T extends DomainFunction[]>(
+  ...fns: T
+): DomainFunction<Last<UnpackAll<T>>> {
+  const last = <T>(ls: T[]): T => ls[ls.length - 1]
+  return map(sequence(...fns), last)
 }
 
 function sequence<Fns extends DomainFunction[]>(
