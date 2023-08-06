@@ -49,40 +49,11 @@ function all<Fns extends DomainFunction[]>(
 function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): DomainFunction<UnpackDFObject<Fns>> {
-  return async (input, environment) => {
-    const results = await Promise.all(
-      Object.entries(fns).map(
-        async ([key, fn]) =>
-          [key, await (fn as DomainFunction)(input, environment)] as const,
-      ),
-    )
+  const dfsWithKey = Object.entries(fns).map(([key, df]) =>
+    map(df, (result) => ({ [key]: result })),
+  )
+  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<UnpackDFObject<Fns>>
 
-    const collectedResults = results.map(([, result]) => result)
-    if (!isListOfSuccess(collectedResults)) {
-      return {
-        success: false,
-        errors: collectedResults.map(({ errors }) => errors).flat(),
-        inputErrors: collectedResults
-          .map(({ inputErrors }) => inputErrors)
-          .flat(),
-        environmentErrors: collectedResults
-          .map(({ environmentErrors }) => environmentErrors)
-          .flat(),
-      }
-    }
-
-    const allData = results.map(([key, result]) => [
-      key,
-      (result as SuccessResult).data,
-    ])
-    return {
-      success: true,
-      data: Object.fromEntries(allData),
-      inputErrors: [],
-      environmentErrors: [],
-      errors: [],
-    } as SuccessResult<UnpackDFObject<Fns>>
-  }
 }
 
 function first<Fns extends DomainFunction[]>(
