@@ -427,6 +427,8 @@ Instead of returning a tuple, it will return a merged object which is equivalent
 map(all(a, b, c), mergeObjects)
 ```
 
+**NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+
 The resulting data of every domain function will be merged into one object. __This could potentially lead to values of the leftmost functions being overwritten by the rightmost ones__.
 
 ```ts
