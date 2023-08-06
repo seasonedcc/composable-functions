@@ -86,47 +86,19 @@ function first<Fns extends DomainFunction[]>(
   }
 }
 
+/**
+ * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+ */
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return async (input, environment) => {
-    const results = await Promise.all(
-      fns.map((fn) => (fn as DomainFunction)(input, environment)),
-    )
-
-    if (!isListOfSuccess(results)) {
-      return {
-        success: false,
-        errors: results.map(({ errors }) => errors).flat(),
-        inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-        environmentErrors: results
-          .map(({ environmentErrors }) => environmentErrors)
-          .flat(),
-      }
+  return map(all(...fns), (results) => {
+    const resultSchema = z.record(z.any())
+    if (results.some((r) => resultSchema.safeParse(r).success === false)) {
+      throw new Error('Invalid data format returned from some domainFunction')
     }
-
-    const collectedResults = results.map(({ data }) => data)
-
-    const resultSchema = z.array(z.object({}))
-    if (!resultSchema.safeParse(collectedResults).success) {
-      return {
-        success: false,
-        errors: [
-          { message: 'Invalid data format returned from some domainFunction' },
-        ],
-        inputErrors: [],
-        environmentErrors: [],
-      }
-    }
-
-    return {
-      success: true,
-      data: mergeObjects(collectedResults),
-      inputErrors: [],
-      environmentErrors: [],
-      errors: [],
-    } as SuccessResult<MergeObjs<UnpackAll<Fns>>>
-  }
+    return mergeObjects(results)
+  })
 }
 
 function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
