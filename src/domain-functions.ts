@@ -50,7 +50,7 @@ function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): DomainFunction<UnpackDFObject<Fns>> {
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
-    map(df, (result) => Object.fromEntries([[key, result]])),
+    map(df, (result) => ({ [key]: result })),
   )
   return map(all(...dfsWithKey), mergeObjects) as DomainFunction<UnpackDFObject<Fns>>
 
