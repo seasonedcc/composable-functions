@@ -55,6 +55,21 @@ async function safeResult<T>(fn: () => T): Promise<Result<T>> {
   }
 }
 
+/**
+ * Creates a domain function.
+ * After giving the input and environment schemas, you can pass a handler function that takes type safe input and environment. That function is gonna catch any errors and always return a Result.
+ * @param inputSchema the schema for the input
+ * @param environmentSchema the schema for the environment
+ * @returns a handler function that takes type safe input and environment
+ * @example
+ * const safeFunction = makeDomainFunction(
+ *  z.object({ greeting: z.string() }),
+ *  z.object({ user: z.object({ name: z.string() }) }),
+ * )
+ * const myDf = safeFunction(({ greeting }, { user }) => {
+ *   return { message: `${greeting} ${user.name}` }
+ * })
+ */
 function makeDomainFunction<
   Schema extends z.ZodTypeAny,
   EnvSchema extends z.ZodTypeAny,
