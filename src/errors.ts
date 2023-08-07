@@ -16,6 +16,17 @@ function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   )
 }
 
+/**
+ * Turns the given 'unknown' error into an ErrorWithMessage.
+ * @param maybeError the error to turn into an ErrorWithMessage
+ * @returns the ErrorWithMessage
+ * @example
+ * try {}
+ * catch (error) {
+ *   const errorWithMessage = toErrorWithMessage(error)
+ *   console.log(errorWithMessage.message)
+ * }
+ */
 function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   const message = isErrorWithMessage(maybeError)
     ? maybeError.message
@@ -26,10 +37,22 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   }
 }
 
+/**
+ * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
+ * @param message the error message
+ * @param path the path to the property that caused the error
+ * @returns the SchemaError
+ */
 function schemaError(message: string, path: string): SchemaError {
   return { message, path: path.split('.') }
 }
 
+/**
+ * Extracts the error messages for a property from the given ErrorResult.
+ * @param errors the ErrorResult['inputErrors'] or ErrorResult['environmentErrors']
+ * @param name the name of the property
+ * @returns string[] the error messages for the given property
+ */
 function errorMessagesFor(errors: SchemaError[], name: string) {
   return errors
     .filter(({ path }) => path.join('.') === name)
@@ -92,6 +115,13 @@ function errorMessagesForSchema<T extends z.ZodTypeAny>(
   return errorTree
 }
 
+/**
+ * A custom error class for input errors.
+ * @example
+ * const df = makeDomainFunction()(() => {
+ *   throw new InputError('Invalid input', 'user.name')
+ * })
+ */
 class InputError extends Error {
   path: string
 
@@ -111,6 +141,13 @@ class InputErrors extends Error {
   }
 }
 
+/**
+ * A custom error class for environment errors.
+ * @example
+ * const df = makeDomainFunction()(() => {
+ *  throw new EnvironmentError('Invalid environment', 'user.name')
+ * })
+ */
 class EnvironmentError extends Error {
   path: string
 
@@ -121,6 +158,16 @@ class EnvironmentError extends Error {
   }
 }
 
+/**
+ * A custom error class for creating ErrorResult.
+ * @example
+ * const df = makeDomainFunction()(() => {
+ *   throw new ResultError({
+ *     errors: [{ message: 'Some error' }],
+ *     inputErrors: [{ message: 'Some input error', path: 'user.name' }],
+ *   })
+ * })
+ */
 class ResultError extends Error {
   result: ErrorResult
 
