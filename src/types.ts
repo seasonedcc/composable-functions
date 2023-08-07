@@ -1,5 +1,5 @@
 /**
- * The type of the items in the errors array returned by failed domain functions.
+ * Items in the errors array returned by failed domain functions.
  */
 type ErrorWithMessage = {
   message: string
