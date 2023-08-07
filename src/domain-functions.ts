@@ -1,7 +1,6 @@
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { ResultError } from './errors.ts'
-import { toErrorWithMessage } from './errors.ts'
 import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
   DomainFunction,
@@ -16,34 +15,30 @@ import type {
 } from './types.ts'
 import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
+import { safeResult } from './constructor.ts'
 
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return async (input, environment) => {
-    const results = await Promise.all(
-      fns.map((fn) => (fn as DomainFunction)(input, environment)),
-    )
+  return ((input, environment) => {
+    return safeResult(async () => {
+      const results = await Promise.all(
+        fns.map((fn) => (fn as DomainFunction)(input, environment)),
+      )
 
-    if (!isListOfSuccess(results)) {
-      return {
-        success: false,
-        errors: results.map(({ errors }) => errors).flat(),
-        inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-        environmentErrors: results
-          .map(({ environmentErrors }) => environmentErrors)
-          .flat(),
+      if (!isListOfSuccess(results)) {
+        throw new ResultError({
+          errors: results.map(({ errors }) => errors).flat(),
+          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
+          environmentErrors: results
+            .map(({ environmentErrors }) => environmentErrors)
+            .flat(),
+        })
       }
-    }
 
-    return {
-      success: true,
-      data: results.map(({ data }) => data),
-      inputErrors: [],
-      environmentErrors: [],
-      errors: [],
-    } as SuccessResult<UnpackAll<Fns>>
-  }
+      return results.map(({ data }) => data)
+    })
+  }) as DomainFunction<UnpackAll<Fns>>
 }
 
 function collect<Fns extends Record<string, DomainFunction>>(
@@ -52,122 +47,78 @@ function collect<Fns extends Record<string, DomainFunction>>(
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
     map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<UnpackDFObject<Fns>>
-
+  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<
+    UnpackDFObject<Fns>
+  >
 }
 
 function first<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<TupleToUnion<UnpackAll<Fns>>> {
-  return async (input, environment) => {
-    const results = await Promise.all(
-      fns.map((fn) => (fn as DomainFunction)(input, environment)),
-    )
+  return ((input, environment) => {
+    return safeResult(async () => {
+      const results = await Promise.all(
+        fns.map((fn) => (fn as DomainFunction)(input, environment)),
+      )
 
-    const result = results.find((r) => r.success) as SuccessResult | undefined
-    if (result) {
-      return {
-        success: true,
-        data: result.data,
-        inputErrors: [],
-        environmentErrors: [],
-        errors: [],
-      } as SuccessResult<TupleToUnion<UnpackAll<Fns>>>
-    }
+      const result = results.find((r) => r.success) as SuccessResult | undefined
+      if (!result) {
+        throw new ResultError({
+          errors: results.map(({ errors }) => errors).flat(),
+          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
+          environmentErrors: results
+            .map(({ environmentErrors }) => environmentErrors)
+            .flat(),
+        })
+      }
 
-    return {
-      success: false,
-      errors: results.map(({ errors }) => errors).flat(),
-      inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-      environmentErrors: results
-        .map(({ environmentErrors }) => environmentErrors)
-        .flat(),
-    }
-  }
+      return result.data
+    })
+  }) as DomainFunction<TupleToUnion<UnpackAll<Fns>>>
 }
 
+/**
+ * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+ */
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return async (input, environment) => {
-    const results = await Promise.all(
-      fns.map((fn) => (fn as DomainFunction)(input, environment)),
-    )
-
-    if (!isListOfSuccess(results)) {
-      return {
-        success: false,
-        errors: results.map(({ errors }) => errors).flat(),
-        inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-        environmentErrors: results
-          .map(({ environmentErrors }) => environmentErrors)
-          .flat(),
-      }
+  return map(all(...fns), (results) => {
+    const resultSchema = z.record(z.any())
+    if (results.some((r) => resultSchema.safeParse(r).success === false)) {
+      throw new Error('Invalid data format returned from some domainFunction')
     }
-
-    const collectedResults = results.map(({ data }) => data)
-
-    const resultSchema = z.array(z.object({}))
-    if (!resultSchema.safeParse(collectedResults).success) {
-      return {
-        success: false,
-        errors: [
-          { message: 'Invalid data format returned from some domainFunction' },
-        ],
-        inputErrors: [],
-        environmentErrors: [],
-      }
-    }
-
-    return {
-      success: true,
-      data: mergeObjects(collectedResults),
-      inputErrors: [],
-      environmentErrors: [],
-      errors: [],
-    } as SuccessResult<MergeObjs<UnpackAll<Fns>>>
-  }
+    return mergeObjects(results)
+  })
 }
 
-function pipe<T extends DomainFunction[]>(...fns: T): Last<T> {
-  const [head, ...tail] = fns
-
-  return ((input: unknown, environment?: unknown) => {
-    return tail.reduce(async (memo, fn) => {
-      const resolved = await memo
-      if (resolved.success) {
-        return fn(resolved.data as unknown, environment)
-      } else {
-        return memo
-      }
-    }, head(input, environment))
-  }) as Last<T>
+function pipe<T extends DomainFunction[]>(
+  ...fns: T
+): DomainFunction<Last<UnpackAll<T>>> {
+  const last = <T>(ls: T[]): T => ls[ls.length - 1]
+  return map(sequence(...fns), last)
 }
 
 function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return async function (input: unknown, environment?: unknown) {
-    const results = []
-    let currResult: undefined | Result<unknown>
-    for await (const fn of fns as DomainFunction[]) {
-      const result = await fn(
-        currResult?.success ? currResult.data : input,
-        environment,
-      )
-      if (!result.success) return result
-      currResult = result
-      results.push(result.data)
-    }
+  return function (input: unknown, environment?: unknown) {
+    return safeResult(async () => {
+      const results = []
+      let currResult: undefined | Result<unknown>
+      for await (const fn of fns) {
+        const result = await fn(
+          currResult?.success ? currResult.data : input,
+          environment,
+        )
+        if (!result.success) throw new ResultError(result)
+        currResult = result
+        results.push(result.data)
+      }
 
-    return {
-      success: true,
-      data: results,
-      inputErrors: [],
-      environmentErrors: [],
-      errors: [],
-    } as SuccessResult<UnpackAll<Fns>>
-  }
+      return results
+    })
+  } as DomainFunction<UnpackAll<Fns>>
 }
 
 function map<O, R>(
@@ -178,23 +129,7 @@ function map<O, R>(
     const result = await dfn(input, environment)
     if (!result.success) return result
 
-    try {
-      return {
-        success: true,
-        data: mapper(result.data),
-        errors: [],
-        inputErrors: [],
-        environmentErrors: [],
-      }
-    } catch (error) {
-      const errors = [toErrorWithMessage(error)]
-      return {
-        success: false,
-        errors,
-        inputErrors: [],
-        environmentErrors: [],
-      }
-    }
+    return safeResult(() => mapper(result.data))
   }
 }
 
@@ -206,18 +141,10 @@ function branch<T, Df extends DomainFunction>(
     const result = await dfn(input, environment)
     if (!result.success) return result
 
-    try {
+    return safeResult(async () => {
       const nextDf = await resolver(result.data)
-      return nextDf(result.data, environment)
-    } catch (error) {
-      const errors = [toErrorWithMessage(error)]
-      return {
-        success: false,
-        errors,
-        inputErrors: [],
-        environmentErrors: [],
-      }
-    }
+      return fromSuccess(nextDf)(result.data, environment)
+    })
   }
 }
 
@@ -240,17 +167,9 @@ function mapError<O>(
     const result = await dfn(input, environment)
     if (result.success) return result
 
-    try {
-      return { ...mapper(result), success: false }
-    } catch (error) {
-      const errors = [toErrorWithMessage(error)]
-      return {
-        success: false,
-        errors,
-        inputErrors: [],
-        environmentErrors: [],
-      }
-    }
+    return safeResult(() => {
+      throw new ResultError({ ...mapper(result) })
+    })
   }
 }
 

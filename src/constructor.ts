@@ -8,7 +8,52 @@ import {
 } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { formatSchemaErrors } from './utils.ts'
-import type { DomainFunction } from './types.ts'
+import type { DomainFunction, Result } from './types.ts'
+
+async function safeResult<T>(fn: () => T): Promise<Result<T>> {
+  try {
+    return {
+      success: true,
+      data: await fn(),
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    }
+  } catch (error) {
+    if (error instanceof InputError) {
+      return {
+        success: false,
+        errors: [],
+        environmentErrors: [],
+        inputErrors: [schemaError(error.message, error.path)],
+      }
+    }
+    if (error instanceof EnvironmentError) {
+      return {
+        success: false,
+        errors: [],
+        environmentErrors: [schemaError(error.message, error.path)],
+        inputErrors: [],
+      }
+    }
+    if (error instanceof InputErrors) {
+      return {
+        success: false,
+        errors: [],
+        environmentErrors: [],
+        inputErrors: error.errors.map((e) => schemaError(e.message, e.path)),
+      }
+    }
+    if (error instanceof ResultError) return error.result
+
+    return {
+      success: false,
+      errors: [toErrorWithMessage(error)],
+      inputErrors: [],
+      environmentErrors: [],
+    }
+  }
+}
 
 function makeDomainFunction<
   Schema extends z.ZodTypeAny,
@@ -20,70 +65,29 @@ function makeDomainFunction<
       environment: z.infer<EnvSchema>,
     ) => Output,
   ) {
-    return async function (input, environment = {}) {
-      const envResult = await (
-        environmentSchema ?? z.object({})
-      ).safeParseAsync(environment)
-      const result = await (inputSchema ?? z.undefined()).safeParseAsync(input)
+    return function (input, environment = {}) {
+      return safeResult(async () => {
+        const envResult = await (
+          environmentSchema ?? z.object({})
+        ).safeParseAsync(environment)
+        const result = await (inputSchema ?? z.undefined()).safeParseAsync(
+          input,
+        )
 
-      try {
-        if (result.success === true && envResult.success === true) {
-          return {
-            success: true,
-            data: await handler(result.data, envResult.data),
-            errors: [],
-            inputErrors: [],
-            environmentErrors: [],
-          }
+        if (!result.success || !envResult.success) {
+          throw new ResultError({
+            inputErrors: result.success
+              ? []
+              : formatSchemaErrors(result.error.issues),
+            environmentErrors: envResult.success
+              ? []
+              : formatSchemaErrors(envResult.error.issues),
+          })
         }
-      } catch (error) {
-        if (error instanceof InputError) {
-          return {
-            success: false,
-            errors: [],
-            environmentErrors: [],
-            inputErrors: [schemaError(error.message, error.path)],
-          }
-        }
-        if (error instanceof EnvironmentError) {
-          return {
-            success: false,
-            errors: [],
-            environmentErrors: [schemaError(error.message, error.path)],
-            inputErrors: [],
-          }
-        }
-        if (error instanceof InputErrors) {
-          return {
-            success: false,
-            errors: [],
-            environmentErrors: [],
-            inputErrors: error.errors.map((e) =>
-              schemaError(e.message, e.path),
-            ),
-          }
-        }
-        if (error instanceof ResultError) return error.result
-
-        return {
-          success: false,
-          errors: [toErrorWithMessage(error)],
-          inputErrors: [],
-          environmentErrors: [],
-        }
-      }
-      return {
-        success: false,
-        errors: [],
-        inputErrors: result.success
-          ? []
-          : formatSchemaErrors(result.error.issues),
-        environmentErrors: envResult.success
-          ? []
-          : formatSchemaErrors(envResult.error.issues),
-      }
+        return handler(result.data, envResult.data)
+      })
     } as DomainFunction<Awaited<Output>>
   }
 }
 
-export { makeDomainFunction }
+export { safeResult, makeDomainFunction }

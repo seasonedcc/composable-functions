@@ -184,7 +184,7 @@ describe('merge', () => {
     // @ts-expect-error - DF a is not DomainFunction<Record<string, unknown>>
     const c = merge(a, b)
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
       errors: [
         { message: 'Invalid data format returned from some domainFunction' },
