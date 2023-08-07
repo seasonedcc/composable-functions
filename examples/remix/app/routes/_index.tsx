@@ -1,20 +1,20 @@
 import { LoaderArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { inputFromUrl, map, merge } from 'domain-functions'
+import { inputFromUrl, map, collect } from 'domain-functions'
 import { listColors } from '~/domain/colors'
 import { listUsers } from '~/domain/users'
 import { loaderResponseOrThrow } from '~/lib'
 
 // We'll run these 2 domain functions in parallel with Promise.all
-const getData = merge(
+const getData = collect({
   // The second argument will transform the successful result of listColors,
   // we only care about what is in the "data" field
-  map(listColors, ({ colors }) => ({ colors: colors.data })),
-  listUsers,
-)
+  colors: map(listColors, ({ data }) => data),
+  users: listUsers,
+})
 export const loader = async ({ request }: LoaderArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
-  const result = await getData(null, inputFromUrl(request))
+  const result = await getData(inputFromUrl(request))
   return loaderResponseOrThrow(result)
 }
 

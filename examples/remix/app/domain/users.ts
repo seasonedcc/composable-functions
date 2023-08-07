@@ -1,32 +1,31 @@
 import * as z from 'zod'
-import { makeDomainFunction } from 'domain-functions'
-import { createApi } from '~/lib'
+import { makeDomainFunction as mdf } from 'domain-functions'
+import { makeService } from 'make-service'
 
-const fetchApi = createApi('https://jsonplaceholder.typicode.com')
+const jsonPlaceholder = makeService('https://jsonplaceholder.typicode.com')
 
 const userSchema = z.object({
-  user: z.object({
-    id: z.number(),
-    address: z.object({}),
-    company: z.object({}),
-    email: z.string(),
-    name: z.string(),
-    phone: z.string(),
-    username: z.string(),
-    website: z.string(),
-  }),
+  id: z.number(),
+  address: z.object({}),
+  company: z.object({}),
+  email: z.string(),
+  name: z.string(),
+  phone: z.string(),
+  username: z.string(),
+  website: z.string(),
 })
-type User = z.infer<typeof userSchema>
 
-const listUsers = makeDomainFunction(z.any())(async () => ({
-  users: await fetchApi<User['user'][]>('/users'),
-}))
+const listUsers = mdf(z.any())(async () => {
+  const response = await jsonPlaceholder.get('/users')
+  return response.json(z.array(userSchema))
+})
 
-const getUser = makeDomainFunction(z.object({ id: z.string() }))(
-  async ({ id }) => ({ user: await fetchApi<User>('/users/' + id) }),
-)
+const getUser = mdf(z.object({ id: z.string() }))(async ({ id }) => {
+  const response = await jsonPlaceholder.get('/users/:id', { params: { id } })
+  return response.json(userSchema)
+})
 
-const formatUser = makeDomainFunction(userSchema)(async ({ user }) => {
+const formatUser = mdf(userSchema)((user) => {
   return {
     user: {
       ...user,
