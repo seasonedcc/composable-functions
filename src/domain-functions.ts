@@ -77,21 +77,6 @@ function first<Fns extends DomainFunction[]>(
   }) as DomainFunction<TupleToUnion<UnpackAll<Fns>>>
 }
 
-/**
- * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
- */
-function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
-  ...fns: Fns
-): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), (results) => {
-    const resultSchema = z.record(z.any())
-    if (results.some((r) => resultSchema.safeParse(r).success === false)) {
-      throw new Error('Invalid data format returned from some domainFunction')
-    }
-    return mergeObjects(results)
-  })
-}
-
 function pipe<T extends DomainFunction[]>(
   ...fns: T
 ): DomainFunction<Last<UnpackAll<T>>> {
@@ -196,7 +181,6 @@ export {
   fromSuccess,
   map,
   mapError,
-  merge,
   pipe,
   sequence,
   trace,
