@@ -7,7 +7,7 @@ type ErrorWithMessage = {
 }
 
 /**
- * The type of a successful domain function result.
+ * A successful domain function result.
  */
 type SuccessResult<T = void> = {
   success: true
@@ -18,7 +18,7 @@ type SuccessResult<T = void> = {
 }
 
 /**
- * The type of a failed domain function result.
+ * A failed domain function result.
  */
 type ErrorResult = {
   success: false
@@ -28,7 +28,7 @@ type ErrorResult = {
 }
 
 /**
- * The type of the items in the inputErrors and environmentErrors array returned by failed domain functions.
+ * Items in the inputErrors and environmentErrors array returned by failed domain functions.
  */
 type SchemaError = {
   path: string[]
@@ -41,12 +41,12 @@ type SchemaError = {
 type ErrorData = Omit<ErrorResult, 'success'>
 
 /**
- * The type of the result returned by a domain function.
+ * The content of the Promise a domain function returns.
  */
 type Result<T = void> = SuccessResult<T> | ErrorResult
 
 /**
- * The type of the domain function.
+ * A domain function.
  * It carries the output type which can be further unpacked with UnpackData and other type helpers.
  */
 type DomainFunction<Output = unknown> = {
