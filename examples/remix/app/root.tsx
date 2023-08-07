@@ -1,9 +1,7 @@
 import type {
-  ActionArgs,
+  DataFunctionArgs,
   LinksFunction,
-  LoaderArgs,
-  MetaFunction,
-  ErrorBoundaryComponent,
+  V2_MetaFunction,
 } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
@@ -15,31 +13,32 @@ import {
   Scripts,
   useActionData,
   useLoaderData,
+  useRouteError,
 } from '@remix-run/react'
-import { ScrollRestoration, useCatch } from '@remix-run/react'
+import { ScrollRestoration } from '@remix-run/react'
 import * as React from 'react'
 
 import { envFromCookie, loaderResponseOrThrow } from '~/lib'
 import { agreeToGPD, cookie, getGPDInfo } from '~/domain/gpd'
 import { inputFromForm } from 'domain-functions'
 
-import styles from '~/styles/tailwind.css'
+import styles from "./tailwind.css";
 
-export const meta: MetaFunction = () => ({
+export const meta: V2_MetaFunction = () => ([{
   charset: 'utf-8',
   title: 'Remix Domains',
   viewport: 'width=device-width,initial-scale=1',
   language: 'en-US',
-})
+}])
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }]
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: DataFunctionArgs) => {
   const result = await getGPDInfo(null, await envFromCookie(cookie)(request))
   return loaderResponseOrThrow(result)
 }
 
-export const action = async ({ request }: ActionArgs) => {
+export const action = async ({ request }: DataFunctionArgs) => {
   const result = await agreeToGPD(await inputFromForm(request))
   if (!result.success || result.data.agreed === false) {
     return json(result)
@@ -107,25 +106,15 @@ function Document({ children, title }: DocumentProps) {
       <body className="isolate flex min-h-screen w-screen items-center justify-center overflow-y-auto overflow-x-hidden bg-[#282c34] p-12 text-center text-white antialiased">
         {children}
         <ScrollRestoration />
+        <Scripts />
         <LiveReload />
       </body>
     </html>
   )
 }
 
-export const CatchBoundary = () => {
-  const caught = useCatch()
-  return (
-    <Document title={`Error ${caught.status}`}>
-      <div>
-        <h1 className="text-6xl font-bold">{caught.status}</h1>
-        <h3 className="mt-2 text-xl">{caught.statusText}</h3>
-      </div>
-    </Document>
-  )
-}
-
-export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
+export function ErrorBoundary() {
+  const error = useRouteError();
   console.error(error)
   return (
     <Document title="Oh no!">

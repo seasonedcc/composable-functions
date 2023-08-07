@@ -16,9 +16,9 @@ export const action = async ({ request }: ActionArgs) => {
 }
 
 export default function Index() {
-  const { colorData } = useLoaderData<typeof loader>()
+  const { data } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
-  const color = actionData?.success ? actionData.data.color : colorData.color
+  const color = actionData?.success ? actionData.data.color : data.color
   return (
     <>
       <h1
@@ -27,11 +27,11 @@ export default function Index() {
         }}
         className="text-6xl font-extrabold"
       >
-        {colorData.name}
+        {data.name}
       </h1>
       <div className="mt-6 text-xl">
         <Form method="post" className="mt-6 text-3xl">
-          <input type="hidden" name="id" value={colorData.id} />
+          <input type="hidden" name="id" value={data.id} />
           <button
             name="color"
             value={tinycolor(color).lighten().toHexString()}

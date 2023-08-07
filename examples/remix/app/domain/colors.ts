@@ -1,43 +1,40 @@
 import * as z from 'zod'
-import { makeDomainFunction } from 'domain-functions'
-import { createApi } from '~/lib'
+import { makeDomainFunction as mdf } from 'domain-functions'
+import { makeService } from 'make-service'
 
-const fetchApi = createApi('https://reqres.in/api')
+const reqRes = makeService('https://reqres.in/api')
 
-type Color = {
-  id: number
-  name: string
-  year: number
-  color: string
-  pantone_value: string
-}
-const listColors = makeDomainFunction(
-  z.any(),
-  // The "environment" knows the URL's queryString
-  z.object({ page: z.string().optional() }),
-)(async (_i, { page = '1' }) => ({
-  colors: await fetchApi<{ data: Color[] }>(`/colors?page=${page}`),
-}))
+const colorSchema = z.object({
+  id: z.coerce.number(),
+  name: z.string(),
+  year: z.coerce.number(),
+  color: z.string(),
+  pantone_value: z.string(),
+})
 
-const getColor = makeDomainFunction(z.object({ id: z.string() }))(
-  async ({ id }) => {
-    const color = await fetchApi<{ data: Color }>(`/colors/${id}`)
-    return {
-      colorData: color.data,
-    }
-  },
-)
+const listColors = mdf(z.object({ page: z.string().optional() }))(async ({
+  page = '1',
+}) => {
+  const response = await reqRes.get('/colors', { query: { page } })
+  return response.json(z.object({ data: z.array(colorSchema) }))
+})
 
-const mutateColor = makeDomainFunction(
+const getColor = mdf(z.object({ id: z.string() }))(async ({ id }) => {
+  const response = await reqRes.get('/colors/:id', { params: { id } })
+  return response.json(z.object({ data: colorSchema }))
+})
+
+const mutateColor = mdf(
   z.object({
     id: z.string(),
     color: z.string().min(1, 'Color is required'),
   }),
-)(async ({ id, color }) =>
-  fetchApi<Color>('/colors/' + id, {
-    method: 'POST',
+)(async ({ id, color }) => {
+  const response = await reqRes.post('/colors/:id', {
+    params: { id },
     body: { color },
-  }),
-)
+  })
+  return response.json(colorSchema.pick({ color: true, id: true }))
+})
 
 export { listColors, getColor, mutateColor }
