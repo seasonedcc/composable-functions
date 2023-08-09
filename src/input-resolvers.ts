@@ -1,7 +1,10 @@
-import * as qsModule from 'https://deno.land/x/deno_qs@0.0.1/mod.ts'
-
-type ParsedQs = {
-  [key: string]: undefined | string | string[] | ParsedQs | ParsedQs[]
+type QueryStringRecord = {
+  [key: string]:
+    | undefined
+    | string
+    | string[]
+    | QueryStringRecord
+    | QueryStringRecord[]
 }
 
 type FormDataLike = Iterable<readonly [PropertyKey, unknown]>
@@ -9,9 +12,6 @@ type RequestLike = {
   url: string
   clone: () => { formData: () => Promise<FormDataLike> }
 }
-
-// Little hack to ensure we are compatible with the default export of qs in NPM
-const qs = qsModule.qs ? qsModule.qs : qsModule
 
 /**
  * Parses the given URLSearchParams into an object.
@@ -21,8 +21,82 @@ const qs = qsModule.qs ? qsModule.qs : qsModule
  * const parsed = inputFromSearch(new URLSearchParams('a=1&b=2'))
  * //    ^? { a: '1', b: '2' }
  */
-const inputFromSearch = (queryString: URLSearchParams) =>
-  (qs as typeof qsModule.qs).parse(queryString.toString()) as ParsedQs
+const inputFromSearch = (queryString: URLSearchParams) => {
+  const pairs: [string, string][] = []
+  queryString.forEach((value, key) => pairs.push([key, value]))
+
+  return pairs
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    .reduce((parsed, [encodedKey, encodedValue]) => {
+      const key = decodeURIComponent(encodedKey)
+      const value = decodeURIComponent(encodedValue)
+      const compositeKey = key.match(/([^\[\]]*)(\[.*\].*)$/)
+      if (compositeKey) {
+        const [, rootKey, subKeys] = compositeKey
+
+        const placeValue = (
+          current: unknown[] | Record<string, unknown>,
+          keys: string[],
+          value: string,
+        ): void => {
+          if (keys.length > 1) {
+            // we still have at least 1 nested key
+            const [nextKey, ...rest] = keys
+            const initialValueFromKeys = (nextKeys: string[]) =>
+              typeof nextKeys[0] === 'string' && !isNaN(Number(nextKeys[0]))
+                ? []
+                : {}
+            if (current instanceof Array) {
+              const arrayKey = Number(nextKey)
+              if (!current[arrayKey]) {
+                current[arrayKey] = initialValueFromKeys(rest)
+              }
+              placeValue(current[arrayKey] as typeof current, rest, value)
+            } else {
+              if (!current[nextKey]) {
+                current[nextKey] = initialValueFromKeys(rest)
+              }
+              placeValue(current[nextKey] as typeof current, rest, value)
+            }
+          } else {
+            // we are on the last key, assign the value
+            const [nextKey] = keys
+            if (isNaN(Number(nextKey))) {
+              if (!(current instanceof Array)) {
+                if (!current[nextKey]) {
+                  current[nextKey] = {}
+                }
+                current[nextKey] = value
+              }
+            } else {
+              if (current instanceof Array) {
+                current.push(value)
+              }
+            }
+          }
+        }
+
+        const subKeysList = subKeys
+          .replace(/^\[/, '')
+          .replace(/\]$/, '')
+          .split('][')
+        placeValue(parsed, [rootKey, ...subKeysList], value)
+        return parsed
+      } else {
+        // no subkeys here, to its either a simple value or a list
+        const existing = parsed[key]
+        if (typeof existing === 'string') {
+          parsed[key] = [existing, value]
+        } else if (existing instanceof Array) {
+          const strings = existing as string[]
+          strings.push(value)
+        } else {
+          parsed[key] = value
+        }
+        return parsed
+      }
+    }, {} as QueryStringRecord)
+}
 
 /**
  * Parses the given FormData into an object.
@@ -68,4 +142,4 @@ const inputFromForm = async (request: RequestLike) =>
 const inputFromUrl = (request: RequestLike) =>
   inputFromSearch(new URL(request.url).searchParams)
 
-export { inputFromForm, inputFromUrl, inputFromFormData, inputFromSearch }
+export { inputFromForm, inputFromFormData, inputFromSearch, inputFromUrl }

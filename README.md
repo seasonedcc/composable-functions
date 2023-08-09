@@ -912,7 +912,7 @@ const values = inputFromSearch(qs)
 // values = { colors: ['red', 'green', 'blue'] }
 ```
 
-All of the functions above will parse the input using [`qs`](https://www.npmjs.com/package/qs), thus allowing structured data as follows:
+All of the functions above will allow structured data as follows:
 
 ```tsx
 // Given the following form:
@@ -941,7 +941,7 @@ async (request: Request) => {
 }
 ```
 
-To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
+To better understand how to structure your data, refer to [this test file](./src/input-resolvers.test.ts)
 
 ## Resources
 
