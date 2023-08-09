@@ -6,7 +6,6 @@ type QueryStringRecord = {
     | QueryStringRecord
     | QueryStringRecord[]
 }
-type QueryStringPairs = [string, string][]
 
 type FormDataLike = Iterable<readonly [PropertyKey, unknown]>
 type RequestLike = {
@@ -23,7 +22,7 @@ type RequestLike = {
  * //    ^? { a: '1', b: '2' }
  */
 const inputFromSearch = (queryString: URLSearchParams) => {
-  const pairs: QueryStringPairs = []
+  const pairs: [string, string][] = []
   queryString.forEach((value, key) => pairs.push([key, value]))
 
   return pairs
@@ -43,10 +42,10 @@ const inputFromSearch = (queryString: URLSearchParams) => {
           if (keys.length > 1) {
             // we still have at least 1 nested key
             const [nextKey, ...rest] = keys
-            const initialValueFromKeys = (nextKeys: string[]) => 
-                  typeof nextKeys[0] === 'string' && !isNaN(Number(nextKeys[0]))
-                    ? []
-                    : {}
+            const initialValueFromKeys = (nextKeys: string[]) =>
+              typeof nextKeys[0] === 'string' && !isNaN(Number(nextKeys[0]))
+                ? []
+                : {}
             if (current instanceof Array) {
               const arrayKey = Number(nextKey)
               if (!current[arrayKey]) {
@@ -77,7 +76,10 @@ const inputFromSearch = (queryString: URLSearchParams) => {
           }
         }
 
-        const subKeysList = subKeys.replace(/^\[/, '').replace(/\]$/, '').split('][')
+        const subKeysList = subKeys
+          .replace(/^\[/, '')
+          .replace(/\]$/, '')
+          .split('][')
         placeValue(parsed, [rootKey, ...subKeysList], value)
         return parsed
       } else {
