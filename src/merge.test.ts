@@ -172,25 +172,4 @@ describe('merge', () => {
       environmentErrors: [],
     })
   })
-
-  it('should throw an error when the results of some domain functions are not objects', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id + 1,
-    )
-    const b = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => ({
-      resultB: id - 1,
-    }))
-
-    // @ts-expect-error - DF a is not DomainFunction<Record<string, unknown>>
-    const c = merge(a, b)
-
-    assertObjectMatch(await c({ id: 1 }), {
-      success: false,
-      errors: [
-        { message: 'Invalid data format returned from some domainFunction' },
-      ],
-      inputErrors: [],
-      environmentErrors: [],
-    })
-  })
 })

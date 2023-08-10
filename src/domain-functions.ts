@@ -1,5 +1,3 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
-
 import { ResultError } from './errors.ts'
 import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
@@ -121,13 +119,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), (results) => {
-    const resultSchema = z.record(z.any())
-    if (results.some((r) => resultSchema.safeParse(r).success === false)) {
-      throw new Error('Invalid data format returned from some domainFunction')
-    }
-    return mergeObjects(results)
-  })
+  return map(all(...fns), mergeObjects)
 }
 
 /**
