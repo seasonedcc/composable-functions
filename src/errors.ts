@@ -1,4 +1,3 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 import type {
   ErrorWithMessage,
   SchemaError,
@@ -57,62 +56,6 @@ function errorMessagesFor(errors: SchemaError[], name: string) {
   return errors
     .filter(({ path }) => path.join('.') === name)
     .map(({ message }) => message)
-}
-
-type NestedErrors<SchemaType> = {
-  [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType[Property]>
-}
-
-function errorMessagesForSchema<T extends z.ZodTypeAny>(
-  errors: SchemaError[],
-  _schema: T,
-): NestedErrors<z.infer<T>> {
-  type SchemaType = z.infer<T>
-  type ErrorObject = { path: string[]; messages: string[] }
-
-  const nest = (
-    { path, messages }: ErrorObject,
-    root: Record<string, unknown>,
-  ) => {
-    const [head, ...tail] = path
-    root[head] =
-      tail.length === 0
-        ? messages
-        : nest(
-            { path: tail, messages },
-            (root[head] as Record<string, unknown>) ?? {},
-          )
-    return root
-  }
-
-  const compareStringArrays = (a: string[]) => (b: string[]) =>
-    JSON.stringify(a) === JSON.stringify(b)
-
-  const toErrorObject = (errors: SchemaError[]): ErrorObject[] =>
-    errors.map(({ path, message }) => ({
-      path,
-      messages: [message],
-    }))
-
-  const unifyPaths = (errors: SchemaError[]) =>
-    toErrorObject(errors).reduce((memo, error) => {
-      const comparePath = compareStringArrays(error.path)
-      const mergeErrorMessages = ({ path, messages }: ErrorObject) =>
-        comparePath(path)
-          ? { path, messages: [...messages, ...error.messages] }
-          : { path, messages }
-      const existingPath = memo.find(({ path }) => comparePath(path))
-
-      return existingPath ? memo.map(mergeErrorMessages) : [...memo, error]
-    }, [] as ErrorObject[])
-
-  const errorTree = unifyPaths(errors).reduce((memo, schemaError) => {
-    const errorBranch = nest(schemaError, memo)
-
-    return { ...memo, ...errorBranch }
-  }, {}) as NestedErrors<SchemaType>
-
-  return errorTree
 }
 
 /**
@@ -186,7 +129,6 @@ class ResultError extends Error {
 
 export {
   errorMessagesFor,
-  errorMessagesForSchema,
   schemaError,
   toErrorWithMessage,
   InputError,
