@@ -18,7 +18,6 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [Other error constructors](#other-error-constructors)
   - [Using error messages in the UI](#using-error-messages-in-the-ui)
     - [errorMessagesFor](#errormessagesfor)
-    - [errorMessagesForSchema](#errormessagesforschema)
   - [Tracing](#tracing)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
@@ -284,28 +283,6 @@ const result = {
 
 errorMessagesFor(result.inputErrors, 'email') // will be an empty array: []
 errorMessagesFor(result.environmentErrors, 'host')[0] === 'Must not be empty'
-```
-
-#### errorMessagesForSchema
-
-Given an array of `SchemaError` -- be it from `inputErrors` or `environmentErrors` -- and a Zod Schema, `errorMessagesForSchema` returns an object with a list of error messages for each key in the schema's shape.
-
-```tsx
-const schema = z.object({ email: z.string().nonEmpty(), password: z.string().nonEmpty() })
-const result = {
-  success: false,
-  errors: [],
-  inputErrors: [{ message: 'Must not be empty', path: ['email'] }, { message: 'Must be a string', path: ['email'] }, { message: 'Must not be empty', path: ['password'] }],
-  environmentErrors: []
-}
-
-errorMessagesForSchema(result.inputErrors, schema)
-/*
-{
-  email: ['Must not be empty', 'Must be a string'],
-  password: ['Must not be empty']
-}
-*/
 ```
 
 ### Tracing
