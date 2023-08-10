@@ -144,6 +144,34 @@ function pipe<T extends DomainFunction[]>(
 }
 
 /**
+ * Receives a Record of domain functions, runs them all in sequence like `pipe` but preserves the shape of that record for the data property in successful results.
+ * It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in the given order.
+ *
+ * **NOTE :** After ECMAScript2015 JS is able to keep the order of keys in an object, we are relying on that. However, number-like keys such as { 1: 'foo' } will be ordered and may break the given order.
+ * @example
+ * import { makeDomainFunction as mdf, collectSequence } from 'domain-functions'
+ *
+ * const a = mdf(z.object({}))(() => '1')
+const b = mdf(z.number())((n) => n + 2)
+const df = collectSequence({ a, b })
+//    ^? DomainFunction<{ a: string, b: number }>
+ */
+function collectSequence<Fns extends Record<string, DomainFunction>>(
+  fns: Fns,
+): DomainFunction<UnpackDFObject<Fns>> {
+  const keys = Object.keys(fns)
+
+  return map(
+    map(sequence(...Object.values(fns)), (outputs) =>
+      outputs.map((o, i) => ({
+        [keys[i]]: o,
+      })),
+    ),
+    mergeObjects,
+  ) as DomainFunction<UnpackDFObject<Fns>>
+}
+
+/**
  * Works like `pipe` but it will collect the output of every function in a tuple, similar to `all`.
  * @example
  * import { makeDomainFunction as mdf, sequence } from 'domain-functions'
@@ -312,6 +340,7 @@ export {
   all,
   branch,
   collect,
+  collectSequence,
   first,
   fromSuccess,
   map,
