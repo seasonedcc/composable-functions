@@ -1,4 +1,5 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
+import { z } from 'npm:zod@3.21.4'
 
 import { errorMessagesFor, schemaError } from './errors.ts'
 
