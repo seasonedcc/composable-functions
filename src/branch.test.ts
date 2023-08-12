@@ -3,7 +3,7 @@ import {
   assertEquals,
   assertObjectMatch,
 } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import { z } from 'npm:zod@3.21.4'
 
 import { makeDomainFunction } from './constructor.ts'
 import { branch, pipe, all } from './domain-functions.ts'

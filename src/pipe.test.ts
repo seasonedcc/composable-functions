@@ -1,6 +1,6 @@
 import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
 import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import { z } from 'npm:zod@3.21.4'
 
 import { makeDomainFunction } from './constructor.ts'
 import { pipe } from './domain-functions.ts'

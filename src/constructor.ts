@@ -1,4 +1,5 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import type { Schema as AnySchema, Infer } from 'npm:@decs/typeschema@0.9.1'
+import { validate } from 'npm:@decs/typeschema@0.9.1'
 
 import {
   EnvironmentError,
@@ -7,7 +8,7 @@ import {
   ResultError,
 } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
-import { formatSchemaErrors } from './utils.ts'
+import { assertObject, assertUndefined, formatSchemaErrors } from './utils.ts'
 import type { DomainFunction, Result } from './types.ts'
 
 async function safeResult<T>(fn: () => T): Promise<Result<T>> {
@@ -71,32 +72,26 @@ async function safeResult<T>(fn: () => T): Promise<Result<T>> {
  * })
  */
 function makeDomainFunction<
-  Schema extends z.ZodTypeAny,
-  EnvSchema extends z.ZodTypeAny,
+  Schema extends AnySchema,
+  EnvSchema extends AnySchema,
 >(inputSchema?: Schema, environmentSchema?: EnvSchema) {
   return function <Output>(
-    handler: (
-      input: z.infer<Schema>,
-      environment: z.infer<EnvSchema>,
-    ) => Output,
+    handler: (input: Infer<Schema>, environment: Infer<EnvSchema>) => Output,
   ) {
     return function (input, environment = {}) {
       return safeResult(async () => {
-        const envResult = await (
-          environmentSchema ?? z.object({})
-        ).safeParseAsync(environment)
-        const result = await (inputSchema ?? z.undefined()).safeParseAsync(
-          input,
+        const envResult = await validate(
+          environmentSchema ?? assertObject,
+          environment,
         )
+        const result = await validate(inputSchema ?? assertUndefined, input)
 
-        if (!result.success || !envResult.success) {
+        if ('issues' in result || 'issues' in envResult) {
           throw new ResultError({
-            inputErrors: result.success
-              ? []
-              : formatSchemaErrors(result.error.issues),
-            environmentErrors: envResult.success
-              ? []
-              : formatSchemaErrors(envResult.error.issues),
+            inputErrors:
+              'issues' in result ? formatSchemaErrors(result.issues) : [],
+            environmentErrors:
+              'issues' in envResult ? formatSchemaErrors(envResult.issues) : [],
           })
         }
         return handler(result.data, envResult.data)

@@ -190,5 +190,21 @@
     "https://jspm.dev/npm:qs@6.9.6/lib/parse!cjs": "b0c4597386bda8cf9de8af3aa98e0a65f5a309f9c8c81b7c5f7979c7de4839b6",
     "https://jspm.dev/npm:qs@6.9.6/lib/stringify!cjs": "7ed83e3ca52ebb09dbf98d86dac970293e1637aa75d27693306dd8a3dd36c353",
     "https://jspm.dev/qs@6.9.6": "7801d7fd6a481b6973a8b4688ec74a5b9641b6623de93b4e85e953c2c884881e"
+  },
+  "npm": {
+    "specifiers": {
+      "@decs/typeschema@0.9.1": "@decs/typeschema@0.9.1",
+      "zod@3.21.4": "zod@3.21.4"
+    },
+    "packages": {
+      "@decs/typeschema@0.9.1": {
+        "integrity": "sha512-ikzD68ViSorw8ad8KvmgDXDmK9ZappOtwis7z87l3357PU/vCgh/2a574jkoNGlT2zmMwzYnj8fAmEdN/idGXw==",
+        "dependencies": {}
+      },
+      "zod@3.21.4": {
+        "integrity": "sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==",
+        "dependencies": {}
+      }
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import type { Schema as AnySchema, Infer } from 'npm:@decs/typeschema@0.9.1'
 import type {
   ErrorWithMessage,
   SchemaError,
@@ -63,11 +63,11 @@ type NestedErrors<SchemaType> = {
   [Property in keyof SchemaType]: string[] | NestedErrors<SchemaType[Property]>
 }
 
-function errorMessagesForSchema<T extends z.ZodTypeAny>(
+function errorMessagesForSchema<T extends AnySchema>(
   errors: SchemaError[],
   _schema: T,
-): NestedErrors<z.infer<T>> {
-  type SchemaType = z.infer<T>
+): NestedErrors<Infer<T>> {
+  type SchemaType = Infer<T>
   type ErrorObject = { path: string[]; messages: string[] }
 
   const nest = (
