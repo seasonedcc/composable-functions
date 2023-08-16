@@ -1,6 +1,5 @@
 // deno-lint-ignore-file ban-ts-comment no-namespace
-import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
-import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
+import { describe, it, assertEquals } from './test-prelude.ts'
 import * as subject from './utils.ts'
 import type { Result, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'

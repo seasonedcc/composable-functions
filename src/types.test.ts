@@ -1,7 +1,6 @@
 // deno-lint-ignore-file ban-ts-comment no-namespace no-unused-vars
 import { makeDomainFunction } from './constructor.ts'
-import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
-import { assertEquals } from 'https://deno.land/std@0.160.0/testing/asserts.ts'
+import { describe, it, assertEquals } from './test-prelude.ts'
 import * as Subject from './types.ts'
 
 export type Expect<T extends true> = T

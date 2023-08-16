@@ -3,6 +3,7 @@ type QueryStringRecord = {
     | undefined
     | string
     | string[]
+    | [string, string][]
     | QueryStringRecord
     | QueryStringRecord[]
 }
