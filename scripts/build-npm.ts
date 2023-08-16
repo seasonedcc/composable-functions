@@ -7,7 +7,7 @@ await emptyDir('./npm')
 await build({
   scriptModule: 'cjs',
   typeCheck: false,
-  declaration: true,
+  declaration: 'separate',
   entryPoints: ['./src/index.ts'],
   outDir: './npm',
   shims: {
