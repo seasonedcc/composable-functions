@@ -1,8 +1,4 @@
-import { describe, it } from 'https://deno.land/std@0.156.0/testing/bdd.ts'
-import {
-  assertEquals,
-  assertObjectMatch,
-} from 'https://deno.land/std@0.160.0/testing/asserts.ts'
+import { describe, it, assertEquals, assertObjectMatch } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { makeDomainFunction } from './constructor.ts'
@@ -167,27 +163,6 @@ describe('merge', () => {
       errors: [
         { message: 'Error A', exception: { message: 'Error A' } },
         { message: 'Error B', exception: { message: 'Error B' } },
-      ],
-      inputErrors: [],
-      environmentErrors: [],
-    })
-  })
-
-  it('should throw an error when the results of some domain functions are not objects', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id + 1,
-    )
-    const b = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => ({
-      resultB: id - 1,
-    }))
-
-    // @ts-expect-error - DF a is not DomainFunction<Record<string, unknown>>
-    const c = merge(a, b)
-
-    assertObjectMatch(await c({ id: 1 }), {
-      success: false,
-      errors: [
-        { message: 'Invalid data format returned from some domainFunction' },
       ],
       inputErrors: [],
       environmentErrors: [],

@@ -1,5 +1,3 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
-
 import { ResultError } from './errors.ts'
 import { isListOfSuccess, mergeObjects } from './utils.ts'
 import type {
@@ -121,13 +119,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), (results) => {
-    const resultSchema = z.record(z.any())
-    if (results.some((r) => resultSchema.safeParse(r).success === false)) {
-      throw new Error('Invalid data format returned from some domainFunction')
-    }
-    return mergeObjects(results)
-  })
+  return map(all(...fns), mergeObjects)
 }
 
 /**
@@ -149,6 +141,34 @@ function pipe<T extends DomainFunction[]>(
 ): DomainFunction<Last<UnpackAll<T>>> {
   const last = <T>(ls: T[]): T => ls[ls.length - 1]
   return map(sequence(...fns), last)
+}
+
+/**
+ * Receives a Record of domain functions, runs them all in sequence like `pipe` but preserves the shape of that record for the data property in successful results.
+ * It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in the given order.
+ *
+ * **NOTE :** After ECMAScript2015 JS is able to keep the order of keys in an object, we are relying on that. However, number-like keys such as { 1: 'foo' } will be ordered and may break the given order.
+ * @example
+ * import { makeDomainFunction as mdf, collectSequence } from 'domain-functions'
+ *
+ * const a = mdf(z.object({}))(() => '1')
+const b = mdf(z.number())((n) => n + 2)
+const df = collectSequence({ a, b })
+//    ^? DomainFunction<{ a: string, b: number }>
+ */
+function collectSequence<Fns extends Record<string, DomainFunction>>(
+  fns: Fns,
+): DomainFunction<UnpackDFObject<Fns>> {
+  const keys = Object.keys(fns)
+
+  return map(
+    map(sequence(...Object.values(fns)), (outputs) =>
+      outputs.map((o, i) => ({
+        [keys[i]]: o,
+      })),
+    ),
+    mergeObjects,
+  ) as DomainFunction<UnpackDFObject<Fns>>
 }
 
 /**
@@ -320,6 +340,7 @@ export {
   all,
   branch,
   collect,
+  collectSequence,
   first,
   fromSuccess,
   map,

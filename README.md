@@ -18,7 +18,6 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [Other error constructors](#other-error-constructors)
   - [Using error messages in the UI](#using-error-messages-in-the-ui)
     - [errorMessagesFor](#errormessagesfor)
-    - [errorMessagesForSchema](#errormessagesforschema)
   - [Tracing](#tracing)
 - [Combining domain functions](#combining-domain-functions)
   - [all](#all)
@@ -28,6 +27,7 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [pipe](#pipe)
   - [branch](#branch)
   - [sequence](#sequence)
+  - [collectSequence](#collectsequence)
   - [map](#map)
   - [mapError](#maperror)
 - [Runtime utilities](#runtime-utilities)
@@ -284,28 +284,6 @@ const result = {
 
 errorMessagesFor(result.inputErrors, 'email') // will be an empty array: []
 errorMessagesFor(result.environmentErrors, 'host')[0] === 'Must not be empty'
-```
-
-#### errorMessagesForSchema
-
-Given an array of `SchemaError` -- be it from `inputErrors` or `environmentErrors` -- and a Zod Schema, `errorMessagesForSchema` returns an object with a list of error messages for each key in the schema's shape.
-
-```tsx
-const schema = z.object({ email: z.string().nonEmpty(), password: z.string().nonEmpty() })
-const result = {
-  success: false,
-  errors: [],
-  inputErrors: [{ message: 'Must not be empty', path: ['email'] }, { message: 'Must be a string', path: ['email'] }, { message: 'Must not be empty', path: ['password'] }],
-  environmentErrors: []
-}
-
-errorMessagesForSchema(result.inputErrors, schema)
-/*
-{
-  email: ['Must not be empty', 'Must be a string'],
-  password: ['Must not be empty']
-}
-*/
 ```
 
 ### Tracing
@@ -621,6 +599,58 @@ const result = await c(1)
 
 For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
 
+### collectSequence
+
+`collectSequence` is very similar to the `collect` function, except __it runs in the sequence of the keys' order like a `pipe`__.
+
+It receives its constituent functions inside a record with string keys that identify each one. 
+The shape of this record will be preserved for the `data` property in successful results.
+
+This feature relies on JS's order of objects' keys (guaranteed since ECMAScript2015).
+
+**NOTE :** For number-like object keys (eg: { 2: dfA, 1: dfB }) JS will follow ascendent order.
+
+```ts
+const a = makeDomainFunction(z.number())((aNumber) => String(aNumber))
+const b = makeDomainFunction(z.string())((aString) => aString === '1')
+
+const c = collectSequence({ a, b })
+
+const result = await c(1)
+```
+
+For the example above, the result type will be `Result<{ a: string, b: boolean }>`:
+
+```ts
+{
+  success: true,
+  data: { a: '1', b: true },
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+If you'd rather have an object instead of a tuple (similar to the `merge` function), you can use the `map` and `mergeObjects` functions like so:
+
+```ts
+import { mergeObjects } from 'domain-functions'
+
+const a = makeDomainFunction(z.number())((aNumber) => ({
+  aString: String(aNumber)
+}))
+const b = makeDomainFunction(z.object({ aString: z.string() }))(
+  ({ aString }) => ({ aBoolean: aString === '1' })
+)
+
+const c = map(sequence(a, b), mergeObjects)
+
+const result = await c(1)
+```
+
+For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
+
+
 ### branch
 
 Use `branch` to add conditional logic to your domain functions' compositions.
@@ -912,7 +942,7 @@ const values = inputFromSearch(qs)
 // values = { colors: ['red', 'green', 'blue'] }
 ```
 
-All of the functions above will parse the input using [`qs`](https://www.npmjs.com/package/qs), thus allowing structured data as follows:
+All of the functions above will allow structured data as follows:
 
 ```tsx
 // Given the following form:
@@ -941,7 +971,7 @@ async (request: Request) => {
 }
 ```
 
-To better understand how to structure your data, refer to [qs documentation](https://github.com/ljharb/qs#parsing-objects)
+To better understand how to structure your data, refer to [this test file](./src/input-resolvers.test.ts)
 
 ## Resources
 

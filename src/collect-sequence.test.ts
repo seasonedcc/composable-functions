@@ -2,12 +2,12 @@ import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { makeDomainFunction } from './constructor.ts'
-import { pipe } from './domain-functions.ts'
+import { collectSequence } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
-describe('pipe', () => {
-  it('should compose domain functions from left-to-right', async () => {
+describe('collectSequence', () => {
+  it('should compose domain functions keeping the given order of keys', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
@@ -15,12 +15,14 @@ describe('pipe', () => {
       ({ id }) => id - 1,
     )
 
-    const c = pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    const c = collectSequence({ a, b })
+    type _R = Expect<
+      Equal<typeof c, DomainFunction<{ a: { id: number }; b: number }>>
+    >
 
     assertEquals(await c({ id: 1 }), {
       success: true,
-      data: 2,
+      data: { a: { id: 3 }, b: 2 },
       errors: [],
       inputErrors: [],
       environmentErrors: [],
@@ -39,12 +41,14 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    const c = collectSequence({ a, b })
+    type _R = Expect<
+      Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
+    >
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: true,
-      data: 4,
+      data: { a: { inp: 3 }, b: 4 },
       errors: [],
       inputErrors: [],
       environmentErrors: [],
@@ -64,8 +68,10 @@ describe('pipe', () => {
       envParser,
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    const c = collectSequence({ a, b })
+    type _R = Expect<
+      Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
+    >
 
     assertEquals(await c(undefined, {}), {
       success: false,
@@ -89,8 +95,10 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    const c = collectSequence({ a, b })
+    type _R = Expect<
+      Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
+    >
 
     assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
       success: false,
@@ -114,8 +122,10 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    const c = collectSequence({ a, b })
+    type _R = Expect<
+      Equal<typeof c, DomainFunction<{ a: { inp: string }; b: number }>>
+    >
 
     assertEquals(await c(undefined, { env: 1 }), {
       success: false,
@@ -142,12 +152,21 @@ describe('pipe', () => {
       ({ aBoolean }) => !aBoolean,
     )
 
-    const d = pipe(a, b, c)
-    type _R = Expect<Equal<typeof d, DomainFunction<boolean>>>
+    const d = collectSequence({ a, b, c })
+    type _R = Expect<
+      Equal<
+        typeof d,
+        DomainFunction<{
+          a: { aString: string }
+          b: { aBoolean: boolean }
+          c: boolean
+        }>
+      >
+    >
 
     assertEquals(await d({ aNumber: 1 }), {
       success: true,
-      data: false,
+      data: { a: { aString: '1' }, b: { aBoolean: true }, c: false },
       errors: [],
       inputErrors: [],
       environmentErrors: [],
