@@ -27,7 +27,7 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [pipe](#pipe)
   - [branch](#branch)
   - [sequence](#sequence)
-  - [collectSequence](#collectSequence)
+  - [collectSequence](#collectsequence)
   - [map](#map)
   - [mapError](#maperror)
 - [Runtime utilities](#runtime-utilities)
