@@ -614,12 +614,12 @@ This feature relies on JS's order of objects' keys (guaranteed since ECMAScript2
 const a = makeDomainFunction(z.number())((aNumber) => String(aNumber))
 const b = makeDomainFunction(z.string())((aString) => aString === '1')
 
-const c = collectSequence({a, b})
+const c = collectSequence({ a, b })
 
 const result = await c(1)
 ```
 
-For the example above, the result type will be `Result<{ a: string, b: boolean}>`:
+For the example above, the result type will be `Result<{ a: string, b: boolean }>`:
 
 ```ts
 {
