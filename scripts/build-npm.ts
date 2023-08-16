@@ -1,5 +1,5 @@
 // ex. scripts/build_npm.ts
-import { build, emptyDir } from 'https://deno.land/x/dnt@0.33.1/mod.ts'
+import { build, emptyDir } from 'https://deno.land/x/dnt@0.38.0/mod.ts'
 import pkg from '../deno.json' assert { type: 'json' }
 
 await emptyDir('./npm')
