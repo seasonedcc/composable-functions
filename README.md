@@ -27,6 +27,7 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [pipe](#pipe)
   - [branch](#branch)
   - [sequence](#sequence)
+  - [collectSequence](#collectsequence)
   - [map](#map)
   - [mapError](#maperror)
 - [Runtime utilities](#runtime-utilities)
@@ -597,6 +598,58 @@ const result = await c(1)
 ```
 
 For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
+
+### collectSequence
+
+`collectSequence` is very similar to the `collect` function, except __it runs in the sequence of the keys' order like a `pipe`__.
+
+It receives its constituent functions inside a record with string keys that identify each one. 
+The shape of this record will be preserved for the `data` property in successful results.
+
+This feature relies on JS's order of objects' keys (guaranteed since ECMAScript2015).
+
+**NOTE :** For number-like object keys (eg: { 2: dfA, 1: dfB }) JS will follow ascendent order.
+
+```ts
+const a = makeDomainFunction(z.number())((aNumber) => String(aNumber))
+const b = makeDomainFunction(z.string())((aString) => aString === '1')
+
+const c = collectSequence({ a, b })
+
+const result = await c(1)
+```
+
+For the example above, the result type will be `Result<{ a: string, b: boolean }>`:
+
+```ts
+{
+  success: true,
+  data: { a: '1', b: true },
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+If you'd rather have an object instead of a tuple (similar to the `merge` function), you can use the `map` and `mergeObjects` functions like so:
+
+```ts
+import { mergeObjects } from 'domain-functions'
+
+const a = makeDomainFunction(z.number())((aNumber) => ({
+  aString: String(aNumber)
+}))
+const b = makeDomainFunction(z.object({ aString: z.string() }))(
+  ({ aString }) => ({ aBoolean: aString === '1' })
+)
+
+const c = map(sequence(a, b), mergeObjects)
+
+const result = await c(1)
+```
+
+For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
+
 
 ### branch
 
