@@ -1,5 +1,5 @@
-import type { Schema as AnySchema, Infer } from 'npm:@decs/typeschema@0.9.1'
-import { validate } from 'npm:@decs/typeschema@0.9.1'
+import type { Schema as AnySchema, Infer } from 'https://deno.land/x/typeschema@v0.9.3/mod.ts'
+import { validate } from 'https://deno.land/x/typeschema@v0.9.3/mod.ts'
 
 import {
   EnvironmentError,

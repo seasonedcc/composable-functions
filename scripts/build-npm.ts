@@ -14,6 +14,13 @@ await build({
     deno: true,
     undici: true,
   },
+  mappings: {
+    'https://deno.land/x/zod@v3.21.4/mod.ts': {
+      name: 'zod',
+      version: '^3.21.4',
+      peerDependency: true,
+    },
+  },
   package: {
     name: 'domain-functions',
     version: pkg.version,
