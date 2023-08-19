@@ -94,7 +94,10 @@ function makeDomainFunction<
               'issues' in envResult ? formatSchemaErrors(envResult.issues) : [],
           })
         }
-        return handler(result.data, envResult.data)
+        return handler(
+          result.data as Infer<Schema>,
+          envResult.data as Infer<EnvSchema>,
+        )
       })
     } as DomainFunction<Awaited<Output>>
   }
