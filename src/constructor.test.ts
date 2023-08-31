@@ -1,12 +1,18 @@
-import { describe, it, assertEquals, assertObjectMatch } from './test-prelude.ts'
+import {
+  assertEquals,
+  assertObjectMatch,
+  describe,
+  it,
+} from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import * as v from 'https://deno.land/x/valibot@v0.13.1/mod.ts'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
   EnvironmentError,
-  ResultError,
   InputError,
   InputErrors,
+  ResultError,
 } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
@@ -26,6 +32,21 @@ describe('makeDomainFunction', () => {
   })
 
   describe('when it has no environment', () => {
+    it('uses valibot parser to create parse the input and call the domain function', async () => {
+      const parser = v.object({ id: v.number() })
+
+      const handler = makeDomainFunction(parser)(({ id }) => id)
+      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+
+      assertEquals(await handler({ id: '1' }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+
     it('uses zod parser to create parse the input and call the domain function', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
