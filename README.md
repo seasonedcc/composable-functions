@@ -1,7 +1,7 @@
 # Keep your business logic clean with Domain Functions
 
 Domain Functions helps you decouple your business logic from your controllers, with first-class type inference from end to end.
-It does this by enforcing the parameters' types at runtime (through [zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
+It does this by enforcing the parameters' types at runtime and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
 
 ![](example.gif)
 
@@ -42,6 +42,7 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
   - [inputFromFormData](#inputfromformdata)
   - [inputFromUrl](#inputfromurl)
   - [inputFromSearch](#inputfromsearch)
+- [Using other schema validators](#using-other-schema-validators)
 - [Resources](#resources)
 - [FAQ](#faq)
 - [Acknowlegements](#acknowlegements)
@@ -59,6 +60,8 @@ It does this by enforcing the parameters' types at runtime (through [zod](https:
 ```
 npm i domain-functions zod
 ```
+
+**NOTE :** All our examples will use [zod](https://zod.dev/). You can, however, use any schema validator supported by [TypeSchema](https://typeschema.com/).
 
 ```tsx
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
@@ -88,7 +91,8 @@ failedResult = {
 */
 ```
 
-To understand how to build the schemas, refer to [Zod documentation](https://github.com/colinhacks/zod#defining-schemas).
+To understand how to build the schemas, refer to your schema validation library documentation.
+See the [Zod documentation](https://zod.dev) to better understand how our examples are built.
 
 ## Using Deno
 
@@ -518,7 +522,7 @@ const result = await first(a, b)({ id: 1 })
 It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order.
 The resulting data will be the output of the rightmost function.
 
-Note that there is no type-level assurance that a function's output will align with and be succesfully parsed by the next function in the pipeline.
+**NOTE :** that there is no type-level assurance that a function's output will align with and be succesfully parsed by the next function in the pipeline.
 
 ```ts
 const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
@@ -973,6 +977,30 @@ async (request: Request) => {
 
 To better understand how to structure your data, refer to [this test file](./src/input-resolvers.test.ts)
 
+## Using other schema validators
+
+Although our examples use `zod`, you are able to chose any one of the supported libraries listed in [TypeSchema's website](https://typeschema.com/#coverage).
+See below another version of our initial example using [Valibot](https://valibot.dev/).
+
+```typescript
+import { makeDomainFunction, inputFromForm } from 'domain-functions'
+import { number } from 'yup';
+
+const schema = z.object({ number: z.coerce.number() })
+const increment = makeDomainFunction(schema)(({ number }) => number + 1)
+
+const result = await increment({ number: 1 })
+/*
+result = {
+  success: true,
+  data: 2,
+  errors: []
+  inputErrors: []
+  environmentErrors: []
+}
+*/
+```
+
 ## Resources
 
 - [The case for domain-functions](https://dev.to/diogob/the-case-for-domain-functions-f4e)
@@ -988,6 +1016,7 @@ To better understand how to structure your data, refer to [this test file](./src
 ## Acknowlegements
 
 We are grateful for [Zod](https://github.com/colinhacks/zod), as it is a great library and it informed our design.
+[TypeSchema](https://typeschema.com/) is another great project that allowed us to support multiple validators.
 It's worth mentioning two other projects that inspired domain-functions:
 
 - [Servant](https://github.com/haskell-servant/servant/)
