@@ -1,4 +1,4 @@
-import type { ValidationIssue } from 'https://deno.land/x/typeschema@v0.9.3/mod.ts'
+import type { ValidationIssue } from 'https://deno.land/x/typeschema@v0.10.0/mod.ts'
 
 import type { MergeObjs, Result, SchemaError, SuccessResult } from './types.ts'
 

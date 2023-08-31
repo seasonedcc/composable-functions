@@ -5,7 +5,7 @@ import {
   it,
 } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
-import * as v from 'https://deno.land/x/valibot@v0.13.1/mod.ts'
+import * as v from 'npm:valibot'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
@@ -38,7 +38,7 @@ describe('makeDomainFunction', () => {
       const handler = makeDomainFunction(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
-      assertEquals(await handler({ id: '1' }), {
+      assertEquals(await handler({ id: 1 }), {
         success: true,
         data: 1,
         errors: [],
