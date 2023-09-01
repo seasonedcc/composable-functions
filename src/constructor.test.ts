@@ -8,6 +8,8 @@ import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 import * as v from 'npm:valibot'
 import * as y from 'npm:yup'
 import * as t from 'npm:io-ts'
+import typia from 'npm:typia'
+import typebox from 'npm:@sinclair/typebox'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
@@ -34,6 +36,38 @@ describe('makeDomainFunction', () => {
   })
 
   describe('when using different libraries to create schemas', () => {
+    it.ignore(
+      'can use a typia schema - test type only, typiq requires a runtime transformer to run validators',
+      async () => {
+        const parser = typia.createAssert<{ id: number }>()
+        const handler = makeDomainFunction(parser)(({ id }) => id)
+        type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+
+        assertEquals(await handler({ id: 1 }), {
+          success: true,
+          data: 1,
+          errors: [],
+          inputErrors: [],
+          environmentErrors: [],
+        })
+      },
+    )
+
+    it('can use a typebox schema', async () => {
+      const parser = typebox.Type.Object({ id: typebox.Type.Integer() })
+
+      const handler = makeDomainFunction(parser)(({ id }) => id)
+      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+
+      assertEquals(await handler({ id: 1 }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+
     it('can use a valibot schema', async () => {
       const parser = v.object({ id: v.number() })
 
@@ -66,20 +100,23 @@ describe('makeDomainFunction', () => {
       })
     })
 
-    it.ignore('can use a io-ts schema - keep here to test the type, runtime has issues from deno', async () => {
-      const parser = t.type({ id: t.number })
+    it.ignore(
+      'can use a io-ts schema - keep here to test the type, runtime has issues from deno',
+      async () => {
+        const parser = t.type({ id: t.number })
 
-      const handler = makeDomainFunction(parser)(({ id }) => id)
-      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+        const handler = makeDomainFunction(parser)(({ id }) => id)
+        type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
-      assertEquals(await handler({ id: 1 }), {
-        success: true,
-        data: 1,
-        errors: [],
-        inputErrors: [],
-        environmentErrors: [],
-      })
-    })
+        assertEquals(await handler({ id: 1 }), {
+          success: true,
+          data: 1,
+          errors: [],
+          inputErrors: [],
+          environmentErrors: [],
+        })
+      },
+    )
   })
 
   describe('when it has no environment', () => {
