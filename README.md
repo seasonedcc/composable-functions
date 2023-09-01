@@ -61,7 +61,8 @@ It does this by enforcing the parameters' types at runtime and always wrapping r
 npm i domain-functions zod
 ```
 
-**NOTE :** All our examples will use [zod](https://zod.dev/). You can, however, use any schema validator supported by [TypeSchema](https://typeschema.com/).
+**NOTE :** All our examples will use [zod](https://zod.dev/) which we recommend if you have no existing schema validation library in your project. 
+You can, however, other schema validators supported by [TypeSchema](https://typeschema.com/#coverage).
 
 ```tsx
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
