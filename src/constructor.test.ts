@@ -9,7 +9,9 @@ import * as v from 'npm:valibot'
 import * as y from 'npm:yup'
 import * as t from 'npm:io-ts'
 import typia from 'npm:typia'
-import typebox from 'npm:@sinclair/typebox'
+import joi from 'npm:joi'
+import { Type as TypeBox } from 'npm:@sinclair/typebox'
+import ajv from 'npm:ajv' // This import is used indirectly by the runtime
 
 import { makeDomainFunction } from './constructor.ts'
 import {
@@ -39,8 +41,8 @@ describe('makeDomainFunction', () => {
     it.ignore(
       'can use a typia schema - test type only, typiq requires a runtime transformer to run validators',
       async () => {
-        const parser = typia.createAssert<{ id: number }>()
-        const handler = makeDomainFunction(parser)(({ id }) => id)
+        const schema = typia.createAssert<{ id: number }>()
+        const handler = makeDomainFunction(schema)(({ id }) => id)
         type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
         assertEquals(await handler({ id: 1 }), {
@@ -53,10 +55,45 @@ describe('makeDomainFunction', () => {
       },
     )
 
-    it('can use a typebox schema', async () => {
-      const parser = typebox.Type.Object({ id: typebox.Type.Integer() })
+    it('can use an joi schema (no type inference)', async () => {
+      const schema = joi.object({ id: joi.number() })
 
-      const handler = makeDomainFunction(parser)(({ id }) => id)
+      const handler = makeDomainFunction(schema)(({ id }: any) => id)
+
+      assertEquals(await handler({ id: 1 }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+
+    it('can use an ajv schema (no type inference)', async () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+        },
+        required: ['id'],
+        additionalProperties: false,
+      }
+
+      const handler = makeDomainFunction(schema)(({ id }: any) => id)
+
+      assertEquals(await handler({ id: 1 }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+
+    it('can use a typebox schema', async () => {
+      const schema = TypeBox.Object({ id: TypeBox.Integer() })
+
+      const handler = makeDomainFunction(schema)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ id: 1 }), {
@@ -69,9 +106,9 @@ describe('makeDomainFunction', () => {
     })
 
     it('can use a valibot schema', async () => {
-      const parser = v.object({ id: v.number() })
+      const schema = v.object({ id: v.number() })
 
-      const handler = makeDomainFunction(parser)(({ id }) => id)
+      const handler = makeDomainFunction(schema)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ id: 1 }), {
@@ -84,9 +121,9 @@ describe('makeDomainFunction', () => {
     })
 
     it('can use a yup schema', async () => {
-      const parser = y.object({ id: y.number() })
+      const schema = y.object({ id: y.number() })
 
-      const handler = makeDomainFunction(parser)(({ id }) => id)
+      const handler = makeDomainFunction(schema)(({ id }) => id)
       type _R = Expect<
         Equal<typeof handler, DomainFunction<number | undefined>>
       >
@@ -103,9 +140,9 @@ describe('makeDomainFunction', () => {
     it.ignore(
       'can use a io-ts schema - keep here to test the type, runtime has issues from deno',
       async () => {
-        const parser = t.type({ id: t.number })
+        const schema = t.type({ id: t.number })
 
-        const handler = makeDomainFunction(parser)(({ id }) => id)
+        const handler = makeDomainFunction(schema)(({ id }) => id)
         type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
         assertEquals(await handler({ id: 1 }), {
@@ -120,10 +157,10 @@ describe('makeDomainFunction', () => {
   })
 
   describe('when it has no environment', () => {
-    it('uses zod parser to create parse the input and call the domain function', async () => {
-      const parser = z.object({ id: z.preprocess(Number, z.number()) })
+    it('uses zod schema to create parse the input and call the domain function', async () => {
+      const schema = z.object({ id: z.preprocess(Number, z.number()) })
 
-      const handler = makeDomainFunction(parser)(({ id }) => id)
+      const handler = makeDomainFunction(schema)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ id: '1' }), {
@@ -136,8 +173,8 @@ describe('makeDomainFunction', () => {
     })
 
     it('returns error when parsing fails', async () => {
-      const parser = z.object({ id: z.preprocess(Number, z.number()) })
-      const handler = makeDomainFunction(parser)(({ id }) => id)
+      const schema = z.object({ id: z.preprocess(Number, z.number()) })
+      const handler = makeDomainFunction(schema)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ missingId: '1' }), {
@@ -151,12 +188,12 @@ describe('makeDomainFunction', () => {
     })
   })
 
-  it('uses zod parsers to parse the input and environment and call the domain function', async () => {
-    const parser = z.object({ id: z.preprocess(Number, z.number()) })
+  it('uses zod schemas to parse the input and environment and call the domain function', async () => {
+    const schema = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = makeDomainFunction(
-      parser,
+      schema,
       envParser,
     )(({ id }, { uid }) => [id, uid] as const)
     type _R = Expect<
@@ -173,7 +210,7 @@ describe('makeDomainFunction', () => {
   })
 
   it('applies async validations', async () => {
-    const parser = z.object({
+    const schema = z.object({
       id: z
         .preprocess(Number, z.number())
         .refine((value) => value !== 1, { message: 'ID already taken' }),
@@ -186,7 +223,7 @@ describe('makeDomainFunction', () => {
     })
 
     const handler = makeDomainFunction(
-      parser,
+      schema,
       envParser,
     )(({ id }, { uid }) => [id, uid])
     type _R = Expect<Equal<typeof handler, DomainFunction<number[]>>>
@@ -216,11 +253,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns error when environment parsing fails', async () => {
-    const parser = z.object({ id: z.preprocess(Number, z.number()) })
+    const schema = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = makeDomainFunction(
-      parser,
+      schema,
       envParser,
     )(({ id }, { uid }) => [id, uid])
     type _R = Expect<Equal<typeof handler, DomainFunction<number[]>>>
