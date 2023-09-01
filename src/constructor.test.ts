@@ -12,6 +12,7 @@ import typia from 'npm:typia'
 import joi from 'npm:joi'
 import { Type as TypeBox } from 'npm:@sinclair/typebox'
 import ajv from 'npm:ajv' // This import is used indirectly by the runtime
+import * as s from 'npm:superstruct'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
@@ -55,6 +56,20 @@ describe('makeDomainFunction', () => {
       },
     )
 
+    it('can use an superstruct schema', async () => {
+      const schema = s.object({ id: s.number() })
+
+      const handler = makeDomainFunction(schema)(({ id }) => id)
+      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+
+      assertEquals(await handler({ id: 1 }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
     it('can use an joi schema (no type inference)', async () => {
       const schema = joi.object({ id: joi.number() })
 

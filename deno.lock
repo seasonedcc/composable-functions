@@ -516,6 +516,7 @@
       "joi@17.9.2": "joi@17.9.2",
       "ow@0.28.2": "ow@0.28.2",
       "runtypes@6.7.0": "runtypes@6.7.0",
+      "superstruct": "superstruct@1.0.3",
       "superstruct@1.0.3": "superstruct@1.0.3",
       "typia": "typia@5.0.1_typescript@5.2.2",
       "valibot": "valibot@0.13.1",
