@@ -7,6 +7,7 @@ import {
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 import * as v from 'npm:valibot'
 import * as y from 'npm:yup'
+import * as t from 'npm:io-ts'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
@@ -55,6 +56,21 @@ describe('makeDomainFunction', () => {
       type _R = Expect<
         Equal<typeof handler, DomainFunction<number | undefined>>
       >
+
+      assertEquals(await handler({ id: 1 }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+
+    it('can use a io-ts schema', async () => {
+      const parser = t.type({ id: t.number })
+
+      const handler = makeDomainFunction(parser)(({ id }) => id)
+      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ id: 1 }), {
         success: true,
