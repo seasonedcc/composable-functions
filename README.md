@@ -62,7 +62,7 @@ npm i domain-functions zod
 ```
 
 **NOTE :** All our examples will use [zod](https://zod.dev/) which we recommend if you have no existing schema validation library in your project. 
-You can, however, other schema validators supported by [TypeSchema](https://typeschema.com/#coverage).
+You can, however, use other schema validators supported by [TypeSchema](https://typeschema.com/#coverage).
 
 ```tsx
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
