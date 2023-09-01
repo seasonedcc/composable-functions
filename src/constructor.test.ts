@@ -6,6 +6,7 @@ import {
 } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 import * as v from 'npm:valibot'
+import * as y from 'npm:yup'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
@@ -31,8 +32,8 @@ describe('makeDomainFunction', () => {
     })
   })
 
-  describe('when it has no environment', () => {
-    it('uses valibot parser to create parse the input and call the domain function', async () => {
+  describe('when using different libraries to create schemas', () => {
+    it('can use a valibot schema', async () => {
       const parser = v.object({ id: v.number() })
 
       const handler = makeDomainFunction(parser)(({ id }) => id)
@@ -47,6 +48,25 @@ describe('makeDomainFunction', () => {
       })
     })
 
+    it('can use a yup schema', async () => {
+      const parser = y.object({ id: y.number() })
+
+      const handler = makeDomainFunction(parser)(({ id }) => id)
+      type _R = Expect<
+        Equal<typeof handler, DomainFunction<number | undefined>>
+      >
+
+      assertEquals(await handler({ id: 1 }), {
+        success: true,
+        data: 1,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+  })
+
+  describe('when it has no environment', () => {
     it('uses zod parser to create parse the input and call the domain function', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 

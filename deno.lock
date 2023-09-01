@@ -514,6 +514,7 @@
       "runtypes@6.7.0": "runtypes@6.7.0",
       "superstruct@1.0.3": "superstruct@1.0.3",
       "valibot": "valibot@0.13.1",
+      "yup": "yup@1.2.0",
       "yup@1.2.0": "yup@1.2.0"
     },
     "packages": {
