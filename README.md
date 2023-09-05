@@ -62,7 +62,7 @@ npm i domain-functions zod
 ```
 
 **NOTE :** All our examples will use [zod](https://zod.dev/) which we recommend if you have no existing schema validation library in your project. 
-You can, however, use other schema validators. For examples of how to use other libraries check our [test file](./src/parsers.test.ts).
+You can, however, [use other schema validators](#using-other-schema-validators).
 
 ```tsx
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
@@ -980,7 +980,14 @@ To better understand how to structure your data, refer to [this test file](./src
 
 ## Using other schema validators
 
-Although our examples use `zod`, you are able to chose any one of the supported libraries listed in [TypeSchema's website](https://typeschema.com/#coverage).
+Although our examples use `zod`, you are able to chose any one of the supported libraries:
+
+ * [Valibot](https://valibot.dev/)
+ * [yup](https://github.com/jquense/yup)
+ * [Superstruct](https://docs.superstructjs.org/)
+ * [TypeBox](https://github.com/sinclairzx81/typebox)
+ * [runtypes](https://github.com/pelotom/runtypes)
+
 See below another version of our initial example using [Valibot](https://valibot.dev/).
 
 ```typescript
@@ -1001,6 +1008,8 @@ result = {
 }
 */
 ```
+
+For more examples of how to use other libraries check our [test file](./src/parsers.test.ts).
 
 ## Resources
 
