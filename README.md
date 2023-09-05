@@ -992,12 +992,13 @@ See below another version of our initial example using [Valibot](https://valibot
 
 ```typescript
 import { makeDomainFunction, inputFromForm } from 'domain-functions'
-import { number } from 'yup';
+import { object, number } from 'valibot';
 
-const schema = z.object({ number: z.coerce.number() })
+const schema = object({ number: number() })
 const increment = makeDomainFunction(schema)(({ number }) => number + 1)
 
 const result = await increment({ number: 1 })
+
 /*
 result = {
   success: true,
