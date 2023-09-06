@@ -336,6 +336,21 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
   }
 }
 
+// deno-lint-ignore no-explicit-any
+const makeSuccess = (input?: any) =>
+  ({
+    success: true,
+    data: input,
+    inputErrors: [],
+    errors: [],
+    environmentErrors: [],
+    // deno-lint-ignore no-explicit-any
+  } as any)
+
+const passthrough = <T extends DomainFunction<Record<string, unknown>>>(
+  df: T,
+) => map(all(df, makeSuccess), mergeObjects)
+
 export {
   all,
   branch,
@@ -349,4 +364,5 @@ export {
   pipe,
   sequence,
   trace,
+  passthrough
 }
