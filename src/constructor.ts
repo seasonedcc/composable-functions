@@ -10,6 +10,25 @@ import { schemaError, toErrorWithMessage } from './errors.ts'
 import { formatSchemaErrors } from './utils.ts'
 import type { DomainFunction, Result } from './types.ts'
 
+/**
+ * A functions that turns the result of its callback into a Result object.
+ * @example
+ * const result = await safeResult(() => ({
+ *   message: 'hello',
+ * }))
+ * // the type of result is Result<{ message: string }>
+ * if (result.success) {
+ *   console.log(result.data.message)
+ * }
+ *
+ * const result = await safeResult(() => {
+ *  throw new Error('something went wrong')
+ * })
+ * // the type of result is Result<never>
+ * if (!result.success) {
+ *  console.log(result.errors[0].message)
+ * }
+ */
 async function safeResult<T>(fn: () => T): Promise<Result<T>> {
   try {
     return {

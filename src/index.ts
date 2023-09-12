@@ -1,4 +1,4 @@
-export { makeDomainFunction } from './constructor.ts'
+export { makeDomainFunction, safeResult } from './constructor.ts'
 export * from './domain-functions.ts'
 export * from './input-resolvers.ts'
 export * from './errors.ts'
