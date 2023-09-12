@@ -15,13 +15,10 @@ await build({
     undici: true,
   },
   mappings: {
-    'https://deno.land/x/typeschema@v0.10.0/mod.ts': {
-      name: '@decs/typeschema',
-      version: '^0.10.0',
-    },
     'https://deno.land/x/zod@v3.21.4/mod.ts': {
       name: 'zod',
       version: '^3.21.4',
+      peerDependency: true,
     },
   },
   package: {

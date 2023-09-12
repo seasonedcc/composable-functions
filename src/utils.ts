@@ -1,11 +1,11 @@
-import type { ValidationIssue } from 'https://deno.land/x/typeschema@v0.10.0/mod.ts'
+import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import type { MergeObjs, Result, SchemaError, SuccessResult } from './types.ts'
 
-function formatSchemaErrors(errors: ValidationIssue[]): SchemaError[] {
+function formatSchemaErrors(errors: z.ZodIssue[]): SchemaError[] {
   return errors.map((error) => {
     const { path, message } = error
-    return { path: (path ?? []).map(String), message }
+    return { path: path.map(String), message }
   })
 }
 
@@ -29,24 +29,4 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
   return Object.assign({}, ...objs) as MergeObjs<T>
 }
 
-function assertObject(data: unknown): object {
-  if (data == null || typeof data !== 'object') {
-    throw new Error('Expected an object')
-  }
-  return data
-}
-
-function assertUndefined(data: unknown): undefined {
-  if (data !== undefined) {
-    throw new Error('Expected undefined')
-  }
-  return data
-}
-
-export {
-  formatSchemaErrors,
-  mergeObjects,
-  isListOfSuccess,
-  assertObject,
-  assertUndefined,
-}
+export { formatSchemaErrors, mergeObjects, isListOfSuccess }
