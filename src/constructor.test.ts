@@ -1,17 +1,12 @@
-import {
-  assertEquals,
-  assertObjectMatch,
-  describe,
-  it,
-} from './test-prelude.ts'
+import { describe, it, assertEquals, assertObjectMatch } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { makeDomainFunction } from './constructor.ts'
 import {
   EnvironmentError,
+  ResultError,
   InputError,
   InputErrors,
-  ResultError,
 } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
@@ -31,10 +26,10 @@ describe('makeDomainFunction', () => {
   })
 
   describe('when it has no environment', () => {
-    it('uses zod schema to create parse the input and call the domain function', async () => {
-      const schema = z.object({ id: z.preprocess(Number, z.number()) })
+    it('uses zod parser to create parse the input and call the domain function', async () => {
+      const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
-      const handler = makeDomainFunction(schema)(({ id }) => id)
+      const handler = makeDomainFunction(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ id: '1' }), {
@@ -47,8 +42,8 @@ describe('makeDomainFunction', () => {
     })
 
     it('returns error when parsing fails', async () => {
-      const schema = z.object({ id: z.preprocess(Number, z.number()) })
-      const handler = makeDomainFunction(schema)(({ id }) => id)
+      const parser = z.object({ id: z.preprocess(Number, z.number()) })
+      const handler = makeDomainFunction(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
       assertEquals(await handler({ missingId: '1' }), {
@@ -62,12 +57,12 @@ describe('makeDomainFunction', () => {
     })
   })
 
-  it('uses zod schemas to parse the input and environment and call the domain function', async () => {
-    const schema = z.object({ id: z.preprocess(Number, z.number()) })
+  it('uses zod parsers to parse the input and environment and call the domain function', async () => {
+    const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = makeDomainFunction(
-      schema,
+      parser,
       envParser,
     )(({ id }, { uid }) => [id, uid] as const)
     type _R = Expect<
@@ -84,7 +79,7 @@ describe('makeDomainFunction', () => {
   })
 
   it('applies async validations', async () => {
-    const schema = z.object({
+    const parser = z.object({
       id: z
         .preprocess(Number, z.number())
         .refine((value) => value !== 1, { message: 'ID already taken' }),
@@ -97,7 +92,7 @@ describe('makeDomainFunction', () => {
     })
 
     const handler = makeDomainFunction(
-      schema,
+      parser,
       envParser,
     )(({ id }, { uid }) => [id, uid])
     type _R = Expect<Equal<typeof handler, DomainFunction<number[]>>>
@@ -127,11 +122,11 @@ describe('makeDomainFunction', () => {
   })
 
   it('returns error when environment parsing fails', async () => {
-    const schema = z.object({ id: z.preprocess(Number, z.number()) })
+    const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = makeDomainFunction(
-      schema,
+      parser,
       envParser,
     )(({ id }, { uid }) => [id, uid])
     type _R = Expect<Equal<typeof handler, DomainFunction<number[]>>>

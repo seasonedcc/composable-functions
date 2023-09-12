@@ -1,5 +1,4 @@
-import type { Schema as AnySchema, Infer } from 'https://deno.land/x/typeschema@v0.10.0/mod.ts'
-import { validate } from 'https://deno.land/x/typeschema@v0.10.0/mod.ts'
+import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import {
   EnvironmentError,
@@ -8,7 +7,7 @@ import {
   ResultError,
 } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
-import { assertObject, assertUndefined, formatSchemaErrors } from './utils.ts'
+import { formatSchemaErrors } from './utils.ts'
 import type { DomainFunction, Result } from './types.ts'
 
 async function safeResult<T>(fn: () => T): Promise<Result<T>> {
@@ -72,32 +71,35 @@ async function safeResult<T>(fn: () => T): Promise<Result<T>> {
  * })
  */
 function makeDomainFunction<
-  Schema extends AnySchema,
-  EnvSchema extends AnySchema,
+  Schema extends z.ZodTypeAny,
+  EnvSchema extends z.ZodTypeAny,
 >(inputSchema?: Schema, environmentSchema?: EnvSchema) {
   return function <Output>(
-    handler: (input: Infer<Schema>, environment: Infer<EnvSchema>) => Output,
+    handler: (
+      input: z.infer<Schema>,
+      environment: z.infer<EnvSchema>,
+    ) => Output,
   ) {
     return function (input, environment = {}) {
       return safeResult(async () => {
-        const envResult = await validate(
-          environmentSchema ?? assertObject,
-          environment,
+        const envResult = await (
+          environmentSchema ?? z.object({})
+        ).safeParseAsync(environment)
+        const result = await (inputSchema ?? z.undefined()).safeParseAsync(
+          input,
         )
-        const result = await validate(inputSchema ?? assertUndefined, input)
 
-        if ('issues' in result || 'issues' in envResult) {
+        if (!result.success || !envResult.success) {
           throw new ResultError({
-            inputErrors:
-              'issues' in result ? formatSchemaErrors(result.issues) : [],
-            environmentErrors:
-              'issues' in envResult ? formatSchemaErrors(envResult.issues) : [],
+            inputErrors: result.success
+              ? []
+              : formatSchemaErrors(result.error.issues),
+            environmentErrors: envResult.success
+              ? []
+              : formatSchemaErrors(envResult.error.issues),
           })
         }
-        return handler(
-          result.data as Infer<Schema>,
-          envResult.data as Infer<EnvSchema>,
-        )
+        return handler(result.data, envResult.data)
       })
     } as DomainFunction<Awaited<Output>>
   }
