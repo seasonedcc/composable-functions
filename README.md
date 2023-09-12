@@ -103,7 +103,7 @@ This documentation will use Node.JS imports by convention, just replace `domain-
 ## Create your first action with Remix
 
 ```tsx
-import type { ActionFunction } from 'remix'
+import type { DataFunctionArgs } from 'remix'
 import { useActionData, redirect } from 'remix'
 // You can also use the short version of makeDomainFunction: mdf
 import { mdf, inputFromForm } from 'domain-functions'
@@ -111,7 +111,7 @@ import * as z from 'zod'
 
 const schema = z.object({ number: z.coerce.number() })
 
-export const action: ActionFunction = async ({ request }) => {
+export async function action({ request }: DataFunctionArgs) {
   const increment = mdf(schema)(({ number }) => number + 1)
   const result = await increment(await inputFromForm(request))
 
@@ -121,7 +121,8 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Index() {
-  const actionData = useActionData()
+  const actionData = useActionData<typeof action>()
+  //    ^? ErrorResult | null
 
   return (
     <Form method="post">
@@ -237,6 +238,7 @@ const alwaysFails = mdf(input, environment)(async () => {
 })
 
 const failedResult = await alwaysFails(someInput)
+//    ^? Result<never>
 /*
 failedResult = {
   success: false,
@@ -255,6 +257,7 @@ const alwaysFails = mdf(input, environment)(async () => {
 })
 
 const failedResult = await alwaysFails(someInput)
+//    ^? Result<never>
 /*
 failedResult = {
   success: false,
@@ -333,9 +336,10 @@ const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
 const c = mdf(z.object({ id: z.number() }))(({ id }) => Boolean(id))
 
 const results = await all(a, b, c)({ id: 1 })
+//    ^? Result<[string, number, boolean]>
 ```
 
-For the example above, the result type will be `Result<[string, number, boolean]>`:
+For the example above, the result will be:
 
 ```ts
 {
@@ -358,6 +362,7 @@ const b = mdf(z.object({ id: z.number() }))(() => {
 })
 
 const results = await all(a, b)({ id: 1 })
+//    ^? Result<[never, never]>
 
 /*{
   success: false,
@@ -382,9 +387,10 @@ const b = mdf(z.object({}))(() => 2)
 const c = mdf(z.object({}))(() => true)
 
 const results = await collect({ a, b, c })({})
+//    ^? Result<{ a: string, b: number, c: boolean }>
 ```
 
-For the example above, the result type will be `Result<{ a: string, b: number, c: boolean }>`:
+For the example above, the result will be:
 
 ```ts
 {
@@ -420,26 +426,15 @@ const b = mdf(z.object({}))(() => ({ resultB: 2 }))
 const c = mdf(z.object({}))(async () => ({ resultC: true }))
 
 const results = await merge(a, b, c)({})
+//    ^? Result<{ resultA: string, resultB: number, resultC: boolean }>
 ```
 
-For the example above, the result type will be `Result<{ resultA: string, resultB: number, resultC: boolean }>`:
-
+For the example above, the result will be:
 ```ts
 {
   success: true,
   data: { resultA: 'string', resultB: 2, resultC: true },
   errors: [],
-  inputErrors: [],
-  environmentErrors: [],
-}
-```
-
-__Be mindful of__ each constituent domain function's return type. If any domain function returns something other than an object, the composite domain function will return an `ErrorResult`:
-
-```ts
-{
-  success: false,
-  errors: [{ message: 'Invalid data format returned from some domain functions' }],
   inputErrors: [],
   environmentErrors: [],
 }
@@ -459,9 +454,10 @@ const b = mdf(
 )(({ n }) => n - 1)
 
 const result = await first(a, b)({ n: 1, operation: 'increment' })
+//    ^? Result<number>
 ```
 
-For the example above, the result type will be `Result<number>`:
+For the example above, the result will be:
 
 ```ts
 {
@@ -484,7 +480,8 @@ const b = mdf(z.object({ operation: z.literal('B') }))(() => ({
 }))
 
 const result = await first(a, b)({ operation: 'A' })
-//       ^-- Result<{ resultA: string } | { resultB: string }>
+//    ^? Result<{ resultA: string } | { resultB: string }>
+
 if (!result.success) return console.log('No function was successful')
 if ('resultA' in result.data) return console.log('function A succeeded')
 return console.log('function B succeeded')
@@ -501,6 +498,7 @@ const b = mdf(z.object({ id: z.number() }))(() => {
 })
 
 const result = await first(a, b)({ id: 1 })
+//    ^? Result<never>
 
 /*{
   success: false,
@@ -539,9 +537,10 @@ const c = mdf(z.object({ aBoolean: z.boolean() }))(
 const d = pipe(a, b, c)
 
 const result = await d({ aNumber: 1 })
+//    ^? Result<boolean>
 ```
 
-For the example above, the result type will be `Result<boolean>`:
+For the example above, the result will be:
 
 ```ts
 {
@@ -567,9 +566,10 @@ const b = mdf(z.string())((aString) => aString === '1')
 const c = sequence(a, b)
 
 const result = await c(1)
+//    ^? Result<[string, boolean]>
 ```
 
-For the example above, the result type will be `Result<[string, boolean]>`:
+For the example above, the result will be:
 
 ```ts
 {
@@ -596,9 +596,8 @@ const b = mdf(z.object({ aString: z.string() }))(
 const c = map(sequence(a, b), mergeObjects)
 
 const result = await c(1)
+//    ^? Result<{ aString: string, aBoolean: boolean }>
 ```
-
-For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
 
 ### collectSequence
 
@@ -618,9 +617,10 @@ const b = mdf(z.string())((aString) => aString === '1')
 const c = collectSequence({ a, b })
 
 const result = await c(1)
+//    ^? Result<{ a: string, b: boolean }>
 ```
 
-For the example above, the result type will be `Result<{ a: string, b: boolean }>`:
+For the example above, the result will be:
 
 ```ts
 {
@@ -631,26 +631,6 @@ For the example above, the result type will be `Result<{ a: string, b: boolean }
   environmentErrors: [],
 }
 ```
-
-If you'd rather have an object instead of a tuple (similar to the `merge` function), you can use the `map` and `mergeObjects` functions like so:
-
-```ts
-import { mergeObjects } from 'domain-functions'
-
-const a = mdf(z.number())((aNumber) => ({
-  aString: String(aNumber)
-}))
-const b = mdf(z.object({ aString: z.string() }))(
-  ({ aString }) => ({ aBoolean: aString === '1' })
-)
-
-const c = map(sequence(a, b), mergeObjects)
-
-const result = await c(1)
-```
-
-For the example above, the result type will be `Result<{ aString: string, aBoolean: boolean }>`.
-
 
 ### branch
 
@@ -673,8 +653,9 @@ const findUserByIdOrEmail = branch(
   (output) => (typeof output === "number" ? findUserById : findUserByEmail),
 )
 const result = await findUserByIdOrEmail({ id: 1 })
+//    ^? Result<User>
 ```
-For the example above, the result type will be `Result<User>`:
+For the example above, the result will be:
 ```ts
 {
   success: true,
@@ -701,6 +682,7 @@ const findUserByIdOrEmail = branch(
     throw new Error("Invalid input")
   },
 )
+//    ^? DomainFunction<never>
 ```
 For the example above, the result type will be `ErrorResult`:
 ```ts
@@ -738,9 +720,10 @@ const fetchFullName = pipe(
 )
 
 const result = fetchFullName({ userId: 2 })
+//    ^? Result<string>
 ```
 
-For the example above, the result type will be `Result<string>` and its value something like this:
+For the example above, the result will be something like this:
 
 ```ts
 {
@@ -804,10 +787,7 @@ const domainFunctionA = mdf(
 )(async ({ id }) => {
   const valueB = await fromSuccess(domainFunctionB)({ userId: id })
   // do something else
-  return {
-    valueA,
-    valueB,
-  }
+  return { valueA, valueB }
 })
 ```
 
@@ -822,11 +802,11 @@ Object properties from the rightmost object will take precedence over the leftmo
 const a = { a: 1, b: 2 }
 const b = { b: '3', c: '4' }
 const result = mergeObjects([a, b])
+//    ^? { a: number, b: string, c: string }
 ```
 The resulting object will be:
 ```ts
 { a: 1, b: '3', c: '4' }
-// inferred as { a: number, b: string, c: string }
 ```
 
 
@@ -841,7 +821,7 @@ The resulting object will be:
 const fn = mdf()(async () => '')
 
 type Data = UnpackData<typeof fn>
-// Data = string
+//    ^? string
 ```
 
 ### UnpackSuccess
@@ -852,8 +832,8 @@ type Data = UnpackData<typeof fn>
 const fn = mdf()(async () => '')
 
 type Success = UnpackSuccess<typeof fn>
-// Success = { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [] }
-// Which is the same as: SuccessResult<string>
+//    ^? SuccessResult<string>
+// Which is the same as: { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [] }
 ```
 ### UnpackResult
 
@@ -863,18 +843,10 @@ type Success = UnpackSuccess<typeof fn>
 const fn = mdf()(async () => '')
 
 type Result = UnpackResult<typeof fn>
-/*
-Result =
-  | { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [], }
-  | { success: false, errors: { message: string }[], inputErrors: SchemaError[], environmentErrors: SchemaError[] }
-
-* Which is the same as:
-Result<string>
-* Which is the same as:
-SuccessResult<string> | ErrorResult
-*/
+//    ^? Result<string>
+// Which is the same as: { success: true, data: string, errors: [], inputErrors: [], environmentErrors: [], } | { success: false, errors: { message: string }[], inputErrors: SchemaError[], environmentErrors: SchemaError[] }
+// Or the same as: SuccessResult<string> | ErrorResult
 ```
-
 
 ## Extracting input values for domain functions
 
