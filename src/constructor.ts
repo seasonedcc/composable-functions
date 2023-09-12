@@ -124,4 +124,4 @@ function makeDomainFunction<
   }
 }
 
-export { safeResult, makeDomainFunction }
+export { safeResult, makeDomainFunction, makeDomainFunction as mdf }

@@ -18,7 +18,7 @@ import { safeResult } from './constructor.ts'
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
  * @example
- * import { makeDomainFunction as mdf, all } from 'domain-functions'
+ * import { mdf, all } from 'domain-functions'
  *
  * const a = mdf(z.object({ id: z.number() }))(({ id }) => String(id))
 const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
@@ -53,7 +53,7 @@ function all<Fns extends DomainFunction[]>(
 /**
  * Receives a Record of domain functions, runs them all in parallel and preserves the shape of this record for the data property in successful results.
  * @example
- * import { makeDomainFunction as mdf, collect } from 'domain-functions'
+ * import { mdf, collect } from 'domain-functions'
  *
  * const a = mdf(z.object({}))(() => '1')
 const b = mdf(z.object({}))(() => 2)
@@ -74,7 +74,7 @@ function collect<Fns extends Record<string, DomainFunction>>(
 /**
  * Creates a composite domain function that will return the result of the first successful constituent domain function. **It is important to notice** that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
  * @example
- * import { makeDomainFunction as mdf, first } from 'domain-functions'
+ * import { mdf, first } from 'domain-functions'
  *
  * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
 const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
@@ -109,7 +109,7 @@ function first<Fns extends DomainFunction[]>(
 /**
  * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
  * @example
- * import { makeDomainFunction as mdf, merge } from 'domain-functions'
+ * import { mdf, merge } from 'domain-functions'
  *
  * const a = mdf(z.object({}))(() => ({ a: 'a' }))
  * const b = mdf(z.object({}))(() => ({ b: 2 }))
@@ -125,7 +125,7 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
 /**
  * Creates a single domain function out of a chain of multiple domain functions. It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
  * @example
- * import { makeDomainFunction as mdf, pipe } from 'domain-functions'
+ * import { mdf, pipe } from 'domain-functions'
  *
  * const a = mdf(z.object({ aNumber: z.number() }))(
  *   ({ aNumber }) => ({ aString: String(aNumber) }),
@@ -149,7 +149,7 @@ function pipe<T extends DomainFunction[]>(
  *
  * **NOTE :** After ECMAScript2015 JS is able to keep the order of keys in an object, we are relying on that. However, number-like keys such as { 1: 'foo' } will be ordered and may break the given order.
  * @example
- * import { makeDomainFunction as mdf, collectSequence } from 'domain-functions'
+ * import { mdf, collectSequence } from 'domain-functions'
  *
  * const a = mdf(z.object({}))(() => '1')
 const b = mdf(z.number())((n) => n + 2)
@@ -174,7 +174,7 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 /**
  * Works like `pipe` but it will collect the output of every function in a tuple, similar to `all`.
  * @example
- * import { makeDomainFunction as mdf, sequence } from 'domain-functions'
+ * import { mdf, sequence } from 'domain-functions'
  *
  * const a = mdf(z.number())((aNumber) => String(aNumber))
  * const b = mdf(z.string())((aString) => aString === '1')
@@ -206,7 +206,7 @@ function sequence<Fns extends DomainFunction[]>(
 /**
  * It takes a domain function and a predicate to apply a transformation over the result.data of that function. It only runs if the function was successfull. When the given domain function fails, its error is returned wihout changes.
  * @example
- * import { makeDomainFunction as mdf, map } from 'domain-functions'
+ * import { mdf, map } from 'domain-functions'
  *
  * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
  * const df = map(a, (n) => String(n))
@@ -228,7 +228,7 @@ function map<O, R>(
  * Use it to add conditional logic to your domain functions' compositions.
  * It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output.
  * @example
- * import { makeDomainFunction as mdf, branch } from 'domain-functions'
+ * import { mdf, branch } from 'domain-functions'
  *
  * const getIdOrEmail = mdf(z.object({ id: z.number().optional(), email: z.string().optional() }))((data) => data.id ?? data.email)
  * const findUserById = mdf(z.number())((id) => db.users.find({ id }))
@@ -258,7 +258,7 @@ function branch<T, Df extends DomainFunction>(
  * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ResultError` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
- * import { makeDomainFunction as mdf, fromSuccess } from 'domain-functions'
+ * import { mdf, fromSuccess } from 'domain-functions'
  *
  * const add1 = mdf(z.number())((n) => n + 1)
  * const result = await add1(1)
@@ -281,7 +281,7 @@ function fromSuccess<T extends DomainFunction>(
 /**
  * Creates a single domain function that will apply a transformation over the ErrorResult of a failed DomainFunction. When the given domain function succeeds, its result is returned without changes.
  * @example
- * import { makeDomainFunction as mdf, mapError } from 'domain-functions'
+ * import { mdf, mapError } from 'domain-functions'
  *
  * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
  * const summarizeErrors = (result: ErrorData) =>
@@ -317,7 +317,7 @@ type TraceData<T> = {
  * The most common use case is to log failures to the console or to an external service.
  * @param traceFn A function that receives the input, environment and result of a domain function.
  * @example
- * import { makeDomainFunction as mdf, trace } from 'domain-functions'
+ * import { mdf, trace } from 'domain-functions'
  *
  * const trackErrors = trace(({ input, output, result }) => {
  *   if(!result.success) sendToExternalService({ input, output, result })

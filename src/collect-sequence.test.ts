@@ -1,19 +1,17 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
-import { makeDomainFunction } from './constructor.ts'
+import { mdf } from './constructor.ts'
 import { collectSequence } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('collectSequence', () => {
   it('should compose domain functions keeping the given order of keys', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => ({
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id - 1,
-    )
+    const b = mdf(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = collectSequence({ a, b })
     type _R = Expect<
@@ -30,13 +28,13 @@ describe('collectSequence', () => {
   })
 
   it('should use the same environment in all composed functions', async () => {
-    const a = makeDomainFunction(
+    const a = mdf(
       z.undefined(),
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = makeDomainFunction(
+    const b = mdf(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -57,13 +55,13 @@ describe('collectSequence', () => {
 
   it('should fail on the first environment parser failure', async () => {
     const envParser = z.object({ env: z.number() })
-    const a = makeDomainFunction(
+    const a = mdf(
       z.undefined(),
       envParser,
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = makeDomainFunction(
+    const b = mdf(
       z.object({ inp: z.number() }),
       envParser,
     )(({ inp }, { env }) => inp + env)
@@ -84,13 +82,13 @@ describe('collectSequence', () => {
   it('should fail on the first input parser failure', async () => {
     const firstInputParser = z.undefined()
 
-    const a = makeDomainFunction(
+    const a = mdf(
       firstInputParser,
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = makeDomainFunction(
+    const b = mdf(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -111,13 +109,13 @@ describe('collectSequence', () => {
   })
 
   it('should fail on the second input parser failure', async () => {
-    const a = makeDomainFunction(
+    const a = mdf(
       z.undefined(),
       z.object({ env: z.number() }),
     )(() => ({
       inp: 'some invalid input',
     }))
-    const b = makeDomainFunction(
+    const b = mdf(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -138,17 +136,13 @@ describe('collectSequence', () => {
   })
 
   it('should compose more than 2 functions', async () => {
-    const a = makeDomainFunction(z.object({ aNumber: z.number() }))(
-      ({ aNumber }) => ({
-        aString: String(aNumber),
-      }),
-    )
-    const b = makeDomainFunction(z.object({ aString: z.string() }))(
-      ({ aString }) => ({
-        aBoolean: aString == '1',
-      }),
-    )
-    const c = makeDomainFunction(z.object({ aBoolean: z.boolean() }))(
+    const a = mdf(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
+      aString: String(aNumber),
+    }))
+    const b = mdf(z.object({ aString: z.string() }))(({ aString }) => ({
+      aBoolean: aString == '1',
+    }))
+    const c = mdf(z.object({ aBoolean: z.boolean() }))(
       ({ aBoolean }) => !aBoolean,
     )
 

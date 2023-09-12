@@ -1,19 +1,20 @@
-import { describe, it, assertObjectMatch, assertEquals } from './test-prelude.ts'
+import {
+  describe,
+  it,
+  assertObjectMatch,
+  assertEquals,
+} from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
-import { makeDomainFunction } from './constructor.ts'
+import { mdf } from './constructor.ts'
 import { collect } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('collect', () => {
   it('should combine an object of domain functions', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id + 1,
-    )
-    const b = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id - 1,
-    )
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const b = mdf(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: number }>>>
@@ -28,8 +29,8 @@ describe('collect', () => {
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => id)
-    const b = makeDomainFunction(z.object({ id: z.string() }))(({ id }) => id)
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id)
+    const b = mdf(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: string }>>>
@@ -48,8 +49,8 @@ describe('collect', () => {
   })
 
   it('should return error when one of the domain functions fails', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => id)
-    const b = makeDomainFunction(z.object({ id: z.number() }))(() => {
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id)
+    const b = mdf(z.object({ id: z.number() }))(() => {
       throw 'Error'
     })
 
@@ -65,8 +66,8 @@ describe('collect', () => {
   })
 
   it('should combine the inputError messages of both functions', async () => {
-    const a = makeDomainFunction(z.object({ id: z.string() }))(({ id }) => id)
-    const b = makeDomainFunction(z.object({ id: z.string() }))(({ id }) => id)
+    const a = mdf(z.object({ id: z.string() }))(({ id }) => id)
+    const b = mdf(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: string; b: string }>>>
@@ -89,10 +90,10 @@ describe('collect', () => {
   })
 
   it('should combine the error messages when both functions fail', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(() => {
+    const a = mdf(z.object({ id: z.number() }))(() => {
       throw new Error('Error A')
     })
-    const b = makeDomainFunction(z.object({ id: z.number() }))(() => {
+    const b = mdf(z.object({ id: z.number() }))(() => {
       throw new Error('Error B')
     })
 

@@ -1,16 +1,14 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
-import { makeDomainFunction } from './constructor.ts'
+import { mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
 import type { DomainFunction, ErrorData } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id + 1,
-    )
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = () =>
       ({
         errors: [{ message: 'New Error Message' }],
@@ -30,9 +28,7 @@ describe('mapError', () => {
   })
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id + 1,
-    )
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       ({
         errors: [{ message: 'Number of errors: ' + result.errors.length }],
@@ -57,9 +53,7 @@ describe('mapError', () => {
   })
 
   it('returns the error when the mapping function fails', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      ({ id }) => id + 1,
-    )
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = () => {
       throw 'failed to map'
     }
