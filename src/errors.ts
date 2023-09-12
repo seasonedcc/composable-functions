@@ -61,7 +61,7 @@ function errorMessagesFor(errors: SchemaError[], name: string) {
 /**
  * A custom error class for input errors.
  * @example
- * const df = makeDomainFunction()(() => {
+ * const df = mdf()(() => {
  *   throw new InputError('Invalid input', 'user.name')
  * })
  */
@@ -87,7 +87,7 @@ class InputErrors extends Error {
 /**
  * A custom error class for environment errors.
  * @example
- * const df = makeDomainFunction()(() => {
+ * const df = mdf()(() => {
  *  throw new EnvironmentError('Invalid environment', 'user.name')
  * })
  */
@@ -104,7 +104,7 @@ class EnvironmentError extends Error {
 /**
  * A custom error class for creating ErrorResult.
  * @example
- * const df = makeDomainFunction()(() => {
+ * const df = mdf()(() => {
  *   throw new ResultError({
  *     errors: [{ message: 'Some error' }],
  *     inputErrors: [{ message: 'Some input error', path: 'user.name' }],
