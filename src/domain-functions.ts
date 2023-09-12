@@ -226,7 +226,7 @@ function map<O, R>(
 
 /**
  * Use it to add conditional logic to your domain functions' compositions.
- * It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output.
+ * It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output, like `pipe`. If the predicate returns `null` the result of the previous domain function will be returned and it won't be piped.
  * @example
  * import { mdf, branch } from 'domain-functions'
  *
@@ -238,20 +238,32 @@ function map<O, R>(
  *   (output) => (typeof output === "number" ? findUserById : findUserByEmail)
  * )
  * //    ^? DomainFunction<User>
+ *
+ * const getStock = mdf(z.any(), z.object({ id: z.number() }))(_, ({ id }) => db.stocks.find({ id }))
+ * const getExtraStock = mdf(z.any(), z.object({ id: z.number() }))(_, ({ id }) => db.stockes.find({ id, extra: true }))
+ *
+ * const getStockOrExtraStock = branch(
+ *  getStock,
+ *  ({ items }) => (items.length >= 0 ? null : getExtraStock)
+ * )
+ * //   ^? DomainFunction<{ items: Item[] }>
  */
-function branch<T, Df extends DomainFunction>(
+function branch<T, R extends DomainFunction | null>(
   dfn: DomainFunction<T>,
-  resolver: (o: T) => Promise<Df> | Df,
-): DomainFunction<UnpackData<Df>> {
-  return async (input, environment) => {
+  resolver: (o: T) => Promise<R> | R,
+) {
+  return (async (input, environment) => {
     const result = await dfn(input, environment)
     if (!result.success) return result
 
     return safeResult(async () => {
       const nextDf = await resolver(result.data)
+      if (typeof nextDf !== 'function') return result.data
       return fromSuccess(nextDf)(result.data, environment)
     })
-  }
+  }) as DomainFunction<
+    R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
+  >
 }
 
 /**
