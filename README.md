@@ -656,7 +656,7 @@ For the example above, the result type will be `Result<{ aString: string, aBoole
 
 Use `branch` to add conditional logic to your domain functions' compositions.
 
-It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output.
+It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output, like `pipe`.
 
 ```ts
 const getIdOrEmail = mdf(z.object({ id: z.number().optional, email: z.string().optional() }))((data) => {
@@ -684,6 +684,14 @@ For the example above, the result type will be `Result<User>`:
   environmentErrors: [],
 }
 ```
+If you don't want to pipe when a certain condition is matched, you can return `null` like so:
+```ts
+const a = mdf()(() => 'a')
+const b = mdf()(() => 'b')
+const df = branch(a, (output) => output === 'a' ? null : b)
+//    ^? DomainFunction<'a' | 'b'>
+```
+
 If any function fails, execution halts and the error is returned.
 The predicate function will return an `ErrorResult` type in case it throws:
 ```ts

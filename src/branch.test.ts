@@ -50,13 +50,11 @@ describe('branch', () => {
   })
 
   it('should not pipe if the predicate returns null', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(({ id }) => ({
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
       next: 'multiply',
     }))
-    const b = makeDomainFunction(z.object({ id: z.number() }))(({ id }) =>
-      String(id),
-    )
+    const b = mdf(z.object({ id: z.number() }))(({ id }) => String(id))
     const d = branch(a, (output) => (output.next === 'multiply' ? null : b))
     type _R = Expect<
       Equal<typeof d, DomainFunction<string | { id: number; next: string }>>
