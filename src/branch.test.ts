@@ -49,6 +49,26 @@ describe('branch', () => {
     })
   })
 
+  it('should not pipe if the predicate returns null', async () => {
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => ({
+      id: id + 2,
+      next: 'multiply',
+    }))
+    const b = mdf(z.object({ id: z.number() }))(({ id }) => String(id))
+    const d = branch(a, (output) => (output.next === 'multiply' ? null : b))
+    type _R = Expect<
+      Equal<typeof d, DomainFunction<string | { id: number; next: string }>>
+    >
+
+    assertEquals(await d({ id: 1 }), {
+      success: true,
+      data: { id: 3, next: 'multiply' },
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
   it('should use the same environment in all composed functions', async () => {
     const a = mdf(
       z.undefined(),
@@ -122,6 +142,7 @@ describe('branch', () => {
     const b = mdf(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = branch(a, (_) => {
       throw new Error('condition function failed')
+      // deno-lint-ignore no-unreachable
       return b
     })
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
