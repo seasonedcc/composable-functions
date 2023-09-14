@@ -117,25 +117,23 @@ function makeDomainFunction<I, E>(
   }
 }
 
-// deno-lint-ignore ban-types
-const objectSchema: ParserSchema<{}> = {
-  // deno-lint-ignore require-await
-  safeParseAsync: async (data: unknown) => {
-    if (data == null || typeof data !== 'object') {
+const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
+  safeParseAsync: (data: unknown) => {
+    if (Object.prototype.toString.call({}) !== '[object Object]') {
       throw new Error('Expected an object')
     }
-    return { success: true, data }
+    const someRecord = data as Record<PropertyKey, unknown>
+    return Promise.resolve({ success: true, data: someRecord })
   },
 }
 
 const undefinedSchema: ParserSchema<undefined> = {
-  // deno-lint-ignore require-await
-  safeParseAsync: async (data: unknown) => {
+  safeParseAsync: (data: unknown) => {
     if (data !== undefined) {
       throw new Error('Expected undefined')
     }
-    return { success: true, data }
+    return Promise.resolve({ success: true, data })
   },
 }
 
-export { safeResult, makeDomainFunction, makeDomainFunction as mdf }
+export { makeDomainFunction, makeDomainFunction as mdf, safeResult }
