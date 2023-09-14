@@ -158,6 +158,19 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
  */
 type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 
+type ParserIssue = { path: (string | number | symbol)[]; message: string }
+
+type ParserResult<T> =
+  | {
+      success: true
+      data: T
+    }
+  | { success: false; error: { issues: ParserIssue[] } }
+
+type ParserSchema<T extends unknown = unknown> = {
+  safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
+}
+
 export type {
   AtLeastOne,
   DomainFunction,
@@ -166,6 +179,9 @@ export type {
   ErrorWithMessage,
   Last,
   MergeObjs,
+  ParserIssue,
+  ParserResult,
+  ParserSchema,
   Result,
   SchemaError,
   SuccessResult,

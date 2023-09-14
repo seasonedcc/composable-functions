@@ -1,8 +1,6 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import type { MergeObjs, ParserIssue, Result, SchemaError, SuccessResult } from './types.ts'
 
-import type { MergeObjs, Result, SchemaError, SuccessResult } from './types.ts'
-
-function formatSchemaErrors(errors: z.ZodIssue[]): SchemaError[] {
+function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
   return errors.map((error) => {
     const { path, message } = error
     return { path: path.map(String), message }

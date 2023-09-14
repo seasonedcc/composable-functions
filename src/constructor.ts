@@ -1,5 +1,3 @@
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
-
 import {
   EnvironmentError,
   InputError,
@@ -8,7 +6,7 @@ import {
 } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { formatSchemaErrors } from './utils.ts'
-import type { DomainFunction, Result } from './types.ts'
+import type { DomainFunction, ParserSchema, Result } from './types.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -89,22 +87,17 @@ async function safeResult<T>(fn: () => T): Promise<Result<T>> {
  *   return { message: `${greeting} ${user.name}` }
  * })
  */
-function makeDomainFunction<
-  Schema extends z.ZodTypeAny,
-  EnvSchema extends z.ZodTypeAny,
->(inputSchema?: Schema, environmentSchema?: EnvSchema) {
-  return function <Output>(
-    handler: (
-      input: z.infer<Schema>,
-      environment: z.infer<EnvSchema>,
-    ) => Output,
-  ) {
+function makeDomainFunction<I, E>(
+  inputSchema?: ParserSchema<I>,
+  environmentSchema?: ParserSchema<E>,
+) {
+  return function <Output>(handler: (input: I, environment: E) => Output) {
     return function (input, environment = {}) {
       return safeResult(async () => {
         const envResult = await (
-          environmentSchema ?? z.object({})
+          environmentSchema ?? objectSchema
         ).safeParseAsync(environment)
-        const result = await (inputSchema ?? z.undefined()).safeParseAsync(
+        const result = await (inputSchema ?? undefinedSchema).safeParseAsync(
           input,
         )
 
@@ -118,10 +111,31 @@ function makeDomainFunction<
               : formatSchemaErrors(envResult.error.issues),
           })
         }
-        return handler(result.data, envResult.data)
+        return handler(result.data as I, envResult.data as E)
       })
     } as DomainFunction<Awaited<Output>>
   }
+}
+
+// deno-lint-ignore ban-types
+const objectSchema: ParserSchema<{}> = {
+  // deno-lint-ignore require-await
+  safeParseAsync: async (data: unknown) => {
+    if (data == null || typeof data !== 'object') {
+      throw new Error('Expected an object')
+    }
+    return { success: true, data }
+  },
+}
+
+const undefinedSchema: ParserSchema<undefined> = {
+  // deno-lint-ignore require-await
+  safeParseAsync: async (data: unknown) => {
+    if (data !== undefined) {
+      throw new Error('Expected undefined')
+    }
+    return { success: true, data }
+  },
 }
 
 export { safeResult, makeDomainFunction, makeDomainFunction as mdf }
