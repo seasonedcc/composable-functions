@@ -119,8 +119,11 @@ function makeDomainFunction<I, E>(
 
 const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
   safeParseAsync: (data: unknown) => {
-    if (Object.prototype.toString.call({}) !== '[object Object]') {
-      throw new Error('Expected an object')
+    if (Object.prototype.toString.call(data) !== '[object Object]') {
+      return Promise.resolve({
+        success: false,
+        error: { issues: [{ path: [], message: 'Expected an object' }] },
+      })
     }
     const someRecord = data as Record<PropertyKey, unknown>
     return Promise.resolve({ success: true, data: someRecord })
@@ -130,7 +133,10 @@ const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
 const undefinedSchema: ParserSchema<undefined> = {
   safeParseAsync: (data: unknown) => {
     if (data !== undefined) {
-      throw new Error('Expected undefined')
+      return Promise.resolve({
+        success: false,
+        error: { issues: [{ path: [], message: 'Expected undefined' }] },
+      })
     }
     return Promise.resolve({ success: true, data })
   },
