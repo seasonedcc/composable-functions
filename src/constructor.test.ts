@@ -1,32 +1,46 @@
 import {
-  describe,
-  it,
   assertEquals,
   assertObjectMatch,
+  describe,
+  it,
 } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { mdf } from './constructor.ts'
 import {
   EnvironmentError,
-  ResultError,
   InputError,
   InputErrors,
+  ResultError,
 } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('makeDomainFunction', () => {
-  describe('when it has no input', async () => {
-    const handler = mdf()(() => 'no input!')
-    type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+  describe('when it has no input', () => {
+    it('uses zod parser to create parse the input and call the domain function', async () => {
+      const handler = mdf()(() => 'no input!')
+      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
 
-    assertEquals(await handler(), {
-      success: true,
-      data: 'no input!',
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
+      assertEquals(await handler(), {
+        success: true,
+        data: 'no input!',
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      })
+    })
+
+    it('fails gracefully if gets something other than undefined', async () => {
+      const handler = mdf()(() => 'no input!')
+      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+
+      assertEquals(await handler('some input'), {
+        success: false,
+        errors: [],
+        inputErrors: [{ path: [], message: 'Expected undefined' }],
+        environmentErrors: [],
+      })
     })
   })
 
@@ -43,6 +57,18 @@ describe('makeDomainFunction', () => {
         errors: [],
         inputErrors: [],
         environmentErrors: [],
+      })
+    })
+
+    it('fails gracefully if gets something other than empty record', async () => {
+      const handler = mdf()(() => 'no input!')
+      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+
+      assertEquals(await handler(undefined, ''), {
+        success: false,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [{ path: [], message: 'Expected an object' }],
       })
     })
 
