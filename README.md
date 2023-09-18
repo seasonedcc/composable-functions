@@ -1,7 +1,7 @@
 # Keep your business logic clean with Domain Functions
 
 Domain Functions helps you decouple your business logic from your controllers, with first-class type inference from end to end.
-It does this by enforcing the parameters' types at runtime (through [zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
+It does this by enforcing the parameters' types at runtime (through [Zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
 
 ![](example.gif)
 
@@ -960,8 +960,11 @@ To better understand how to structure your data, refer to [this test file](./src
 - [How domain-functions improves the already awesome DX of Remix projects](https://dev.to/gugaguichard/how-remix-domains-improves-the-already-awesome-dx-of-remix-projects-56lm)
 
 ## FAQ
+
+- I want to use domain-functions in a project that does not have Zod, how can I use other schema validation libraries?
+  - Although we code against Zod during the library development, any schema validation can be used as long as you are able to create an adapter of the type [`ParserSchema<T>`](./src/types.ts#L183).
 - Why are the inputs and the environment not type-safe?
-  - Short answer: Similar to how zod's `.parse` operates, we won't presume you're providing the right data to the domain function. We will validate it only at runtime. The domain function's inner code won't execute if the input/environment is invalid, ensuring that the data you receive is valid. Once validated, we can also infer the output type. Read more about it in [@danielweinmann 's comment](https://github.com/seasonedcc/domain-functions/issues/80#issuecomment-1642453221).
+  - Short answer: Similar to how Zod's `.parse` operates, we won't presume you're providing the right data to the domain function. We will validate it only at runtime. The domain function's inner code won't execute if the input/environment is invalid, ensuring that the data you receive is valid. Once validated, we can also infer the output type. Read more about it in [@danielweinmann 's comment](https://github.com/seasonedcc/domain-functions/issues/80#issuecomment-1642453221).
 - How do I carry out conditional branching in a composition of domain functions?
   - Before 1.8.0: You would have to use either the [`first`](#first) operator or `if` statements within the function. The `first` operator was not ideal because it could execute all the functions in the composition (assuming the input and environment validate) until one of them returns a success. For the `if` approach, we'd recommend using [`fromSuccess`](#fromsuccess) to invoke the other domain functions, as it would propagate any errors that could occur within them. Read more about it [here](https://twitter.com/gugaguichard/status/1684280544387899393).
   - After 1.8.0: We introduced the [`branch`](#branch) operator, which enables you to conduct more complex conditional branching without breaking compositions.
