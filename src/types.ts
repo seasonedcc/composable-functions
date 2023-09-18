@@ -158,7 +158,7 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
  */
 type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 
-type ParserIssue = { path: (string | number | symbol)[]; message: string }
+type ParserIssue = { path: PropertyKey[]; message: string }
 
 type ParserResult<T> =
   | {
