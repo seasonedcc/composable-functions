@@ -313,9 +313,9 @@ traceToConsole(someOtherDomainFunction)()
 It would also be simple to create a function that will send the errors to some error tracking service under certain conditions:
 
 ```ts
-const trackErrors = trace(({ input, output, result }) => {
+const trackErrors = trace(async ({ input, output, result }) => {
   if(!result.success && someOtherConditions(result)) {
-    sendToExternalService({ input, output, result })
+    await sendToExternalService({ input, output, result })
   }
 })
 ```

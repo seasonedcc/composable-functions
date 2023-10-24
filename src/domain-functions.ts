@@ -339,11 +339,15 @@ type TraceData<T> = {
  * //    ^? DomainFunction<number>
  */
 function trace<D extends DomainFunction = DomainFunction<unknown>>(
-  traceFn: ({ input, environment, result }: TraceData<UnpackResult<D>>) => void,
+  traceFn: ({
+    input,
+    environment,
+    result,
+  }: TraceData<UnpackResult<D>>) => Promise<void> | void,
 ): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
     const result = await fn(input, environment)
-    traceFn({ input, environment, result } as TraceData<UnpackResult<D>>)
+    await traceFn({ input, environment, result } as TraceData<UnpackResult<D>>)
     return result
   }
 }
