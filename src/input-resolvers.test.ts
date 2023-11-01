@@ -255,8 +255,8 @@ describe('inputFromSearch', () => {
 
   it('takes keys encoded as URI components', () => {
     const qs = new URLSearchParams()
-    qs.append('some%20colors[0]', 'blue')
-    qs.append('some%20colors[1]', 'red ish')
+    qs.append('some colors[0]', 'blue')
+    qs.append('some colors[1]', 'red ish')
     assertEquals(subject.inputFromSearch(qs), {
       'some colors': ['blue', 'red ish'],
     })

@@ -28,8 +28,7 @@ const inputFromSearch = (queryString: URLSearchParams) => {
 
   return pairs
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-    .reduce((parsed, [encodedKey, value]) => {
-      const key = decodeURIComponent(encodedKey)
+    .reduce((parsed, [key, value]) => {
       const compositeKey = key.match(/([^\[\]]*)(\[.*\].*)$/)
       if (compositeKey) {
         const [, rootKey, subKeys] = compositeKey
