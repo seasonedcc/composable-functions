@@ -23,6 +23,15 @@ const makeGet: (entries: Array<[string, string]>, url?: string) => Request = (
   })
 
 describe('inputFromForm', () => {
+  it('should parse all symbols correctly', async () => {
+    const request = makePost([
+      ['formula', '3 % 2']
+    ])
+    assertEquals(await subject.inputFromForm(request), {
+      formula: '3 % 2'
+    })
+  })
+
   it("extracts the input values from a Request's FormData as an Object", async () => {
     const request = makePost([
       ['foo', 'bar'],
@@ -247,7 +256,7 @@ describe('inputFromSearch', () => {
   it('takes keys encoded as URI components', () => {
     const qs = new URLSearchParams()
     qs.append('some%20colors[0]', 'blue')
-    qs.append('some%20colors[1]', 'red%20ish')
+    qs.append('some%20colors[1]', 'red ish')
     assertEquals(subject.inputFromSearch(qs), {
       'some colors': ['blue', 'red ish'],
     })
@@ -256,8 +265,8 @@ describe('inputFromSearch', () => {
   it('takes values encoded as URI components', () => {
     const qs = new URLSearchParams()
     qs.append('colors[0]', 'blue')
-    qs.append('colors[1]', 'red%20ish')
-    qs.append('person[name]', 'Average%20Joe')
+    qs.append('colors[1]', 'red ish')
+    qs.append('person[name]', 'Average Joe')
     assertEquals(subject.inputFromSearch(qs), {
       colors: ['blue', 'red ish'],
       person: { name: 'Average Joe' },
