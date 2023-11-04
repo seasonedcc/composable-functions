@@ -11,7 +11,6 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
       ? maybeError.message
       : String(maybeError),
     exception: maybeError,
-    cause: objectHasKey(maybeError, 'cause') ? maybeError.cause : undefined,
   }
 }
 

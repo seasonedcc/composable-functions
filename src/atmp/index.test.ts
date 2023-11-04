@@ -106,7 +106,11 @@ describe('pipe', () => {
 
     assertEquals(res.success, false)
     assertEquals(res.errors![0].message, 'always throw')
-    assertEquals(res.errors![0].cause, 'it was made for this')
+    assertEquals(
+      // deno-lint-ignore no-explicit-any
+      (res.errors[0] as any).exception?.cause,
+      'it was made for this',
+    )
   })
 })
 

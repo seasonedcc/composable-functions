@@ -7,7 +7,6 @@ type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
 type ErrorWithMessage = {
   message: string
   exception?: unknown
-  cause?: unknown
 }
 type Error = {
   success: false,
