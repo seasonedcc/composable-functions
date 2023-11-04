@@ -1,6 +1,7 @@
 import { toErrorWithMessage } from './errors.ts'
 import {
   Attempt,
+  Error,
   ErrorWithMessage,
   First,
   Fn,
@@ -12,21 +13,22 @@ import {
 } from './types.ts'
 import { mergeObjects } from '../utils.ts'
 
+function success<T>(data: T): Success<T> {
+  return { success: true, data, errors: [] }
+}
+
+function error(errors: ErrorWithMessage[]): Error {
+  return { success: false, errors }
+}
+
 function atmp<T extends Fn>(fn: T): Attempt<T> {
   return async (...args) => {
     try {
       // deno-lint-ignore no-explicit-any
       const result = await fn(...(args as any[]))
-      return {
-        success: true,
-        data: result,
-        errors: [],
-      }
+      return success(result)
     } catch (e) {
-      return {
-        success: false,
-        errors: [toErrorWithMessage(e)],
-      }
+      return error([toErrorWithMessage(e)])
     }
   }
 }
@@ -34,9 +36,7 @@ function atmp<T extends Fn>(fn: T): Attempt<T> {
 function pipe<T extends [Attempt, ...Attempt[]]>(...fns: T) {
   return (async (...args) => {
     const res = await sequence(...fns)(...args)
-    return !res.success
-      ? { success: false, errors: res.errors }
-      : { success: true, data: res.data.at(-1), errors: [] }
+    return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as Attempt<
     (
       ...args: Parameters<Extract<First<T>, Attempt>>
@@ -53,13 +53,10 @@ function all<T extends [Attempt, ...Attempt[]]>(...fns: T) {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (!isListOfSuccess(results)) {
-      return {
-        success: false,
-        errors: results.map(({ errors }) => errors).flat(),
-      }
+      return error(results.map(({ errors }) => errors).flat())
     }
 
-    return { success: true, data: results.map(({ data }) => data), errors: [] }
+    return success(results.map(({ data }) => data))
   }) as unknown as Attempt<
     (...args: Parameters<Extract<T[keyof T], Attempt>>) => {
       [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Attempt>>>
@@ -83,15 +80,15 @@ function sequence<T extends [Attempt, ...Attempt[]]>(...fns: T) {
     const [head, ...tail] = fns
 
     const res = await head(...args)
-    if (!res.success) return { success: false, errors: res.errors }
+    if (!res.success) return error(res.errors)
 
     const result = [res.data]
     for await (const fn of tail) {
       const res = await fn(result.at(-1))
-      if (!res.success) return { success: false, errors: res.errors }
+      if (!res.success) return error(res.errors)
       result.push(res.data)
     }
-    return { success: true, data: result, errors: [] }
+    return success(result)
   }) as Attempt<
     (...args: Parameters<Extract<First<T>, Attempt>>) => UnpackAll<T>
   >
@@ -103,9 +100,7 @@ function map<T extends Attempt, R>(
 ) {
   return (async (...args) => {
     const res = await fn(...args)
-    return !res.success
-      ? { success: false, errors: res.errors }
-      : { success: true, data: mapper(res.data), errors: [] }
+    return !res.success ? error(res.errors) : success(mapper(res.data))
   }) as Attempt<(...args: Parameters<T>) => R>
 }
 
@@ -115,9 +110,7 @@ function mapError<T extends Attempt, R>(
 ) {
   return (async (...args) => {
     const res = await fn(...args)
-    return !res.success
-      ? { success: false, errors: res.errors.map(mapper) }
-      : { success: true, data: res.data, errors: [] }
+    return !res.success ? error(res.errors.map(mapper)) : success(res.data)
   }) as T
 }
 
