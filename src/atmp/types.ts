@@ -1,6 +1,14 @@
-type Last<T extends readonly any[]> = T extends [...infer _I, infer L]
+/**
+ * Returns the last item of a tuple type.
+ * @example
+ * type MyTuple = [string, number]
+ * type Result = Last<MyTuple>
+ * //   ^? number
+ */
+type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
+
 type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
   ? F
   : never
@@ -8,7 +16,7 @@ type ErrorWithMessage = {
   message: string
   exception?: unknown
 }
-type Error = {
+type Failure = {
   success: false,
   errors: Array<ErrorWithMessage>
 }
@@ -17,7 +25,7 @@ type Success<T> = {
   data: T,
   errors: []
 }
-type Result<T> = Success<T> | Error
+type Result<T> = Success<T> | Failure
 
 type Fn = (...args: any[]) => any
 type Attempt<T extends Fn = Fn> = (
@@ -30,20 +38,49 @@ type UnpackAll<List extends Attempt[]> = {
   [K in keyof List]: UnpackResult<ReturnType<List[K]>>
 }
 
-type MergeObjs<Objs extends unknown[], output = {}> = Prettify<
-  Objs extends [infer first, ...infer rest]
-    ? MergeObjs<rest, Omit<output, keyof first> & first>
-    : output
->
+/**
+ * Merges the data types of a list of objects.
+ * @example
+ * type MyObjs = [
+ *   { a: string },
+ *   { b: number },
+ * ]
+ * type MyData = MergeObjs<MyObjs>
+ * //   ^? { a: string, b: number }
+ */
+type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
+  infer first,
+  ...infer rest,
+]
+  ? MergeObjs<rest, Prettify<Omit<output, keyof first> & first>>
+  : output
 
 type Prettify<T> = {
   [K in keyof T]: T[K]
   // deno-lint-ignore ban-types
 } & {}
 
+/**
+ * Converts a tuple type to a union type.
+ * @example
+ * type MyTuple = [string, number]
+ * type MyUnion = TupleToUnion<MyTuple>
+ * //   ^? string | number
+ */
 type TupleToUnion<T extends unknown[]> = T[number]
 
+/**
+ * It is similar to Partial<T> but it requires at least one property to be defined.
+ * @example
+ * type MyType = AtLeastOne<{ a: string, b: number }>
+ * const a: MyType = { a: 'hello' }
+ * const b: MyType = { b: 123 }
+ * const c: MyType = { a: 'hello', b: 123 }
+ * // The following won't compile:
+ * const d: MyType = {}
+ */
 type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
+
 
 export type {
   AtLeastOne,
@@ -59,5 +96,5 @@ export type {
   UnpackAll,
   UnpackResult,
   Success,
-  Error
+  Failure
 }

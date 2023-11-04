@@ -1,7 +1,7 @@
 import { toErrorWithMessage } from './errors.ts'
 import {
   Attempt,
-  Error,
+  Failure,
   ErrorWithMessage,
   First,
   Fn,
@@ -17,7 +17,7 @@ function success<T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
 }
 
-function error(errors: ErrorWithMessage[]): Error {
+function error(errors: ErrorWithMessage[]): Failure {
   return { success: false, errors }
 }
 
