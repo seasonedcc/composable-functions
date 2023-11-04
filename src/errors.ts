@@ -1,9 +1,10 @@
+import { Failure } from './atmp/types.ts'
 import type {
+  AtLeastOne,
+  ErrorData,
+  ErrorResult,
   ErrorWithMessage,
   SchemaError,
-  ErrorResult,
-  ErrorData,
-  AtLeastOne,
 } from './types.ts'
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
@@ -127,12 +128,59 @@ class ResultError extends Error {
   }
 }
 
+function failureToErrorResult({ errors }: Failure): ErrorResult {
+  return {
+    success: false,
+    errors: errors
+      .filter(
+        ({ exception }) =>
+          !(
+            exception instanceof InputError ||
+            exception instanceof InputErrors ||
+            exception instanceof EnvironmentError
+          ),
+      )
+      .flatMap((e) =>
+        e.exception instanceof ResultError ? e.exception.result.errors : e,
+      ),
+    inputErrors: errors.flatMap(({ exception }) =>
+      exception instanceof InputError
+        ? [
+            {
+              path: exception.path.split('.'),
+              message: exception.message,
+            },
+          ]
+        : exception instanceof InputErrors
+        ? exception.errors.map((e) => ({
+            path: e.path.split('.'),
+            message: e.message,
+          }))
+        : exception instanceof ResultError
+        ? exception.result.inputErrors
+        : [],
+    ),
+    environmentErrors: errors.flatMap(({ exception }) =>
+      exception instanceof EnvironmentError
+        ? [
+            {
+              path: exception.path.split('.'),
+              message: exception.message,
+            },
+          ]
+        : [],
+    ),
+  }
+}
+
 export {
-  errorMessagesFor,
-  schemaError,
-  toErrorWithMessage,
-  InputError,
   EnvironmentError,
+  errorMessagesFor,
+  failureToErrorResult,
+  InputError,
   InputErrors,
   ResultError,
+  schemaError,
+  toErrorWithMessage,
 }
+

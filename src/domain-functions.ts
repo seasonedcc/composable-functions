@@ -1,5 +1,6 @@
 import { ResultError } from './errors.ts'
-import { isListOfSuccess, mergeObjects } from './utils.ts'
+import { atmp, mergeObjects } from './atmp/atmp.ts'
+import * as A from './atmp/atmp.ts'
 import type {
   DomainFunction,
   ErrorData,
@@ -13,7 +14,13 @@ import type {
 } from './types.ts'
 import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
-import { safeResult } from './constructor.ts'
+import { dfResultFromAtmp, safeResult } from './constructor.ts'
+
+function applyEnvironment<
+  Fn extends (input: unknown, environment: unknown) => unknown,
+>(df: Fn, environment: unknown) {
+  return (input: unknown) => df(input, environment) as ReturnType<Fn>
+}
 
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
@@ -35,7 +42,7 @@ function all<Fns extends DomainFunction[]>(
         fns.map((fn) => (fn as DomainFunction)(input, environment)),
       )
 
-      if (!isListOfSuccess(results)) {
+      if (results.some(({ success }) => success === false)) {
         throw new ResultError({
           errors: results.map(({ errors }) => errors).flat(),
           inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
@@ -45,7 +52,7 @@ function all<Fns extends DomainFunction[]>(
         })
       }
 
-      return results.map(({ data }) => data)
+      return (results as SuccessResult<unknown>[]).map(({data}) => data)
     })
   }) as DomainFunction<UnpackAll<Fns>>
 }
@@ -354,6 +361,7 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
 
 export {
   all,
+  applyEnvironment,
   branch,
   collect,
   collectSequence,
@@ -366,3 +374,4 @@ export {
   sequence,
   trace,
 }
+

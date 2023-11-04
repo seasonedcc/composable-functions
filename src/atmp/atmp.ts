@@ -1,17 +1,33 @@
 import { toErrorWithMessage } from './errors.ts'
 import {
   Attempt,
-  Failure,
   ErrorWithMessage,
+  Failure,
   First,
   Fn,
   Last,
+  MergeObjs,
   Result,
   Success,
   UnpackAll,
   UnpackResult,
 } from './types.ts'
-import { mergeObjects } from '../utils.ts'
+
+/**
+ * Merges a list of objects into a single object.
+ * It is a type-safe version of Object.assign.
+ * @param objs the list of objects to merge
+ * @returns the merged object
+ * @example
+ * const obj1 = { a: 1, b: 2 }
+ * const obj2 = { c: 3 }
+ * const obj3 = { d: 4 }
+ * const merged = mergeObjects([obj1, obj2, obj3])
+ * //   ^? { a: number, b: number, c: number, d: number }
+ */
+function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
+  return Object.assign({}, ...objs) as MergeObjs<T>
+}
 
 function success<T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
@@ -44,19 +60,15 @@ function pipe<T extends [Attempt, ...Attempt[]]>(...fns: T) {
   >
 }
 
-function isListOfSuccess<T>(result: Result<T>[]): result is Success<T>[] {
-  return result.every(({ success }) => success === true)
-}
-
 function all<T extends [Attempt, ...Attempt[]]>(...fns: T) {
   return (async (...args: any) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
-    if (!isListOfSuccess(results)) {
+    if (results.some(({ success }) => success === false)) {
       return error(results.map(({ errors }) => errors).flat())
     }
 
-    return success(results.map(({ data }) => data))
+    return success((results as Success<any>[]).map(({ data }) => data))
   }) as unknown as Attempt<
     (...args: Parameters<Extract<T[keyof T], Attempt>>) => {
       [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Attempt>>>
@@ -114,5 +126,16 @@ function mapError<T extends Attempt, R>(
   }) as T
 }
 
-export { all, atmp, collect, map, mapError, pipe, sequence }
+export {
+  all,
+  atmp,
+  collect,
+  error,
+  map,
+  mapError,
+  mergeObjects,
+  pipe,
+  sequence,
+  success,
+}
 
