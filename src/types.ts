@@ -1,3 +1,5 @@
+import { Success, Error } from "./atmp/types.ts";
+
 /**
  * Items in the errors array returned by failed domain functions.
  */
@@ -9,10 +11,7 @@ type ErrorWithMessage = {
 /**
  * A successful domain function result.
  */
-type SuccessResult<T = void> = {
-  success: true
-  data: T
-  errors: []
+type SuccessResult<T = void> = Success<T> & {
   inputErrors: []
   environmentErrors: []
 }
@@ -20,9 +19,7 @@ type SuccessResult<T = void> = {
 /**
  * A failed domain function result.
  */
-type ErrorResult = {
-  success: false
-  errors: ErrorWithMessage[]
+type ErrorResult = Error & {
   inputErrors: SchemaError[]
   environmentErrors: SchemaError[]
 }
