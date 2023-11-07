@@ -5,7 +5,6 @@ import type {
   DomainFunction,
   ErrorData,
   MergeObjs,
-  Result,
   TupleToUnion,
   UnpackAll,
   UnpackData,

@@ -1,11 +1,4 @@
-import {
-  EnvironmentError,
-  failureToErrorResult,
-  InputError,
-  InputErrors,
-  ResultError,
-} from './errors.ts'
-import { schemaError, toErrorWithMessage } from './errors.ts'
+import { failureToErrorResult } from './errors.ts'
 import type {
   DomainFunction,
   ParserIssue,
@@ -14,13 +7,6 @@ import type {
   SchemaError,
 } from './types.ts'
 import { atmp, Attempt } from './atmp/index.ts'
-
-function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
-  return errors.map((error) => {
-    const { path, message } = error
-    return { path: path.map(String), message }
-  })
-}
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -55,6 +41,12 @@ function dfResultFromAtmp<T extends Attempt, R>(fn: T) {
   }) as Attempt<(...args: Parameters<T>) => R>
 }
 
+function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
+  return errors.map((error) => {
+    const { path, message } = error
+    return { path: path.map(String), message }
+  })
+}
 /**
  * Creates a domain function.
  * After giving the input and environment schemas, you can pass a handler function that takes type safe input and environment. That function is gonna catch any errors and always return a Result.
