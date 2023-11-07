@@ -1,18 +1,17 @@
 import { ResultError } from './errors.ts'
-import { atmp, mergeObjects } from './atmp/atmp.ts'
 import * as A from './atmp/atmp.ts'
 import type {
   DomainFunction,
   ErrorData,
+  Last,
   MergeObjs,
+  SuccessResult,
   TupleToUnion,
   UnpackAll,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import type { Last } from './types.ts'
-import type { SuccessResult } from './types.ts'
 import { dfResultFromAtmp, safeResult } from './constructor.ts'
 
 function applyEnvironment<
@@ -37,7 +36,7 @@ function all<Fns extends DomainFunction[]>(
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
     const [first, ...rest] = fns.map((df) =>
-      atmp(() => fromSuccess(df)(input, environment)),
+      A.atmp(() => fromSuccess(df)(input, environment)),
     )
     return dfResultFromAtmp(A.all(first, ...rest))()
   }) as DomainFunction<UnpackAll<Fns>>
@@ -59,7 +58,7 @@ function collect<Fns extends Record<string, DomainFunction>>(
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
     map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<
+  return map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
     UnpackDFObject<Fns>
   >
 }
@@ -112,7 +111,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), mergeObjects)
+  return map(all(...fns), A.mergeObjects)
 }
 
 /**
@@ -160,7 +159,7 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
         [keys[i]]: o,
       })),
     ),
-    mergeObjects,
+    A.mergeObjects,
   ) as DomainFunction<UnpackDFObject<Fns>>
 }
 
@@ -179,7 +178,7 @@ function sequence<Fns extends DomainFunction[]>(
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
     const [first, ...rest] = fns.map((df) =>
-      atmp(fromSuccess(applyEnvironment(df, environment))),
+      A.atmp(fromSuccess(applyEnvironment(df, environment))),
     )
     return dfResultFromAtmp(A.sequence(first, ...rest))(input)
   } as DomainFunction<UnpackAll<Fns>>
@@ -201,7 +200,7 @@ function map<O, R>(
   return ((input, environment) =>
     dfResultFromAtmp(
       A.map(
-        atmp(() => fromSuccess(dfn)(input, environment)),
+        A.atmp(() => fromSuccess(dfn)(input, environment)),
         mapper,
       ),
     )()) as DomainFunction<R>
