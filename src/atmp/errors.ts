@@ -1,5 +1,11 @@
 import { ErrorWithMessage } from './types.ts'
-import { objectHasKey } from './utils.ts'
+
+function objectHasKey<T extends string>(
+  obj: unknown,
+  key: T,
+): obj is { [k in T]: unknown } {
+  return typeof obj === 'object' && obj !== null && key in obj
+}
 
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return objectHasKey(error, 'message') && typeof error.message === 'string'
