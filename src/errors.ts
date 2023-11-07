@@ -3,39 +3,8 @@ import type {
   AtLeastOne,
   ErrorData,
   ErrorResult,
-  ErrorWithMessage,
   SchemaError,
 } from './types.ts'
-
-function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as Record<string, unknown>).message === 'string'
-  )
-}
-
-/**
- * Turns the given 'unknown' error into an ErrorWithMessage.
- * @param maybeError the error to turn into an ErrorWithMessage
- * @returns the ErrorWithMessage
- * @example
- * try {}
- * catch (error) {
- *   const errorWithMessage = toErrorWithMessage(error)
- *   console.log(errorWithMessage.message)
- * }
- */
-function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
-  const message = isErrorWithMessage(maybeError)
-    ? maybeError.message
-    : String(maybeError)
-  return {
-    message,
-    exception: maybeError,
-  }
-}
 
 /**
  * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
@@ -183,6 +152,5 @@ export {
   InputErrors,
   ResultError,
   schemaError,
-  toErrorWithMessage,
 }
 
