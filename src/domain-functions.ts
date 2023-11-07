@@ -199,12 +199,13 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R,
 ): DomainFunction<R> {
-  return async (input, environment) => {
-    const result = await dfn(input, environment)
-    if (!result.success) return result
-
-    return safeResult(() => mapper(result.data))
-  }
+  return ((input, environment) =>
+    dfResultFromAtmp(
+      A.map(
+        atmp(() => fromSuccess(dfn)(input, environment)),
+        mapper,
+      ),
+    )()) as DomainFunction<R>
 }
 
 /**

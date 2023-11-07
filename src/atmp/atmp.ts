@@ -7,7 +7,6 @@ import {
   Fn,
   Last,
   MergeObjs,
-  Result,
   Success,
   UnpackAll,
   UnpackResult,
@@ -112,7 +111,10 @@ function map<T extends Attempt, R>(
 ) {
   return (async (...args) => {
     const res = await fn(...args)
-    return !res.success ? error(res.errors) : success(mapper(res.data))
+    if(!res.success) return error(res.errors)
+    const mapped = await atmp(mapper)(res.data)
+    if(!mapped.success) return error(mapped.errors)
+    return mapped
   }) as Attempt<(...args: Parameters<T>) => R>
 }
 
