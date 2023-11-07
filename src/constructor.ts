@@ -41,49 +41,8 @@ function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
  *  console.log(result.errors[0].message)
  * }
  */
-async function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  try {
-    return {
-      success: true,
-      data: await fn(),
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    }
-  } catch (error) {
-    if (error instanceof InputError) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: [schemaError(error.message, error.path)],
-      }
-    }
-    if (error instanceof EnvironmentError) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [schemaError(error.message, error.path)],
-        inputErrors: [],
-      }
-    }
-    if (error instanceof InputErrors) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: error.errors.map((e) => schemaError(e.message, e.path)),
-      }
-    }
-    if (error instanceof ResultError) return error.result
-
-    return {
-      success: false,
-      errors: [toErrorWithMessage(error)],
-      inputErrors: [],
-      environmentErrors: [],
-    }
-  }
+function safeResult<T>(fn: () => T): Promise<Result<T>> {
+  return dfResultFromAtmp(atmp(fn))() as Promise<Result<T>>
 }
 
 function dfResultFromAtmp<T extends Attempt, R>(fn: T) {
