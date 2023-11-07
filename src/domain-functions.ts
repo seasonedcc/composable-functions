@@ -37,23 +37,10 @@ function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
-    return safeResult(async () => {
-      const results = await Promise.all(
-        fns.map((fn) => (fn as DomainFunction)(input, environment)),
-      )
-
-      if (results.some(({ success }) => success === false)) {
-        throw new ResultError({
-          errors: results.map(({ errors }) => errors).flat(),
-          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-          environmentErrors: results
-            .map(({ environmentErrors }) => environmentErrors)
-            .flat(),
-        })
-      }
-
-      return (results as SuccessResult<unknown>[]).map(({data}) => data)
-    })
+    const [first, ...rest] = fns.map((df) =>
+      atmp(() => fromSuccess(df)(input, environment)),
+    )
+    return dfResultFromAtmp(A.all(first, ...rest))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
