@@ -136,7 +136,10 @@ function makeDomainFunction<I, E>(
             : formatSchemaErrors(envResult.error.issues),
         }
       }
-      return dfResultFromAtmp(atmp(handler))(result.data as I, envResult.data as E)
+      return dfResultFromAtmp(atmp(handler))(
+        result.data as I,
+        envResult.data as E,
+      )
     } as DomainFunction<Awaited<Output>>
   }
 }
@@ -166,5 +169,10 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { makeDomainFunction, makeDomainFunction as mdf, safeResult, dfResultFromAtmp }
+export {
+  dfResultFromAtmp,
+  makeDomainFunction,
+  makeDomainFunction as mdf,
+  safeResult,
+}
 

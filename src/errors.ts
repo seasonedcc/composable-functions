@@ -168,6 +168,8 @@ function failureToErrorResult({ errors }: Failure): ErrorResult {
               message: exception.message,
             },
           ]
+        : exception instanceof ResultError
+        ? exception.result.environmentErrors
         : [],
     ),
   }

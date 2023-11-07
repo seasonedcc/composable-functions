@@ -179,21 +179,10 @@ function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
-    return safeResult(async () => {
-      const results = []
-      let currResult: undefined | Result<unknown>
-      for await (const fn of fns) {
-        const result = await fn(
-          currResult?.success ? currResult.data : input,
-          environment,
-        )
-        if (!result.success) throw new ResultError(result)
-        currResult = result
-        results.push(result.data)
-      }
-
-      return results
-    })
+    const [first, ...rest] = fns.map((df) =>
+      atmp(fromSuccess(applyEnvironment(df, environment))),
+    )
+    return dfResultFromAtmp(A.sequence(first, ...rest))(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
