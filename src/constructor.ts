@@ -3,33 +3,9 @@ import type {
   DomainFunction,
   ParserIssue,
   ParserSchema,
-  Result,
   SchemaError,
 } from './types.ts'
 import { atmp, Attempt } from './atmp/index.ts'
-
-/**
- * A functions that turns the result of its callback into a Result object.
- * @example
- * const result = await safeResult(() => ({
- *   message: 'hello',
- * }))
- * // the type of result is Result<{ message: string }>
- * if (result.success) {
- *   console.log(result.data.message)
- * }
- *
- * const result = await safeResult(() => {
- *  throw new Error('something went wrong')
- * })
- * // the type of result is Result<never>
- * if (!result.success) {
- *  console.log(result.errors[0].message)
- * }
- */
-function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return dfResultFromAtmp(atmp(fn))() as Promise<Result<T>>
-}
 
 function dfResultFromAtmp<T extends Attempt, R>(fn: T) {
   return (async (...args) => {
@@ -120,10 +96,5 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export {
-  dfResultFromAtmp,
-  makeDomainFunction,
-  makeDomainFunction as mdf,
-  safeResult,
-}
+export { dfResultFromAtmp, makeDomainFunction, makeDomainFunction as mdf }
 

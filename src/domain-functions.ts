@@ -5,6 +5,7 @@ import type {
   ErrorData,
   Last,
   MergeObjs,
+  Result,
   SuccessResult,
   TupleToUnion,
   UnpackAll,
@@ -12,7 +13,30 @@ import type {
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import { dfResultFromAtmp, safeResult } from './constructor.ts'
+import { dfResultFromAtmp } from './constructor.ts'
+
+/**
+ * A functions that turns the result of its callback into a Result object.
+ * @example
+ * const result = await safeResult(() => ({
+ *   message: 'hello',
+ * }))
+ * // the type of result is Result<{ message: string }>
+ * if (result.success) {
+ *   console.log(result.data.message)
+ * }
+ *
+ * const result = await safeResult(() => {
+ *  throw new Error('something went wrong')
+ * })
+ * // the type of result is Result<never>
+ * if (!result.success) {
+ *  console.log(result.errors[0].message)
+ * }
+ */
+function safeResult<T>(fn: () => T): Promise<Result<T>> {
+  return dfResultFromAtmp(A.atmp(fn))() as Promise<Result<T>>
+}
 
 function applyEnvironment<
   Fn extends (input: unknown, environment: unknown) => unknown,
@@ -346,6 +370,7 @@ export {
   mapError,
   merge,
   pipe,
+  safeResult,
   sequence,
   trace,
 }
