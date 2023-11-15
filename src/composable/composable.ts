@@ -132,6 +132,7 @@ export {
   all,
   composable,
   composable as cf,
+  composable as λ,
   collect,
   error,
   map,
