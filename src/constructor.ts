@@ -43,7 +43,7 @@ function makeDomainFunction<I, E>(
   environmentSchema?: ParserSchema<E>,
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
-    return fromcomposable(
+    return fromComposable(
       composable(handler),
       inputSchema,
       environmentSchema,
@@ -51,7 +51,7 @@ function makeDomainFunction<I, E>(
   }
 }
 
-function fromcomposable<I, E, A extends Composable>(
+function fromComposable<I, E, A extends Composable>(
   fn: A,
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
