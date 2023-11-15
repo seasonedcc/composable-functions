@@ -1,4 +1,4 @@
-import { ResultError } from './errors.ts'
+import { failureToErrorResult, ResultError } from './errors.ts'
 import * as A from './atmp/atmp.ts'
 import type {
   DomainFunction,
@@ -14,6 +14,7 @@ import type {
   UnpackResult,
 } from './types.ts'
 import { dfResultFromAtmp } from './constructor.ts'
+import { toErrorWithMessage } from './atmp/errors.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -353,8 +354,14 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
 ): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
     const result = await fn(input, environment)
-    await traceFn({ input, environment, result } as TraceData<UnpackResult<D>>)
-    return result
+    try {
+      await traceFn({ input, environment, result } as TraceData<
+        UnpackResult<D>
+      >)
+      return result
+    } catch (e) {
+      return failureToErrorResult(A.error([toErrorWithMessage(e)]))
+    }
   }
 }
 
