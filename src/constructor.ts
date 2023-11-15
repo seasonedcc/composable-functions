@@ -43,32 +43,43 @@ function makeDomainFunction<I, E>(
   environmentSchema?: ParserSchema<E>,
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
-    return async function (input, environment = {}) {
-      const envResult = await (
-        environmentSchema ?? objectSchema
-      ).safeParseAsync(environment)
-      const result = await (inputSchema ?? undefinedSchema).safeParseAsync(
-        input,
-      )
-
-      if (!result.success || !envResult.success) {
-        return {
-          success: false,
-          errors: [],
-          inputErrors: result.success
-            ? []
-            : formatSchemaErrors(result.error.issues),
-          environmentErrors: envResult.success
-            ? []
-            : formatSchemaErrors(envResult.error.issues),
-        }
-      }
-      return dfResultFromAtmp(atmp(handler))(
-        result.data as I,
-        envResult.data as E,
-      )
+    return function (input, environment = {}) {
+      return fromAtmp(
+        atmp(handler),
+        inputSchema,
+        environmentSchema,
+      )(input, environment)
     } as DomainFunction<Awaited<Output>>
   }
+}
+
+function fromAtmp<I, E, A extends Attempt>(
+  fn: A,
+  inputSchema?: ParserSchema<I>,
+  environmentSchema?: ParserSchema<E>,
+) {
+  return async function (input, environment = {}) {
+    const envResult = await (environmentSchema ?? objectSchema).safeParseAsync(
+      environment,
+    )
+    const result = await (inputSchema ?? undefinedSchema).safeParseAsync(input)
+
+    if (!result.success || !envResult.success) {
+      return {
+        success: false,
+        errors: [],
+        inputErrors: result.success
+          ? []
+          : formatSchemaErrors(result.error.issues),
+        environmentErrors: envResult.success
+          ? []
+          : formatSchemaErrors(envResult.error.issues),
+      }
+    }
+    return dfResultFromAtmp(fn)(
+      ...([result.data as I, envResult.data as E] as Parameters<A>),
+    )
+  } as DomainFunction<Awaited<ReturnType<A>>>
 }
 
 const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
