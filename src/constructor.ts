@@ -43,13 +43,11 @@ function makeDomainFunction<I, E>(
   environmentSchema?: ParserSchema<E>,
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
-    return function (input, environment = {}) {
-      return fromAtmp(
-        atmp(handler),
-        inputSchema,
-        environmentSchema,
-      )(input, environment)
-    } as DomainFunction<Awaited<Output>>
+    return fromAtmp(
+      atmp(handler),
+      inputSchema,
+      environmentSchema,
+    ) as DomainFunction<Awaited<Output>>
   }
 }
 
