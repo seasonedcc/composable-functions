@@ -5,16 +5,16 @@ import type {
   ParserSchema,
   SchemaError,
 } from './types.ts'
-import { atmp, Attempt } from './atmp/index.ts'
+import { composable, Composable } from './composable/index.ts'
 
-function dfResultFromAtmp<T extends Attempt, R>(fn: T) {
+function dfResultFromcomposable<T extends Composable, R>(fn: T) {
   return (async (...args) => {
     const r = await fn(...args)
 
     return r.success
       ? { ...r, inputErrors: [], environmentErrors: [] }
       : failureToErrorResult(r)
-  }) as Attempt<(...args: Parameters<T>) => R>
+  }) as Composable<(...args: Parameters<T>) => R>
 }
 
 function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
@@ -43,15 +43,15 @@ function makeDomainFunction<I, E>(
   environmentSchema?: ParserSchema<E>,
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
-    return fromAtmp(
-      atmp(handler),
+    return fromcomposable(
+      composable(handler),
       inputSchema,
       environmentSchema,
     ) as DomainFunction<Awaited<Output>>
   }
 }
 
-function fromAtmp<I, E, A extends Attempt>(
+function fromcomposable<I, E, A extends Composable>(
   fn: A,
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
@@ -74,7 +74,7 @@ function fromAtmp<I, E, A extends Attempt>(
           : formatSchemaErrors(envResult.error.issues),
       }
     }
-    return dfResultFromAtmp(fn)(
+    return dfResultFromcomposable(fn)(
       ...([result.data as I, envResult.data as E] as Parameters<A>),
     )
   } as DomainFunction<Awaited<ReturnType<A>>>
@@ -105,5 +105,5 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { dfResultFromAtmp, makeDomainFunction, makeDomainFunction as mdf }
+export { dfResultFromcomposable, makeDomainFunction, makeDomainFunction as mdf }
 

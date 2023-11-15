@@ -28,13 +28,13 @@ type Success<T> = {
 type Result<T> = Success<T> | Failure
 
 type Fn = (...args: any[]) => any
-type Attempt<T extends Fn = Fn> = (
+type Composable<T extends Fn = Fn> = (
   ...args: Parameters<T>
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
 type UnpackResult<T> = Awaited<T> extends Result<infer R> ? R : never
 
-type UnpackAll<List extends Attempt[]> = {
+type UnpackAll<List extends Composable[]> = {
   [K in keyof List]: UnpackResult<ReturnType<List[K]>>
 }
 
@@ -84,7 +84,7 @@ type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
 
 export type {
   AtLeastOne,
-  Attempt,
+  Composable,
   ErrorWithMessage,
   First,
   Fn,

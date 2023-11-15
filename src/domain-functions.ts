@@ -1,5 +1,5 @@
 import { failureToErrorResult, ResultError } from './errors.ts'
-import * as A from './atmp/atmp.ts'
+import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
   ErrorData,
@@ -13,8 +13,8 @@ import type {
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import { dfResultFromAtmp } from './constructor.ts'
-import { toErrorWithMessage } from './atmp/errors.ts'
+import { dfResultFromcomposable } from './constructor.ts'
+import { toErrorWithMessage } from './composable/errors.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -36,7 +36,7 @@ import { toErrorWithMessage } from './atmp/errors.ts'
  * }
  */
 function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return dfResultFromAtmp(A.atmp(fn))() as Promise<Result<T>>
+  return dfResultFromcomposable(A.composable(fn))() as Promise<Result<T>>
 }
 
 function applyEnvironment<
@@ -61,9 +61,9 @@ function all<Fns extends DomainFunction[]>(
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
     const [first, ...rest] = fns.map((df) =>
-      A.atmp(() => fromSuccess(df)(input, environment)),
+      A.composable(() => fromSuccess(df)(input, environment)),
     )
-    return dfResultFromAtmp(A.all(first, ...rest))()
+    return dfResultFromcomposable(A.all(first, ...rest))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -203,9 +203,9 @@ function sequence<Fns extends DomainFunction[]>(
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
     const [first, ...rest] = fns.map((df) =>
-      A.atmp(fromSuccess(applyEnvironment(df, environment))),
+      A.composable(fromSuccess(applyEnvironment(df, environment))),
     )
-    return dfResultFromAtmp(A.sequence(first, ...rest))(input)
+    return dfResultFromcomposable(A.sequence(first, ...rest))(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -223,9 +223,9 @@ function map<O, R>(
   mapper: (element: O) => R,
 ): DomainFunction<R> {
   return ((input, environment) =>
-    dfResultFromAtmp(
+    dfResultFromcomposable(
       A.map(
-        A.atmp(() => fromSuccess(dfn)(input, environment)),
+        A.composable(() => fromSuccess(dfn)(input, environment)),
         mapper,
       ),
     )()) as DomainFunction<R>

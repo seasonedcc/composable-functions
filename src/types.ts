@@ -1,4 +1,4 @@
-import { Failure, Success } from './atmp/types.ts'
+import { Failure, Success } from './composable/types.ts'
 
 /**
  * A successful domain function result.
@@ -125,7 +125,7 @@ export type {
   Last,
   MergeObjs,
   TupleToUnion,
-} from './atmp/types.ts'
+} from './composable/types.ts'
 export type {
   DomainFunction,
   ErrorData,

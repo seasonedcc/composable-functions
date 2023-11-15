@@ -1,6 +1,6 @@
 import { toErrorWithMessage } from './errors.ts'
 import {
-  Attempt,
+  Composable,
   ErrorWithMessage,
   Failure,
   First,
@@ -36,7 +36,7 @@ function error(errors: ErrorWithMessage[]): Failure {
   return { success: false, errors }
 }
 
-function atmp<T extends Fn>(fn: T): Attempt<T> {
+function composable<T extends Fn>(fn: T): Composable<T> {
   return async (...args) => {
     try {
       // deno-lint-ignore no-explicit-any
@@ -48,18 +48,18 @@ function atmp<T extends Fn>(fn: T): Attempt<T> {
   }
 }
 
-function pipe<T extends [Attempt, ...Attempt[]]>(...fns: T) {
+function pipe<T extends [Composable, ...Composable[]]>(...fns: T) {
   return (async (...args) => {
     const res = await sequence(...fns)(...args)
     return !res.success ? error(res.errors) : success(res.data.at(-1))
-  }) as Attempt<
+  }) as Composable<
     (
-      ...args: Parameters<Extract<First<T>, Attempt>>
-    ) => UnpackResult<ReturnType<Extract<Last<T>, Attempt>>>
+      ...args: Parameters<Extract<First<T>, Composable>>
+    ) => UnpackResult<ReturnType<Extract<Last<T>, Composable>>>
   >
 }
 
-function all<T extends [Attempt, ...Attempt[]]>(...fns: T) {
+function all<T extends [Composable, ...Composable[]]>(...fns: T) {
   return (async (...args: any) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
@@ -68,25 +68,25 @@ function all<T extends [Attempt, ...Attempt[]]>(...fns: T) {
     }
 
     return success((results as Success<any>[]).map(({ data }) => data))
-  }) as unknown as Attempt<
-    (...args: Parameters<Extract<T[keyof T], Attempt>>) => {
-      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Attempt>>>
+  }) as unknown as Composable<
+    (...args: Parameters<Extract<T[keyof T], Composable>>) => {
+      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
     }
   >
 }
 
-function collect<T extends Record<string, Attempt>>(fns: T) {
+function collect<T extends Record<string, Composable>>(fns: T) {
   const [fn, ...fnsWithKey] = Object.entries(fns).map(([key, df]) =>
     map(df, (result) => ({ [key]: result })),
   )
-  return map(all(fn, ...fnsWithKey), mergeObjects) as Attempt<
-    (...args: Parameters<Extract<T[keyof T], Attempt>>) => {
-      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Attempt>>>
+  return map(all(fn, ...fnsWithKey), mergeObjects) as Composable<
+    (...args: Parameters<Extract<T[keyof T], Composable>>) => {
+      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
     }
   >
 }
 
-function sequence<T extends [Attempt, ...Attempt[]]>(...fns: T) {
+function sequence<T extends [Composable, ...Composable[]]>(...fns: T) {
   return (async (...args) => {
     const [head, ...tail] = fns
 
@@ -100,25 +100,25 @@ function sequence<T extends [Attempt, ...Attempt[]]>(...fns: T) {
       result.push(res.data)
     }
     return success(result)
-  }) as Attempt<
-    (...args: Parameters<Extract<First<T>, Attempt>>) => UnpackAll<T>
+  }) as Composable<
+    (...args: Parameters<Extract<First<T>, Composable>>) => UnpackAll<T>
   >
 }
 
-function map<T extends Attempt, R>(
+function map<T extends Composable, R>(
   fn: T,
   mapper: (res: UnpackResult<ReturnType<T>>) => R,
 ) {
   return (async (...args) => {
     const res = await fn(...args)
     if(!res.success) return error(res.errors)
-    const mapped = await atmp(mapper)(res.data)
+    const mapped = await composable(mapper)(res.data)
     if(!mapped.success) return error(mapped.errors)
     return mapped
-  }) as Attempt<(...args: Parameters<T>) => R>
+  }) as Composable<(...args: Parameters<T>) => R>
 }
 
-function mapError<T extends Attempt, R>(
+function mapError<T extends Composable, R>(
   fn: T,
   mapper: (err: ErrorWithMessage) => ErrorWithMessage,
 ) {
@@ -130,7 +130,7 @@ function mapError<T extends Attempt, R>(
 
 export {
   all,
-  atmp,
+  composable,
   collect,
   error,
   map,

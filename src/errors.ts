@@ -1,4 +1,4 @@
-import { Failure } from './atmp/types.ts'
+import { Failure } from './composable/types.ts'
 import type {
   AtLeastOne,
   ErrorData,

@@ -3,10 +3,10 @@ import {
   describe,
   it,
 } from '../test-prelude.ts'
-import { atmp, map, mapError, pipe, sequence } from './index.ts'
-import type { Attempt, ErrorWithMessage, Result } from './index.ts'
+import { composable, map, mapError, pipe, sequence } from './index.ts'
+import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
-import { all, collect } from './atmp.ts'
+import { all, collect } from './composable.ts'
 
 const voidFn = () => {}
 const toString = (a: unknown) => `${a}`
@@ -21,23 +21,23 @@ const alwaysThrow = () => {
   throw new Error('always throw', { cause: 'it was made for this' })
 }
 
-describe('atmp', () => {
+describe('composable', () => {
   it('infers the types if has no arguments or return', async () => {
-    const fn = atmp(() => {})
+    const fn = composable(() => {})
     const res = await fn()
 
-    type _FN = Expect<Equal<typeof fn, Attempt<() => void>>>
+    type _FN = Expect<Equal<typeof fn, Composable<() => void>>>
     type _R = Expect<Equal<typeof res, Result<void>>>
 
     assertEquals(res, { success: true, data: undefined, errors: [] })
   })
 
   it('infers the types if has arguments and a return', async () => {
-    const fn = atmp(add)
+    const fn = composable(add)
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => number>>
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
@@ -45,11 +45,11 @@ describe('atmp', () => {
   })
 
   it('infers the types of async functions', async () => {
-    const fn = atmp(asyncAdd)
+    const fn = composable(asyncAdd)
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => number>>
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
@@ -57,11 +57,11 @@ describe('atmp', () => {
   })
 
   it('catch errors', async () => {
-    const fn = atmp(faultyAdd)
+    const fn = composable(faultyAdd)
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => number>>
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
@@ -72,11 +72,11 @@ describe('atmp', () => {
 
 describe('pipe', () => {
   it('sends the results of the first function to the second and infers types', async () => {
-    const fn = pipe(atmp(add), atmp(toString))
+    const fn = pipe(composable(add), composable(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => string>>
+      Equal<typeof fn, Composable<(a: number, b: number) => string>>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
@@ -84,11 +84,11 @@ describe('pipe', () => {
   })
 
   it('catches the errors from function A', async () => {
-    const fn = pipe(atmp(faultyAdd), atmp(toString))
+    const fn = pipe(composable(faultyAdd), composable(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => string>>
+      Equal<typeof fn, Composable<(a: number, b: number) => string>>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
@@ -97,13 +97,13 @@ describe('pipe', () => {
   })
 
   it('catches the errors from function B', async () => {
-    const fn = pipe(atmp(add), atmp(alwaysThrow), atmp(toString))
+    const fn = pipe(composable(add), composable(alwaysThrow), composable(toString))
     // TODO this should not type check
     const res = await fn(1, 2)
 
     // TODO this should be a type error
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => string>>
+      Equal<typeof fn, Composable<(a: number, b: number) => string>>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
@@ -119,11 +119,11 @@ describe('pipe', () => {
 
 describe('sequence', () => {
   it('sends the results of the first function to the second and saves every step of the result', async () => {
-    const fn = sequence(atmp(add), atmp(toString))
+    const fn = sequence(composable(add), composable(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => [number, string]>>
+      Equal<typeof fn, Composable<(a: number, b: number) => [number, string]>>
     >
     type _R = Expect<Equal<typeof res, Result<[number, string]>>>
 
@@ -131,11 +131,11 @@ describe('sequence', () => {
   })
 
   it('catches the errors from function A', async () => {
-    const fn = sequence(atmp(faultyAdd), atmp(toString))
+    const fn = sequence(composable(faultyAdd), composable(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => [number, string]>>
+      Equal<typeof fn, Composable<(a: number, b: number) => [number, string]>>
     >
     type _R = Expect<Equal<typeof res, Result<[number, string]>>>
 
@@ -146,7 +146,7 @@ describe('sequence', () => {
 
 describe('all', () => {
   it('executes all functions using the same input returning a tuple with every result when all are successful', async () => {
-    const fn = all(atmp(add), atmp(toString), atmp(voidFn))
+    const fn = all(composable(add), composable(toString), composable(voidFn))
 
     const res = await fn(1, 2)
 
@@ -155,18 +155,18 @@ describe('all', () => {
 })
 
 describe('collect', () => {
-  it('collects the results of an object of attempts into a result with same format', async () => {
+  it('collects the results of an object of Composables into a result with same format', async () => {
     const fn = collect({
-      add: atmp(add),
-      string: atmp(toString),
-      void: atmp(voidFn),
+      add: composable(add),
+      string: composable(toString),
+      void: composable(voidFn),
     })
     const res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<
         typeof fn,
-        Attempt<
+        Composable<
           (...args: [] | [a: number, b: number] | [a: unknown]) => {
             add: number
             string: string
@@ -188,15 +188,15 @@ describe('collect', () => {
 
   it('uses the same arguments for every function', async () => {
     const fn = collect({
-      add: atmp(add),
-      string: atmp(append),
+      add: composable(add),
+      string: composable(append),
     })
     const res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<
         typeof fn,
-        Attempt<
+        Composable<
           (...args: [a: number, b: number] | [a: string, b: string]) => {
             add: number
             string: string
@@ -214,15 +214,15 @@ describe('collect', () => {
 
   it('collects the errors in the error array', async () => {
     const fn = collect({
-      error1: atmp(faultyAdd),
-      error2: atmp(faultyAdd),
+      error1: composable(faultyAdd),
+      error2: composable(faultyAdd),
     })
     const res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<
         typeof fn,
-        Attempt<
+        Composable<
           (
             a: number,
             b: number,
@@ -244,12 +244,12 @@ describe('collect', () => {
 })
 
 describe('map', () => {
-  it('maps over an attempt function successful result', async () => {
-    const fn = map(atmp(add), (a) => a + 1 === 4)
+  it('maps over an Composable function successful result', async () => {
+    const fn = map(composable(add), (a) => a + 1 === 4)
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => boolean>>
+      Equal<typeof fn, Composable<(a: number, b: number) => boolean>>
     >
     type _R = Expect<Equal<typeof res, Result<boolean>>>
 
@@ -258,13 +258,13 @@ describe('map', () => {
 
   it('maps over a composition', async () => {
     const fn = map(
-      pipe(atmp(add), atmp(toString)),
+      pipe(composable(add), composable(toString)),
       (a) => typeof a === 'string',
     )
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => boolean>>
+      Equal<typeof fn, Composable<(a: number, b: number) => boolean>>
     >
     type _R = Expect<Equal<typeof res, Result<boolean>>>
 
@@ -272,11 +272,11 @@ describe('map', () => {
   })
 
   it('does not do anything when the function fails', async () => {
-    const fn = map(atmp(faultyAdd), (a) => a + 1 === 4)
+    const fn = map(composable(faultyAdd), (a) => a + 1 === 4)
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => boolean>>
+      Equal<typeof fn, Composable<(a: number, b: number) => boolean>>
     >
     type _R = Expect<Equal<typeof res, Result<boolean>>>
 
@@ -289,12 +289,12 @@ const cleanError = (err: ErrorWithMessage) => ({
   message: err.message + '!!!',
 })
 describe('mapError', () => {
-  it('maps over the error results of an attempt function', async () => {
-    const fn = mapError(atmp(faultyAdd), cleanError)
+  it('maps over the error results of an Composable function', async () => {
+    const fn = mapError(composable(faultyAdd), cleanError)
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Attempt<(a: number, b: number) => number>>
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
