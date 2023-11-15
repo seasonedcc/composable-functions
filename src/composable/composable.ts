@@ -131,6 +131,7 @@ function mapError<T extends Composable, R>(
 export {
   all,
   composable,
+  composable as cf,
   collect,
   error,
   map,
