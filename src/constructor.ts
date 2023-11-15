@@ -5,7 +5,7 @@ import type {
   ParserSchema,
   SchemaError,
 } from './types.ts'
-import { composable, Composable } from './composable/index.ts'
+import { Composable, composable } from './composable/index.ts'
 
 function dfResultFromcomposable<T extends Composable, R>(fn: T) {
   return (async (...args) => {
@@ -49,6 +49,12 @@ function makeDomainFunction<I, E>(
       environmentSchema,
     ) as DomainFunction<Awaited<Output>>
   }
+}
+
+function toComposable<O, DF extends DomainFunction<O>>(df: DF) {
+  return df as unknown as Composable<
+    (input: unknown, environment: unknown) => O
+  >
 }
 
 function fromComposable<I, E, A extends Composable>(
@@ -105,5 +111,5 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { dfResultFromcomposable, makeDomainFunction, makeDomainFunction as mdf }
+export { dfResultFromcomposable, makeDomainFunction, makeDomainFunction as mdf, fromComposable, toComposable }
 
