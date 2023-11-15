@@ -4,7 +4,7 @@ import {
   describe,
   it,
 } from './test-prelude.ts'
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'
 import {
