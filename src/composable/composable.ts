@@ -48,6 +48,20 @@ function composable<T extends Fn>(fn: T): Composable<T> {
   }
 }
 
+/**
+ * Creates a single function out of a chain of multiple Composables. It will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const a = C.composable(
+ *   ({ aNumber }: { aNumber: number }) => ({ aString: String(aNumber) }),
+ * )
+ * const b = C.composable(
+ *   ({ aString }: { aString: string }) => ({ aBoolean: aString == '1' }),
+ * )
+ * const d = C.pipe(a, b)
+ * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
+ */
 function pipe<T extends [Composable, ...Composable[]]>(...fns: T) {
   return (async (...args) => {
     const res = await sequence(...fns)(...args)
@@ -76,8 +90,8 @@ function all<T extends [Composable, ...Composable[]]>(...fns: T) {
 }
 
 function collect<T extends Record<string, Composable>>(fns: T) {
-  const [fn, ...fnsWithKey] = Object.entries(fns).map(([key, df]) =>
-    map(df, (result) => ({ [key]: result })),
+  const [fn, ...fnsWithKey] = Object.entries(fns).map(([key, cf]) =>
+    map(cf, (result) => ({ [key]: result })),
   )
   return map(all(fn, ...fnsWithKey), mergeObjects) as Composable<
     (...args: Parameters<Extract<T[keyof T], Composable>>) => {
@@ -86,6 +100,16 @@ function collect<T extends Record<string, Composable>>(fns: T) {
   >
 }
 
+/**
+ * Works like `pipe` but it will collect the output of every function in a tuple.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const a = C.compose((aNumber: number) => String(aNumber))
+ * const b = C.compose((aString: string) => aString === '1')
+ * const cf = C.sequence(a, b)
+ * //    ^? Composable<(aNumber: number) => [string, boolean]>
+ */
 function sequence<T extends [Composable, ...Composable[]]>(...fns: T) {
   return (async (...args) => {
     const [head, ...tail] = fns
