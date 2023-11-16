@@ -1,7 +1,7 @@
 import type {
   DataFunctionArgs,
   LinksFunction,
-  V2_MetaFunction,
+  MetaFunction,
 } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
@@ -22,14 +22,16 @@ import { envFromCookie, loaderResponseOrThrow } from '~/lib'
 import { agreeToGPD, cookie, getGPDInfo } from '~/domain/gpd'
 import { inputFromForm } from 'domain-functions'
 
-import styles from "./tailwind.css";
+import styles from './tailwind.css'
 
-export const meta: V2_MetaFunction = () => ([{
-  charset: 'utf-8',
-  title: 'Remix Domains',
-  viewport: 'width=device-width,initial-scale=1',
-  language: 'en-US',
-}])
+export const meta: MetaFunction = () => [
+  {
+    charset: 'utf-8',
+    title: 'Remix Domains',
+    viewport: 'width=device-width,initial-scale=1',
+    language: 'en-US',
+  },
+]
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }]
 
@@ -114,7 +116,7 @@ function Document({ children, title }: DocumentProps) {
 }
 
 export function ErrorBoundary() {
-  const error = useRouteError();
+  const error = useRouteError()
   console.error(error)
   return (
     <Document title="Oh no!">

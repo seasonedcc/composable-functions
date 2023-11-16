@@ -1,4 +1,4 @@
-import { LoaderArgs } from '@remix-run/node'
+import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
 import { inputFromUrl, map, collect } from 'domain-functions'
 import { listColors } from '~/domain/colors'
@@ -12,7 +12,7 @@ const getData = collect({
   colors: map(listColors, ({ data }) => data),
   users: listUsers,
 })
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
   const result = await getData(inputFromUrl(request))
   return loaderResponseOrThrow(result)

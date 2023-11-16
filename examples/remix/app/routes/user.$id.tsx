@@ -1,4 +1,4 @@
-import { LoaderArgs } from '@remix-run/node'
+import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 import { pipe } from 'domain-functions'
 import { formatUser, getUser } from '~/domain/users'
@@ -7,7 +7,7 @@ import { loaderResponseOrThrow } from '~/lib'
 // The output of getUser will be the input of formatUser
 const getData = pipe(getUser, formatUser)
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   const result = await getData(params)
   return loaderResponseOrThrow(result)
 }

@@ -1,16 +1,16 @@
-import { ActionArgs, LoaderArgs } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { inputFromForm } from 'domain-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/domain/colors'
 import { actionResponse, loaderResponseOrThrow } from '~/lib'
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   const result = await getColor(params)
   return loaderResponseOrThrow(result)
 }
 
-export const action = async ({ request }: ActionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const result = await mutateColor(await inputFromForm(request))
   return actionResponse(result)
 }
