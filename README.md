@@ -10,7 +10,6 @@ It does this by enforcing the parameters' types at runtime (through [Zod](https:
 - [Benefits](#benefits)
 - [Quickstart](#quickstart)
 - [Using Deno](#using-deno)
-- [Create your first action with Remix](#create-your-first-action-with-remix)
 - [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
 - [Dealing with errors](#dealing-with-errors)
   - [Changing the ErrorResult with Custom Errors](#changing-the-errorresult-with-custom-errors)
@@ -99,44 +98,6 @@ import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts"
 ```
 
 This documentation will use Node.JS imports by convention, just replace `domain-functions` with `https://deno.land/x/domain_functions/mod.ts` when using [Deno](https://deno.land/).
-
-## Create your first action with Remix
-
-```tsx
-import type { DataFunctionArgs } from 'remix'
-import { useActionData, redirect } from 'remix'
-// You can also use the short version of makeDomainFunction: mdf
-import { mdf, inputFromForm } from 'domain-functions'
-import * as z from 'zod'
-
-const schema = z.object({ number: z.coerce.number() })
-
-export async function action({ request }: DataFunctionArgs) {
-  const increment = mdf(schema)(({ number }) => number + 1)
-  const result = await increment(await inputFromForm(request))
-
-  if (!result.success) return result
-
-  return redirect('/')
-}
-
-export default function Index() {
-  const actionData = useActionData<typeof action>()
-  //    ^? ErrorResult | null
-
-  return (
-    <Form method="post">
-      <input name="number" type="number" />
-      {actionData.inputErrors && (
-        <span role="alert">{actionData.inputErrors[0].message}</span>
-      )}
-      <button type="submit">
-        Submit
-      </button>
-    </Form>
-  )
-}
-```
 
 ## Taking parameters that are not user input
 
