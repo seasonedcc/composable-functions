@@ -52,11 +52,13 @@ function makeDomainFunction<I, E>(
   }
 }
 
-function toComposable<O>(df: DomainFunction<O>) {
+function toComposable<I = unknown, E = unknown, O = unknown>(
+  df: DomainFunction<O>,
+) {
   return ((input = undefined, environment = {}) =>
     df(input, environment).then((r) =>
       r.success ? r : errorResultToFailure(r),
-    )) as unknown as Composable<(input?: unknown, environment?: unknown) => O>
+    )) as unknown as Composable<(input?: I, environment?: E) => O>
 }
 
 function fromComposable<I, E, A extends Composable>(
