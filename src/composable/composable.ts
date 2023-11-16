@@ -36,6 +36,11 @@ function error(errors: ErrorWithMessage[]): Failure {
   return { success: false, errors }
 }
 
+/**
+ * Creates a composable function.
+ * That function is gonna catch any errors and always return a Result.
+ * @param fn a function to be used as a Composable
+ */
 function composable<T extends Fn>(fn: T): Composable<T> {
   return async (...args) => {
     try {
