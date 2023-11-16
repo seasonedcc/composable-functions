@@ -73,6 +73,17 @@ function pipe<T extends [Composable, ...Composable[]]>(...fns: T) {
   >
 }
 
+/**
+ * Creates a single function out of multiple Composables. It will pass the same input to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const a = C.composable((id: number) => id + 1)
+ * const b = C.composable(String)
+ * const c = C.composable(Boolean)
+ * const cf = C.all(a, b, c)
+//       ^? Composable<(id: number) => [string, number, boolean]>
+ */
 function all<T extends [Composable, ...Composable[]]>(...fns: T) {
   return (async (...args: any) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
@@ -83,7 +94,7 @@ function all<T extends [Composable, ...Composable[]]>(...fns: T) {
 
     return success((results as Success<any>[]).map(({ data }) => data))
   }) as unknown as Composable<
-    (...args: Parameters<Extract<T[keyof T], Composable>>) => {
+    (...args: Parameters<T[0]>) => {
       [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
     }
   >
