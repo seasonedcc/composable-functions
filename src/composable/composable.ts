@@ -105,6 +105,16 @@ function sequence<T extends [Composable, ...Composable[]]>(...fns: T) {
   >
 }
 
+
+/**
+ * It takes a Composable and a predicate to apply a transformation over the resulting `data`. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const increment = C.composable(({ id }: { id: number }) => id + 1)
+ * const incrementToString = C.map(increment, String)
+ * //    ^? Composable<string>
+ */
 function map<T extends Composable, R>(
   fn: T,
   mapper: (res: UnpackResult<ReturnType<T>>) => R,
