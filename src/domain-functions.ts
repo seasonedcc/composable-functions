@@ -199,7 +199,7 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 }
 
 /**
- * Works like `pipe` but it will collect the output of every function in a tuple, similar to `all`.
+ * Works like `pipe` but it will collect the output of every function in a tuple.
  * @example
  * import { mdf, sequence } from 'domain-functions'
  *
