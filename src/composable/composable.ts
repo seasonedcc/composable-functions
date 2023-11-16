@@ -100,6 +100,16 @@ function all<T extends [Composable, ...Composable[]]>(...fns: T) {
   >
 }
 
+/**
+ * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const a = C.composable(() => '1')
+ * const b = C.composable(() => 2)
+ * const df = collect({ a, b })
+//       ^? Composable<() => { a: string, b: number }>
+ */
 function collect<T extends Record<string, Composable>>(fns: T) {
   const [fn, ...fnsWithKey] = Object.entries(fns).map(([key, cf]) =>
     map(cf, (result) => ({ [key]: result })),
