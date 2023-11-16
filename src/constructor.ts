@@ -1,4 +1,4 @@
-import { failureToErrorResult } from './errors.ts'
+import { errorResultToFailure, failureToErrorResult } from './errors.ts'
 import type {
   DomainFunction,
   ParserIssue,
@@ -6,7 +6,7 @@ import type {
   SchemaError,
 } from './types.ts'
 import { Composable } from './composable/index.ts'
-import { λ } from "./composable/composable.ts";
+import { λ } from './composable/composable.ts'
 
 function dfResultFromcomposable<T extends Composable, R>(fn: T) {
   return (async (...args) => {
@@ -52,10 +52,11 @@ function makeDomainFunction<I, E>(
   }
 }
 
-function toComposable<O, DF extends DomainFunction<O>>(df: DF) {
-  return df as unknown as Composable<
-    (input: unknown, environment: unknown) => O
-  >
+function toComposable<O>(df: DomainFunction<O>) {
+  return ((input = undefined, environment = {}) =>
+    df(input, environment).then((r) =>
+      r.success ? r : errorResultToFailure(r),
+    )) as unknown as Composable<(input?: unknown, environment?: unknown) => O>
 }
 
 function fromComposable<I, E, A extends Composable>(
@@ -112,5 +113,11 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { dfResultFromcomposable, makeDomainFunction, makeDomainFunction as mdf, fromComposable, toComposable }
+export {
+  dfResultFromcomposable,
+  fromComposable,
+  makeDomainFunction,
+  makeDomainFunction as mdf,
+  toComposable,
+}
 

@@ -3,6 +3,7 @@ import type {
   AtLeastOne,
   ErrorData,
   ErrorResult,
+  ErrorWithMessage,
   SchemaError,
 } from './types.ts'
 
@@ -97,6 +98,26 @@ class ResultError extends Error {
   }
 }
 
+function schemaErrorToErrorWithMessage(se: SchemaError): ErrorWithMessage {
+  return {
+    message: `${se.path.join('.')} ${se.message}`.trim(),
+  }
+}
+function errorResultToFailure({
+  errors,
+  inputErrors,
+  environmentErrors,
+}: ErrorResult): Failure {
+  return {
+    success: false,
+    errors: [
+      ...errors,
+      ...inputErrors.map(schemaErrorToErrorWithMessage),
+      ...environmentErrors.map(schemaErrorToErrorWithMessage),
+    ],
+  }
+}
+
 function failureToErrorResult({ errors }: Failure): ErrorResult {
   return {
     success: false,
@@ -147,6 +168,7 @@ function failureToErrorResult({ errors }: Failure): ErrorResult {
 export {
   EnvironmentError,
   errorMessagesFor,
+  errorResultToFailure,
   failureToErrorResult,
   InputError,
   InputErrors,

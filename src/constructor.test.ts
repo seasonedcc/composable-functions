@@ -6,7 +6,7 @@ import {
 } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { mdf } from './constructor.ts'
+import { mdf, toComposable } from './constructor.ts'
 import {
   EnvironmentError,
   InputError,
@@ -15,6 +15,42 @@ import {
 } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { Composable } from './composable/index.ts'
+
+describe('toComposable', () => {
+  it('returns a Composable with the same computation and all input errors in errors field', async () => {
+    const handler = mdf(z.string())(() => 'no input!')
+    const c = toComposable(handler)
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => string>
+      >
+    >
+
+    assertEquals(await c(), {
+      success: false,
+      errors: [{ message: 'Required' }],
+    })
+  })
+
+  it('returns a Composable with the same computation and same success result (we just care about the structural typing match)', async () => {
+    const handler = mdf()(() => 'no input!')
+    const c = toComposable(handler)
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => string>
+      >
+    >
+
+    assertObjectMatch(await c(), {
+      success: true,
+      data: 'no input!',
+      errors: [],
+    })
+  })
+})
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', () => {
@@ -300,3 +336,4 @@ describe('makeDomainFunction', () => {
     })
   })
 })
+
