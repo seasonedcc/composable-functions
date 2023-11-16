@@ -61,10 +61,10 @@ function applyEnvironment<
  * import { mdf, all } from 'domain-functions'
  *
  * const a = mdf(z.object({ id: z.number() }))(({ id }) => String(id))
-const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-const c = mdf(z.object({ id: z.number() }))(({ id }) => Boolean(id))
-const df = all(a, b, c)
-//    ^? DomainFunction<[string, number, boolean]>
+ * const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+ * const c = mdf(z.object({ id: z.number() }))(({ id }) => Boolean(id))
+ * const df = all(a, b, c)
+//       ^? DomainFunction<[string, number, boolean]>
  */
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
@@ -83,9 +83,9 @@ function all<Fns extends DomainFunction[]>(
  * import { mdf, collect } from 'domain-functions'
  *
  * const a = mdf(z.object({}))(() => '1')
-const b = mdf(z.object({}))(() => 2)
-const df = collect({ a, b })
-//    ^? DomainFunction<{ a: string, b: number }>
+ * const b = mdf(z.object({}))(() => 2)
+ * const df = collect({ a, b })
+//       ^? DomainFunction<{ a: string, b: number }>
  */
 function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
