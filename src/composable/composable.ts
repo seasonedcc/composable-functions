@@ -118,6 +118,21 @@ function map<T extends Composable, R>(
   }) as Composable<(...args: Parameters<T>) => R>
 }
 
+/**
+ * Creates a new function that will apply a transformation over a resulting Failure from the given function. When the given function succeeds, its result is returned without changes.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const increment = C.cf(({ id }) => id + 1)
+ * const summarizeErrors = (result: ErrorWithMessage) =>
+ *   ({
+ *     errors: [{ message: 'Errors count: ' + result.errors.length }],
+ *     inputErrors: [{ message: 'Input errors count: ' + result.inputErrors.length }],
+ *     environmentErrors: [{ message: 'Environment errors count: ' + result.environmentErrors.length }],
+ *   } as ErrorData)
+ *
+ * const incrementWithErrorSummary = mapError(increment, summarizeErrors)
+ */
 function mapError<T extends Composable, R>(
   fn: T,
   mapper: (err: ErrorWithMessage) => ErrorWithMessage,

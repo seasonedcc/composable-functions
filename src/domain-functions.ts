@@ -39,6 +39,16 @@ function safeResult<T>(fn: () => T): Promise<Result<T>> {
   return dfResultFromcomposable(A.λ(fn))() as Promise<Result<T>>
 }
 
+/**
+ * Takes a function with 2 parameters and partially applies the second one.
+ * This is useful when one wants to use a domain function having a fixed environment.
+ * @example
+ * import { mdf, applyEnvironment } from 'domain-functions'
+ *
+ * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
+ * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
+ * //    ^? (input: unknown) => Promise<Result<Date>>
+ */
 function applyEnvironment<
   Fn extends (input: unknown, environment: unknown) => unknown,
 >(df: Fn, environment: unknown) {
