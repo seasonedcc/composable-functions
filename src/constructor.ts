@@ -5,7 +5,8 @@ import type {
   ParserSchema,
   SchemaError,
 } from './types.ts'
-import { Composable, composable } from './composable/index.ts'
+import { Composable } from './composable/index.ts'
+import { λ } from "./composable/composable.ts";
 
 function dfResultFromcomposable<T extends Composable, R>(fn: T) {
   return (async (...args) => {
@@ -44,7 +45,7 @@ function makeDomainFunction<I, E>(
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
     return fromComposable(
-      composable(handler),
+      λ(handler),
       inputSchema,
       environmentSchema,
     ) as DomainFunction<Awaited<Output>>

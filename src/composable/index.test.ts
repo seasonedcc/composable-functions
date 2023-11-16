@@ -3,10 +3,10 @@ import {
   describe,
   it,
 } from '../test-prelude.ts'
-import { composable, map, mapError, pipe, sequence } from './index.ts'
+import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
-import { all, collect } from './composable.ts'
+import { all, collect, λ } from './composable.ts'
 
 const voidFn = () => {}
 const toString = (a: unknown) => `${a}`
@@ -23,7 +23,7 @@ const alwaysThrow = () => {
 
 describe('composable', () => {
   it('infers the types if has no arguments or return', async () => {
-    const fn = composable(() => {})
+    const fn = λ(() => {})
     const res = await fn()
 
     type _FN = Expect<Equal<typeof fn, Composable<() => void>>>
@@ -33,7 +33,7 @@ describe('composable', () => {
   })
 
   it('infers the types if has arguments and a return', async () => {
-    const fn = composable(add)
+    const fn = λ(add)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -45,7 +45,7 @@ describe('composable', () => {
   })
 
   it('infers the types of async functions', async () => {
-    const fn = composable(asyncAdd)
+    const fn = λ(asyncAdd)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -57,7 +57,7 @@ describe('composable', () => {
   })
 
   it('catch errors', async () => {
-    const fn = composable(faultyAdd)
+    const fn = λ(faultyAdd)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -72,7 +72,7 @@ describe('composable', () => {
 
 describe('pipe', () => {
   it('sends the results of the first function to the second and infers types', async () => {
-    const fn = pipe(composable(add), composable(toString))
+    const fn = pipe(λ(add), λ(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -84,7 +84,7 @@ describe('pipe', () => {
   })
 
   it('catches the errors from function A', async () => {
-    const fn = pipe(composable(faultyAdd), composable(toString))
+    const fn = pipe(λ(faultyAdd), λ(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -97,7 +97,7 @@ describe('pipe', () => {
   })
 
   it('catches the errors from function B', async () => {
-    const fn = pipe(composable(add), composable(alwaysThrow), composable(toString))
+    const fn = pipe(λ(add), λ(alwaysThrow), λ(toString))
     // TODO this should not type check
     const res = await fn(1, 2)
 
@@ -119,7 +119,7 @@ describe('pipe', () => {
 
 describe('sequence', () => {
   it('sends the results of the first function to the second and saves every step of the result', async () => {
-    const fn = sequence(composable(add), composable(toString))
+    const fn = sequence(λ(add), λ(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -131,7 +131,7 @@ describe('sequence', () => {
   })
 
   it('catches the errors from function A', async () => {
-    const fn = sequence(composable(faultyAdd), composable(toString))
+    const fn = sequence(λ(faultyAdd), λ(toString))
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -146,7 +146,7 @@ describe('sequence', () => {
 
 describe('all', () => {
   it('executes all functions using the same input returning a tuple with every result when all are successful', async () => {
-    const fn = all(composable(add), composable(toString), composable(voidFn))
+    const fn = all(λ(add), λ(toString), λ(voidFn))
 
     const res = await fn(1, 2)
 
@@ -157,9 +157,9 @@ describe('all', () => {
 describe('collect', () => {
   it('collects the results of an object of Composables into a result with same format', async () => {
     const fn = collect({
-      add: composable(add),
-      string: composable(toString),
-      void: composable(voidFn),
+      add: λ(add),
+      string: λ(toString),
+      void: λ(voidFn),
     })
     const res = await fn(1, 2)
 
@@ -188,8 +188,8 @@ describe('collect', () => {
 
   it('uses the same arguments for every function', async () => {
     const fn = collect({
-      add: composable(add),
-      string: composable(append),
+      add: λ(add),
+      string: λ(append),
     })
     const res = await fn(1, 2)
 
@@ -214,8 +214,8 @@ describe('collect', () => {
 
   it('collects the errors in the error array', async () => {
     const fn = collect({
-      error1: composable(faultyAdd),
-      error2: composable(faultyAdd),
+      error1: λ(faultyAdd),
+      error2: λ(faultyAdd),
     })
     const res = await fn(1, 2)
 
@@ -245,7 +245,7 @@ describe('collect', () => {
 
 describe('map', () => {
   it('maps over an Composable function successful result', async () => {
-    const fn = map(composable(add), (a) => a + 1 === 4)
+    const fn = map(λ(add), (a) => a + 1 === 4)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -258,7 +258,7 @@ describe('map', () => {
 
   it('maps over a composition', async () => {
     const fn = map(
-      pipe(composable(add), composable(toString)),
+      pipe(λ(add), λ(toString)),
       (a) => typeof a === 'string',
     )
     const res = await fn(1, 2)
@@ -272,7 +272,7 @@ describe('map', () => {
   })
 
   it('does not do anything when the function fails', async () => {
-    const fn = map(composable(faultyAdd), (a) => a + 1 === 4)
+    const fn = map(λ(faultyAdd), (a) => a + 1 === 4)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -290,7 +290,7 @@ const cleanError = (err: ErrorWithMessage) => ({
 })
 describe('mapError', () => {
   it('maps over the error results of an Composable function', async () => {
-    const fn = mapError(composable(faultyAdd), cleanError)
+    const fn = mapError(λ(faultyAdd), cleanError)
     const res = await fn(1, 2)
 
     type _FN = Expect<
