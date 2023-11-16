@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  describe,
-  it,
-} from '../test-prelude.ts'
+import { assertEquals, describe, it } from '../test-prelude.ts'
 import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
@@ -257,10 +253,7 @@ describe('map', () => {
   })
 
   it('maps over a composition', async () => {
-    const fn = map(
-      pipe(λ(add), λ(toString)),
-      (a) => typeof a === 'string',
-    )
+    const fn = map(pipe(λ(add), λ(toString)), (a) => typeof a === 'string')
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -290,7 +283,9 @@ const cleanError = (err: ErrorWithMessage) => ({
 })
 describe('mapError', () => {
   it('maps over the error results of an Composable function', async () => {
-    const fn = mapError(λ(faultyAdd), cleanError)
+    const fn = mapError(λ(faultyAdd), ({ errors }) => ({
+      errors: errors.map(cleanError),
+    }))
     const res = await fn(1, 2)
 
     type _FN = Expect<

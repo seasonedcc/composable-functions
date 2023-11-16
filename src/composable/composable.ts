@@ -111,9 +111,9 @@ function map<T extends Composable, R>(
 ) {
   return (async (...args) => {
     const res = await fn(...args)
-    if(!res.success) return error(res.errors)
+    if (!res.success) return error(res.errors)
     const mapped = await composable(mapper)(res.data)
-    if(!mapped.success) return error(mapped.errors)
+    if (!mapped.success) return error(mapped.errors)
     return mapped
   }) as Composable<(...args: Parameters<T>) => R>
 }
@@ -135,20 +135,20 @@ function map<T extends Composable, R>(
  */
 function mapError<T extends Composable, R>(
   fn: T,
-  mapper: (err: ErrorWithMessage) => ErrorWithMessage,
+  mapper: (err: Omit<Failure, 'success'>) => Omit<Failure, 'success'>,
 ) {
   return (async (...args) => {
     const res = await fn(...args)
-    return !res.success ? error(res.errors.map(mapper)) : success(res.data)
+    return !res.success ? error(mapper(res).errors) : success(res.data)
   }) as T
 }
 
 export {
   all,
+  collect,
   composable,
   composable as cf,
   composable as λ,
-  collect,
   error,
   map,
   mapError,
