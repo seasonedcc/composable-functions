@@ -123,15 +123,10 @@ function map<T extends Composable, R>(
  * @example
  * import { composable as C } from 'domain-functions'
  *
- * const increment = C.cf(({ id }) => id + 1)
- * const summarizeErrors = (result: ErrorWithMessage) =>
- *   ({
- *     errors: [{ message: 'Errors count: ' + result.errors.length }],
- *     inputErrors: [{ message: 'Input errors count: ' + result.inputErrors.length }],
- *     environmentErrors: [{ message: 'Environment errors count: ' + result.environmentErrors.length }],
- *   } as ErrorData)
- *
- * const incrementWithErrorSummary = mapError(increment, summarizeErrors)
+ * const increment = C.composable(({ id }: { id: number }) => id + 1)
+ * const incrementWithErrorSummary = C.mapError(increment, (result) => ({
+ *   errors: [{ message: 'Errors count: ' + result.errors.length }],
+ * }))
  */
 function mapError<T extends Composable, R>(
   fn: T,
