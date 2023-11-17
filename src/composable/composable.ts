@@ -73,10 +73,9 @@ function pipe<T extends [Composable, ...Composable[]]>(
   ...fns: T & PipeArguments<T, []>
 ) {
   return (async (...args) => {
-    const res = await sequence(...(fns as T))(...args as any)
+    const res = await sequence(...(fns as T))(...(args as any))
     return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as PipeReturn<T>
-  
 }
 
 type PipeReturn<Fns extends any[]> = Fns extends [
@@ -117,8 +116,10 @@ type PipeArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
  * const cf = C.all(a, b, c)
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
-function all<T extends [Composable, ...Composable[]]>(...fns: T) {
-  return (async (...args: T & AllArguments<T, []>) => {
+function all<T extends [Composable, ...Composable[]]>(
+  ...fns: T & AllArguments<T, []>
+) {
+  return (async (...args: any) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (results.some(({ success }) => success === false)) {
@@ -167,15 +168,11 @@ type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
       >
     : ['Fail to compose ', PA, ' does not fit in ', PB]
   : Fns extends [Composable<(...args: infer P) => infer O>, ...infer rest]
-  ? Arguments
+  ? Equal<rest, []> extends true
+    ? Arguments
+    : Fns
   : never
 
-// type X1 = [string] & []
-const a = composable((b: number) => 'string')
-const b = composable((a: 'a') => a.toUpperCase())
-type X = AllArguments<[typeof a, typeof b], []>
-
-const c = all(a, b)
 /**
  * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
  * @example

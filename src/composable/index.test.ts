@@ -4,7 +4,7 @@ import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
 import { all, collect, λ } from './composable.ts'
 
-const voidFn = () => {}
+const voidFn = λ(() => {})
 const toString = λ((a: unknown) => `${a}`)
 const append = (a: string, b: string) => `${a}${b}`
 const add = λ((a: number, b: number) => a + b)
@@ -143,7 +143,7 @@ describe('sequence', () => {
 
 describe('all', () => {
   it('executes all functions using the same input returning a tuple with every result when all are successful', async () => {
-    const fn = all(add, toString, λ(voidFn))
+    const fn = all(add, toString, voidFn)
 
     const res = await fn(1, 2)
 
@@ -156,7 +156,7 @@ describe('collect', () => {
     const fn = collect({
       add: add,
       string: toString,
-      void: λ(voidFn),
+      void: voidFn,
     })
     const res = await fn(1, 2)
 
