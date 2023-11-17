@@ -68,9 +68,9 @@ function composable<T extends Fn>(fn: T): Composable<T> {
  * const d = C.pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
-function pipe<T extends [Composable, ...Composable[]]>(...fns: T) {
+function pipe<T extends [Composable, ...Composable[]]>(...fns: T & PipeArguments<T, []>) {
   return (async (...args) => {
-    const res = await sequence(...fns)(...args)
+    const res = await sequence(...fns as T)(...args)
     return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as Composable<
     (
@@ -79,59 +79,32 @@ function pipe<T extends [Composable, ...Composable[]]>(...fns: T) {
   >
 }
 
-function pt<Fns extends [Composable, ...Composable[]]>(
-  ...args: Fns & PipeArguments<Fns, []>
-): PipeReturn<Fns> {
-  return null as unknown as PipeReturn<Fns>
-}
-
 type PipeReturn<DFs extends any[]> = DFs extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? PB extends OA
+  ? OA extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
-    : void
+    : ['Fail to compose ', OA, ' does not fit in ', PB]
   : DFs extends [Composable<(...args: infer P) => infer O>]
   ? Composable<(...args: P) => O>
-  : void
+  : never
 
 type PipeArguments<DFs extends any[], Arguments extends any[]> = DFs extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? PB extends OA
+  ? OA extends PB
     ? PipeArguments<
         [Composable<(...args: PA) => OB>, ...rest],
         [...Arguments, Composable<(...a: PA) => OA>, Composable<(b: PB) => OB>]
       >
-    : {parameterNext: PB, outputPrevious: OA}
+    : ['Fail to compose ', OA, ' does not fit in ', PB]
   : DFs extends [Composable<(...args: infer P) => infer O>, ...infer rest]
   ? Arguments
-  : {dfs: DFs}
-
-// Awaited<T> extends Result<infer R> ? R : never
-
-type X = PipeArguments<
-  [Composable<() => string>, Composable<(a : string) => string>], []
->
-
-const argA = composable(() => 'some string')
-const argB = composable((a: string) => 'a')
-const x = pt(
-  argA, argB
-)
-
-function tt<X extends (...args: any) => any>(id: X & ReturnType<X>) {}
-
-const s = composable(() => 'some string')
-const u = composable((s: string) => s.toUpperCase())
-const ok = pipe(s, u)
-const notOk = pipe(u, s)
-const ok2 = pt(s, u)
-const notOk2 = pt(u, s)
+  : never
 
 /**
  * Creates a single function out of multiple Composables. It will pass the same input to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
