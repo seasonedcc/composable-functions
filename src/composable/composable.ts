@@ -1,4 +1,5 @@
 import { toErrorWithMessage } from './errors.ts'
+import { Equal } from './types.test.ts'
 import {
   Composable,
   ErrorWithMessage,
@@ -68,9 +69,11 @@ function composable<T extends Fn>(fn: T): Composable<T> {
  * const d = C.pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
-function pipe<T extends [Composable, ...Composable[]]>(...fns: T & PipeArguments<T, []>) {
+function pipe<T extends [Composable, ...Composable[]]>(
+  ...fns: T & PipeArguments<T, []>
+) {
   return (async (...args) => {
-    const res = await sequence(...fns as T)(...args)
+    const res = await sequence(...(fns as T))(...args)
     return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as Composable<
     (
@@ -118,7 +121,7 @@ type PipeArguments<DFs extends any[], Arguments extends any[]> = DFs extends [
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
 function all<T extends [Composable, ...Composable[]]>(...fns: T) {
-  return (async (...args: any) => {
+  return (async (...args: T & AllArguments<T, []>) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (results.some(({ success }) => success === false)) {
@@ -133,6 +136,49 @@ function all<T extends [Composable, ...Composable[]]>(...fns: T) {
   >
 }
 
+type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
+  Composable<(...a: infer PA) => infer OA>,
+  Composable<(...b: infer PB) => infer OB>,
+  ...infer rest,
+]
+  ? Equal<PA & PB, never> extends false
+    ? AllArguments<
+        [Composable<(...args: PA) => OB>, ...rest],
+        [
+          ...Arguments,
+          Composable<(...a: PA) => OA>,
+          Composable<(...b: PB) => OB>,
+        ]
+      >
+    : Equal<PA, []> extends true
+    ? AllArguments<
+        [Composable<(...args: PA) => OB>, ...rest],
+        [
+          ...Arguments,
+          Composable<(...a: PA) => OA>,
+          Composable<(...b: PB) => OB>,
+        ]
+      >
+    : Equal<PB, []> extends true
+    ? AllArguments<
+        [Composable<(...args: PA) => OB>, ...rest],
+        [
+          ...Arguments,
+          Composable<(...a: PA) => OA>,
+          Composable<(...b: PB) => OB>,
+        ]
+      >
+    : ['Fail to compose ', PA, ' does not fit in ', PB]
+  : Fns extends [Composable<(...args: infer P) => infer O>, ...infer rest]
+  ? Arguments
+  : never
+
+// type X1 = [string] & []
+// const a = composable((b: number) => 'string')
+// const b = composable((a: 'a') => a.toUpperCase())
+// type X = AllArguments<[typeof a, typeof b], []>
+
+// const c = all(a, b)
 /**
  * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
  * @example
