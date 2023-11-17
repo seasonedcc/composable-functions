@@ -73,16 +73,13 @@ function pipe<T extends [Composable, ...Composable[]]>(
   ...fns: T & PipeArguments<T, []>
 ) {
   return (async (...args) => {
-    const res = await sequence(...(fns as T))(...args)
+    const res = await sequence(...(fns as T))(...args as any)
     return !res.success ? error(res.errors) : success(res.data.at(-1))
-  }) as Composable<
-    (
-      ...args: Parameters<Extract<First<T>, Composable>>
-    ) => UnpackResult<ReturnType<Extract<Last<T>, Composable>>>
-  >
+  }) as PipeReturn<T>
+  
 }
 
-type PipeReturn<DFs extends any[]> = DFs extends [
+type PipeReturn<Fns extends any[]> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
@@ -90,11 +87,11 @@ type PipeReturn<DFs extends any[]> = DFs extends [
   ? OA extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
     : ['Fail to compose ', OA, ' does not fit in ', PB]
-  : DFs extends [Composable<(...args: infer P) => infer O>]
+  : Fns extends [Composable<(...args: infer P) => infer O>]
   ? Composable<(...args: P) => O>
   : never
 
-type PipeArguments<DFs extends any[], Arguments extends any[]> = DFs extends [
+type PipeArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
@@ -105,7 +102,7 @@ type PipeArguments<DFs extends any[], Arguments extends any[]> = DFs extends [
         [...Arguments, Composable<(...a: PA) => OA>, Composable<(b: PB) => OB>]
       >
     : ['Fail to compose ', OA, ' does not fit in ', PB]
-  : DFs extends [Composable<(...args: infer P) => infer O>, ...infer rest]
+  : Fns extends [Composable<(...args: infer P) => infer O>, ...infer rest]
   ? Arguments
   : never
 
@@ -174,11 +171,11 @@ type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
   : never
 
 // type X1 = [string] & []
-// const a = composable((b: number) => 'string')
-// const b = composable((a: 'a') => a.toUpperCase())
-// type X = AllArguments<[typeof a, typeof b], []>
+const a = composable((b: number) => 'string')
+const b = composable((a: 'a') => a.toUpperCase())
+type X = AllArguments<[typeof a, typeof b], []>
 
-// const c = all(a, b)
+const c = all(a, b)
 /**
  * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
  * @example
