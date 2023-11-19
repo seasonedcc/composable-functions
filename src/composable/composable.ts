@@ -74,7 +74,10 @@ function pipe<T extends [Composable, ...Composable[]]>(
   ...fns: T & PipeArguments<T, []>
 ) {
   return (async (...args) => {
-    const res = await (sequence(...(fns as any)) as any)(...(args as any))
+    //@ts-ignore pipe uses exactly he same generic input type as sequence
+    //           I don't understand what is the issue here but ignoring the errors
+    //           is safe and much nicer than a bunch of casts to any
+    const res = await sequence(...fns)(...args)
     return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as PipeReturn<T>
 }
