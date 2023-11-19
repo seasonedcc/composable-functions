@@ -1,3 +1,4 @@
+import { unknown } from 'https://deno.land/x/zod@v3.22.4/types.ts'
 import { toErrorWithMessage } from './errors.ts'
 import { Equal } from './types.test.ts'
 import {
@@ -134,43 +135,45 @@ function all<T extends [Composable, ...Composable[]]>(
   >
 }
 
+type MatchAllArguments<
+  TA extends unknown[],
+  TB extends unknown[],
+  O extends unknown[],
+> = TA extends [infer headA, ...infer restA]
+  ? TB extends [infer headB, ...infer restB]
+    ? headA extends headB
+      ? MatchAllArguments<restA, restB, [...O, headB]>
+      : headB extends headA
+      ? MatchAllArguments<restA, restB, [...O, headA]>
+      : { 'Incompatible arguments ': true; argument1: headA; argument2: headB }
+    : MatchAllArguments<restA, [], [...O, headA]>
+  : TB extends [infer headBNoA, ...infer restBNoA]
+  ? MatchAllArguments<[], restBNoA, [...O, headBNoA]>
+  : O
+
 type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? Equal<PA & PB, never> extends false
-    ? AllArguments<
-        [Composable<(...args: PA) => OB>, ...rest],
-        [
-          ...Arguments,
-          Composable<(...a: PA) => OA>,
-          Composable<(...b: PB) => OB>,
-        ]
-      >
-    : Equal<PA, []> extends true
-    ? AllArguments<
-        [Composable<(...args: PA) => OB>, ...rest],
-        [
-          ...Arguments,
-          Composable<(...a: PA) => OA>,
-          Composable<(...b: PB) => OB>,
-        ]
-      >
-    : Equal<PB, []> extends true
-    ? AllArguments<
-        [Composable<(...args: PA) => OB>, ...rest],
-        [
-          ...Arguments,
-          Composable<(...a: PA) => OA>,
-          Composable<(...b: PB) => OB>,
-        ]
-      >
+  ? MatchAllArguments<PA, PB, []> extends [...infer MergedP]
+    ? rest extends []
+      ? [...Arguments, Composable<(...b: MergedP) => OB>]
+      : AllArguments<
+          [Composable<(...args: MergedP) => OB>, ...rest],
+          [
+            ...Arguments,
+            Composable<(...a: MergedP) => OA>,
+            Composable<(...b: MergedP) => OB>,
+          ]
+        >
     : ['Fail to compose ', PA, ' does not fit in ', PB]
-  : Fns extends [Composable<(...args: infer P) => infer O>, ...infer rest]
-  ? Equal<rest, []> extends true
+  : Fns extends [Composable, ...infer rest]
+  ? rest extends []
     ? Arguments
     : Fns
+  : Fns extends []
+  ? []
   : never
 
 /**
