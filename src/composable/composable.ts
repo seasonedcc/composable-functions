@@ -74,7 +74,7 @@ function pipe<T extends [Composable, ...Composable[]]>(
   ...fns: T & PipeArguments<T, []>
 ) {
   return (async (...args) => {
-    const res = await sequence(...(fns as T))(...(args as any))
+    const res = await (sequence(...(fns as any)) as any)(...(args as any))
     return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as PipeReturn<T>
 }
@@ -207,9 +207,11 @@ function collect<T extends Record<string, Composable>>(fns: T) {
  * const cf = C.sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
-function sequence<T extends [Composable, ...Composable[]]>(...fns: T) {
+function sequence<T extends [Composable, ...Composable[]]>(
+  ...fns: T & PipeArguments<T, []>
+) {
   return (async (...args) => {
-    const [head, ...tail] = fns
+    const [head, ...tail] = fns as T
 
     const res = await head(...args)
     if (!res.success) return error(res.errors)

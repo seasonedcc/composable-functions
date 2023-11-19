@@ -215,7 +215,9 @@ function sequence<Fns extends DomainFunction[]>(
     const [first, ...rest] = fns.map((df) =>
       A.λ(fromSuccess(applyEnvironment(df, environment))),
     )
-    return dfResultFromcomposable(A.sequence(first, ...rest))(input)
+    return (
+      dfResultFromcomposable(A.sequence(...([first, ...rest] as any))) as any
+    )(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
