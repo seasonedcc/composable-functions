@@ -15,6 +15,7 @@ import type {
 } from './types.ts'
 import { dfResultFromcomposable } from './constructor.ts'
 import { toErrorWithMessage } from './composable/errors.ts'
+import { Composable } from './index.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -212,12 +213,12 @@ function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
-    const [first, ...rest] = fns.map((df) =>
+    const dfsAsComposable = fns.map((df) =>
       A.λ(fromSuccess(applyEnvironment(df, environment))),
+    ) as [Composable, ...Composable[]]
+    return (dfResultFromcomposable(A.sequence(...dfsAsComposable)))(
+      input,
     )
-    return (
-      dfResultFromcomposable(A.sequence(...([first, ...rest] as any))) as any
-    )(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 

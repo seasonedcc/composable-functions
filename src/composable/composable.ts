@@ -77,7 +77,7 @@ function pipe<T extends [Composable, ...Composable[]]>(
     //@ts-ignore pipe uses exactly he same generic input type as sequence
     //           I don't understand what is the issue here but ignoring the errors
     //           is safe and much nicer than a bunch of casts to any
-    const res = await sequence(...fns)(...args)
+    const res = (await sequence(...fns)(...args)) as Result<unknown[]>
     return !res.success ? error(res.errors) : success(res.data.at(-1))
   }) as PipeReturn<T>
 }
@@ -96,17 +96,31 @@ type PipeReturn<Fns extends any[]> = Fns extends [
 
 type PipeArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
-  Composable<(b: infer PB) => infer OB>,
+  Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? OA extends PB
-    ? PipeArguments<
-        [Composable<(...args: PA) => OB>, ...rest],
-        [...Arguments, Composable<(...a: PA) => OA>, Composable<(b: PB) => OB>]
-      >
-    : ['Fail to compose ', OA, ' does not fit in ', PB]
-  : Fns extends [Composable<(...args: infer P) => infer O>, ...infer rest]
-  ? Arguments
+  ? OA extends PB[0]
+    ? rest extends []
+      ? [
+          ...Arguments,
+          Composable<(...a: PA) => OA>,
+          Composable<(...b: PB) => OB>,
+        ]
+      : PipeArguments<
+          [Composable<(...args: PA) => OB>, ...rest],
+          [
+            ...Arguments,
+            Composable<(...a: PA) => OA>,
+            Composable<(...b: PB) => OB>,
+          ]
+        >
+    : ['Fail to compose ', PA, ' does not fit in ', PB[0]]
+  : Fns extends [Composable, ...infer rest]
+  ? rest extends []
+    ? Arguments
+    : Fns
+  : Fns extends []
+  ? []
   : never
 
 /**
