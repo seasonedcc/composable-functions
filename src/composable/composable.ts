@@ -71,7 +71,7 @@ function composable<T extends Fn>(fn: T): Composable<T> {
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
 function pipe<T extends [Composable, ...Composable[]]>(
-  ...fns: T & PipeArguments<T, []>
+  ...fns: T & PipeArguments<T>
 ) {
   return (async (...args) => {
     //@ts-ignore pipe uses exactly he same generic input type as sequence
@@ -94,7 +94,7 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   ? Composable<(...args: P) => O>
   : never
 
-type PipeArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
+type PipeArguments<Fns extends any[], Arguments extends any[] = []> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
@@ -135,7 +135,7 @@ type PipeArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
 function all<T extends [Composable, ...Composable[]]>(
-  ...fns: T & AllArguments<T, []>
+  ...fns: T & AllArguments<T>
 ) {
   return (async (...args: any) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
@@ -168,7 +168,7 @@ type SupertypesTuple<
   ? SupertypesTuple<[], restBNoA, [...O, headBNoA]>
   : O
 
-type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
+type AllArguments<Fns extends any[], Arguments extends any[] = []> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
@@ -225,7 +225,7 @@ function collect<T extends Record<string, Composable>>(fns: T) {
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
 function sequence<T extends [Composable, ...Composable[]]>(
-  ...fns: T & PipeArguments<T, []>
+  ...fns: T & PipeArguments<T>
 ) {
   return (async (...args) => {
     const [head, ...tail] = fns as T
