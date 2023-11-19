@@ -138,20 +138,20 @@ function all<T extends [Composable, ...Composable[]]>(
   >
 }
 
-type MatchAllArguments<
+type SupertypesTuple<
   TA extends unknown[],
   TB extends unknown[],
   O extends unknown[],
 > = TA extends [infer headA, ...infer restA]
   ? TB extends [infer headB, ...infer restB]
     ? headA extends headB
-      ? MatchAllArguments<restA, restB, [...O, headB]>
+      ? SupertypesTuple<restA, restB, [...O, headB]>
       : headB extends headA
-      ? MatchAllArguments<restA, restB, [...O, headA]>
+      ? SupertypesTuple<restA, restB, [...O, headA]>
       : { 'Incompatible arguments ': true; argument1: headA; argument2: headB }
-    : MatchAllArguments<restA, [], [...O, headA]>
+    : SupertypesTuple<restA, [], [...O, headA]>
   : TB extends [infer headBNoA, ...infer restBNoA]
-  ? MatchAllArguments<[], restBNoA, [...O, headBNoA]>
+  ? SupertypesTuple<[], restBNoA, [...O, headBNoA]>
   : O
 
 type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
@@ -159,7 +159,7 @@ type AllArguments<Fns extends any[], Arguments extends any[]> = Fns extends [
   Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? MatchAllArguments<PA, PB, []> extends [...infer MergedP]
+  ? SupertypesTuple<PA, PB, []> extends [...infer MergedP]
     ? rest extends []
       ? [...Arguments, Composable<(...b: MergedP) => OB>]
       : AllArguments<
