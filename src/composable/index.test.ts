@@ -6,7 +6,7 @@ import { all, collect, λ } from './composable.ts'
 
 const voidFn = λ(() => {})
 const toString = λ((a: unknown) => `${a}`)
-const append = (a: string, b: string) => `${a}${b}`
+const append = λ((a: string, b: string) => `${a}${b}`)
 const add = λ((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
 const faultyAdd = λ((a: number, b: number) => {
@@ -184,9 +184,11 @@ describe('collect', () => {
   })
 
   it('uses the same arguments for every function', async () => {
+    //@ts-expect-error add and append parameters are incompatible
+    // The runtime will work since passing 1, 2 will be coerced to '1', '2'
     const fn = collect({
       add: add,
-      string: λ(append),
+      string: append,
     })
     const res = await fn(1, 2)
 

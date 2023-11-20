@@ -94,7 +94,10 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   ? Composable<(...args: P) => O>
   : never
 
-type PipeArguments<Fns extends any[], Arguments extends any[] = []> = Fns extends [
+type PipeArguments<
+  Fns extends any[],
+  Arguments extends any[] = [],
+> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
@@ -168,7 +171,10 @@ type SupertypesTuple<
   ? SupertypesTuple<[], restBNoA, [...O, headBNoA]>
   : O
 
-type AllArguments<Fns extends any[], Arguments extends any[] = []> = Fns extends [
+type AllArguments<
+  Fns extends any[],
+  Arguments extends any[] = [],
+> = Fns extends [
   Composable<(...a: infer PA) => infer OA>,
   Composable<(...b: infer PB) => infer OB>,
   ...infer rest,
@@ -193,6 +199,49 @@ type AllArguments<Fns extends any[], Arguments extends any[] = []> = Fns extends
   ? []
   : never
 
+// Thanks to https://github.com/tjjfvi
+// UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
+// This will not preserve union order but we don't care since this is for Composable paralel application
+type UnionToTuple<T> = (
+  (T extends any ? (t: T) => T : never) extends infer U
+    ? (U extends any ? (u: U) => any : never) extends (v: infer V) => any
+      ? V
+      : never
+    : never
+) extends (_: any) => infer W
+  ? [...UnionToTuple<Exclude<T, W>>, W]
+  : []
+
+type Keys<R extends Record<string, any>> = UnionToTuple<keyof R>
+
+type RecordValuesFromKeysTuple<
+  R extends Record<string, Composable>,
+  K extends unknown[],
+  ValuesTuple extends Composable[] = [],
+> = K extends [infer Head, ...infer rest]
+  ? Head extends string
+    ? rest extends string[]
+      ? RecordValuesFromKeysTuple<R, rest, [...ValuesTuple, R[Head]]>
+      : never
+    : ValuesTuple
+  : ValuesTuple
+
+type Zip<
+  K extends unknown[],
+  V extends Composable[],
+  O extends Record<string, Composable> = {},
+> = K extends [infer HeadK, ...infer restK]
+  ? V extends [infer HeadV, ...infer restV]
+    ? HeadK extends string
+      ? restK extends string[]
+        ? restV extends Composable[]
+          ? Zip<restK, restV, O & { [key in HeadK]: HeadV }>
+          : never
+        : never
+      : never
+    : O
+  : O
+
 /**
  * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
  * @example
@@ -203,7 +252,9 @@ type AllArguments<Fns extends any[], Arguments extends any[] = []> = Fns extends
  * const df = collect({ a, b })
 //       ^? Composable<() => { a: string, b: number }>
  */
-function collect<T extends Record<string, Composable>>(fns: T) {
+function collect<T extends Record<string, Composable>>(
+  fns: T & Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>,
+) {
   const [fn, ...fnsWithKey] = Object.entries(fns).map(([key, cf]) =>
     map(cf, (result) => ({ [key]: result })),
   )
