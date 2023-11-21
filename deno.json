@@ -5,7 +5,7 @@
     "publish": "deno task build-npm && cd npm/ && npm publish",
     "build-npm": "deno run -A scripts/build-npm.ts",
     "docs": "deno doc --html --name='domain-functions' ./mod.ts"
-  }
+  },
   "lint": {
     "include": ["src/"],
     "rules": {
