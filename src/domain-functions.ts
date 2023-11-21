@@ -37,7 +37,7 @@ import { Composable } from './index.ts'
  * }
  */
 function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return dfResultFromcomposable(A.λ(fn))() as Promise<Result<T>>
+  return dfResultFromcomposable(A.composable(fn))() as Promise<Result<T>>
 }
 
 /**
@@ -72,7 +72,7 @@ function all<Fns extends DomainFunction[]>(
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
     const [first, ...rest] = fns.map((df) =>
-      A.λ(() => fromSuccess(df)(input, environment)),
+      A.composable(() => fromSuccess(df)(input, environment)),
     )
     return dfResultFromcomposable(A.all(first, ...rest))()
   }) as DomainFunction<UnpackAll<Fns>>
@@ -214,7 +214,7 @@ function sequence<Fns extends DomainFunction[]>(
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
     const dfsAsComposable = fns.map((df) =>
-      A.λ(fromSuccess(applyEnvironment(df, environment))),
+      A.composable(fromSuccess(applyEnvironment(df, environment))),
     ) as [Composable, ...Composable[]]
     return (dfResultFromcomposable(A.sequence(...dfsAsComposable)))(
       input,
@@ -238,7 +238,7 @@ function map<O, R>(
   return ((input, environment) =>
     dfResultFromcomposable(
       A.map(
-        A.λ(() => fromSuccess(dfn)(input, environment)),
+        A.composable(() => fromSuccess(dfn)(input, environment)),
         mapper,
       ),
     )()) as DomainFunction<R>

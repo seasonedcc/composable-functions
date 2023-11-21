@@ -2,24 +2,24 @@ import { assertEquals, describe, it } from '../test-prelude.ts'
 import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
-import { all, collect, λ } from './composable.ts'
+import { all, collect, composable } from './composable.ts'
 
-const voidFn = λ(() => {})
-const toString = λ((a: unknown) => `${a}`)
-const append = λ((a: string, b: string) => `${a}${b}`)
-const add = λ((a: number, b: number) => a + b)
+const voidFn = composable(() => {})
+const toString = composable((a: unknown) => `${a}`)
+const append = composable((a: string, b: string) => `${a}${b}`)
+const add = composable((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
-const faultyAdd = λ((a: number, b: number) => {
+const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b
 })
-const alwaysThrow = λ(() => {
+const alwaysThrow = composable(() => {
   throw new Error('always throw', { cause: 'it was made for this' })
 })
 
 describe('composable', () => {
   it('infers the types if has no arguments or return', async () => {
-    const fn = λ(() => {})
+    const fn = composable(() => {})
     const res = await fn()
 
     type _FN = Expect<Equal<typeof fn, Composable<() => void>>>
@@ -41,7 +41,7 @@ describe('composable', () => {
   })
 
   it('infers the types of async functions', async () => {
-    const fn = λ(asyncAdd)
+    const fn = composable(asyncAdd)
     const res = await fn(1, 2)
 
     type _FN = Expect<

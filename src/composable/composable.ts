@@ -1,13 +1,10 @@
-import { unknown } from 'https://deno.land/x/zod@v3.22.4/types.ts'
 import { toErrorWithMessage } from './errors.ts'
-import { Equal } from './types.test.ts'
 import {
   Composable,
   ErrorWithMessage,
   Failure,
   First,
   Fn,
-  Last,
   MergeObjs,
   Result,
   Success,
@@ -342,8 +339,6 @@ export {
   all,
   collect,
   composable,
-  composable as cf,
-  composable as λ,
   error,
   map,
   mapError,
