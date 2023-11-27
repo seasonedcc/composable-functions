@@ -25,6 +25,10 @@ await build({
       url: 'https://github.com/seasonedcc/domain-functions/issues',
     },
     homepage: 'https://github.com/seasonedcc/domain-functions',
+    repository: {
+      type: "git",
+      url: "https://github.com/seasonedcc/domain-functions.git"
+    },
   },
 })
 
