@@ -68,13 +68,14 @@ describe('makeDomainFunction', () => {
     })
 
     it('fails gracefully if gets something other than undefined', async () => {
-      const handler = mdf()(() => 'no input!')
-      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+      const handler = mdf()((args) => args)
+      type _R = Expect<Equal<typeof handler, DomainFunction<undefined>>>
 
       assertEquals(await handler('some input'), {
-        success: false,
+        success: true,
+        data: undefined,
         errors: [],
-        inputErrors: [{ path: [], message: 'Expected undefined' }],
+        inputErrors: [],
         environmentErrors: [],
       })
     })

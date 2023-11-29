@@ -39,7 +39,7 @@ function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
  *   return { message: `${greeting} ${user.name}` }
  * })
  */
-function makeDomainFunction<I, E>(
+function makeDomainFunction<I = undefined, E = Record<PropertyKey, unknown>>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
 ) {
@@ -104,14 +104,8 @@ const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
 }
 
 const undefinedSchema: ParserSchema<undefined> = {
-  safeParseAsync: (data: unknown) => {
-    if (data !== undefined) {
-      return Promise.resolve({
-        success: false,
-        error: { issues: [{ path: [], message: 'Expected undefined' }] },
-      })
-    }
-    return Promise.resolve({ success: true, data })
+  safeParseAsync: (_data: unknown) => {
+    return Promise.resolve({ success: true, data: undefined })
   },
 }
 
