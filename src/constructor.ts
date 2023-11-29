@@ -1,77 +1,29 @@
-import {
-  EnvironmentError,
-  InputError,
-  InputErrors,
-  ResultError,
-} from './errors.ts'
-import { schemaError, toErrorWithMessage } from './errors.ts'
-import { formatSchemaErrors } from './utils.ts'
-import type { DomainFunction, ParserSchema, Result } from './types.ts'
+import { errorResultToFailure, failureToErrorResult } from './errors.ts'
+import type {
+  DomainFunction,
+  ParserIssue,
+  ParserSchema,
+  SchemaError,
+} from './types.ts'
+import { Composable } from './composable/index.ts'
+import { λ } from './composable/composable.ts'
 
-/**
- * A functions that turns the result of its callback into a Result object.
- * @example
- * const result = await safeResult(() => ({
- *   message: 'hello',
- * }))
- * // the type of result is Result<{ message: string }>
- * if (result.success) {
- *   console.log(result.data.message)
- * }
- *
- * const result = await safeResult(() => {
- *  throw new Error('something went wrong')
- * })
- * // the type of result is Result<never>
- * if (!result.success) {
- *  console.log(result.errors[0].message)
- * }
- */
-async function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  try {
-    return {
-      success: true,
-      data: await fn(),
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    }
-  } catch (error) {
-    if (error instanceof InputError) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: [schemaError(error.message, error.path)],
-      }
-    }
-    if (error instanceof EnvironmentError) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [schemaError(error.message, error.path)],
-        inputErrors: [],
-      }
-    }
-    if (error instanceof InputErrors) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: error.errors.map((e) => schemaError(e.message, e.path)),
-      }
-    }
-    if (error instanceof ResultError) return error.result
+function dfResultFromcomposable<T extends Composable, R>(fn: T) {
+  return (async (...args) => {
+    const r = await fn(...args)
 
-    return {
-      success: false,
-      errors: [toErrorWithMessage(error)],
-      inputErrors: [],
-      environmentErrors: [],
-    }
-  }
+    return r.success
+      ? { ...r, inputErrors: [], environmentErrors: [] }
+      : failureToErrorResult(r)
+  }) as Composable<(...args: Parameters<T>) => R>
 }
 
+function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
+  return errors.map((error) => {
+    const { path, message } = error
+    return { path: path.map(String), message }
+  })
+}
 /**
  * Creates a domain function.
  * After giving the input and environment schemas, you can pass a handler function that takes type safe input and environment. That function is gonna catch any errors and always return a Result.
@@ -92,29 +44,50 @@ function makeDomainFunction<I, E>(
   environmentSchema?: ParserSchema<E>,
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
-    return function (input, environment = {}) {
-      return safeResult(async () => {
-        const envResult = await (
-          environmentSchema ?? objectSchema
-        ).safeParseAsync(environment)
-        const result = await (inputSchema ?? undefinedSchema).safeParseAsync(
-          input,
-        )
-
-        if (!result.success || !envResult.success) {
-          throw new ResultError({
-            inputErrors: result.success
-              ? []
-              : formatSchemaErrors(result.error.issues),
-            environmentErrors: envResult.success
-              ? []
-              : formatSchemaErrors(envResult.error.issues),
-          })
-        }
-        return handler(result.data as I, envResult.data as E)
-      })
-    } as DomainFunction<Awaited<Output>>
+    return fromComposable(
+      λ(handler),
+      inputSchema,
+      environmentSchema,
+    ) as DomainFunction<Awaited<Output>>
   }
+}
+
+function toComposable<I = unknown, E = unknown, O = unknown>(
+  df: DomainFunction<O>,
+) {
+  return ((input = undefined, environment = {}) =>
+    df(input, environment).then((r) =>
+      r.success ? r : errorResultToFailure(r),
+    )) as unknown as Composable<(input?: I, environment?: E) => O>
+}
+
+function fromComposable<I, E, A extends Composable>(
+  fn: A,
+  inputSchema?: ParserSchema<I>,
+  environmentSchema?: ParserSchema<E>,
+) {
+  return async function (input, environment = {}) {
+    const envResult = await (environmentSchema ?? objectSchema).safeParseAsync(
+      environment,
+    )
+    const result = await (inputSchema ?? undefinedSchema).safeParseAsync(input)
+
+    if (!result.success || !envResult.success) {
+      return {
+        success: false,
+        errors: [],
+        inputErrors: result.success
+          ? []
+          : formatSchemaErrors(result.error.issues),
+        environmentErrors: envResult.success
+          ? []
+          : formatSchemaErrors(envResult.error.issues),
+      }
+    }
+    return dfResultFromcomposable(fn)(
+      ...([result.data as I, envResult.data as E] as Parameters<A>),
+    )
+  } as DomainFunction<Awaited<ReturnType<A>>>
 }
 
 const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
@@ -142,4 +115,11 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { makeDomainFunction, makeDomainFunction as mdf, safeResult }
+export {
+  dfResultFromcomposable,
+  fromComposable,
+  makeDomainFunction,
+  makeDomainFunction as mdf,
+  toComposable,
+}
+

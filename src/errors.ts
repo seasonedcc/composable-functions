@@ -1,40 +1,11 @@
+import { Failure } from './composable/types.ts'
 import type {
+  AtLeastOne,
+  ErrorData,
+  ErrorResult,
   ErrorWithMessage,
   SchemaError,
-  ErrorResult,
-  ErrorData,
-  AtLeastOne,
 } from './types.ts'
-
-function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as Record<string, unknown>).message === 'string'
-  )
-}
-
-/**
- * Turns the given 'unknown' error into an ErrorWithMessage.
- * @param maybeError the error to turn into an ErrorWithMessage
- * @returns the ErrorWithMessage
- * @example
- * try {}
- * catch (error) {
- *   const errorWithMessage = toErrorWithMessage(error)
- *   console.log(errorWithMessage.message)
- * }
- */
-function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
-  const message = isErrorWithMessage(maybeError)
-    ? maybeError.message
-    : String(maybeError)
-  return {
-    message,
-    exception: maybeError,
-  }
-}
 
 /**
  * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
@@ -127,12 +98,81 @@ class ResultError extends Error {
   }
 }
 
+function schemaErrorToErrorWithMessage(se: SchemaError): ErrorWithMessage {
+  return {
+    message: `${se.path.join('.')} ${se.message}`.trim(),
+  }
+}
+function errorResultToFailure({
+  errors,
+  inputErrors,
+  environmentErrors,
+}: ErrorResult): Failure {
+  return {
+    success: false,
+    errors: [
+      ...errors,
+      ...inputErrors.map(schemaErrorToErrorWithMessage),
+      ...environmentErrors.map(schemaErrorToErrorWithMessage),
+    ],
+  }
+}
+
+function failureToErrorResult({ errors }: Failure): ErrorResult {
+  return {
+    success: false,
+    errors: errors
+      .filter(
+        ({ exception }) =>
+          !(
+            exception instanceof InputError ||
+            exception instanceof InputErrors ||
+            exception instanceof EnvironmentError
+          ),
+      )
+      .flatMap((e) =>
+        e.exception instanceof ResultError ? e.exception.result.errors : e,
+      ),
+    inputErrors: errors.flatMap(({ exception }) =>
+      exception instanceof InputError
+        ? [
+            {
+              path: exception.path.split('.'),
+              message: exception.message,
+            },
+          ]
+        : exception instanceof InputErrors
+        ? exception.errors.map((e) => ({
+            path: e.path.split('.'),
+            message: e.message,
+          }))
+        : exception instanceof ResultError
+        ? exception.result.inputErrors
+        : [],
+    ),
+    environmentErrors: errors.flatMap(({ exception }) =>
+      exception instanceof EnvironmentError
+        ? [
+            {
+              path: exception.path.split('.'),
+              message: exception.message,
+            },
+          ]
+        : exception instanceof ResultError
+        ? exception.result.environmentErrors
+        : [],
+    ),
+  }
+}
+
 export {
-  errorMessagesFor,
-  schemaError,
-  toErrorWithMessage,
-  InputError,
   EnvironmentError,
+  errorMessagesFor,
+  errorResultToFailure,
+  failureToErrorResult,
+  InputError,
   InputErrors,
   ResultError,
+  schemaError,
 }
+

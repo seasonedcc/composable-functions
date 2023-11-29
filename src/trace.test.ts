@@ -1,5 +1,10 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
-import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
+import {
+  assertEquals,
+  assertObjectMatch,
+  describe,
+  it,
+} from './test-prelude.ts'
+import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'
 import { fromSuccess, trace } from './domain-functions.ts'
@@ -7,6 +12,24 @@ import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('trace', () => {
+  it('converts trace exceptions to df failures', async () => {
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+
+    const c = trace(() => {
+      throw new Error('Problem in tracing')
+    })(a)
+    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+
+    const result = await c({ id: 1 })
+
+    assertObjectMatch(result, {
+      success: false,
+      errors: [{ message: 'Problem in tracing' }],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
   it('intercepts inputs and outputs of a given domain function', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
 
@@ -35,3 +58,4 @@ describe('trace', () => {
     })
   })
 })
+

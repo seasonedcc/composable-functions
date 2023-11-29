@@ -1,19 +1,59 @@
-import { ResultError } from './errors.ts'
-import { isListOfSuccess, mergeObjects } from './utils.ts'
+import { failureToErrorResult, ResultError } from './errors.ts'
+import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
   ErrorData,
+  Last,
   MergeObjs,
   Result,
+  SuccessResult,
   TupleToUnion,
   UnpackAll,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import type { Last } from './types.ts'
-import type { SuccessResult } from './types.ts'
-import { safeResult } from './constructor.ts'
+import { dfResultFromcomposable } from './constructor.ts'
+import { toErrorWithMessage } from './composable/errors.ts'
+
+/**
+ * A functions that turns the result of its callback into a Result object.
+ * @example
+ * const result = await safeResult(() => ({
+ *   message: 'hello',
+ * }))
+ * // the type of result is Result<{ message: string }>
+ * if (result.success) {
+ *   console.log(result.data.message)
+ * }
+ *
+ * const result = await safeResult(() => {
+ *  throw new Error('something went wrong')
+ * })
+ * // the type of result is Result<never>
+ * if (!result.success) {
+ *  console.log(result.errors[0].message)
+ * }
+ */
+function safeResult<T>(fn: () => T): Promise<Result<T>> {
+  return dfResultFromcomposable(A.λ(fn))() as Promise<Result<T>>
+}
+
+/**
+ * Takes a function with 2 parameters and partially applies the second one.
+ * This is useful when one wants to use a domain function having a fixed environment.
+ * @example
+ * import { mdf, applyEnvironment } from 'domain-functions'
+ *
+ * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
+ * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
+ * //    ^? (input: unknown) => Promise<Result<Date>>
+ */
+function applyEnvironment<
+  Fn extends (input: unknown, environment: unknown) => unknown,
+>(df: Fn, environment: unknown) {
+  return (input: unknown) => df(input, environment) as ReturnType<Fn>
+}
 
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
@@ -21,32 +61,19 @@ import { safeResult } from './constructor.ts'
  * import { mdf, all } from 'domain-functions'
  *
  * const a = mdf(z.object({ id: z.number() }))(({ id }) => String(id))
-const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-const c = mdf(z.object({ id: z.number() }))(({ id }) => Boolean(id))
-const df = all(a, b, c)
-//    ^? DomainFunction<[string, number, boolean]>
+ * const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+ * const c = mdf(z.object({ id: z.number() }))(({ id }) => Boolean(id))
+ * const df = all(a, b, c)
+//       ^? DomainFunction<[string, number, boolean]>
  */
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
-    return safeResult(async () => {
-      const results = await Promise.all(
-        fns.map((fn) => (fn as DomainFunction)(input, environment)),
-      )
-
-      if (!isListOfSuccess(results)) {
-        throw new ResultError({
-          errors: results.map(({ errors }) => errors).flat(),
-          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-          environmentErrors: results
-            .map(({ environmentErrors }) => environmentErrors)
-            .flat(),
-        })
-      }
-
-      return results.map(({ data }) => data)
-    })
+    const [first, ...rest] = fns.map((df) =>
+      A.λ(() => fromSuccess(df)(input, environment)),
+    )
+    return dfResultFromcomposable(A.all(first, ...rest))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -56,9 +83,9 @@ function all<Fns extends DomainFunction[]>(
  * import { mdf, collect } from 'domain-functions'
  *
  * const a = mdf(z.object({}))(() => '1')
-const b = mdf(z.object({}))(() => 2)
-const df = collect({ a, b })
-//    ^? DomainFunction<{ a: string, b: number }>
+ * const b = mdf(z.object({}))(() => 2)
+ * const df = collect({ a, b })
+//       ^? DomainFunction<{ a: string, b: number }>
  */
 function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
@@ -66,7 +93,7 @@ function collect<Fns extends Record<string, DomainFunction>>(
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
     map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<
+  return map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
     UnpackDFObject<Fns>
   >
 }
@@ -119,7 +146,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), mergeObjects)
+  return map(all(...fns), A.mergeObjects)
 }
 
 /**
@@ -167,12 +194,12 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
         [keys[i]]: o,
       })),
     ),
-    mergeObjects,
+    A.mergeObjects,
   ) as DomainFunction<UnpackDFObject<Fns>>
 }
 
 /**
- * Works like `pipe` but it will collect the output of every function in a tuple, similar to `all`.
+ * Works like `pipe` but it will collect the output of every function in a tuple.
  * @example
  * import { mdf, sequence } from 'domain-functions'
  *
@@ -185,21 +212,10 @@ function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
-    return safeResult(async () => {
-      const results = []
-      let currResult: undefined | Result<unknown>
-      for await (const fn of fns) {
-        const result = await fn(
-          currResult?.success ? currResult.data : input,
-          environment,
-        )
-        if (!result.success) throw new ResultError(result)
-        currResult = result
-        results.push(result.data)
-      }
-
-      return results
-    })
+    const [first, ...rest] = fns.map((df) =>
+      A.λ(fromSuccess(applyEnvironment(df, environment))),
+    )
+    return dfResultFromcomposable(A.sequence(first, ...rest))(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -216,12 +232,13 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R,
 ): DomainFunction<R> {
-  return async (input, environment) => {
-    const result = await dfn(input, environment)
-    if (!result.success) return result
-
-    return safeResult(() => mapper(result.data))
-  }
+  return ((input, environment) =>
+    dfResultFromcomposable(
+      A.map(
+        A.λ(() => fromSuccess(dfn)(input, environment)),
+        mapper,
+      ),
+    )()) as DomainFunction<R>
 }
 
 /**
@@ -347,13 +364,20 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
 ): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
     const result = await fn(input, environment)
-    await traceFn({ input, environment, result } as TraceData<UnpackResult<D>>)
-    return result
+    try {
+      await traceFn({ input, environment, result } as TraceData<
+        UnpackResult<D>
+      >)
+      return result
+    } catch (e) {
+      return failureToErrorResult(A.error([toErrorWithMessage(e)]))
+    }
   }
 }
 
 export {
   all,
+  applyEnvironment,
   branch,
   collect,
   collectSequence,
@@ -363,6 +387,8 @@ export {
   mapError,
   merge,
   pipe,
+  safeResult,
   sequence,
   trace,
 }
+
