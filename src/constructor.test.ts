@@ -67,7 +67,7 @@ describe('makeDomainFunction', () => {
       })
     })
 
-    it('fails gracefully if gets something other than undefined', async () => {
+    it('ignores the input and pass undefined', async () => {
       const handler = mdf()((args) => args)
       type _R = Expect<Equal<typeof handler, DomainFunction<undefined>>>
 
