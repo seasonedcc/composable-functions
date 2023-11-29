@@ -1,8 +1,8 @@
 import { assertEquals, assertIsError, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { success, mdf } from './constructor.ts'
-import { failure, EnvironmentError, InputError, ErrorList } from './errors.ts'
+import { mdf, success } from './constructor.ts'
+import { EnvironmentError, ErrorList, failure, InputError } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
@@ -15,14 +15,15 @@ describe('makeDomainFunction', () => {
       assertEquals(await handler(), success('no input!'))
     })
 
-    it('fails gracefully if gets something other than undefined', async () => {
-      const handler = mdf()(() => 'no input!')
-      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+    it('ignores the input and pass undefined', async () => {
+      const handler = mdf()((args) => args)
+      type _R = Expect<Equal<typeof handler, DomainFunction<unknown>>>
 
-      assertEquals(
-        await handler('some input'),
-        failure([new InputError('Expected undefined')]),
-      )
+      assertEquals(await handler('some input'), {
+        success: true,
+        data: undefined,
+        errors: [],
+      })
     })
   })
 
