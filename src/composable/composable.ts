@@ -242,7 +242,7 @@ function collect<T extends Record<string, Composable>>(
     map(cf, (result) => ({ [key]: result })),
   )
   return map(all(...fnsWithKey as any), mergeObjects) as Composable<
-    (...args: Parameters<Extract<T[keyof T], Composable>>) => {
+    (...args: Parameters<AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>[0]>) => {
       [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
     }
   >

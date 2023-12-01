@@ -164,7 +164,10 @@ describe('collect', () => {
       Equal<
         typeof fn,
         Composable<
-          (...args: [] | [a: number, b: number] | [a: unknown]) => {
+          (
+            a: number,
+            b: number,
+          ) => {
             add: number
             string: string
             void: void
@@ -190,20 +193,21 @@ describe('collect', () => {
       add: add,
       string: append,
     })
+    //@ts-expect-error add and append parameters are incompatible
     const res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<
         typeof fn,
         Composable<
-          (...args: [a: number, b: number] | [a: string, b: string]) => {
+          (...args: never) => {
             add: number
             string: string
           }
         >
       >
     >
-    type _R = Expect<Equal<typeof res, Result<{ add: number; string: string }>>>
+    type _R = Expect<Equal<typeof res, Result<any>>>
     assertEquals(res, {
       success: true,
       data: { add: 3, string: '12' },
