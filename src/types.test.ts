@@ -1,18 +1,17 @@
 // deno-lint-ignore-file ban-ts-comment no-namespace no-unused-vars
 import { mdf } from './constructor.ts'
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { assertEquals, describe, it } from './test-prelude.ts'
 import * as Subject from './types.ts'
 
 export type Expect<T extends true> = T
 export type Equal<A, B> =
   // prettier is removing the parens thus worsening readability
   // prettier-ignore
-  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2)
-    ? true
+  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true
     : false
 
 namespace UnpackData {
-  const result = mdf()(() => ({ name: 'foo' } as const))
+  const result = mdf()(() => ({ name: 'foo' }) as const)
 
   type test = Expect<
     Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>
@@ -78,8 +77,8 @@ namespace AtLeastOne {
 }
 
 namespace UnpackAll {
-  const dfA = mdf()(() => ({ a: 1 } as const))
-  const dfB = mdf()(() => ({ b: 2 } as const))
+  const dfA = mdf()(() => ({ a: 1 }) as const)
+  const dfB = mdf()(() => ({ b: 2 }) as const)
 
   type Result = Subject.UnpackAll<[typeof dfA, typeof dfB]>
 
@@ -88,3 +87,4 @@ namespace UnpackAll {
 
 describe('type tests', () =>
   it('should have no ts errors', () => assertEquals(true, true)))
+

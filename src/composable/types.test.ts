@@ -1,17 +1,12 @@
 // deno-lint-ignore-file ban-ts-comment no-namespace no-unused-vars
-import {
-  assertEquals,
-  describe,
-  it,
-} from '../test-prelude.ts'
+import { assertEquals, describe, it } from '../test-prelude.ts'
 import * as Subject from './types.ts'
 
 export type Expect<T extends true> = T
 export type Equal<A, B> =
   // prettier is removing the parens thus worsening readability
   // prettier-ignore
-  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2)
-    ? true
+  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true
     : false
 
 namespace MergeObjs {
@@ -65,5 +60,41 @@ namespace AtLeastOne {
   const error2: Result = { a: 1, c: 3 }
 }
 
+namespace AllArguments {
+  type testNoEmptyArgumentList = Expect<Equal<Subject.AllArguments<[]>, never>>
+  type testOneComposable = Expect<
+    Equal<Subject.AllArguments<[Subject.Composable]>, [Subject.Composable]>
+  >
+  type testSubtypesForTwoComposables = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string, y: 1) => void>,
+          Subject.Composable<(x: 'foo', y: number) => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo', y: 1) => void>,
+        Subject.Composable<(x: 'foo', y: 1) => void>,
+      ]
+    >
+  >
+  type testMaxArityForTwoComposables = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string, y: number) => void>,
+          Subject.Composable<(x: 'foo') => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo', y: number) => void>,
+        Subject.Composable<(x: 'foo', y: number) => void>,
+      ]
+    >
+  >
+}
+
 describe('type tests', () =>
   it('should have no ts errors', () => assertEquals(true, true)))
+
