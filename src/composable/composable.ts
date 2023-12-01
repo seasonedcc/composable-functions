@@ -146,26 +146,26 @@ function all<T extends [Composable, ...Composable[]]>(
 
     return success((results as Success<any>[]).map(({ data }) => data))
   }) as unknown as Composable<
-    (...args: Parameters<T[0]>) => {
+    (...args: Parameters<AllArguments<T>[0]>) => {
       [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
     }
   >
 }
 
-type SupertypesTuple<
+type SubtypesTuple<
   TA extends unknown[],
   TB extends unknown[],
   O extends unknown[],
 > = TA extends [infer headA, ...infer restA]
   ? TB extends [infer headB, ...infer restB]
     ? headA extends headB
-      ? SupertypesTuple<restA, restB, [...O, headB]>
+      ? SubtypesTuple<restA, restB, [...O, headA]>
       : headB extends headA
-      ? SupertypesTuple<restA, restB, [...O, headA]>
+      ? SubtypesTuple<restA, restB, [...O, headB]>
       : { 'Incompatible arguments ': true; argument1: headA; argument2: headB }
-    : SupertypesTuple<restA, [], [...O, headA]>
+    : SubtypesTuple<restA, [], [...O, headA]>
   : TB extends [infer headBNoA, ...infer restBNoA]
-  ? SupertypesTuple<[], restBNoA, [...O, headBNoA]>
+  ? SubtypesTuple<[], restBNoA, [...O, headBNoA]>
   : O
 
 type AllArguments<
@@ -173,7 +173,7 @@ type AllArguments<
   Arguments extends any[] = [],
 > = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
   ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
-    ? SupertypesTuple<PA, PB, []> extends [...infer MergedP]
+    ? SubtypesTuple<PA, PB, []> extends [...infer MergedP]
       ? AllArguments<
           [Composable<(...args: MergedP) => OB>, ...restB],
           [...Arguments, Composable<(...a: MergedP) => OA>]
