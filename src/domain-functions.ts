@@ -71,10 +71,10 @@ function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
-    const [first, ...rest] = fns.map((df) =>
+    const composables = fns.map((df) =>
       A.composable(() => fromSuccess(df)(input, environment)),
     )
-    return dfResultFromcomposable(A.all(first, ...rest))()
+    return dfResultFromcomposable(A.all(...composables as any))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 

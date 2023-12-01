@@ -171,29 +171,15 @@ type SupertypesTuple<
 type AllArguments<
   Fns extends any[],
   Arguments extends any[] = [],
-> = Fns extends [
-  Composable<(...a: infer PA) => infer OA>,
-  Composable<(...b: infer PB) => infer OB>,
-  ...infer rest,
-]
-  ? SupertypesTuple<PA, PB, []> extends [...infer MergedP]
-    ? rest extends []
-      ? [...Arguments, Composable<(...b: MergedP) => OB>]
-      : AllArguments<
-          [Composable<(...args: MergedP) => OB>, ...rest],
-          [
-            ...Arguments,
-            Composable<(...a: MergedP) => OA>,
-            Composable<(...b: MergedP) => OB>,
-          ]
+> = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
+  ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
+    ? SupertypesTuple<PA, PB, []> extends [...infer MergedP]
+      ? AllArguments<
+          [Composable<(...args: MergedP) => OB>, ...restB],
+          [...Arguments, Composable<(...a: MergedP) => OA>]
         >
-    : ['Fail to compose ', PA, ' does not fit in ', PB]
-  : Fns extends [Composable, ...infer rest]
-  ? rest extends []
-    ? Arguments
-    : Fns
-  : Fns extends []
-  ? []
+      : ['Fail to compose ', PA, ' does not fit in ', PB]
+    : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
 // Thanks to https://github.com/tjjfvi
@@ -252,10 +238,10 @@ type Zip<
 function collect<T extends Record<string, Composable>>(
   fns: T & Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>,
 ) {
-  const [fn, ...fnsWithKey] = Object.entries(fns).map(([key, cf]) =>
+  const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
     map(cf, (result) => ({ [key]: result })),
   )
-  return map(all(fn, ...fnsWithKey), mergeObjects) as Composable<
+  return map(all(...fnsWithKey as any), mergeObjects) as Composable<
     (...args: Parameters<Extract<T[keyof T], Composable>>) => {
       [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
     }
