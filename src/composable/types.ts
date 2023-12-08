@@ -96,33 +96,15 @@ type PipeReturn<Fns extends any[]> = Fns extends [
 type PipeArguments<
   Fns extends any[],
   Arguments extends any[] = [],
-> = Fns extends [
-  Composable<(...a: infer PA) => infer OA>,
-  Composable<(...b: infer PB) => infer OB>,
-  ...infer rest,
-]
-  ? OA extends PB[0]
-    ? rest extends []
-      ? [
-          ...Arguments,
-          Composable<(...a: PA) => OA>,
-          Composable<(...b: PB) => OB>,
-        ]
-      : PipeArguments<
-          [Composable<(...args: PA) => OB>, ...rest],
-          [
-            ...Arguments,
-            Composable<(...a: PA) => OA>,
-            Composable<(...b: PB) => OB>,
-          ]
+> = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
+  ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
+    ? OA extends PB[0]
+      ? PipeArguments<
+          [Composable<(...args: PB) => OB>, ...restB],
+          [...Arguments, Composable<(...a: PA) => OA>]
         >
-    : ['Fail to compose ', PA, ' does not fit in ', PB[0]]
-  : Fns extends [Composable, ...infer rest]
-  ? rest extends []
-    ? Arguments
-    : Fns
-  : Fns extends []
-  ? []
+      : ['Fail to compose ', OA, ' does not fit in ', PB[0]]
+    : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
 type SubtypesTuple<
@@ -227,3 +209,4 @@ export type {
   UnpackAll,
   UnpackResult,
 }
+

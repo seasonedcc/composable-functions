@@ -74,7 +74,7 @@ function all<Fns extends DomainFunction[]>(
     const composables = fns.map((df) =>
       A.composable(() => fromSuccess(df)(input, environment)),
     )
-    return dfResultFromcomposable(A.all(...composables as any))()
+    return dfResultFromcomposable(A.all(...(composables as [Composable])))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -216,9 +216,9 @@ function sequence<Fns extends DomainFunction[]>(
     const dfsAsComposable = fns.map((df) =>
       A.composable(fromSuccess(applyEnvironment(df, environment))),
     ) as [Composable, ...Composable[]]
-    return (dfResultFromcomposable(A.sequence(...dfsAsComposable)))(
-      input,
-    )
+    return dfResultFromcomposable(
+      A.sequence(...(dfsAsComposable as [Composable])),
+    )(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 

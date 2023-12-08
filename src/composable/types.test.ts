@@ -60,6 +60,38 @@ namespace AtLeastOne {
   const error2: Result = { a: 1, c: 3 }
 }
 
+namespace PipeArguments {
+  type testNoEmptyArgumentList = Expect<Equal<Subject.PipeArguments<[]>, never>>
+  type testOneComposable = Expect<
+    Equal<Subject.PipeArguments<[Subject.Composable]>, [Subject.Composable]>
+  >
+  type testForTwoComposables = Expect<
+    Equal<
+      Subject.PipeArguments<
+        [
+          Subject.Composable<(x: string) => number>,
+          Subject.Composable<(y: number) => boolean>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: string) => number>,
+        Subject.Composable<(y: number) => boolean>,
+      ]
+    >
+  >
+  type testFailureToCompose = Expect<
+    Equal<
+      Subject.PipeArguments<
+        [
+          Subject.Composable<(x: string) => void>,
+          Subject.Composable<(y: number) => boolean>,
+        ]
+      >,
+      ['Fail to compose ', void, ' does not fit in ', number]
+    >
+  >
+}
+
 namespace AllArguments {
   type testNoEmptyArgumentList = Expect<Equal<Subject.AllArguments<[]>, never>>
   type testOneComposable = Expect<
