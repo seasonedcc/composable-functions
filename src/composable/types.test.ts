@@ -79,6 +79,17 @@ namespace PipeArguments {
       ]
     >
   >
+  type testForComponentsWithArityGreaterThan1 = Expect<
+    Equal<
+      Subject.PipeArguments<
+        [
+          Subject.Composable<(x: string) => number>,
+          Subject.Composable<(y: number, willBeUndefined: string) => boolean>,
+        ]
+      >,
+      ['Fail to compose ', undefined, ' does not fit in ', string]
+    >
+  >
   type testFailureToCompose = Expect<
     Equal<
       Subject.PipeArguments<

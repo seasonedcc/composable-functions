@@ -97,15 +97,34 @@ type PipeArguments<
   Fns extends any[],
   Arguments extends any[] = [],
 > = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
-  ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
-    ? OA extends PB[0]
-      ? PipeArguments<
-          [Composable<(...args: PB) => OB>, ...restB],
-          [...Arguments, Composable<(...a: PA) => OA>]
-        >
-      : ['Fail to compose ', OA, ' does not fit in ', PB[0]]
+  ? restA extends [
+      Composable<
+        (firstParameter: infer FirstBParameter, ...b: infer PB) => infer OB
+      >,
+      ...infer restB,
+    ]
+    ? OA extends FirstBParameter
+      ? EveryElementTakesUndefined<PB> extends true
+        ? PipeArguments<
+            [
+              Composable<(firstParameter: FirstBParameter, ...b: PB) => OB>,
+              ...restB,
+            ],
+            [...Arguments, Composable<(...a: PA) => OA>]
+          >
+        : EveryElementTakesUndefined<PB>
+      : ['Fail to compose ', OA, ' does not fit in ', FirstBParameter]
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
+
+type EveryElementTakesUndefined<T extends any[]> = T extends [
+  infer HEAD,
+  ...infer TAIL,
+]
+  ? undefined extends HEAD
+    ? true & EveryElementTakesUndefined<TAIL>
+    : ['Fail to compose ', undefined, ' does not fit in ', HEAD]
+  : true
 
 type SubtypesTuple<
   TA extends unknown[],
