@@ -168,11 +168,6 @@ namespace AllArguments {
   >
 }
 
-type x = Subject.CollectArguments<{
-  a: Subject.Composable<(x: string, y: 1) => void>
-  b: Subject.Composable<(x: 'foo', y: number) => void>
-}>
-
 namespace CollectArguments {
   type testNoEmptyArgumentList = Expect<
     Equal<Subject.CollectArguments<{}>, never>
