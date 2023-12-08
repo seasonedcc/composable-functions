@@ -191,7 +191,6 @@ namespace CollectArguments {
       }>,
       {
         a: Subject.Composable<(x: 'foo', y: 1) => void>
-      } & {
         b: Subject.Composable<(x: 'foo', y: 1) => void>
       }
     >
@@ -204,7 +203,6 @@ namespace CollectArguments {
       }>,
       {
         a: Subject.Composable<(x: 'foo', y: number) => void>
-      } & {
         b: Subject.Composable<(x: 'foo', y: number) => void>
       }
     >

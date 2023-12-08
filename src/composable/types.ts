@@ -197,7 +197,7 @@ type CollectArguments<T extends Record<string, Composable>> = {} extends Zip<
   AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>
 >
   ? never
-  : Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>
+  : Prettify<Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>>
 
 type X = {} extends undefined ? true : false
 
