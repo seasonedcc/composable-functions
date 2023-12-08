@@ -192,10 +192,14 @@ type Zip<
     : O
   : O
 
-type CollectArguments<T extends Record<string, Composable>> = Zip<
+type CollectArguments<T extends Record<string, Composable>> = {} extends Zip<
   Keys<T>,
   AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>
 >
+  ? never
+  : Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>
+
+type X = {} extends undefined ? true : false
 
 type RecordToTuple<T extends Record<string, Composable>> =
   RecordValuesFromKeysTuple<T, Keys<T>>

@@ -152,6 +152,49 @@ namespace AllArguments {
   >
 }
 
+type x = Subject.CollectArguments<{
+  a: Subject.Composable<(x: string, y: 1) => void>
+  b: Subject.Composable<(x: 'foo', y: number) => void>
+}>
+
+namespace CollectArguments {
+  type testNoEmptyArgumentList = Expect<
+    Equal<Subject.CollectArguments<{}>, never>
+  >
+  type testOneComposable = Expect<
+    Equal<
+      Subject.CollectArguments<{ a: Subject.Composable }>,
+      { a: Subject.Composable }
+    >
+  >
+  type testSubtypesForTwoComposables = Expect<
+    Equal<
+      Subject.CollectArguments<{
+        a: Subject.Composable<(x: string, y: 1) => void>
+        b: Subject.Composable<(x: 'foo', y: number) => void>
+      }>,
+      {
+        a: Subject.Composable<(x: 'foo', y: 1) => void>
+      } & {
+        b: Subject.Composable<(x: 'foo', y: 1) => void>
+      }
+    >
+  >
+  type testMaxArityForTwoComposables = Expect<
+    Equal<
+      Subject.CollectArguments<{
+        a: Subject.Composable<(x: string, y: number) => void>
+        b: Subject.Composable<(x: 'foo') => void>
+      }>,
+      {
+        a: Subject.Composable<(x: 'foo', y: number) => void>
+      } & {
+        b: Subject.Composable<(x: 'foo', y: number) => void>
+      }
+    >
+  >
+}
+
 describe('type tests', () =>
   it('should have no ts errors', () => assertEquals(true, true)))
 
