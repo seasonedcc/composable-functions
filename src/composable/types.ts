@@ -99,19 +99,12 @@ type PipeArguments<
 > = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
   ? restA extends [
       Composable<
-        (firstParameter: infer FirstBParameter, ...b: infer PB) => infer OB
+        (firstParameter: infer FirstBParameter, ...b: infer PB) => any
       >,
-      ...infer restB,
     ]
     ? OA extends FirstBParameter
       ? EveryElementTakesUndefined<PB> extends true
-        ? PipeArguments<
-            [
-              Composable<(firstParameter: FirstBParameter, ...b: PB) => OB>,
-              ...restB,
-            ],
-            [...Arguments, Composable<(...a: PA) => OA>]
-          >
+        ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
         : EveryElementTakesUndefined<PB>
       : ['Fail to compose ', OA, ' does not fit in ', FirstBParameter]
     : [...Arguments, Composable<(...a: PA) => OA>]
