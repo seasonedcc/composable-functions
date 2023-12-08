@@ -88,7 +88,7 @@ type PipeReturn<Fns extends any[]> = Fns extends [
 ]
   ? OA extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
-    : ['Fail to compose ', OA, ' does not fit in ', PB]
+    : ['Fail to compose', OA, 'does not fit in', PB]
   : Fns extends [Composable<(...args: infer P) => infer O>]
   ? Composable<(...args: P) => O>
   : never
@@ -106,7 +106,7 @@ type PipeArguments<
       ? EveryElementTakesUndefined<PB> extends true
         ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
         : EveryElementTakesUndefined<PB>
-      : ['Fail to compose ', OA, ' does not fit in ', FirstBParameter]
+      : ['Fail to compose', OA, 'does not fit in', FirstBParameter]
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
@@ -116,7 +116,7 @@ type EveryElementTakesUndefined<T extends any[]> = T extends [
 ]
   ? undefined extends HEAD
     ? true & EveryElementTakesUndefined<TAIL>
-    : ['Fail to compose ', undefined, ' does not fit in ', HEAD]
+    : ['Fail to compose', undefined, 'does not fit in', HEAD]
   : true
 
 type SubtypesTuple<
@@ -145,7 +145,7 @@ type AllArguments<
           [Composable<(...args: MergedP) => OB>, ...restB],
           [...Arguments, Composable<(...a: MergedP) => OA>]
         >
-      : ['Fail to compose ', PA, ' does not fit in ', PB]
+      : ['Fail to compose', PA, 'does not fit in', PB]
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
@@ -186,7 +186,7 @@ type Zip<
       ? restK extends string[]
         ? restV extends Composable[]
           ? Zip<restK, restV, O & { [key in HeadK]: HeadV }>
-          : never
+          : V // in this case V has the AllArguments failure type
         : never
       : never
     : O

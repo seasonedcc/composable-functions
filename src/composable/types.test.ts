@@ -101,7 +101,7 @@ namespace PipeArguments {
           Subject.Composable<(y: number, willBeUndefined: string) => boolean>,
         ]
       >,
-      ['Fail to compose ', undefined, ' does not fit in ', string]
+      ['Fail to compose', undefined, 'does not fit in', string]
     >
   >
   type testFailureToCompose = Expect<
@@ -112,7 +112,7 @@ namespace PipeArguments {
           Subject.Composable<(y: number) => boolean>,
         ]
       >,
-      ['Fail to compose ', void, ' does not fit in ', number]
+      ['Fail to compose', void, 'does not fit in', number]
     >
   >
 }
@@ -147,6 +147,22 @@ namespace AllArguments {
       [
         Subject.Composable<(x: 'foo', y: number) => void>,
         Subject.Composable<(x: 'foo', y: number) => void>,
+      ]
+    >
+  >
+  type testCompositionFailure = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string, y: string) => void>,
+          Subject.Composable<(x: 'foo', y: number) => void>,
+        ]
+      >,
+      [
+        'Fail to compose',
+        [x: string, y: string],
+        'does not fit in',
+        [x: 'foo', y: number],
       ]
     >
   >
@@ -191,6 +207,20 @@ namespace CollectArguments {
       } & {
         b: Subject.Composable<(x: 'foo', y: number) => void>
       }
+    >
+  >
+  type testCompositionFailure = Expect<
+    Equal<
+      Subject.CollectArguments<{
+        a: Subject.Composable<(x: string, y: string) => void>
+        b: Subject.Composable<(x: 'foo', y: number) => void>
+      }>,
+      [
+        'Fail to compose',
+        [x: string, y: string],
+        'does not fit in',
+        [x: 'foo', y: number],
+      ]
     >
   >
 }
