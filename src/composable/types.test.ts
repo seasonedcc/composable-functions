@@ -79,6 +79,20 @@ namespace PipeArguments {
       ]
     >
   >
+  type testForComponentsWithArityGreaterThan1WithOptionalParameters = Expect<
+    Equal<
+      Subject.PipeArguments<
+        [
+          Subject.Composable<(x: string) => number>,
+          Subject.Composable<(y: number, optionalArgument?: string) => boolean>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: string) => number>,
+        Subject.Composable<(y: number, optionalArgument?: string) => boolean>,
+      ]
+    >
+  >
   type testForComponentsWithArityGreaterThan1 = Expect<
     Equal<
       Subject.PipeArguments<
