@@ -7,7 +7,7 @@ export type Equal<A, B> =
   // prettier is removing the parens thus worsening readability
   // prettier-ignore
   (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true
-    : false
+    : [A, 'should equal', B]
 
 namespace MergeObjs {
   const obj1 = { a: 1, b: 2 } as const
