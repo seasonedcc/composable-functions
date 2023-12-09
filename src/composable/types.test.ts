@@ -7,7 +7,7 @@ export type Equal<A, B> =
   // prettier is removing the parens thus worsening readability
   // prettier-ignore
   (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true
-    : [A, 'should equal', B]
+    : [A, "should equal", B]
 
 namespace MergeObjs {
   const obj1 = { a: 1, b: 2 } as const
@@ -215,6 +215,18 @@ namespace CollectArguments {
         [x: 'foo', y: number],
       ]
     >
+  >
+}
+
+namespace UnpackResult {
+  type testExtractsDataFromPromisedResult = Expect<
+    Equal<Subject.UnpackResult<Promise<Subject.Result<string>>>, string>
+  >
+}
+
+namespace UnpackAll {
+  type testExtractsDataFromPromisedResult = Expect<
+    Equal<Subject.UnpackAll<[Subject.Composable<() => string>]>, [string]>
   >
 }
 
