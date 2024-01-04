@@ -215,7 +215,7 @@ function sequence<Fns extends DomainFunction[]>(
   return function (input: unknown, environment?: unknown) {
     const dfsAsComposable = fns.map((df) =>
       A.composable(fromSuccess(applyEnvironment(df, environment))),
-    ) as [Composable, ...Composable[]]
+    )
     return dfResultFromcomposable(
       A.sequence(...(dfsAsComposable as [Composable])),
     )(input)
