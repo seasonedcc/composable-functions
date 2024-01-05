@@ -2,7 +2,7 @@ import { assertEquals, describe, it } from '../test-prelude.ts'
 import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
-import { all, collect, composable } from './composable.ts'
+import { all, collect, composable, sequenceAll } from './composable.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)
@@ -186,6 +186,36 @@ describe('sequence', () => {
 
     assertEquals(res.success, false)
     assertEquals(res.errors![0].message, 'a is 1')
+  })
+})
+
+describe('sequenceAll', () => {
+  it('executes all functions in sequence using the same input returning a tuple with every result when all are successful', async () => {
+    const fn = sequenceAll(add, toString, voidFn)
+
+    const res = await fn(1, 2)
+
+    assertEquals(res, { success: true, data: [3, '1', undefined], errors: [] })
+  })
+
+  it('expects argument types just like all', () => {
+    const isA = composable((aString: string) => aString === 'a')
+
+    const fn = sequenceAll(toString, isA)
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: string) => [string, boolean]>>
+    >
+  })
+
+  it('fails when any function fails', async () => {
+    const fn = sequenceAll(add, faultyAdd)
+
+    const res = await fn(1, 2)
+
+    assertEquals(res, {
+      success: false,
+      errors: [{ exception: new Error('a is 1'), message: 'a is 1' }],
+    })
   })
 })
 

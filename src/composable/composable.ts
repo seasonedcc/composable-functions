@@ -140,8 +140,8 @@ function collect<T extends Record<string, Composable>>(
  * @example
  * import { cf as C } from 'domain-functions'
  *
- * const a = C.compose((aNumber: number) => String(aNumber))
- * const b = C.compose((aString: string) => aString === '1')
+ * const a = C.composable((aNumber: number) => String(aNumber))
+ * const b = C.composable((aString: string) => aString === '1')
  * const cf = C.sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
@@ -163,6 +163,40 @@ function sequence<T extends [Composable, ...Composable[]]>(
     return success(result)
   }) as Composable<
     (...args: Parameters<Extract<First<T>, Composable>>) => UnpackAll<T>
+  >
+}
+
+/**
+ * Sequences a tuple of functions and collect the output of every function like `sequence` feeding the same input to all of them.
+ * Will abort the sequence on the first error.
+ * @example
+ * import { composable as C } from 'domain-functions'
+ *
+ * const a = C.composable((something: unknown) => String(something))
+ * const b = C.composable((aString: string) => aString === '1')
+ * const cf = C.sequenceAll(a, b)
+ * //    ^? Composable<(aString: string) => [string, boolean]>
+ */
+function sequenceAll<T extends [Composable, ...Composable[]]>(
+  ...fns: T & AllArguments<T>
+) {
+  return (async (...args) => {
+    const [head, ...tail] = fns as T
+
+    const res = await head(...args)
+    if (!res.success) return error(res.errors)
+
+    const result = [res.data]
+    for await (const fn of tail) {
+      const res = await fn(...args)
+      if (!res.success) return error(res.errors)
+      result.push(res.data)
+    }
+    return success(result)
+  }) as Composable<
+    (...args: Parameters<AllArguments<T>[0]>) => {
+      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
+    }
   >
 }
 
@@ -224,6 +258,7 @@ export {
   mergeObjects,
   pipe,
   sequence,
+  sequenceAll,
   success,
 }
 
