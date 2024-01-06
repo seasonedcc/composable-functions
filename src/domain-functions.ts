@@ -15,6 +15,7 @@ import type {
 } from './types.ts'
 import { dfResultFromcomposable } from './constructor.ts'
 import { toErrorWithMessage } from './composable/errors.ts'
+import { Composable } from './index.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -36,7 +37,7 @@ import { toErrorWithMessage } from './composable/errors.ts'
  * }
  */
 function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return dfResultFromcomposable(A.λ(fn))() as Promise<Result<T>>
+  return dfResultFromcomposable(A.composable(fn))() as Promise<Result<T>>
 }
 
 /**
@@ -70,10 +71,10 @@ function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
-    const [first, ...rest] = fns.map((df) =>
-      A.λ(() => fromSuccess(df)(input, environment)),
+    const composables = fns.map((df) =>
+      A.composable(() => fromSuccess(df)(input, environment)),
     )
-    return dfResultFromcomposable(A.all(first, ...rest))()
+    return dfResultFromcomposable(A.all(...(composables as [Composable])))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -212,10 +213,12 @@ function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
-    const [first, ...rest] = fns.map((df) =>
-      A.λ(fromSuccess(applyEnvironment(df, environment))),
+    const dfsAsComposable = fns.map((df) =>
+      A.composable(fromSuccess(applyEnvironment(df, environment))),
     )
-    return dfResultFromcomposable(A.sequence(first, ...rest))(input)
+    return dfResultFromcomposable(
+      A.sequence(...(dfsAsComposable as [Composable])),
+    )(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -235,7 +238,7 @@ function map<O, R>(
   return ((input, environment) =>
     dfResultFromcomposable(
       A.map(
-        A.λ(() => fromSuccess(dfn)(input, environment)),
+        A.composable(() => fromSuccess(dfn)(input, environment)),
         mapper,
       ),
     )()) as DomainFunction<R>
