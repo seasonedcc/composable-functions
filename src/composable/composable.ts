@@ -172,7 +172,7 @@ function sequence<T extends [Composable, ...Composable[]]>(
  * @example
  * import { composable as C } from 'domain-functions'
  *
- * const a = C.composable((something: unknown) => String(something))
+ * const a = C.composable((something: unknown) => Number(something))
  * const b = C.composable((aString: string) => aString === '1')
  * const cf = C.sequenceAll(a, b)
  * //    ^? Composable<(aString: string) => [string, boolean]>
