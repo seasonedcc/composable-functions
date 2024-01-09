@@ -10,6 +10,7 @@ export * from './errors.ts'
 export { mergeObjects } from './composable/composable.ts'
 export type { Composable } from './composable/index.ts'
 import * as composable from './composable/index.ts'
+export { toErrorWithMessage } from './composable/errors.ts'
 export { composable }
 export type {
   AtLeastOne,
