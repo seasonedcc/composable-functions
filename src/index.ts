@@ -10,7 +10,8 @@ export * from './errors.ts'
 export { mergeObjects } from './composable/composable.ts'
 export type { Composable } from './composable/index.ts'
 import * as composable from './composable/index.ts'
-export { composable }
+export { toErrorWithMessage } from './composable/errors.ts'
+export { composable as cf }
 export type {
   AtLeastOne,
   DomainFunction,
