@@ -9,6 +9,13 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
 
+type IsNever<A> =
+  // prettier is removing the parens thus worsening readability
+  // prettier-ignore
+  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends never ? 1 : 2)
+    ? true
+    : false
+
 type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
   ? F
   : never
@@ -86,9 +93,11 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? OA extends PB
+  ? IsNever<OA> extends true
+    ? ['Fail to compose, "never" does not fit in', PB]
+    : Awaited<OA> extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
-    : ['Fail to compose', OA, 'does not fit in', PB]
+    : ['Fail to compose', Awaited<OA>, 'does not fit in', PB]
   : Fns extends [Composable<(...args: infer P) => infer O>]
   ? Composable<(...args: P) => O>
   : never
@@ -102,11 +111,13 @@ type PipeArguments<
         (firstParameter: infer FirstBParameter, ...b: infer PB) => any
       >,
     ]
-    ? OA extends FirstBParameter
+    ? IsNever<Awaited<OA>> extends true
+      ? ['Fail to compose, "never" does not fit in', FirstBParameter]
+      : Awaited<OA> extends FirstBParameter
       ? EveryElementTakesUndefined<PB> extends true
         ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
         : EveryElementTakesUndefined<PB>
-      : ['Fail to compose', OA, 'does not fit in', FirstBParameter]
+      : ['Fail to compose', Awaited<OA>, 'does not fit in', FirstBParameter]
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
