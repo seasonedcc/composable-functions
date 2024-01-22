@@ -79,17 +79,17 @@ describe('pipe', () => {
     assertEquals(res, { success: true, data: '3', errors: [] })
   })
 
-  it('sends the results of the first function to the second and infers types', async () => {
+  it('type checks and composes async functions', async () => {
     const asyncProduceToIncrement = composable(() =>
-      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' }))
+      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' }),
+    )
     const asyncIncrementProperty = composable((a: { toIncrement: number }) =>
-      Promise.resolve(a.toIncrement + 1))
+      Promise.resolve(a.toIncrement + 1),
+    )
     const fn = pipe(asyncProduceToIncrement, asyncIncrementProperty)
     const res = await fn()
 
-    type _FN = Expect<
-      Equal<typeof fn, Composable<() => number>>
-    >
+    type _FN = Expect<Equal<typeof fn, Composable<() => number>>>
     type _R = Expect<Equal<typeof res, Result<number>>>
 
     assertEquals(res, { success: true, data: 2, errors: [] })
@@ -141,6 +141,38 @@ describe('sequence', () => {
     type _R = Expect<Equal<typeof res, Result<[number, string]>>>
 
     assertEquals(res, { success: true, data: [3, '3'], errors: [] })
+  })
+
+  it('type checks and composes async functions', async () => {
+    const asyncProduceToIncrement = composable(() =>
+      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' }),
+    )
+    const asyncIncrementProperty = composable((a: { toIncrement: number }) =>
+      Promise.resolve(a.toIncrement + 1),
+    )
+    const fn = sequence(asyncProduceToIncrement, asyncIncrementProperty)
+    const res = await fn()
+
+    type _FN = Expect<
+      Equal<
+        typeof fn,
+        Composable<
+          () => [{ toIncrement: number; someOtherProperty: string }, number]
+        >
+      >
+    >
+    type _R = Expect<
+      Equal<
+        typeof res,
+        Result<[{ toIncrement: number; someOtherProperty: string }, number]>
+      >
+    >
+
+    assertEquals(res, {
+      success: true,
+      data: [{ toIncrement: 1, someOtherProperty: 'test' }, 2],
+      errors: [],
+    })
   })
 
   it('catches the errors from function A', async () => {
