@@ -331,6 +331,21 @@ describe('map', () => {
     assertEquals(res.success, false)
     assertEquals(res.errors![0].message, 'a is 1')
   })
+
+  it('fails when mapper fail', async () => {
+    const fn = map(add, () => {
+      throw new Error('Mapper also has problems')
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => never>>
+    >
+    type _R = Expect<Equal<typeof res, Result<never>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors![0].message, 'Mapper also has problems')
+  })
 })
 
 const cleanError = (err: ErrorWithMessage) => ({
@@ -350,6 +365,21 @@ describe('mapError', () => {
 
     assertEquals(res.success, false)
     assertEquals(res.errors![0].message, 'a is 1!!!')
+  })
+
+  it('fails when mapper fail', async () => {
+    const fn = mapError(faultyAdd, () => {
+      throw new Error('Mapper also has problems')
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors![0].message, 'Mapper also has problems')
   })
 })
 
