@@ -11,7 +11,6 @@ import { all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
-import { ErrorWithMessage } from './index.ts'
 
 describe('all', () => {
   it('should combine two domain functions into one', async () => {
@@ -106,12 +105,7 @@ describe('all', () => {
 
     assertObjectMatch(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          { message: 'Error A' },
-          { message: 'Error B' },
-        ] as ErrorWithMessage[],
-      }),
+      makeErrorResult({ errors: [new Error('Error A'), new Error('Error B')] }),
     )
   })
 })

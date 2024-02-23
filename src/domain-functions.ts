@@ -14,7 +14,7 @@ import type {
   UnpackResult,
 } from './types.ts'
 import { dfResultFromcomposable } from './constructor.ts'
-import { toErrorWithMessage } from './composable/errors.ts'
+import { toError } from './composable/errors.ts'
 import { Composable } from './index.ts'
 
 /**
@@ -369,7 +369,7 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
       >)
       return result
     } catch (e) {
-      return failureToErrorResult(A.error([toErrorWithMessage(e)]))
+      return failureToErrorResult(A.error([toError(e)]))
     }
   }
 }

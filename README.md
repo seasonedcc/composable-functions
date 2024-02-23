@@ -149,7 +149,7 @@ The error result has the following structure:
 ```ts
 type ErrorResult = {
   success: false
-  errors: ErrorWithMessage[]
+  errors: Error[]
   inputErrors: SchemaError[]
   environmentErrors: SchemaError[]
 }

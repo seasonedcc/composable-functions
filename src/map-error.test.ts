@@ -6,7 +6,6 @@ import { mapError } from './domain-functions.ts'
 import type { DomainFunction, ErrorData } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
-import { ErrorWithMessage } from './types.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
@@ -54,9 +53,7 @@ describe('mapError', () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       Promise.resolve({
-        errors: [
-          { message: 'Number of errors: ' + result.errors.length },
-        ] as ErrorWithMessage[],
+        errors: [new Error('Number of errors: ' + result.errors.length)],
         environmentErrors: [],
         inputErrors: [
           {
@@ -72,7 +69,7 @@ describe('mapError', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        errors: [{ message: 'Number of errors: 0' }] as ErrorWithMessage[],
+        errors: [new Error('Number of errors: 0')],
         inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
       }),
     )

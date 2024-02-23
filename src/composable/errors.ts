@@ -1,5 +1,3 @@
-import { ErrorWithMessage } from './types.ts'
-
 function objectHasKey<T extends string>(
   obj: unknown,
   key: T,
@@ -7,25 +5,23 @@ function objectHasKey<T extends string>(
   return typeof obj === 'object' && obj !== null && key in obj
 }
 
-function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+function isError(error: unknown): error is Error {
   return objectHasKey(error, 'message') && typeof error.message === 'string'
 }
 
 /**
- * Turns the given 'unknown' error into an ErrorWithMessage.
- * @param maybeError the error to turn into an ErrorWithMessage
- * @returns the ErrorWithMessage
+ * Turns the given 'unknown' error into an Error.
+ * @param maybeError the error to turn into an Error
+ * @returns the Error
  * @example
  * try {}
  * catch (error) {
- *   const errorWithMessage = toErrorWithMessage(error)
- *   console.log(errorWithMessage.message)
+ *   const Error = toError(error)
+ *   console.log(Error.message)
  * }
  */
-function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
-  return isErrorWithMessage(maybeError)
-    ? maybeError
-    : new Error(String(maybeError))
+function toError(maybeError: unknown): Error {
+  return isError(maybeError) ? maybeError : new Error(String(maybeError))
 }
 
-export { toErrorWithMessage }
+export { toError }

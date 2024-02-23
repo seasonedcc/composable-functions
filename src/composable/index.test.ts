@@ -1,6 +1,6 @@
 import { assertEquals, describe, it } from '../test-prelude.ts'
 import { map, mapError, pipe, sequence } from './index.ts'
-import type { Composable, ErrorWithMessage, Result } from './index.ts'
+import type { Composable, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
 import { all, catchError, collect, composable } from './composable.ts'
 
@@ -348,7 +348,7 @@ describe('map', () => {
   })
 })
 
-const cleanError = (err: ErrorWithMessage) => ({
+const cleanError = (err: Error) => ({
   ...err,
   message: err.message + '!!!',
 })
