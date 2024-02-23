@@ -70,7 +70,7 @@ describe('all', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'Error', exception: 'Error' }],
+        errors: [new Error()],
       }),
     )
   })

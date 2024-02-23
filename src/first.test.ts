@@ -48,7 +48,7 @@ describe('first', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'Error', exception: 'Error' }],
+        errors: [new Error('Error')],
         inputErrors: [
           { message: 'Expected string, received number', path: ['id'] },
         ],

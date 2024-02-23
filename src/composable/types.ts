@@ -19,10 +19,9 @@ type IsNever<A> =
 type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
   ? F
   : never
-type ErrorWithMessage = {
-  message: string
-  exception: unknown
-}
+
+type ErrorWithMessage = Error
+
 type Failure = {
   success: false
   errors: Array<ErrorWithMessage>
@@ -234,4 +233,3 @@ export type {
   UnpackAll,
   UnpackResult,
 }
-

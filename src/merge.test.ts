@@ -8,7 +8,7 @@ import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
 import { merge } from './domain-functions.ts'
-import type { DomainFunction } from './types.ts'
+import type { DomainFunction, ErrorWithMessage } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
 
@@ -105,7 +105,7 @@ describe('merge', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'Error', exception: 'Error' }],
+        errors: [new Error('Error')],
       }),
     )
   })
@@ -149,9 +149,9 @@ describe('merge', () => {
       await c({ id: 1 }),
       makeErrorResult({
         errors: [
-          { message: 'Error A', exception: { message: 'Error A' } },
-          { message: 'Error B', exception: { message: 'Error B' } },
-        ],
+          { message: 'Error A' },
+          { message: 'Error B' },
+        ] as ErrorWithMessage[],
       }),
     )
   })

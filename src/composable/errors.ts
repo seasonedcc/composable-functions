@@ -23,12 +23,9 @@ function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
  * }
  */
 function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
-  return {
-    message: isErrorWithMessage(maybeError)
-      ? maybeError.message
-      : String(maybeError),
-    exception: maybeError,
-  }
+  return isErrorWithMessage(maybeError)
+    ? maybeError
+    : new Error(String(maybeError))
 }
 
 export { toErrorWithMessage }

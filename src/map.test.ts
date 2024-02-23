@@ -56,7 +56,7 @@ describe('map', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'failed to map', exception: 'failed to map' }],
+        errors: [new Error('failed to map')],
       }),
     )
   })

@@ -32,7 +32,7 @@ describe('toComposable', () => {
 
     assertEquals(await c(), {
       success: false,
-      errors: [{ message: 'Required', exception: new Error('Required') }],
+      errors: [new Error('Required')],
     })
   })
 
@@ -216,12 +216,9 @@ describe('makeDomainFunction', () => {
         errors: [
           {
             message: 'Some message',
-            exception: {
-              message: 'Some message',
-              cause: { someUnknownFields: true },
-            },
+            cause: { someUnknownFields: true },
           },
-        ],
+        ] as ErrorWithMessage[],
       }),
     )
   })
@@ -235,7 +232,7 @@ describe('makeDomainFunction', () => {
     assertObjectMatch(
       await handler({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'Error', exception: 'Error' }],
+        errors: [{ message: 'Error' }] as ErrorWithMessage[],
       }),
     )
   })
@@ -249,7 +246,7 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'Error', exception: { message: 'Error' } }],
+        errors: [{ message: 'Error' }] as ErrorWithMessage[],
       }),
     )
   })

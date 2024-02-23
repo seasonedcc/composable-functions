@@ -28,7 +28,7 @@ describe('mapError', () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       ({
-        errors: [{ message: exception.message }] as ErrorWithMessage[],
+        errors: [exception],
         environmentErrors: [],
         inputErrors: [
           {
@@ -44,7 +44,7 @@ describe('mapError', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        errors: [{ message: 'Number of errors: 0' }] as ErrorWithMessage[],
+        errors: [exception],
         inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
       }),
     )
@@ -55,11 +55,8 @@ describe('mapError', () => {
     const b = (result: ErrorData) =>
       Promise.resolve({
         errors: [
-          {
-            message: 'Number of errors: ' + result.errors.length,
-            exception: null,
-          },
-        ],
+          { message: 'Number of errors: ' + result.errors.length },
+        ] as ErrorWithMessage[],
         environmentErrors: [],
         inputErrors: [
           {
@@ -75,7 +72,7 @@ describe('mapError', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        errors: [{ message: 'Number of errors: 0', exception: null }],
+        errors: [{ message: 'Number of errors: 0' }] as ErrorWithMessage[],
         inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
       }),
     )
@@ -93,7 +90,7 @@ describe('mapError', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        errors: [{ message: 'failed to map', exception: 'failed to map' }],
+        errors: [new Error('failed to map')],
       }),
     )
   })

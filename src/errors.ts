@@ -94,10 +94,7 @@ class ResultError extends Error {
 
 function schemaErrorToErrorWithMessage(se: SchemaError): ErrorWithMessage {
   const message = `${se.path.join('.')} ${se.message}`.trim()
-  return {
-    message,
-    exception: new Error(message),
-  }
+  return new Error(message)
 }
 function errorResultToFailure({
   errors,
@@ -118,17 +115,15 @@ function failureToErrorResult({ errors }: Failure): ErrorResult {
   return makeErrorResult({
     errors: errors
       .filter(
-        ({ exception }) =>
+        (exception) =>
           !(
             exception instanceof InputError ||
             exception instanceof InputErrors ||
             exception instanceof EnvironmentError
           ),
       )
-      .flatMap((e) =>
-        e.exception instanceof ResultError ? e.exception.result.errors : e,
-      ),
-    inputErrors: errors.flatMap(({ exception }) =>
+      .flatMap((e) => (e instanceof ResultError ? e.result.errors : e)),
+    inputErrors: errors.flatMap((exception) =>
       exception instanceof InputError
         ? [
             {
@@ -145,7 +140,7 @@ function failureToErrorResult({ errors }: Failure): ErrorResult {
         ? exception.result.inputErrors
         : [],
     ),
-    environmentErrors: errors.flatMap(({ exception }) =>
+    environmentErrors: errors.flatMap((exception) =>
       exception instanceof EnvironmentError
         ? [
             {
