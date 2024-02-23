@@ -121,7 +121,6 @@ type ParserSchema<T extends unknown = unknown> = {
 
 export type {
   AtLeastOne,
-  ErrorWithMessage,
   Last,
   MergeObjs,
   TupleToUnion,
@@ -142,4 +141,3 @@ export type {
   UnpackResult,
   UnpackSuccess,
 }
-

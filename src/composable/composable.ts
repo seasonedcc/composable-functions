@@ -1,9 +1,8 @@
-import { toErrorWithMessage } from './errors.ts'
+import { toError } from './errors.ts'
 import {
   AllArguments,
   CollectArguments,
   Composable,
-  ErrorWithMessage,
   Failure,
   First,
   Fn,
@@ -36,7 +35,7 @@ function success<T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
 }
 
-function error(errors: ErrorWithMessage[]): Failure {
+function error(errors: Error[]): Failure {
   return { success: false, errors }
 }
 
@@ -52,7 +51,7 @@ function composable<T extends Fn>(fn: T): Composable<T> {
       const result = await fn(...(args as any[]))
       return success(result)
     } catch (e) {
-      return error([toErrorWithMessage(e)])
+      return error([toError(e)])
     }
   }
 }
@@ -226,4 +225,3 @@ export {
   sequence,
   success,
 }
-
