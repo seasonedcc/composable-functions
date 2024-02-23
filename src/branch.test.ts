@@ -11,6 +11,7 @@ import { branch, pipe, all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
+import { ErrorWithMessage } from './types.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {
@@ -124,7 +125,9 @@ describe('branch', () => {
     assertObjectMatch(
       await c({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'condition function failed' }],
+        errors: [
+          { message: 'condition function failed' },
+        ] as ErrorWithMessage[],
       }),
     )
   })

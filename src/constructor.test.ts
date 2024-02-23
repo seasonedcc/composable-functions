@@ -17,6 +17,7 @@ import {
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { Composable } from './composable/index.ts'
+import { ErrorWithMessage } from './types.ts'
 
 describe('toComposable', () => {
   it('returns a Composable with the same computation and all input errors in errors field', async () => {
@@ -31,7 +32,7 @@ describe('toComposable', () => {
 
     assertEquals(await c(), {
       success: false,
-      errors: [{ message: 'Required' }],
+      errors: [{ message: 'Required', exception: new Error('Required') }],
     })
   })
 
@@ -198,7 +199,7 @@ describe('makeDomainFunction', () => {
     assertObjectMatch(
       await handler({ id: 1 }),
       makeErrorResult({
-        errors: [{ message: 'Error' }],
+        errors: [{ message: 'Error' }] as ErrorWithMessage[],
       }),
     )
   })

@@ -1,4 +1,4 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
@@ -6,6 +6,7 @@ import { mapError } from './domain-functions.ts'
 import type { DomainFunction, ErrorData } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
+import { ErrorWithMessage } from './types.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
@@ -23,10 +24,11 @@ describe('mapError', () => {
   })
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
+    const exception = new Error('Number of errors: 0')
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       ({
-        errors: [{ message: 'Number of errors: ' + result.errors.length }],
+        errors: [{ message: exception.message }] as ErrorWithMessage[],
         environmentErrors: [],
         inputErrors: [
           {
@@ -42,7 +44,7 @@ describe('mapError', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        errors: [{ message: 'Number of errors: 0' }],
+        errors: [{ message: 'Number of errors: 0' }] as ErrorWithMessage[],
         inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
       }),
     )
@@ -52,7 +54,12 @@ describe('mapError', () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       Promise.resolve({
-        errors: [{ message: 'Number of errors: ' + result.errors.length }],
+        errors: [
+          {
+            message: 'Number of errors: ' + result.errors.length,
+            exception: null,
+          },
+        ],
         environmentErrors: [],
         inputErrors: [
           {
@@ -68,7 +75,7 @@ describe('mapError', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        errors: [{ message: 'Number of errors: 0' }],
+        errors: [{ message: 'Number of errors: 0', exception: null }],
         inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
       }),
     )

@@ -349,6 +349,7 @@ describe('map', () => {
 })
 
 const cleanError = (err: ErrorWithMessage) => ({
+  ...err,
   message: err.message + '!!!',
 })
 describe('mapError', () => {

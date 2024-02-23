@@ -93,8 +93,10 @@ class ResultError extends Error {
 }
 
 function schemaErrorToErrorWithMessage(se: SchemaError): ErrorWithMessage {
+  const message = `${se.path.join('.')} ${se.message}`.trim()
   return {
-    message: `${se.path.join('.')} ${se.message}`.trim(),
+    message,
+    exception: new Error(message),
   }
 }
 function errorResultToFailure({

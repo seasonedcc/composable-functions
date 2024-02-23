@@ -11,6 +11,7 @@ import { fromSuccess, trace } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
+import { ErrorWithMessage } from './types.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to df failures', async () => {
@@ -26,7 +27,7 @@ describe('trace', () => {
     assertObjectMatch(
       result,
       makeErrorResult({
-        errors: [{ message: 'Problem in tracing' }],
+        errors: [{ message: 'Problem in tracing' }] as ErrorWithMessage[],
       }),
     )
   })
