@@ -1,11 +1,11 @@
-import { Failure } from './composable/types.ts'
+import { Failure } from "./composable/types.ts";
 import type {
   AtLeastOne,
   ErrorData,
   ErrorResult,
   ErrorWithMessage,
   SchemaError,
-} from './types.ts'
+} from "./types.ts";
 
 /**
  * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
@@ -14,7 +14,7 @@ import type {
  * @returns the SchemaError
  */
 function schemaError(message: string, path: string): SchemaError {
-  return { message, path: path.split('.') }
+  return { message, path: path.split(".") };
 }
 
 /**
@@ -25,8 +25,8 @@ function schemaError(message: string, path: string): SchemaError {
  */
 function errorMessagesFor(errors: SchemaError[], name: string) {
   return errors
-    .filter(({ path }) => path.join('.') === name)
-    .map(({ message }) => message)
+    .filter(({ path }) => path.join(".") === name)
+    .map(({ message }) => message);
 }
 
 /**
@@ -37,21 +37,21 @@ function errorMessagesFor(errors: SchemaError[], name: string) {
  * })
  */
 class InputError extends Error {
-  path: string
+  path: string;
 
   constructor(message: string, path: string) {
-    super(message)
-    this.name = 'InputError'
-    this.path = path
+    super(message);
+    this.name = "InputError";
+    this.path = path;
   }
 }
 
 class InputErrors extends Error {
-  errors: { message: string; path: string }[]
+  errors: { message: string; path: string }[];
 
   constructor(errors: { message: string; path: string }[]) {
-    super(`${errors.length} errors`)
-    this.errors = errors
+    super(`${errors.length} errors`);
+    this.errors = errors;
   }
 }
 
@@ -63,12 +63,12 @@ class InputErrors extends Error {
  * })
  */
 class EnvironmentError extends Error {
-  path: string
+  path: string;
 
   constructor(message: string, path: string) {
-    super(message)
-    this.name = 'EnvironmentError'
-    this.path = path
+    super(message);
+    this.name = "EnvironmentError";
+    this.path = path;
   }
 }
 
@@ -83,25 +83,27 @@ class EnvironmentError extends Error {
  * })
  */
 class ResultError extends Error {
-  result: ErrorResult
+  result: ErrorResult;
 
   constructor(result: AtLeastOne<ErrorData>) {
-    super('ResultError')
-    this.name = 'ResultError'
+    super("ResultError");
+    this.name = "ResultError";
     this.result = {
       errors: [],
       inputErrors: [],
       environmentErrors: [],
       ...result,
       success: false,
-    }
+    };
   }
 }
 
 function schemaErrorToErrorWithMessage(se: SchemaError): ErrorWithMessage {
+  const message = `${se.path.join(".")} ${se.message}`.trim();
   return {
-    message: `${se.path.join('.')} ${se.message}`.trim(),
-  }
+    message,
+    exception: new Error(message),
+  };
 }
 function errorResultToFailure({
   errors,
@@ -115,7 +117,7 @@ function errorResultToFailure({
       ...inputErrors.map(schemaErrorToErrorWithMessage),
       ...environmentErrors.map(schemaErrorToErrorWithMessage),
     ],
-  }
+  };
 }
 
 function failureToErrorResult({ errors }: Failure): ErrorResult {
@@ -131,38 +133,38 @@ function failureToErrorResult({ errors }: Failure): ErrorResult {
           ),
       )
       .flatMap((e) =>
-        e.exception instanceof ResultError ? e.exception.result.errors : e,
+        e.exception instanceof ResultError ? e.exception.result.errors : e
       ),
     inputErrors: errors.flatMap(({ exception }) =>
       exception instanceof InputError
         ? [
-            {
-              path: exception.path.split('.'),
-              message: exception.message,
-            },
-          ]
+          {
+            path: exception.path.split("."),
+            message: exception.message,
+          },
+        ]
         : exception instanceof InputErrors
         ? exception.errors.map((e) => ({
-            path: e.path.split('.'),
-            message: e.message,
-          }))
+          path: e.path.split("."),
+          message: e.message,
+        }))
         : exception instanceof ResultError
         ? exception.result.inputErrors
-        : [],
+        : []
     ),
     environmentErrors: errors.flatMap(({ exception }) =>
       exception instanceof EnvironmentError
         ? [
-            {
-              path: exception.path.split('.'),
-              message: exception.message,
-            },
-          ]
+          {
+            path: exception.path.split("."),
+            message: exception.message,
+          },
+        ]
         : exception instanceof ResultError
         ? exception.result.environmentErrors
-        : [],
+        : []
     ),
-  }
+  };
 }
 
 export {
@@ -174,5 +176,4 @@ export {
   InputErrors,
   ResultError,
   schemaError,
-}
-
+};

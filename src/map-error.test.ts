@@ -1,4 +1,4 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'
@@ -13,7 +13,7 @@ describe('mapError', () => {
       ({
         errors: [{ message: 'New Error Message' }],
         inputErrors: [{ message: 'New Input Error Message' }],
-      } as ErrorData)
+      }) as ErrorData
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
@@ -28,10 +28,11 @@ describe('mapError', () => {
   })
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
+    const exception = new Error('Number of errors: 0')
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       ({
-        errors: [{ message: 'Number of errors: ' + result.errors.length }],
+        errors: [{ message: exception.message, exception }],
         environmentErrors: [],
         inputErrors: [
           {
@@ -39,14 +40,14 @@ describe('mapError', () => {
             path: [],
           },
         ],
-      } as ErrorData)
+      }) as ErrorData
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
-      errors: [{ message: 'Number of errors: 0' }],
+      errors: [{ message: 'Number of errors: 0', exception }],
       environmentErrors: [],
       inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
     })

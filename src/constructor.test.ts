@@ -30,7 +30,7 @@ describe('toComposable', () => {
 
     assertEquals(await c(), {
       success: false,
-      errors: [{ message: 'Required' }],
+      errors: [{ message: 'Required', exception: new Error('Required') }],
     })
   })
 
@@ -336,4 +336,3 @@ describe('makeDomainFunction', () => {
     })
   })
 })
-

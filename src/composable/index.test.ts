@@ -349,6 +349,7 @@ describe('map', () => {
 })
 
 const cleanError = (err: ErrorWithMessage) => ({
+  ...err,
   message: err.message + '!!!',
 })
 describe('mapError', () => {
@@ -382,4 +383,3 @@ describe('mapError', () => {
     assertEquals(res.errors![0].message, 'Mapper also has problems')
   })
 })
-
