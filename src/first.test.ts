@@ -5,6 +5,7 @@ import { mdf } from './constructor.ts'
 import { first } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { assertObjectMatch } from 'https://deno.land/std@0.206.0/assert/assert_object_match.ts'
 
 describe('first', () => {
   it('should return the result of the first successful domain function', async () => {
@@ -53,9 +54,9 @@ describe('first', () => {
     const c = first(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<string>>>
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: 'Error' }],
       inputErrors: [
         {
           message: 'Expected string, received number',

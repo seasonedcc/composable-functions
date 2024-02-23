@@ -5,6 +5,7 @@ import { mdf } from './constructor.ts'
 import { map } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { assertObjectMatch } from 'https://deno.land/std@0.206.0/assert/assert_object_match.ts'
 
 describe('map', () => {
   it('returns a domain function function that will apply a function over the results of the first one', async () => {
@@ -48,9 +49,9 @@ describe('map', () => {
     const c = map(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'failed to map', exception: 'failed to map' }],
+      errors: [{ message: 'failed to map' }],
       inputErrors: [],
       environmentErrors: [],
     })

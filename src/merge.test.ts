@@ -114,9 +114,9 @@ describe('merge', () => {
     const c: DomainFunction<never> = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -165,10 +165,7 @@ describe('merge', () => {
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [
-        { message: 'Error A', exception: { message: 'Error A' } },
-        { message: 'Error B', exception: { message: 'Error B' } },
-      ],
+      errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
       environmentErrors: [],
     })

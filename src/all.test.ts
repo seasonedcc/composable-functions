@@ -76,7 +76,7 @@ describe('all', () => {
 
     assertEquals(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [new Error()],
       inputErrors: [],
       environmentErrors: [],
     })

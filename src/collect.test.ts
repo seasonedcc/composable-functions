@@ -1,8 +1,8 @@
 import {
+  assertEquals,
+  assertObjectMatch,
   describe,
   it,
-  assertObjectMatch,
-  assertEquals,
 } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
@@ -59,7 +59,7 @@ describe('collect', () => {
 
     assertEquals(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [new Error('Error')],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -102,10 +102,7 @@ describe('collect', () => {
 
     assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [
-        { message: 'Error A', exception: { message: 'Error A' } },
-        { message: 'Error B', exception: { message: 'Error B' } },
-      ],
+      errors: [{ message: 'Error A' }, { message: 'Error B' }],
       inputErrors: [],
       environmentErrors: [],
     })

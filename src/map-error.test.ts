@@ -5,6 +5,7 @@ import { mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
 import type { DomainFunction, ErrorData } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { assertObjectMatch } from 'https://deno.land/std@0.206.0/assert/assert_object_match.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
@@ -32,7 +33,7 @@ describe('mapError', () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (result: ErrorData) =>
       ({
-        errors: [{ message: exception.message, exception }],
+        errors: [exception],
         environmentErrors: [],
         inputErrors: [
           {
@@ -47,7 +48,7 @@ describe('mapError', () => {
 
     assertEquals(await c({ invalidInput: '1' }), {
       success: false,
-      errors: [{ message: 'Number of errors: 0', exception }],
+      errors: [exception],
       environmentErrors: [],
       inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
     })
@@ -62,9 +63,9 @@ describe('mapError', () => {
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ invalidInput: '1' }), {
+    assertObjectMatch(await c({ invalidInput: '1' }), {
       success: false,
-      errors: [{ message: 'failed to map', exception: 'failed to map' }],
+      errors: [{ message: 'failed to map' }],
       inputErrors: [],
       environmentErrors: [],
     })

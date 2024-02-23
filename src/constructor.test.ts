@@ -30,7 +30,7 @@ describe('toComposable', () => {
 
     assertEquals(await c(), {
       success: false,
-      errors: [{ message: 'Required', exception: new Error('Required') }],
+      errors: [new Error('Required')],
     })
   })
 
@@ -227,10 +227,7 @@ describe('makeDomainFunction', () => {
       errors: [
         {
           message: 'Some message',
-          exception: {
-            message: 'Some message',
-            cause: { someUnknownFields: true },
-          },
+          cause: { someUnknownFields: true },
         },
       ],
       inputErrors: [],
@@ -246,7 +243,7 @@ describe('makeDomainFunction', () => {
 
     assertObjectMatch(await handler({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -258,9 +255,9 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertEquals(await handler({ id: 1 }), {
+    assertObjectMatch(await handler({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: { message: 'Error' } }],
+      errors: [{ message: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })
