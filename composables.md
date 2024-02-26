@@ -36,6 +36,7 @@ const add = composable((a: number, b: number) => a + b)
 const toString = composable((a: unknown) => `${a}`)
 ```
 
+## Sequential composition
 Now we can compose them using pipe to create `addAndReturnString`:
 
 ```typescript
@@ -53,19 +54,58 @@ const addAndReturnString = pipe(toString, add)
 The error message comes in the form of an inferred type (the type checker error is a bit more cryptic).
 Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.
 
-## Handling errors
-> Quick motivation for having Composables return an error over dealing with exceptions
- 
-### Catching errors
-> We still dont have a catch combinator, but it would make a lot of sense and it seems more relevant than error mapping.
-
-### Mapping errors
-> Motivation and example for mapping errors
-
-## Sequential composition
-> Here we explain 
-
 ### Using non-composables (mapping)
 
+Sometimes we want to use a simple function in this sort of sequential composition. Imagine that `toString` is not a composable, and you just want to apply a plain old function to the result of `add` when it succeeds.
+The function `map` can be used for this, since we are mapping over the result of a `Composable`:
+
+```typescript
+const addAndReturnString = map(add, String)
+```
+
+Note that if your mapper function has to be `async` you should wrap it in `composable` and use `pipe` instead.
+
 ## Parallel composition
+
+There are also functions compositions where all its parameters are excuted in parallel, like `Promise.all` will execute several promises and wait for all of them.
+The `all` function is one way of composing in this fashion. Assuming we want to apply our `add` and multiply the two numbers returning a success only once both operations succeed:
+
+```typescript
+const add = composable((a: number, b: number) => a + b)
+const mul = composable((a: number, b: number) => a * b)
+const addAndMul = all(add, mul)
+       ^? Composable<(args_0: number, args_1: number) => [number, number]>
+```
+
+The result of the composition comes in a tuple in the same order as the functions were passed to `all`.
+Note that the input functions will also have to type-check and all the functions have to work from the same input.
+
+## Handling errors
+Since a `Composable` always return a type `Result<T>` that might be either a failure or a success, there are never exceptions to catch. Any exception inside a `Composable` will return as an object with the shape: `{ success: false, errors: Error[] }`.
+
+Two neat consequences is that we can handle errors using functions (no need for try/catch blocks) and handle multiple errors at once.
+
+### Catching errors
+To catch an error you need a second `Composable` capable of receiving `{ errors: Error[] }`. This composable is called when the first function fails:
+
+```typescript
+const fetchBody = composable((url: string) => fetch(url).then((r) => r.text()))
+const emptyOnError = composable(({errors}: { errors: Error[] }) => {
+  console.error("Something went wrong, returning empty string", errors)
+  return ""
+})
+const fetchThatNeverFails = catchError(fetchBody, emptyOnError)
+```
+
+### Mapping errors
+Sometimes we just need to transform one error into something that would make more sense for the caller. Imagine you have our `fetchBody` defined above, but we want a custom error type for when the input URL is invalid. You can map over the failures using `mapError` and a function with the type `({ errors: Error[] }) => { errors: Error[] }`.
+
+```typescript
+class InvalidUrlError extends Error {}
+const fetchBodyWithCustomError = mapError(fetchBody, ({ errors }) => ({
+  errors: errors.map((e) =>
+    e.message.includes('Invalid URL') ? new InvalidUrlError() : e,
+  ),
+}))
+```
 
