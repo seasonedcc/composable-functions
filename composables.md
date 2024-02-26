@@ -15,7 +15,7 @@ It would be neat if typescript could the typing for us and provided a more gener
 
 Using composables the code could be written as:
 
- ```typescript
+```typescript
 const addAndReturnString = pipe(add, toString)
 ``` 
 
@@ -25,7 +25,33 @@ This library also defines several operations besides the `pipe` to compose funct
 
 ## Creating primitive composables
 
-> here we will have a quick intro for the `Composable` and `Result<T>` types and how to call composables and check for results
+A `Composable` is a function that returns a `Promise<Result<T>>` where `T` is any type you want to return. Values of the type `Result` will represent either a failure (which carries a list of errors) or a success, where the computation has returned a value within the type `T`.
+
+So we can define the `add` and the `toString` functions as a `Composable`:
+
+```typescript
+const add = composable((a: number, b: number) => a + b)
+        ^? Composable<(a: number, b: number) => number>
+
+const toString = composable((a: unknown) => `${a}`)
+```
+
+Now we can compose them using pipe to create `addAndReturnString`:
+
+```typescript
+const addAndReturnString = pipe(add, toString)
+       ^? Composable<(a: number, b: number) => string>
+```
+
+Note that trying to compose pipe flipping the arguments will not type-check:
+
+```typescript
+const addAndReturnString = pipe(toString, add)
+       ^? ["Fail to compose", string, "does not fit in", number]
+```
+
+The error message comes in the form of an inferred type (the type checker error is a bit more cryptic).
+Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.
 
 ## Handling errors
 > Quick motivation for having Composables return an error over dealing with exceptions
