@@ -2,7 +2,7 @@ import { assertEquals, describe, it } from '../test-prelude.ts'
 import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
-import { all, collect, composable } from './composable.ts'
+import { all, catchError, collect, composable } from './composable.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)
@@ -383,3 +383,35 @@ describe('mapError', () => {
   })
 })
 
+describe('catchError', () => {
+  it('receives an error as input to another composable', async () => {
+    const fn = catchError(faultyAdd, (_error, a, b) => a + b)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, {
+      success: true,
+      data: 3,
+      errors: [],
+    })
+  })
+
+  it('fails when catcher fail', async () => {
+    const fn = catchError(faultyAdd, () => {
+      throw new Error('Catcher also has problems')
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors![0].message, 'Catcher also has problems')
+  })
+})
