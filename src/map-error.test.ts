@@ -13,7 +13,7 @@ describe('mapError', () => {
       ({
         errors: [{ message: 'New Error Message' }],
         inputErrors: [{ message: 'New Input Error Message' }],
-      } as ErrorData)
+      }) as ErrorData
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
@@ -39,7 +39,32 @@ describe('mapError', () => {
             path: [],
           },
         ],
-      } as ErrorData)
+      }) as ErrorData
+
+    const c = mapError(a, b)
+    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+
+    assertEquals(await c({ invalidInput: '1' }), {
+      success: false,
+      errors: [{ message: 'Number of errors: 0' }],
+      environmentErrors: [],
+      inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
+    })
+  })
+
+  it('returns a domain function function that will apply an async function over the error of the first one', async () => {
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const b = (result: ErrorData) =>
+      Promise.resolve({
+        errors: [{ message: 'Number of errors: ' + result.errors.length }],
+        environmentErrors: [],
+        inputErrors: [
+          {
+            message: 'Number of input errors: ' + result.inputErrors.length,
+            path: [],
+          },
+        ],
+      }) as Promise<ErrorData>
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>

@@ -186,9 +186,11 @@ function sequence<Fns extends DomainFunction[]>(
  */
 function map<O, R>(
   dfn: DomainFunction<O>,
-  mapper: (element: O) => R,
+  mapper: (element: O) => R | Promise<R>,
 ): DomainFunction<R> {
-  return fromComposable(Future.map(toComposable(dfn), mapper))
+  return fromComposable(
+    Future.map(toComposable(dfn), mapper),
+  ) as DomainFunction<R>
 }
 
 /**
@@ -276,16 +278,16 @@ function fromSuccess<T extends DomainFunction>(
  */
 function mapError<O>(
   dfn: DomainFunction<O>,
-  mapper: (element: ErrorData) => ErrorData,
+  mapper: (element: ErrorData) => ErrorData | Promise<ErrorData>,
 ): DomainFunction<O> {
-  return async (input, environment) => {
+  return (async (input, environment) => {
     const result = await dfn(input, environment)
     if (result.success) return result
 
-    return safeResult(() => {
-      throw new ResultError({ ...mapper(result) })
+    return safeResult(async () => {
+      throw new ResultError({ ...(await mapper(result)) })
     })
-  }
+  }) as DomainFunction<O>
 }
 
 type TraceData<T> = {
