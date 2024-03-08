@@ -23,6 +23,22 @@ describe('map', () => {
     })
   })
 
+  it('returns a domain function function that will apply an async function over the results of the first one', async () => {
+    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const b = (id: number) => Promise.resolve(id + 1)
+
+    const c = map(a, b)
+    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+
+    assertEquals(await c({ id: 1 }), {
+      success: true,
+      data: 3,
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
   it('returns the error when the domain function fails', async () => {
     const firstInputParser = z.object({ id: z.number() })
     const a = mdf(firstInputParser)(({ id }) => id + 1)
