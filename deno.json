@@ -1,5 +1,5 @@
 {
-  "version": "2.5.5",
+  "version": "2.6.0",
   "tasks": {
     "test": "deno test --allow-env --allow-net src",
     "publish": "deno task build-npm && cd npm/ && npm publish",
@@ -7,9 +7,14 @@
     "docs": "deno doc --html --name='domain-functions' ./mod.ts"
   },
   "lint": {
-    "include": ["src/"],
+    "include": [
+      "src/"
+    ],
     "rules": {
-      "exclude": ["no-explicit-any", "ban-types"]
+      "exclude": [
+        "no-explicit-any",
+        "ban-types"
+      ]
     }
   }
 }
