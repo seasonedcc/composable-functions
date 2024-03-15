@@ -179,13 +179,9 @@ function map<T extends Composable, R>(
   fn: T,
   mapper: (res: UnpackResult<ReturnType<T>>) => R,
 ) {
-  return (async (...args) => {
-    const res = await fn(...args)
-    if (!res.success) return error(res.errors)
-    const mapped = await composable(mapper)(res.data)
-    if (!mapped.success) return error(mapped.errors)
-    return mapped
-  }) as Composable<(...args: Parameters<T>) => R>
+  return pipe(fn as Composable, composable(mapper) as Composable) as Composable<
+    (...args: Parameters<T>) => R
+  >
 }
 
 /**
@@ -226,4 +222,3 @@ export {
   sequence,
   success,
 }
-

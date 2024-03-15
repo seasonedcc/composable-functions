@@ -235,13 +235,9 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R | Promise<R>,
 ): DomainFunction<R> {
-  return ((input, environment) =>
-    dfResultFromcomposable(
-      A.map(
-        A.composable(() => fromSuccess(dfn)(input, environment)),
-        mapper,
-      ),
-    )()) as DomainFunction<R>
+  return dfResultFromcomposable(
+    A.map(A.composable(fromSuccess(dfn)), mapper),
+  ) as DomainFunction<R>
 }
 
 /**
