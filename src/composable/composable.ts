@@ -205,7 +205,15 @@ function catchError<T extends Fn, R>(
     const res = await fn(...args)
     if (res.success) return success(res.data)
     return composable(catcher)(res, ...(args as any))
-  }) as Composable<(...args: Parameters<T>) => ReturnType<T> | R>
+  }) as Composable<
+    (
+      ...args: Parameters<T>
+    ) => ReturnType<T> extends any[]
+      ? R extends never[]
+        ? ReturnType<T>
+        : ReturnType<T> | R
+      : ReturnType<T> | R
+  >
 }
 
 /**
