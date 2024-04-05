@@ -384,7 +384,23 @@ describe('mapError', () => {
 })
 
 describe('catchError', () => {
-  it('receives an error as input to another composable', async () => {
+  it('changes the type to accomodate catcher return type', async () => {
+    const fn = catchError(faultyAdd, () => null)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number | null>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number | null>>>
+
+    assertEquals(res, {
+      success: true,
+      data: null,
+      errors: [],
+    })
+  })
+
+  it('receives an error as input to another function and returns a new composable', async () => {
     const fn = catchError(faultyAdd, (_error, a, b) => a + b)
     const res = await fn(1, 2)
 

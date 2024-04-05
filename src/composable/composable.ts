@@ -194,18 +194,18 @@ function map<T extends Composable, R>(
  *  originalInput.id * -1
  * ))
  */
-function catchError<T extends Composable, R>(
-  fn: T,
+function catchError<T extends Fn, R>(
+  fn: Composable<T>,
   catcher: (
     err: Omit<Failure, 'success'>,
     ...originalInput: Parameters<T>
-  ) => UnpackResult<ReturnType<T>>,
+  ) => R,
 ) {
-  return (async (...args) => {
+  return (async (...args: Parameters<T>) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
     return composable(catcher)(res, ...(args as any))
-  }) as T
+  }) as Composable<(...args: Parameters<T>) => ReturnType<T> | R>
 }
 
 /**
