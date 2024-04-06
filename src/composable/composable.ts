@@ -196,15 +196,12 @@ function map<T extends Composable, R>(
  */
 function catchError<T extends Fn, R>(
   fn: Composable<T>,
-  catcher: (
-    err: Omit<Failure, 'success'>,
-    ...originalInput: Parameters<T>
-  ) => R,
+  catcher: (err: Failure['errors'], ...originalInput: Parameters<T>) => R,
 ) {
   return (async (...args: Parameters<T>) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
-    return composable(catcher)(res, ...(args as any))
+    return composable(catcher)(res.errors, ...(args as any))
   }) as Composable<
     (
       ...args: Parameters<T>

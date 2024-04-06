@@ -400,8 +400,10 @@ describe('catchError', () => {
     })
   })
 
-  it('receives an error as input to another function and returns a new composable', async () => {
-    const fn = catchError(faultyAdd, (_error, a, b) => a + b)
+  it('receives the list of errors as input to another function and returns a new composable', async () => {
+    const fn = catchError(faultyAdd, (errors, a, b) =>
+      errors.length > 1 ? NaN : a + b,
+    )
     const res = await fn(1, 2)
 
     type _FN = Expect<
