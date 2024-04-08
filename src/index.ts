@@ -3,6 +3,7 @@ export {
   makeDomainFunction,
   mdf,
   toComposable,
+  makeSuccessResult,
 } from './constructor.ts'
 export * from './domain-functions.ts'
 export * from './input-resolvers.ts'
@@ -32,4 +33,3 @@ export type {
   UnpackResult,
   UnpackSuccess,
 } from './types.ts'
-
