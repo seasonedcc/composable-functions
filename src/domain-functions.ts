@@ -1,8 +1,7 @@
-import { failureToErrorResult, ResultError } from './errors.ts'
+import { ResultError } from './errors.ts'
 import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
-  ErrorData,
   Last,
   MergeObjs,
   Result,
@@ -16,6 +15,7 @@ import type {
 import { dfResultFromcomposable } from './constructor.ts'
 import { toError } from './composable/errors.ts'
 import { Composable } from './index.ts'
+import { ErrorResult } from '../mod.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -118,14 +118,12 @@ function first<Fns extends DomainFunction[]>(
         fns.map((fn) => (fn as DomainFunction)(input, environment)),
       )
 
-      const result = results.find((r) => r.success) as SuccessResult | undefined
+      const result = results.find((r) => r.success) as
+        | SuccessResult<any>
+        | undefined
       if (!result) {
         throw new ResultError({
           errors: results.map(({ errors }) => errors).flat(),
-          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-          environmentErrors: results
-            .map(({ environmentErrors }) => environmentErrors)
-            .flat(),
         })
       }
 
@@ -168,7 +166,7 @@ function pipe<T extends DomainFunction[]>(
   ...fns: T
 ): DomainFunction<Last<UnpackAll<T>>> {
   const last = <T>(ls: T[]): T => ls[ls.length - 1]
-  return map(sequence(...fns), last) as DomainFunction<Last<UnpackAll<T>>> 
+  return map(sequence(...fns), last) as DomainFunction<Last<UnpackAll<T>>>
 }
 
 /**
@@ -323,7 +321,9 @@ function fromSuccess<T extends DomainFunction>(
  */
 function mapError<O>(
   dfn: DomainFunction<O>,
-  mapper: (element: ErrorData) => ErrorData | Promise<ErrorData>,
+  mapper: (
+    element: Pick<ErrorResult, 'errors'>,
+  ) => Pick<ErrorResult, 'errors'> | Promise<Pick<ErrorResult, 'errors'>>,
 ): DomainFunction<O> {
   return (async (input, environment) => {
     const result = await dfn(input, environment)
@@ -369,7 +369,7 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
       >)
       return result
     } catch (e) {
-      return failureToErrorResult(A.error([toError(e)]))
+      return A.error([toError(e)])
     }
   }
 }

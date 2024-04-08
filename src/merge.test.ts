@@ -6,7 +6,7 @@ import { makeSuccessResult, mdf } from './constructor.ts'
 import { merge } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { InputError, makeErrorResult } from './errors.ts'
 
 describe('merge', () => {
   it('should combine two domain functions results into one object', async () => {
@@ -80,9 +80,7 @@ describe('merge', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
-        ],
+        errors: [new InputError('Expected string, received number', 'id')],
       }),
     )
   })
@@ -122,9 +120,9 @@ describe('merge', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
-          { message: 'Expected string, received number', path: ['id'] },
+        errors: [
+          new InputError('Expected string, received number', 'id'),
+          new InputError('Expected string, received number', 'id'),
         ],
       }),
     )

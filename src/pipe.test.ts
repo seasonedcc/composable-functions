@@ -5,7 +5,8 @@ import { makeSuccessResult, mdf } from './constructor.ts'
 import { pipe } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { InputError, makeErrorResult } from './errors.ts'
+import { EnvironmentError } from './errors.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
@@ -57,7 +58,7 @@ describe('pipe', () => {
     assertEquals(
       await c(undefined, {}),
       makeErrorResult({
-        environmentErrors: [{ message: 'Required', path: ['env'] }],
+        errors: [new EnvironmentError('Required', 'env')],
       }),
     )
   })
@@ -82,9 +83,7 @@ describe('pipe', () => {
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected undefined, received object', path: [] },
-        ],
+        errors: [new InputError('Expected undefined, received object', '')],
       }),
     )
   })
@@ -107,9 +106,7 @@ describe('pipe', () => {
     assertEquals(
       await c(undefined, { env: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected number, received string', path: ['inp'] },
-        ],
+        errors: [new InputError('Expected number, received string', 'inp')],
       }),
     )
   })

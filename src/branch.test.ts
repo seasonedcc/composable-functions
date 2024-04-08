@@ -6,6 +6,7 @@ import { branch, pipe, all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
+import { InputError } from '../mod.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {
@@ -79,9 +80,7 @@ describe('branch', () => {
     assertEquals(
       await c({ id: '1' }),
       makeErrorResult({
-        inputErrors: [
-          { path: ['id'], message: 'Expected number, received string' },
-        ],
+        errors: [new InputError('Expected number, received string', 'id')],
       }),
     )
   })
@@ -97,9 +96,7 @@ describe('branch', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { path: ['id'], message: 'Expected number, received string' },
-        ],
+        errors: [new InputError('Expected number, received string', 'id')],
       }),
     )
   })

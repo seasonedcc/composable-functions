@@ -5,7 +5,7 @@ import { makeSuccessResult, mdf } from './constructor.ts'
 import { map } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { InputError, makeErrorResult } from './errors.ts'
 
 describe('map', () => {
   it('returns a domain function function that will apply a function over the results of the first one', async () => {
@@ -39,7 +39,7 @@ describe('map', () => {
     assertEquals(
       await c({ invalidInput: '1' }),
       makeErrorResult({
-        inputErrors: [{ message: 'Required', path: ['id'] }],
+        errors: [new InputError('Required', 'id')],
       }),
     )
   })

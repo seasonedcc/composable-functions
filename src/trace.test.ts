@@ -39,13 +39,7 @@ describe('trace', () => {
     assertEquals(contextFromFunctionA, {
       input: { id: 1 },
       environment: undefined,
-      result: {
-        success: true,
-        errors: [],
-        inputErrors: [],
-        environmentErrors: [],
-        data: 2,
-      },
+      result: { success: true, errors: [], data: 2 },
     })
   })
 })

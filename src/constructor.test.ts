@@ -70,7 +70,7 @@ describe('makeDomainFunction', () => {
       assertEquals(
         await handler('some input'),
         makeErrorResult({
-          inputErrors: [{ path: [], message: 'Expected undefined' }],
+          errors: [new InputError('Expected undefined', '')],
         }),
       )
     })
@@ -93,7 +93,7 @@ describe('makeDomainFunction', () => {
       assertEquals(
         await handler(undefined, ''),
         makeErrorResult({
-          environmentErrors: [{ path: [], message: 'Expected an object' }],
+          errors: [new EnvironmentError('Expected an object', '')],
         }),
       )
     })
@@ -106,9 +106,7 @@ describe('makeDomainFunction', () => {
       assertEquals(
         await handler({ missingId: '1' }),
         makeErrorResult({
-          inputErrors: [
-            { message: 'Expected number, received nan', path: ['id'] },
-          ],
+          errors: [new InputError('Expected number, received nan', 'id')],
         }),
       )
     })
@@ -151,8 +149,10 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: '1' }, { uid: '2' }),
       makeErrorResult({
-        inputErrors: [{ message: 'ID already taken', path: ['id'] }],
-        environmentErrors: [{ message: 'UID already taken', path: ['uid'] }],
+        errors: [
+          new InputError('ID already taken', 'id'),
+          new EnvironmentError('UID already taken', 'uid'),
+        ],
       }),
     )
   })
@@ -183,9 +183,7 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: '1' }, {}),
       makeErrorResult({
-        environmentErrors: [
-          { message: 'Expected number, received nan', path: ['uid'] },
-        ],
+        errors: [new EnvironmentError('Expected number, received nan', 'uid')],
       }),
     )
   })
@@ -250,9 +248,7 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-        ],
+        errors: [new InputError('Custom input error', 'contact.id')],
       }),
     )
   })
@@ -269,9 +265,9 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-          { message: 'Another input error', path: ['contact', 'id'] },
+        errors: [
+          new InputError('Custom input error', 'contact.id'),
+          new InputError('Another input error', 'contact.id'),
         ],
       }),
     )
@@ -286,9 +282,7 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: 1 }),
       makeErrorResult({
-        environmentErrors: [
-          { message: 'Custom env error', path: ['currentUser', 'role'] },
-        ],
+        errors: [new EnvironmentError('Custom env error', 'currentUser.role')],
       }),
     )
   })
@@ -296,11 +290,7 @@ describe('makeDomainFunction', () => {
   it('returns an error result when the domain function throws an ResultError', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
       throw new ResultError({
-        errors: [],
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-        ],
-        environmentErrors: [],
+        errors: [new InputError('Custom input error', 'contact.id')],
       })
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
@@ -308,9 +298,7 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-        ],
+        errors: [new InputError('Custom input error', 'contact.id')],
       }),
     )
   })

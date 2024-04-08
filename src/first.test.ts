@@ -6,6 +6,7 @@ import { first } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
+import { InputError } from './errors.ts'
 
 describe('first', () => {
   it('should return the result of the first successful domain function', async () => {
@@ -48,9 +49,9 @@ describe('first', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        errors: [new Error('Error')],
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
+        errors: [
+          new Error('Error'),
+          new InputError('Expected string, received number', 'id'),
         ],
       }),
     )

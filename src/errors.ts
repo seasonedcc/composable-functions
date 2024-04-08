@@ -1,10 +1,4 @@
-import { Failure } from './composable/types.ts'
-import type {
-  AtLeastOne,
-  ErrorData,
-  ErrorResult,
-  SchemaError,
-} from './types.ts'
+import type { ErrorData, ErrorResult, SchemaError } from './types.ts'
 
 /**
  * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
@@ -84,91 +78,72 @@ class EnvironmentError extends Error {
 class ResultError extends Error {
   result: ErrorResult
 
-  constructor(result: AtLeastOne<ErrorData>) {
+  constructor(result: Pick<ErrorResult, 'errors'>) {
     super('ResultError')
     this.name = 'ResultError'
     this.result = makeErrorResult(result)
   }
 }
 
-function schemaErrorToError(se: SchemaError): Error {
-  const message = `${se.path.join('.')} ${se.message}`.trim()
-  return new Error(message)
-}
-function errorResultToFailure({
-  errors,
-  inputErrors,
-  environmentErrors,
-}: ErrorResult): Failure {
+// function schemaErrorToError(se: SchemaError): Error {
+//   const message = `${se.path.join('.')} ${se.message}`.trim()
+//   return new Error(message)
+// }
+
+// function failureToErrorResult({ errors }: Failure): ErrorResult {
+//   return makeErrorResult({
+//     errors: errors
+//       .filter(
+//         (exception) =>
+//           !(
+//             exception instanceof InputError ||
+//             exception instanceof InputErrors ||
+//             exception instanceof EnvironmentError
+//           ),
+//       )
+//       .flatMap((e) => (e instanceof ResultError ? e.result.errors : e)),
+//     inputErrors: errors.flatMap((exception) =>
+//       exception instanceof InputError
+//         ? [
+//             {
+//               path: exception.path.split('.'),
+//               message: exception.message,
+//             },
+//           ]
+//         : exception instanceof InputErrors
+//         ? exception.errors.map((e) => ({
+//             path: e.path.split('.'),
+//             message: e.message,
+//           }))
+//         : exception instanceof ResultError
+//         ? exception.result.inputErrors
+//         : [],
+//     ),
+//     environmentErrors: errors.flatMap((exception) =>
+//       exception instanceof EnvironmentError
+//         ? [
+//             {
+//               path: exception.path.split('.'),
+//               message: exception.message,
+//             },
+//           ]
+//         : exception instanceof ResultError
+//         ? exception.result.environmentErrors
+//         : [],
+//     ),
+//   })
+// }
+
+function makeErrorResult({ errors }: Pick<ErrorData, 'errors'>): ErrorResult {
   return {
     success: false,
-    errors: [
-      ...errors,
-      ...inputErrors.map(schemaErrorToError),
-      ...environmentErrors.map(schemaErrorToError),
-    ],
+    errors,
   }
-}
-
-function failureToErrorResult({ errors }: Failure): ErrorResult {
-  return makeErrorResult({
-    errors: errors
-      .filter(
-        (exception) =>
-          !(
-            exception instanceof InputError ||
-            exception instanceof InputErrors ||
-            exception instanceof EnvironmentError
-          ),
-      )
-      .flatMap((e) => (e instanceof ResultError ? e.result.errors : e)),
-    inputErrors: errors.flatMap((exception) =>
-      exception instanceof InputError
-        ? [
-            {
-              path: exception.path.split('.'),
-              message: exception.message,
-            },
-          ]
-        : exception instanceof InputErrors
-        ? exception.errors.map((e) => ({
-            path: e.path.split('.'),
-            message: e.message,
-          }))
-        : exception instanceof ResultError
-        ? exception.result.inputErrors
-        : [],
-    ),
-    environmentErrors: errors.flatMap((exception) =>
-      exception instanceof EnvironmentError
-        ? [
-            {
-              path: exception.path.split('.'),
-              message: exception.message,
-            },
-          ]
-        : exception instanceof ResultError
-        ? exception.result.environmentErrors
-        : [],
-    ),
-  })
-}
-
-function makeErrorResult(errorData: AtLeastOne<ErrorData>) {
-  return {
-    success: false,
-    errors: [],
-    inputErrors: [],
-    environmentErrors: [],
-    ...errorData,
-  } as ErrorResult
 }
 
 export {
   EnvironmentError,
   errorMessagesFor,
-  errorResultToFailure,
-  failureToErrorResult,
   InputError,
   InputErrors,
   ResultError,

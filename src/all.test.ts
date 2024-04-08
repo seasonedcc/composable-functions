@@ -7,6 +7,7 @@ import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
 import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
+import { InputError } from '../mod.ts'
 
 describe('all', () => {
   it('should combine two domain functions into one', async () => {
@@ -46,9 +47,7 @@ describe('all', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
-        ],
+        errors: [new InputError('Expected string, received number', 'id')],
       }),
     )
   })
@@ -80,9 +79,9 @@ describe('all', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
-          { message: 'Expected string, received number', path: ['id'] },
+        errors: [
+          new InputError('Expected string, received number', 'id'),
+          new InputError('Expected string, received number', 'id'),
         ],
       }),
     )

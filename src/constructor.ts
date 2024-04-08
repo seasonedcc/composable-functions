@@ -1,40 +1,34 @@
-import {
-  errorResultToFailure,
-  failureToErrorResult,
-  makeErrorResult,
-} from './errors.ts'
+import { makeErrorResult, InputError, EnvironmentError } from './errors.ts'
 import type {
   DomainFunction,
   ParserIssue,
   ParserSchema,
-  SchemaError,
   SuccessResult,
 } from './types.ts'
 import { Composable } from './composable/index.ts'
 import { composable } from './composable/composable.ts'
 
 function makeSuccessResult<const T>(data: T): SuccessResult<T> {
-  return {
-    success: true,
-    data,
-    inputErrors: [],
-    errors: [],
-    environmentErrors: [],
-  }
+  return { success: true, data, errors: [] }
 }
 
 function dfResultFromcomposable<T extends Composable, R>(fn: T) {
   return (async (...args) => {
-    const r = await fn(...args)
-
-    return r.success ? makeSuccessResult(r.data) : failureToErrorResult(r)
+    return await fn(...args)
   }) as Composable<(...args: Parameters<T>) => R>
 }
 
-function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
+function getInputErrors(errors: ParserIssue[]): InputError[] {
   return errors.map((error) => {
     const { path, message } = error
-    return { path: path.map(String), message }
+    return new InputError(message, path.join('.'))
+  })
+}
+
+function getEnvironmentErrors(errors: ParserIssue[]): EnvironmentError[] {
+  return errors.map((error) => {
+    const { path, message } = error
+    return new EnvironmentError(message, path.join('.'))
   })
 }
 /**
@@ -69,9 +63,9 @@ function toComposable<I = unknown, E = unknown, O = unknown>(
   df: DomainFunction<O>,
 ) {
   return ((input = undefined, environment = {}) =>
-    df(input, environment).then((r) =>
-      r.success ? r : errorResultToFailure(r),
-    )) as unknown as Composable<(input?: I, environment?: E) => O>
+    df(input, environment)) as unknown as Composable<
+    (input?: I, environment?: E) => O
+  >
 }
 
 function fromComposable<I, E, A extends Composable>(
@@ -86,14 +80,14 @@ function fromComposable<I, E, A extends Composable>(
     const result = await (inputSchema ?? undefinedSchema).safeParseAsync(input)
 
     if (!result.success || !envResult.success) {
-      return makeErrorResult({
-        inputErrors: result.success
-          ? []
-          : formatSchemaErrors(result.error.issues),
-        environmentErrors: envResult.success
-          ? []
-          : formatSchemaErrors(envResult.error.issues),
-      })
+      let errors: Error[] = []
+      if (!result.success) {
+        errors = getInputErrors(result.error.issues)
+      }
+      if (!envResult.success) {
+        errors = errors.concat(getEnvironmentErrors(envResult.error.issues))
+      }
+      return makeErrorResult({ errors })
     }
     return dfResultFromcomposable(fn)(
       ...([result.data as I, envResult.data as E] as Parameters<A>),

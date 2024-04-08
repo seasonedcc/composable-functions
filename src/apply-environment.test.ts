@@ -4,6 +4,7 @@ import { z } from './test-prelude.ts'
 import { makeSuccessResult, mdf } from './constructor.ts'
 import { applyEnvironment } from './domain-functions.ts'
 import { makeErrorResult } from './errors.ts'
+import { EnvironmentError } from '../mod.ts'
 
 describe('applyEnvironment', () => {
   it('fails when environment fails parser', async () => {
@@ -17,9 +18,7 @@ describe('applyEnvironment', () => {
     assertEquals(
       await getEnvWithEnvironment('some input'),
       makeErrorResult({
-        environmentErrors: [
-          { message: 'Expected number, received string', path: [] },
-        ],
+        errors: [new EnvironmentError('Expected number, received string', '')],
       }),
     )
   })

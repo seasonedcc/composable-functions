@@ -1,20 +1,4 @@
-import { Failure, Success } from './composable/types.ts'
-
-/**
- * A successful domain function result.
- */
-type SuccessResult<T = void> = Success<T> & {
-  inputErrors: []
-  environmentErrors: []
-}
-
-/**
- * A failed domain function result.
- */
-type ErrorResult = Failure & {
-  inputErrors: SchemaError[]
-  environmentErrors: SchemaError[]
-}
+import { Failure, Success, Result } from './composable/types.ts'
 
 /**
  * Items in the inputErrors and environmentErrors array returned by failed domain functions.
@@ -27,12 +11,10 @@ type SchemaError = {
 /**
  * The properties of the ErrorResult which carry information about what made the domain function fail.
  */
-type ErrorData = Omit<ErrorResult, 'success'>
-
-/**
- * The content of the Promise a domain function returns.
- */
-type Result<T = void> = SuccessResult<T> | ErrorResult
+type ErrorData = Failure & {
+  inputErrors: SchemaError[]
+  environmentErrors: SchemaError[]
+}
 
 /**
  * A domain function.
@@ -128,13 +110,13 @@ export type {
 export type {
   DomainFunction,
   ErrorData,
-  ErrorResult,
+  Failure as ErrorResult,
   ParserIssue,
   ParserResult,
   ParserSchema,
   Result,
   SchemaError,
-  SuccessResult,
+  Success as SuccessResult,
   UnpackAll,
   UnpackData,
   UnpackDFObject,

@@ -5,7 +5,7 @@ import { makeSuccessResult, mdf } from './constructor.ts'
 import { collect } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { InputError, makeErrorResult } from './errors.ts'
 
 describe('collect', () => {
   it('should combine an object of domain functions', async () => {
@@ -28,9 +28,7 @@ describe('collect', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
-        ],
+        errors: [new InputError('Expected string, received number', 'id')],
       }),
     )
   })
@@ -62,15 +60,9 @@ describe('collect', () => {
     assertEquals(
       await c({ id: 1 }),
       makeErrorResult({
-        inputErrors: [
-          {
-            message: 'Expected string, received number',
-            path: ['id'],
-          },
-          {
-            message: 'Expected string, received number',
-            path: ['id'],
-          },
+        errors: [
+          new InputError('Expected string, received number', 'id'),
+          new InputError('Expected string, received number', 'id'),
         ],
       }),
     )
