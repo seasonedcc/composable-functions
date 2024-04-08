@@ -146,7 +146,7 @@ describe('branch', () => {
 
     assertEquals(
       await d({ id: 1 }),
-      makeSuccessResult([4, { id: 3 }] as [number, { id: number }]),
+      makeSuccessResult<[number, { id: number }]>([4, { id: 3 }]),
     )
   })
 })

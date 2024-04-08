@@ -22,7 +22,7 @@ describe('all', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeSuccessResult([2, 0] as [number, number]),
+      makeSuccessResult<[number, number]>([2, 0]),
     )
   })
 
@@ -36,7 +36,7 @@ describe('all', () => {
     const results = await d({ id: 1 })
     assertEquals(
       results,
-      makeSuccessResult(['1', 2, true] as [string, number, boolean]),
+      makeSuccessResult<[string, number, boolean]>(['1', 2, true]),
     )
   })
 

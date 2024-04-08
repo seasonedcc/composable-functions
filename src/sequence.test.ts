@@ -23,9 +23,9 @@ describe('sequence', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeSuccessResult([{ id: 3 }, { result: 2 }] as [
-        { id: number },
-        { result: number },
+      makeSuccessResult<[{ id: number }, { result: number }]>([
+        { id: 3 },
+        { result: 2 },
       ]),
     )
   })
@@ -49,9 +49,9 @@ describe('sequence', () => {
 
     assertEquals(
       await c(undefined, { env: 1 }),
-      makeSuccessResult([{ inp: 3 }, { result: 4 }] as [
-        { inp: number },
-        { result: number },
+      makeSuccessResult<[{ inp: number }, { result: number }]>([
+        { inp: 3 },
+        { result: 4 },
       ]),
     )
   })
@@ -159,15 +159,13 @@ describe('sequence', () => {
 
     assertEquals(
       await d({ aNumber: 1 }),
-      makeSuccessResult([
-        { aString: '1' },
-        { aBoolean: true },
-        { anotherBoolean: false },
-      ] as [
-        { aString: string },
-        { aBoolean: boolean },
-        { anotherBoolean: boolean },
-      ]),
+      makeSuccessResult<
+        [
+          { aString: string },
+          { aBoolean: boolean },
+          { anotherBoolean: boolean },
+        ]
+      >([{ aString: '1' }, { aBoolean: true }, { anotherBoolean: false }]),
     )
   })
 })
