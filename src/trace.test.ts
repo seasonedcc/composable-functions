@@ -10,6 +10,7 @@ import { mdf } from './constructor.ts'
 import { fromSuccess, trace } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { makeErrorResult } from './errors.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to df failures', async () => {
@@ -22,12 +23,12 @@ describe('trace', () => {
 
     const result = await c({ id: 1 })
 
-    assertObjectMatch(result, {
-      success: false,
-      errors: [{ message: 'Problem in tracing' }],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertObjectMatch(
+      result,
+      makeErrorResult({
+        errors: [{ message: 'Problem in tracing' }],
+      }),
+    )
   })
 
   it('intercepts inputs and outputs of a given domain function', async () => {
@@ -58,4 +59,3 @@ describe('trace', () => {
     })
   })
 })
-

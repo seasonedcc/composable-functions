@@ -13,7 +13,7 @@ import type {
 import { Composable } from './composable/index.ts'
 import { composable } from './composable/composable.ts'
 
-function makeSuccessResult<T>(data: T): SuccessResult<T> {
+function makeSuccessResult<const T>(data: T): SuccessResult<T> {
   return {
     success: true,
     data,

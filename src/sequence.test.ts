@@ -1,10 +1,11 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { mdf } from './constructor.ts'
+import { makeSuccessResult, mdf } from './constructor.ts'
 import { sequence } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { makeErrorResult } from './errors.ts'
 
 describe('sequence', () => {
   it('should compose domain functions from left-to-right saving the results sequentially', async () => {
@@ -20,13 +21,13 @@ describe('sequence', () => {
       Equal<typeof c, DomainFunction<[{ id: number }, { result: number }]>>
     >
 
-    assertEquals(await c({ id: 1 }), {
-      success: true,
-      data: [{ id: 3 }, { result: 2 }],
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ id: 1 }),
+      makeSuccessResult([{ id: 3 }, { result: 2 }] as [
+        { id: number },
+        { result: number },
+      ]),
+    )
   })
 
   it('should use the same environment in all composed functions', async () => {
@@ -46,13 +47,13 @@ describe('sequence', () => {
       Equal<typeof c, DomainFunction<[{ inp: number }, { result: number }]>>
     >
 
-    assertEquals(await c(undefined, { env: 1 }), {
-      success: true,
-      data: [{ inp: 3 }, { result: 4 }],
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c(undefined, { env: 1 }),
+      makeSuccessResult([{ inp: 3 }, { result: 4 }] as [
+        { inp: number },
+        { result: number },
+      ]),
+    )
   })
 
   it('should fail on the first environment parser failure', async () => {
@@ -71,12 +72,12 @@ describe('sequence', () => {
     const c = sequence(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<[{ inp: number }, number]>>>
 
-    assertEquals(await c(undefined, {}), {
-      success: false,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [{ message: 'Required', path: ['env'] }],
-    })
+    assertEquals(
+      await c(undefined, {}),
+      makeErrorResult({
+        environmentErrors: [{ message: 'Required', path: ['env'] }],
+      }),
+    )
   })
 
   it('should fail on the first input parser failure', async () => {
@@ -96,14 +97,14 @@ describe('sequence', () => {
     const c = sequence(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<[{ inp: number }, number]>>>
 
-    assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
-      success: false,
-      errors: [],
-      inputErrors: [
-        { message: 'Expected undefined, received object', path: [] },
-      ],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ inp: 'some invalid input' }, { env: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { message: 'Expected undefined, received object', path: [] },
+        ],
+      }),
+    )
   })
 
   it('should fail on the second input parser failure', async () => {
@@ -121,14 +122,14 @@ describe('sequence', () => {
     const c = sequence(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<[{ inp: string }, number]>>>
 
-    assertEquals(await c(undefined, { env: 1 }), {
-      success: false,
-      errors: [],
-      inputErrors: [
-        { message: 'Expected number, received string', path: ['inp'] },
-      ],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c(undefined, { env: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { message: 'Expected number, received string', path: ['inp'] },
+        ],
+      }),
+    )
   })
 
   it('should compose more than 2 functions', async () => {
@@ -156,12 +157,17 @@ describe('sequence', () => {
       >
     >
 
-    assertEquals(await d({ aNumber: 1 }), {
-      success: true,
-      data: [{ aString: '1' }, { aBoolean: true }, { anotherBoolean: false }],
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await d({ aNumber: 1 }),
+      makeSuccessResult([
+        { aString: '1' },
+        { aBoolean: true },
+        { anotherBoolean: false },
+      ] as [
+        { aString: string },
+        { aBoolean: boolean },
+        { anotherBoolean: boolean },
+      ]),
+    )
   })
 })

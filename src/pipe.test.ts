@@ -1,10 +1,11 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { mdf } from './constructor.ts'
+import { makeSuccessResult, mdf } from './constructor.ts'
 import { pipe } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { makeErrorResult } from './errors.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
@@ -16,13 +17,7 @@ describe('pipe', () => {
     const c = pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: 1 }), {
-      success: true,
-      data: 2,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(await c({ id: 1 }), makeSuccessResult(2))
   })
 
   it('should use the same environment in all composed functions', async () => {
@@ -40,13 +35,7 @@ describe('pipe', () => {
     const c = pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c(undefined, { env: 1 }), {
-      success: true,
-      data: 4,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(await c(undefined, { env: 1 }), makeSuccessResult(4))
   })
 
   it('should fail on the first environment parser failure', async () => {
@@ -65,12 +54,12 @@ describe('pipe', () => {
     const c = pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c(undefined, {}), {
-      success: false,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [{ message: 'Required', path: ['env'] }],
-    })
+    assertEquals(
+      await c(undefined, {}),
+      makeErrorResult({
+        environmentErrors: [{ message: 'Required', path: ['env'] }],
+      }),
+    )
   })
 
   it('should fail on the first input parser failure', async () => {
@@ -90,14 +79,14 @@ describe('pipe', () => {
     const c = pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ inp: 'some invalid input' }, { env: 1 }), {
-      success: false,
-      errors: [],
-      inputErrors: [
-        { message: 'Expected undefined, received object', path: [] },
-      ],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ inp: 'some invalid input' }, { env: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { message: 'Expected undefined, received object', path: [] },
+        ],
+      }),
+    )
   })
 
   it('should fail on the second input parser failure', async () => {
@@ -115,14 +104,14 @@ describe('pipe', () => {
     const c = pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c(undefined, { env: 1 }), {
-      success: false,
-      errors: [],
-      inputErrors: [
-        { message: 'Expected number, received string', path: ['inp'] },
-      ],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c(undefined, { env: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { message: 'Expected number, received string', path: ['inp'] },
+        ],
+      }),
+    )
   })
 
   it('should compose more than 2 functions', async () => {
@@ -139,12 +128,6 @@ describe('pipe', () => {
     const d = pipe(a, b, c)
     type _R = Expect<Equal<typeof d, DomainFunction<boolean>>>
 
-    assertEquals(await d({ aNumber: 1 }), {
-      success: true,
-      data: false,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(await d({ aNumber: 1 }), makeSuccessResult(false))
   })
 })

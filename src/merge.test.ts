@@ -6,10 +6,11 @@ import {
 } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { mdf } from './constructor.ts'
+import { makeSuccessResult, mdf } from './constructor.ts'
 import { merge } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { makeErrorResult } from './errors.ts'
 
 describe('merge', () => {
   it('should combine two domain functions results into one object', async () => {
@@ -25,13 +26,10 @@ describe('merge', () => {
       Equal<typeof c, DomainFunction<{ resultA: number; resultB: number }>>
     >
 
-    assertEquals(await c({ id: 1 }), {
-      success: true,
-      data: { resultA: 2, resultB: 0 },
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ id: 1 }),
+      makeSuccessResult({ resultA: 2, resultB: 0 }),
+    )
   })
 
   it('should combine many domain functions into one', async () => {
@@ -59,17 +57,10 @@ describe('merge', () => {
     >
 
     const results = await d({ id: 1 })
-    assertEquals(results, {
-      success: true,
-      data: {
-        resultA: '1',
-        resultB: 2,
-        resultC: true,
-      },
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      results,
+      makeSuccessResult({ resultA: '1', resultB: 2, resultC: true }),
+    )
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
@@ -90,17 +81,14 @@ describe('merge', () => {
       >
     >
 
-    assertEquals(await c({ id: 1 }), {
-      success: false,
-      inputErrors: [
-        {
-          message: 'Expected string, received number',
-          path: ['id'],
-        },
-      ],
-      errors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ id: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { message: 'Expected string, received number', path: ['id'] },
+        ],
+      }),
+    )
   })
 
   it('should return error when one of the domain functions fails', async () => {
@@ -114,12 +102,12 @@ describe('merge', () => {
     const c: DomainFunction<never> = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertEquals(await c({ id: 1 }), {
-      success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ id: 1 }),
+      makeErrorResult({
+        errors: [{ message: 'Error', exception: 'Error' }],
+      }),
+    )
   })
 
   it('should combine the inputError messages of both functions', async () => {
@@ -135,21 +123,15 @@ describe('merge', () => {
       Equal<typeof c, DomainFunction<{ resultA: string; resultB: string }>>
     >
 
-    assertEquals(await c({ id: 1 }), {
-      success: false,
-      inputErrors: [
-        {
-          message: 'Expected string, received number',
-          path: ['id'],
-        },
-        {
-          message: 'Expected string, received number',
-          path: ['id'],
-        },
-      ],
-      environmentErrors: [],
-      errors: [],
-    })
+    assertEquals(
+      await c({ id: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { message: 'Expected string, received number', path: ['id'] },
+          { message: 'Expected string, received number', path: ['id'] },
+        ],
+      }),
+    )
   })
 
   it('should combine the error messages when both functions fail', async () => {
@@ -163,14 +145,14 @@ describe('merge', () => {
     const c = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertObjectMatch(await c({ id: 1 }), {
-      success: false,
-      errors: [
-        { message: 'Error A', exception: { message: 'Error A' } },
-        { message: 'Error B', exception: { message: 'Error B' } },
-      ],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertObjectMatch(
+      await c({ id: 1 }),
+      makeErrorResult({
+        errors: [
+          { message: 'Error A', exception: { message: 'Error A' } },
+          { message: 'Error B', exception: { message: 'Error B' } },
+        ],
+      }),
+    )
   })
 })
