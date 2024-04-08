@@ -185,6 +185,35 @@ function map<T extends Composable, R>(
 }
 
 /**
+ * Creates a new function that will try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
+ * @example
+ * import { cf as C } from 'domain-functions'
+ *
+ * const increment = C.composable(({ id }: { id: number }) => id + 1)
+ * const negativeOnError = C.catchError(increment, (result, originalInput) => (
+ *  originalInput.id * -1
+ * ))
+ */
+function catchError<T extends Fn, R>(
+  fn: Composable<T>,
+  catcher: (err: Failure['errors'], ...originalInput: Parameters<T>) => R,
+) {
+  return (async (...args: Parameters<T>) => {
+    const res = await fn(...args)
+    if (res.success) return success(res.data)
+    return composable(catcher)(res.errors, ...(args as any))
+  }) as Composable<
+    (
+      ...args: Parameters<T>
+    ) => ReturnType<T> extends any[]
+      ? R extends never[]
+        ? ReturnType<T>
+        : ReturnType<T> | R
+      : ReturnType<T> | R
+  >
+}
+
+/**
  * Creates a new function that will apply a transformation over a resulting Failure from the given function. When the given function succeeds, its result is returned without changes.
  * @example
  * import { cf as C } from 'domain-functions'
@@ -212,6 +241,7 @@ function mapError<T extends Composable, R>(
 
 export {
   all,
+  catchError,
   collect,
   composable,
   error,

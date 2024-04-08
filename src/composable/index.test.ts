@@ -2,7 +2,7 @@ import { assertEquals, describe, it } from '../test-prelude.ts'
 import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, ErrorWithMessage, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
-import { all, collect, composable } from './composable.ts'
+import { all, catchError, collect, composable } from './composable.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)
@@ -383,3 +383,53 @@ describe('mapError', () => {
   })
 })
 
+describe('catchError', () => {
+  it('changes the type to accomodate catcher return type', async () => {
+    const fn = catchError(faultyAdd, () => null)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number | null>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number | null>>>
+
+    assertEquals(res, {
+      success: true,
+      data: null,
+      errors: [],
+    })
+  })
+
+  it('receives the list of errors as input to another function and returns a new composable', async () => {
+    const fn = catchError(faultyAdd, (errors, a, b) =>
+      errors.length > 1 ? NaN : a + b,
+    )
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, {
+      success: true,
+      data: 3,
+      errors: [],
+    })
+  })
+
+  it('fails when catcher fail', async () => {
+    const fn = catchError(faultyAdd, () => {
+      throw new Error('Catcher also has problems')
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors![0].message, 'Catcher also has problems')
+  })
+})
