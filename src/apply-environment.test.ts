@@ -1,8 +1,9 @@
 import { assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { mdf } from './constructor.ts'
+import { makeSuccessResult, mdf } from './constructor.ts'
 import { applyEnvironment } from './domain-functions.ts'
+import { makeErrorResult } from './errors.ts'
 
 describe('applyEnvironment', () => {
   it('fails when environment fails parser', async () => {
@@ -13,17 +14,14 @@ describe('applyEnvironment', () => {
       'invalid environment',
     )
 
-    assertEquals(await getEnvWithEnvironment('some input'), {
-      success: false,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [
-        {
-          message: 'Expected number, received string',
-          path: [],
-        },
-      ],
-    })
+    assertEquals(
+      await getEnvWithEnvironment('some input'),
+      makeErrorResult({
+        environmentErrors: [
+          { message: 'Expected number, received string', path: [] },
+        ],
+      }),
+    )
   })
 
   it('should apply environment', async () => {
@@ -34,13 +32,9 @@ describe('applyEnvironment', () => {
       'constant environment',
     )
 
-    assertEquals(await getEnvWithEnvironment('some input'), {
-      success: true,
-      data: 'constant environment',
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await getEnvWithEnvironment('some input'),
+      makeSuccessResult('constant environment'),
+    )
   })
 })
-

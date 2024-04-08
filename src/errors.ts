@@ -88,13 +88,7 @@ class ResultError extends Error {
   constructor(result: AtLeastOne<ErrorData>) {
     super('ResultError')
     this.name = 'ResultError'
-    this.result = {
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-      ...result,
-      success: false,
-    }
+    this.result = makeErrorResult(result)
   }
 }
 
@@ -119,8 +113,7 @@ function errorResultToFailure({
 }
 
 function failureToErrorResult({ errors }: Failure): ErrorResult {
-  return {
-    success: false,
+  return makeErrorResult({
     errors: errors
       .filter(
         ({ exception }) =>
@@ -162,7 +155,17 @@ function failureToErrorResult({ errors }: Failure): ErrorResult {
         ? exception.result.environmentErrors
         : [],
     ),
-  }
+  })
+}
+
+function makeErrorResult(errorData: AtLeastOne<ErrorData>) {
+  return {
+    success: false,
+    errors: [],
+    inputErrors: [],
+    environmentErrors: [],
+    ...errorData,
+  } as ErrorResult
 }
 
 export {
@@ -174,5 +177,5 @@ export {
   InputErrors,
   ResultError,
   schemaError,
+  makeErrorResult,
 }
-

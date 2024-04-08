@@ -6,10 +6,11 @@ import {
 } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { mdf } from './constructor.ts'
+import { makeSuccessResult, mdf } from './constructor.ts'
 import { branch, pipe, all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { makeErrorResult } from './errors.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {
@@ -21,13 +22,7 @@ describe('branch', () => {
     const c = branch(a, () => Promise.resolve(b))
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: 1 }), {
-      success: true,
-      data: 2,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(await c({ id: 1 }), makeSuccessResult(2))
   })
 
   it('should enable conditionally choosing the next DF with the output of first one', async () => {
@@ -40,13 +35,7 @@ describe('branch', () => {
     const d = branch(a, (output) => (output.next === 'multiply' ? c : b))
     type _R = Expect<Equal<typeof d, DomainFunction<number | string>>>
 
-    assertEquals(await d({ id: 1 }), {
-      success: true,
-      data: 6,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(await d({ id: 1 }), makeSuccessResult(6))
   })
 
   it('should not pipe if the predicate returns null', async () => {
@@ -60,13 +49,10 @@ describe('branch', () => {
       Equal<typeof d, DomainFunction<string | { id: number; next: string }>>
     >
 
-    assertEquals(await d({ id: 1 }), {
-      success: true,
-      data: { id: 3, next: 'multiply' },
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await d({ id: 1 }),
+      makeSuccessResult({ id: 3, next: 'multiply' }),
+    )
   })
 
   it('should use the same environment in all composed functions', async () => {
@@ -84,13 +70,7 @@ describe('branch', () => {
     const c = branch(a, () => b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c(undefined, { env: 1 }), {
-      success: true,
-      data: 4,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(await c(undefined, { env: 1 }), makeSuccessResult(4))
   })
 
   it('should gracefully fail if the first function fails', async () => {
@@ -101,17 +81,14 @@ describe('branch', () => {
     const c = branch(a, () => b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: '1' }), {
-      success: false,
-      errors: [],
-      inputErrors: [
-        {
-          path: ['id'],
-          message: 'Expected number, received string',
-        },
-      ],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ id: '1' }),
+      makeErrorResult({
+        inputErrors: [
+          { path: ['id'], message: 'Expected number, received string' },
+        ],
+      }),
+    )
   })
 
   it('should gracefully fail if the second function fails', async () => {
@@ -122,17 +99,14 @@ describe('branch', () => {
     const c = branch(a, () => b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: 1 }), {
-      success: false,
-      errors: [],
-      inputErrors: [
-        {
-          path: ['id'],
-          message: 'Expected number, received string',
-        },
-      ],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await c({ id: 1 }),
+      makeErrorResult({
+        inputErrors: [
+          { path: ['id'], message: 'Expected number, received string' },
+        ],
+      }),
+    )
   })
 
   it('should gracefully fail if the condition function fails', async () => {
@@ -147,12 +121,12 @@ describe('branch', () => {
     })
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertObjectMatch(await c({ id: 1 }), {
-      success: false,
-      errors: [{ message: 'condition function failed' }],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertObjectMatch(
+      await c({ id: 1 }),
+      makeErrorResult({
+        errors: [{ message: 'condition function failed' }],
+      }),
+    )
   })
 
   it('should not break composition with other combinators', async () => {
@@ -170,12 +144,9 @@ describe('branch', () => {
     )
     type _R = Expect<Equal<typeof d, DomainFunction<[number, { id: number }]>>>
 
-    assertEquals(await d({ id: 1 }), {
-      data: [4, { id: 3 }],
-      success: true,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    })
+    assertEquals(
+      await d({ id: 1 }),
+      makeSuccessResult<[number, { id: number }]>([4, { id: 3 }]),
+    )
   })
 })

@@ -1,20 +1,33 @@
-import { errorResultToFailure, failureToErrorResult } from './errors.ts'
+import {
+  errorResultToFailure,
+  failureToErrorResult,
+  makeErrorResult,
+} from './errors.ts'
 import type {
   DomainFunction,
   ParserIssue,
   ParserSchema,
   SchemaError,
+  SuccessResult,
 } from './types.ts'
 import { Composable } from './composable/index.ts'
 import { composable } from './composable/composable.ts'
+
+function makeSuccessResult<const T>(data: T): SuccessResult<T> {
+  return {
+    success: true,
+    data,
+    inputErrors: [],
+    errors: [],
+    environmentErrors: [],
+  }
+}
 
 function dfResultFromcomposable<T extends Composable, R>(fn: T) {
   return (async (...args) => {
     const r = await fn(...args)
 
-    return r.success
-      ? { ...r, inputErrors: [], environmentErrors: [] }
-      : failureToErrorResult(r)
+    return r.success ? makeSuccessResult(r.data) : failureToErrorResult(r)
   }) as Composable<(...args: Parameters<T>) => R>
 }
 
@@ -73,16 +86,14 @@ function fromComposable<I, E, A extends Composable>(
     const result = await (inputSchema ?? undefinedSchema).safeParseAsync(input)
 
     if (!result.success || !envResult.success) {
-      return {
-        success: false,
-        errors: [],
+      return makeErrorResult({
         inputErrors: result.success
           ? []
           : formatSchemaErrors(result.error.issues),
         environmentErrors: envResult.success
           ? []
           : formatSchemaErrors(envResult.error.issues),
-      }
+      })
     }
     return dfResultFromcomposable(fn)(
       ...([result.data as I, envResult.data as E] as Parameters<A>),
@@ -121,5 +132,5 @@ export {
   makeDomainFunction,
   makeDomainFunction as mdf,
   toComposable,
+  makeSuccessResult,
 }
-
