@@ -1,3 +1,4 @@
+import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
 import {
   assertEquals,
   assertObjectMatch,
@@ -29,10 +30,10 @@ describe('toComposable', () => {
       >
     >
 
-    assertEquals(await c(), {
-      success: false,
-      errors: [new Error('Required')],
-    })
+    const {
+      errors: [err],
+    } = await c(1)
+    assertIsError(err, Error, 'Expected string, received number')
   })
 
   it('returns a Composable with the same computation and same success result (we just care about the structural typing match)', async () => {
@@ -195,12 +196,10 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('Error')],
-      }),
-    )
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+    assertIsError(err, Error, 'Error')
   })
 
   it('preserves entire original exception when the domain function throws an Error', async () => {
@@ -209,14 +208,11 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          new Error('Some message', { cause: { someUnknownFields: true } }),
-        ],
-      }),
-    )
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+    assertIsError(err, Error, 'Some message')
+    assertEquals(err.cause, { someUnknownFields: true })
   })
 
   it('returns error when the domain function throws a string', async () => {
@@ -225,7 +221,7 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
+    assertEquals(
       await handler({ id: 1 }),
       makeErrorResult({
         errors: [new Error('Error')],
@@ -239,11 +235,9 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertEquals(
+    assertObjectMatch(
       await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('Error')],
-      }),
+      makeErrorResult({ errors: [{ message: 'Error' } as Error] }),
     )
   })
 

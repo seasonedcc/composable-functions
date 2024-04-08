@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  assertEquals,
-  assertObjectMatch,
-} from './test-prelude.ts'
+import { describe, it, assertEquals, assertIsError } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
@@ -121,12 +116,10 @@ describe('branch', () => {
     })
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertObjectMatch(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('condition function failed')],
-      }),
-    )
+    const {
+      errors: [err],
+    } = await c({ id: 1 })
+    assertIsError(err, Error, 'condition function failed')
   })
 
   it('should not break composition with other combinators', async () => {

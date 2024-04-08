@@ -1,9 +1,4 @@
-import {
-  assertEquals,
-  assertObjectMatch,
-  describe,
-  it,
-} from './test-prelude.ts'
+import { assertEquals, assertIsError, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
@@ -92,11 +87,10 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: never; b: never }>>>
 
-    assertObjectMatch(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('Error A'), new Error('Error B')],
-      }),
-    )
+    const {
+      errors: [errA, errB],
+    } = await c({ id: 1 })
+    assertIsError(errA, Error, 'Error A')
+    assertIsError(errB, Error, 'Error B')
   })
 })

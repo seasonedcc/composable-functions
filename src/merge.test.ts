@@ -1,9 +1,5 @@
-import {
-  describe,
-  it,
-  assertEquals,
-  assertObjectMatch,
-} from './test-prelude.ts'
+import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
+import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
@@ -145,11 +141,10 @@ describe('merge', () => {
     const c = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('Error A'), new Error('Error B')],
-      }),
-    )
+    const {
+      errors: [errA, errB],
+    } = await c({ id: 1 })
+    assertIsError(errA, Error, 'Error A')
+    assertIsError(errB, Error, 'Error B')
   })
 })

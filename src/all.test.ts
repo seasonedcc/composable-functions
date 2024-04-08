@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  assertEquals,
-  assertObjectMatch,
-} from './test-prelude.ts'
+import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
@@ -11,6 +6,7 @@ import { all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
+import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
 
 describe('all', () => {
   it('should combine two domain functions into one', async () => {
@@ -103,9 +99,10 @@ describe('all', () => {
     const c = all(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<[never, never]>>>
 
-    assertObjectMatch(
-      await c({ id: 1 }),
-      makeErrorResult({ errors: [new Error('Error A'), new Error('Error B')] }),
-    )
+    const {
+      errors: [errA, errB],
+    } = await c({ id: 1 })
+    assertIsError(errA, Error, 'Error A')
+    assertIsError(errB, Error, 'Error B')
   })
 })
