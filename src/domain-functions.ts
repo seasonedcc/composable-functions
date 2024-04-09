@@ -16,6 +16,7 @@ import type {
 import { Composable } from './index.ts'
 
 /**
+ * @deprecated Use `composable` instead.
  * A functions that turns the result of its callback into a Result object.
  * @example
  * const result = await safeResult(() => ({
@@ -69,10 +70,8 @@ function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return ((input, environment) => {
-    const composables = fns.map((df) =>
-      A.composable(() => fromSuccess(df)(input, environment)),
-    )
-    return A.all(...(composables as [Composable]))()
+    const composables = fns.map((df) => applyEnvironment(df, environment))
+    return A.all(...(composables as [Composable]))(input)
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -111,7 +110,7 @@ function first<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<TupleToUnion<UnpackAll<Fns>>> {
   return ((input, environment) => {
-    return safeResult(async () => {
+    return A.composable(async () => {
       const results = await Promise.all(
         fns.map((fn) => (fn as DomainFunction)(input, environment)),
       )
@@ -126,7 +125,7 @@ function first<Fns extends DomainFunction[]>(
       }
 
       return result.data
-    })
+    })()
   }) as DomainFunction<TupleToUnion<UnpackAll<Fns>>>
 }
 
@@ -209,8 +208,9 @@ function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
-    const dfsAsComposable = fns.map((df) => applyEnvironment(df, environment))
-    return A.sequence(...(dfsAsComposable as [Composable]))(input)
+    return A.sequence(
+      ...(fns.map((df) => applyEnvironment(df, environment)) as [Composable]),
+    )(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -227,7 +227,7 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R | Promise<R>,
 ): DomainFunction<R> {
-  return A.map(A.composable(fromSuccess(dfn)), mapper) as DomainFunction<R>
+  return A.map(dfn, mapper) as DomainFunction<R>
 }
 
 /**
@@ -262,11 +262,11 @@ function branch<T, R extends DomainFunction | null>(
     const result = await dfn(input, environment)
     if (!result.success) return result
 
-    return safeResult(async () => {
+    return A.composable(async () => {
       const nextDf = await resolver(result.data)
       if (typeof nextDf !== 'function') return result.data
       return fromSuccess(nextDf)(result.data, environment)
-    })
+    })()
   }) as DomainFunction<
     R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
   >
@@ -321,9 +321,9 @@ function mapError<O>(
     const result = await dfn(input, environment)
     if (result.success) return result
 
-    return safeResult(async () => {
+    return A.composable(async () => {
       throw new ResultError({ ...(await mapper(result)) })
-    })
+    })()
   }) as DomainFunction<O>
 }
 
