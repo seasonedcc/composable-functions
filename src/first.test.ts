@@ -50,8 +50,8 @@ describe('first', () => {
       await c({ id: 1 }),
       makeErrorResult({
         errors: [
-          new Error('Error'),
           new InputError('Expected string, received number', 'id'),
+          new Error('Error'),
         ],
       }),
     )
