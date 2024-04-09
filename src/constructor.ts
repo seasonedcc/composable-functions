@@ -1,10 +1,5 @@
 import { InputError, EnvironmentError, failure } from './errors.ts'
-import type {
-  DomainFunction,
-  ParserIssue,
-  ParserSchema,
-  Success,
-} from './types.ts'
+import type { DomainFunction, ParserSchema, Success } from './types.ts'
 import { Composable } from './composable/index.ts'
 import { composable } from './composable/index.ts'
 
@@ -12,19 +7,6 @@ function success<const T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
 }
 
-function getInputErrors(errors: ParserIssue[]): InputError[] {
-  return errors.map((error) => {
-    const { path, message } = error
-    return new InputError(message, path.join('.'))
-  })
-}
-
-function getEnvironmentErrors(errors: ParserIssue[]): EnvironmentError[] {
-  return errors.map((error) => {
-    const { path, message } = error
-    return new EnvironmentError(message, path.join('.'))
-  })
-}
 /**
  * Creates a domain function.
  * After giving the input and environment schemas, you can pass a handler function that takes type safe input and environment. That function is gonna catch any errors and always return a Result.
@@ -76,10 +58,17 @@ function fromComposable<I, E, A extends Composable>(
     if (!result.success || !envResult.success) {
       let errors: Error[] = []
       if (!result.success) {
-        errors = getInputErrors(result.error.issues)
+        errors = result.error.issues.map(
+          (error) => new InputError(error.message, error.path.join('.')),
+        )
       }
       if (!envResult.success) {
-        errors = errors.concat(getEnvironmentErrors(envResult.error.issues))
+        errors = errors.concat(
+          envResult.error.issues.map(
+            (error) =>
+              new EnvironmentError(error.message, error.path.join('.')),
+          ),
+        )
       }
       return failure(errors)
     }
