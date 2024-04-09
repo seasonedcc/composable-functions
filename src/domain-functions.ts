@@ -368,7 +368,7 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
       >)
       return result
     } catch (e) {
-      return A.error([toError(e)])
+      return A.failure([toError(e)])
     }
   }
 }

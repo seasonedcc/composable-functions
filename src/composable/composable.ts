@@ -35,7 +35,7 @@ function success<T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
 }
 
-function error(errors: Error[]): Failure {
+function failure(errors: Error[]): Failure {
   return { success: false, errors }
 }
 
@@ -52,9 +52,9 @@ function composable<T extends Fn>(fn: T): Composable<T> {
       return success(result)
     } catch (e) {
       if (e instanceof ResultError) {
-        return error(e.result.errors)
+        return failure(e.result.errors)
       }
-      return error([toError(e)])
+      return failure([toError(e)])
     }
   }
 }
@@ -81,7 +81,7 @@ function pipe<T extends [Composable, ...Composable[]]>(
     //           I don't understand what is the issue here but ignoring the errors
     //           is safe and much nicer than a bunch of casts to any
     const res = await sequence(...fns)(...args)
-    return !res.success ? error(res.errors) : success(res.data.at(-1))
+    return !res.success ? failure(res.errors) : success(res.data.at(-1))
   }) as PipeReturn<T>
 }
 
@@ -103,7 +103,7 @@ function all<T extends [Composable, ...Composable[]]>(
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (results.some(({ success }) => success === false)) {
-      return error(results.map(({ errors }) => errors).flat())
+      return failure(results.map(({ errors }) => errors).flat())
     }
 
     return success((results as Success<any>[]).map(({ data }) => data))
@@ -154,12 +154,12 @@ function sequence<T extends [Composable, ...Composable[]]>(
     const [head, ...tail] = fns as T
 
     const res = await head(...args)
-    if (!res.success) return error(res.errors)
+    if (!res.success) return failure(res.errors)
 
     const result = [res.data]
     for await (const fn of tail) {
       const res = await fn(result.at(-1))
-      if (!res.success) return error(res.errors)
+      if (!res.success) return failure(res.errors)
       result.push(res.data)
     }
     return success(result)
@@ -234,9 +234,9 @@ function mapError<T extends Composable, R>(
     if (res.success) return success(res.data)
     const mapped = await composable(mapper)(res)
     if (mapped.success) {
-      return error(mapped.data.errors)
+      return failure(mapped.data.errors)
     } else {
-      return error(mapped.errors)
+      return failure(mapped.errors)
     }
   }) as T
 }
@@ -246,7 +246,7 @@ export {
   catchError,
   collect,
   composable,
-  error,
+  failure,
   map,
   mapError,
   mergeObjects,
