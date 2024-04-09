@@ -1,8 +1,12 @@
 import { InputError, EnvironmentError, failure } from './errors.ts'
-import type { DomainFunction, ParserIssue, ParserSchema } from './types.ts'
+import type {
+  DomainFunction,
+  ParserIssue,
+  ParserSchema,
+  Success,
+} from './types.ts'
 import { Composable } from './composable/index.ts'
 import { composable } from './composable/index.ts'
-import { Success } from './composable/types.ts'
 
 function success<const T>(data: T): Success<T> {
   return { success: true, data, errors: [] }

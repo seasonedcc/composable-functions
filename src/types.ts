@@ -1,4 +1,13 @@
-import { Failure, Success, Result } from './composable/types.ts'
+type Failure = {
+  success: false
+  errors: Array<Error>
+}
+type Success<T = any> = {
+  success: true
+  data: T
+  errors: []
+}
+type Result<T = any> = Success<T> | Failure
 
 /**
  * A domain function.
@@ -85,20 +94,74 @@ type ParserSchema<T extends unknown = unknown> = {
   safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
 }
 
+/**
+ * Merges the data types of a list of objects.
+ * @example
+ * type MyObjs = [
+ *   { a: string },
+ *   { b: number },
+ * ]
+ * type MyData = MergeObjs<MyObjs>
+ * //   ^? { a: string, b: number }
+ */
+type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
+  infer first,
+  ...infer rest,
+]
+  ? MergeObjs<rest, Prettify<Omit<output, keyof first> & first>>
+  : output
+
+type Prettify<T> = {
+  [K in keyof T]: T[K]
+  // deno-lint-ignore ban-types
+} & {}
+
+/**
+ * It is similar to Partial<T> but it requires at least one property to be defined.
+ * @example
+ * type MyType = AtLeastOne<{ a: string, b: number }>
+ * const a: MyType = { a: 'hello' }
+ * const b: MyType = { b: 123 }
+ * const c: MyType = { a: 'hello', b: 123 }
+ * // The following won't compile:
+ * const d: MyType = {}
+ */
+type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
+
+/**
+ * Returns the last item of a tuple type.
+ * @example
+ * type MyTuple = [string, number]
+ * type Result = Last<MyTuple>
+ * //   ^? number
+ */
+type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
+  ? L
+  : never
+
+/**
+ * Converts a tuple type to a union type.
+ * @example
+ * type MyTuple = [string, number]
+ * type MyUnion = TupleToUnion<MyTuple>
+ * //   ^? string | number
+ */
+type TupleToUnion<T extends unknown[]> = T[number]
+
 export type {
   AtLeastOne,
-  Last,
-  MergeObjs,
-  TupleToUnion,
-} from './composable/types.ts'
-export type {
   DomainFunction,
   Failure,
+  Last,
+  MergeObjs,
   ParserIssue,
   ParserResult,
   ParserSchema,
+  Prettify,
   Result,
+  Success,
   Success as SuccessResult,
+  TupleToUnion,
   UnpackAll,
   UnpackData,
   UnpackDFObject,

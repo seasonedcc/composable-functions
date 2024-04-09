@@ -1,17 +1,15 @@
 import { success } from '../constructor.ts'
 import { toError, ResultError, failure } from '../errors.ts'
+import { MergeObjs, Success, Failure } from '../types.ts'
 import {
   AllArguments,
   CollectArguments,
   Composable,
-  Failure,
   First,
   Fn,
-  MergeObjs,
   PipeArguments,
   PipeReturn,
   RecordToTuple,
-  Success,
   UnpackAll,
   UnpackResult,
 } from './types.ts'
