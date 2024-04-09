@@ -16,7 +16,7 @@ export type {
   AtLeastOne,
   DomainFunction,
   ErrorData,
-  ErrorResult,
+  Failure,
   Last,
   MergeObjs,
   ParserIssue,

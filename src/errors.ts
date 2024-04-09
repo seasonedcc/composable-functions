@@ -1,4 +1,4 @@
-import type { ErrorData, ErrorResult, SchemaError } from './types.ts'
+import type { ErrorData, Failure, SchemaError } from './types.ts'
 
 /**
  * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
@@ -67,9 +67,9 @@ class EnvironmentError extends Error {
  * })
  */
 class ResultError extends Error {
-  result: ErrorResult
+  result: Failure
 
-  constructor(result: Pick<ErrorResult, 'errors'>) {
+  constructor(result: Pick<Failure, 'errors'>) {
     super('ResultError')
     this.name = 'ResultError'
     this.result = makeErrorResult(result)
@@ -125,7 +125,7 @@ class ResultError extends Error {
 //   })
 // }
 
-function makeErrorResult({ errors }: Pick<ErrorData, 'errors'>): ErrorResult {
+function makeErrorResult({ errors }: Pick<ErrorData, 'errors'>): Failure {
   return {
     success: false,
     errors,

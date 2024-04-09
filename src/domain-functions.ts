@@ -11,7 +11,7 @@ import type {
   UnpackData,
   UnpackDFObject,
   UnpackResult,
-  ErrorResult,
+  Failure,
 } from './types.ts'
 import { dfResultFromcomposable } from './constructor.ts'
 import { Composable } from './index.ts'
@@ -321,8 +321,8 @@ function fromSuccess<T extends DomainFunction>(
 function mapError<O>(
   dfn: DomainFunction<O>,
   mapper: (
-    element: Pick<ErrorResult, 'errors'>,
-  ) => Pick<ErrorResult, 'errors'> | Promise<Pick<ErrorResult, 'errors'>>,
+    element: Pick<Failure, 'errors'>,
+  ) => Pick<Failure, 'errors'> | Promise<Pick<Failure, 'errors'>>,
 ): DomainFunction<O> {
   return (async (input, environment) => {
     const result = await dfn(input, environment)

@@ -110,7 +110,7 @@ export type {
 export type {
   DomainFunction,
   ErrorData,
-  Failure as ErrorResult,
+  Failure as Failure,
   ParserIssue,
   ParserResult,
   ParserSchema,
