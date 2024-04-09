@@ -5,9 +5,8 @@ import { makeSuccessResult, mdf } from './constructor.ts'
 import { all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { makeErrorResult, InputError } from './errors.ts'
 import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
-import { InputError } from '../mod.ts'
 
 describe('all', () => {
   it('should combine two domain functions into one', async () => {

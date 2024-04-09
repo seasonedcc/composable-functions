@@ -11,10 +11,10 @@ import type {
   UnpackData,
   UnpackDFObject,
   UnpackResult,
+  ErrorResult,
 } from './types.ts'
 import { dfResultFromcomposable } from './constructor.ts'
 import { Composable } from './index.ts'
-import { ErrorResult } from '../mod.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.

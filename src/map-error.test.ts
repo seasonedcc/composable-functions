@@ -3,10 +3,9 @@ import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
-import type { DomainFunction, ErrorData } from './types.ts'
+import type { DomainFunction, ErrorData, ErrorResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
-import { ErrorResult, InputError } from '../mod.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {

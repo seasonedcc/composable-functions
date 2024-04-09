@@ -5,8 +5,7 @@ import { makeSuccessResult, mdf } from './constructor.ts'
 import { branch, pipe, all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
-import { InputError } from '../mod.ts'
+import { makeErrorResult, InputError } from './errors.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {

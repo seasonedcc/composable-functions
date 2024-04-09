@@ -3,8 +3,7 @@ import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
 import { applyEnvironment } from './domain-functions.ts'
-import { makeErrorResult } from './errors.ts'
-import { EnvironmentError } from '../mod.ts'
+import { makeErrorResult, EnvironmentError } from './errors.ts'
 
 describe('applyEnvironment', () => {
   it('fails when environment fails parser', async () => {
