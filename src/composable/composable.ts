@@ -1,5 +1,4 @@
-import { ResultError } from '../../mod.ts'
-import { toError } from '../errors.ts'
+import { toError, ResultError } from '../errors.ts'
 import {
   AllArguments,
   CollectArguments,
