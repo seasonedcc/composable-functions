@@ -1,22 +1,6 @@
 import { Failure, Success, Result } from './composable/types.ts'
 
 /**
- * Items in the inputErrors and environmentErrors array returned by failed domain functions.
- */
-type SchemaError = {
-  path: string[]
-  message: string
-}
-
-/**
- * The properties of the ErrorResult which carry information about what made the domain function fail.
- */
-type ErrorData = Failure & {
-  inputErrors: SchemaError[]
-  environmentErrors: SchemaError[]
-}
-
-/**
  * A domain function.
  * It carries the output type which can be further unpacked with UnpackData and other type helpers.
  */
@@ -77,7 +61,7 @@ type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
 
 /**
  * A parsing error when validating the input or environment schemas.
- * This will be transformed into a `SchemaError` before being returned from the domain function.
+ * This will be transformed into an `InputError` before being returned from the domain function.
  * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
  */
 type ParserIssue = { path: PropertyKey[]; message: string }
@@ -109,13 +93,11 @@ export type {
 } from './composable/types.ts'
 export type {
   DomainFunction,
-  ErrorData,
-  Failure as Failure,
+  Failure,
   ParserIssue,
   ParserResult,
   ParserSchema,
   Result,
-  SchemaError,
   Success as SuccessResult,
   UnpackAll,
   UnpackData,

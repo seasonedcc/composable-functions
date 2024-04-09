@@ -3,7 +3,7 @@ import { z } from './test-prelude.ts'
 
 import { makeSuccessResult, mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
-import type { DomainFunction, ErrorData, Failure } from './types.ts'
+import type { DomainFunction, Failure } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { makeErrorResult } from './errors.ts'
 
@@ -22,11 +22,9 @@ describe('mapError', () => {
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const errorMapper = (result: Pick<Failure, 'errors'>) => {
-      return {
-        errors: [new Error('Number of errors: ' + result.errors.length)],
-      } as Pick<ErrorData, 'errors'>
-    }
+    const errorMapper = (result: Pick<Failure, 'errors'>) => ({
+      errors: [new Error('Number of errors: ' + result.errors.length)],
+    })
 
     const c = mapError(a, errorMapper)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>

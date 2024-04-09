@@ -1,26 +1,4 @@
-import type { ErrorData, Failure, SchemaError } from './types.ts'
-
-/**
- * Creates a SchemaError (used in inputErrors and environmentErrors) from the given message and path.
- * @param message the error message
- * @param path the path to the property that caused the error
- * @returns the SchemaError
- */
-function schemaError(message: string, path: string): SchemaError {
-  return { message, path: path.split('.') }
-}
-
-/**
- * Extracts the error messages for a property from the given ErrorResult.
- * @param errors the ErrorResult['inputErrors'] or ErrorResult['environmentErrors']
- * @param name the name of the property
- * @returns string[] the error messages for the given property
- */
-function errorMessagesFor(errors: SchemaError[], name: string) {
-  return errors
-    .filter(({ path }) => path.join('.') === name)
-    .map(({ message }) => message)
-}
+import type { Failure } from './types.ts'
 
 /**
  * A custom error class for input errors.
@@ -76,11 +54,6 @@ class ResultError extends Error {
   }
 }
 
-// function schemaErrorToError(se: SchemaError): Error {
-//   const message = `${se.path.join('.')} ${se.message}`.trim()
-//   return new Error(message)
-// }
-
 // function failureToErrorResult({ errors }: Failure): ErrorResult {
 //   return makeErrorResult({
 //     errors: errors
@@ -125,7 +98,7 @@ class ResultError extends Error {
 //   })
 // }
 
-function makeErrorResult({ errors }: Pick<ErrorData, 'errors'>): Failure {
+function makeErrorResult({ errors }: Pick<Failure, 'errors'>): Failure {
   return {
     success: false,
     errors,
@@ -158,12 +131,4 @@ function toError(maybeError: unknown): Error {
   return isError(maybeError) ? maybeError : new Error(String(maybeError))
 }
 
-export {
-  toError,
-  EnvironmentError,
-  errorMessagesFor,
-  InputError,
-  ResultError,
-  schemaError,
-  makeErrorResult,
-}
+export { toError, EnvironmentError, InputError, ResultError, makeErrorResult }

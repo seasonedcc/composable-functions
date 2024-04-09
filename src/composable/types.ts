@@ -24,12 +24,12 @@ type Failure = {
   success: false
   errors: Array<Error>
 }
-type Success<T> = {
+type Success<T = any> = {
   success: true
   data: T
   errors: []
 }
-type Result<T> = Success<T> | Failure
+type Result<T = any> = Success<T> | Failure
 
 type Fn = (...args: any[]) => any
 type Composable<T extends Fn = Fn> = (
