@@ -1,4 +1,4 @@
-import { ResultError } from './errors.ts'
+import { ResultError, toError } from './errors.ts'
 import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
@@ -13,7 +13,6 @@ import type {
   UnpackResult,
 } from './types.ts'
 import { dfResultFromcomposable } from './constructor.ts'
-import { toError } from './composable/errors.ts'
 import { Composable } from './index.ts'
 import { ErrorResult } from '../mod.ts'
 

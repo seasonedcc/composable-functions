@@ -210,25 +210,6 @@ failedResult = {
 */
 ```
 
-To throw several input errors at once, you can use the pluralized version `InputErrors` like this:
-
-```ts
-const alwaysFails = mdf(input, environment)(async () => {
-  throw new InputErrors([{message: 'Email already taken', path: 'email'}, {message: 'Password too short', path: 'password'}])
-})
-
-const failedResult = await alwaysFails(someInput)
-//    ^? Result<never>
-/*
-failedResult = {
-  success: false,
-  errors: [],
-  inputErrors: [{ message: 'Email already taken', path: ['email'] }, { message: 'Password too short', path: ['password'] }],
-  environmentErrors: [],
-}
-*/
-```
-
 You can also return a custom environment error by throwing an `EnvironmentError`.
 
 ### Using error messages in the UI

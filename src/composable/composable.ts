@@ -1,4 +1,4 @@
-import { toError } from './errors.ts'
+import { toError } from '../errors.ts'
 import {
   AllArguments,
   CollectArguments,

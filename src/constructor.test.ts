@@ -11,7 +11,6 @@ import { makeSuccessResult, mdf, toComposable } from './constructor.ts'
 import {
   EnvironmentError,
   InputError,
-  InputErrors,
   ResultError,
   makeErrorResult,
 } from './errors.ts'
