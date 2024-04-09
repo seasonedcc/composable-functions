@@ -12,12 +12,6 @@ function makeSuccessResult<const T>(data: T): SuccessResult<T> {
   return { success: true, data, errors: [] }
 }
 
-function dfResultFromcomposable<T extends Composable, R>(fn: T) {
-  return (async (...args) => {
-    return await fn(...args)
-  }) as Composable<(...args: Parameters<T>) => R>
-}
-
 function getInputErrors(errors: ParserIssue[]): InputError[] {
   return errors.map((error) => {
     const { path, message } = error
@@ -89,9 +83,7 @@ function fromComposable<I, E, A extends Composable>(
       }
       return makeErrorResult({ errors })
     }
-    return dfResultFromcomposable(fn)(
-      ...([result.data as I, envResult.data as E] as Parameters<A>),
-    )
+    return fn(...([result.data as I, envResult.data as E] as Parameters<A>))
   } as DomainFunction<Awaited<ReturnType<A>>>
 }
 
@@ -121,7 +113,6 @@ const undefinedSchema: ParserSchema<undefined> = {
 }
 
 export {
-  dfResultFromcomposable,
   fromComposable,
   makeDomainFunction,
   makeDomainFunction as mdf,

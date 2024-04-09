@@ -13,7 +13,6 @@ import type {
   UnpackResult,
   Failure,
 } from './types.ts'
-import { dfResultFromcomposable } from './constructor.ts'
 import { Composable } from './index.ts'
 
 /**
@@ -36,7 +35,7 @@ import { Composable } from './index.ts'
  * }
  */
 function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return dfResultFromcomposable(A.composable(fn))() as Promise<Result<T>>
+  return A.composable(fn)() as Promise<Result<T>>
 }
 
 /**
@@ -73,7 +72,7 @@ function all<Fns extends DomainFunction[]>(
     const composables = fns.map((df) =>
       A.composable(() => fromSuccess(df)(input, environment)),
     )
-    return dfResultFromcomposable(A.all(...(composables as [Composable])))()
+    return A.all(...(composables as [Composable]))()
   }) as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -210,12 +209,8 @@ function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
   return function (input: unknown, environment?: unknown) {
-    const dfsAsComposable = fns.map((df) =>
-      A.composable(fromSuccess(applyEnvironment(df, environment))),
-    )
-    return dfResultFromcomposable(
-      A.sequence(...(dfsAsComposable as [Composable])),
-    )(input)
+    const dfsAsComposable = fns.map((df) => applyEnvironment(df, environment))
+    return A.sequence(...(dfsAsComposable as [Composable]))(input)
   } as DomainFunction<UnpackAll<Fns>>
 }
 
@@ -232,9 +227,7 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R | Promise<R>,
 ): DomainFunction<R> {
-  return dfResultFromcomposable(
-    A.map(A.composable(fromSuccess(dfn)), mapper),
-  ) as DomainFunction<R>
+  return A.map(A.composable(fromSuccess(dfn)), mapper) as DomainFunction<R>
 }
 
 /**
