@@ -1,3 +1,4 @@
+import { ResultError } from '../../mod.ts'
 import { toError } from '../errors.ts'
 import {
   AllArguments,
@@ -51,6 +52,9 @@ function composable<T extends Fn>(fn: T): Composable<T> {
       const result = await fn(...(args as any[]))
       return success(result)
     } catch (e) {
+      if (e instanceof ResultError) {
+        return error(e.result.errors)
+      }
       return error([toError(e)])
     }
   }
