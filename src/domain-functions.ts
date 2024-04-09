@@ -1,4 +1,4 @@
-import { ResultError, toError } from './errors.ts'
+import { ResultError, failure, toError } from './errors.ts'
 import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
@@ -361,7 +361,7 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
       >)
       return result
     } catch (e) {
-      return A.failure([toError(e)])
+      return failure([toError(e)])
     }
   }
 }

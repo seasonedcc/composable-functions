@@ -1,5 +1,8 @@
 import type { Failure } from './types.ts'
 
+function failure(errors: Error[]): Failure {
+  return { success: false, errors }
+}
 /**
  * A custom error class for input errors.
  * @example
@@ -50,7 +53,7 @@ class ResultError extends Error {
   constructor(result: Pick<Failure, 'errors'>) {
     super('ResultError')
     this.name = 'ResultError'
-    this.result = makeErrorResult(result)
+    this.result = failure(result.errors)
   }
 }
 
@@ -98,13 +101,6 @@ class ResultError extends Error {
 //   })
 // }
 
-function makeErrorResult({ errors }: Pick<Failure, 'errors'>): Failure {
-  return {
-    success: false,
-    errors,
-  }
-}
-
 function objectHasKey<T extends string>(
   obj: unknown,
   key: T,
@@ -131,4 +127,11 @@ function toError(maybeError: unknown): Error {
   return isError(maybeError) ? maybeError : new Error(String(maybeError))
 }
 
-export { toError, EnvironmentError, InputError, ResultError, makeErrorResult }
+export {
+  EnvironmentError,
+  failure as makeErrorResult,
+  failure,
+  InputError,
+  ResultError,
+  toError,
+}

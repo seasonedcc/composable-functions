@@ -1,12 +1,11 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { first } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
-import { InputError } from './errors.ts'
+import { failure, InputError } from './errors.ts'
 
 describe('first', () => {
   it('should return the result of the first successful domain function', async () => {
@@ -17,7 +16,7 @@ describe('first', () => {
     type _R = Expect<Equal<typeof d, DomainFunction<string | number | boolean>>>
 
     const results = await d({ id: 1 })
-    assertEquals(results, makeSuccessResult('1'))
+    assertEquals(results, success('1'))
   })
 
   it('should return a successful result even if one of the domain functions fails', async () => {
@@ -31,10 +30,7 @@ describe('first', () => {
     const c = first(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(
-      await c({ n: 1, operation: 'increment' }),
-      makeSuccessResult(2),
-    )
+    assertEquals(await c({ n: 1, operation: 'increment' }), success(2))
   })
 
   it('should return error when all of the domain functions fails', async () => {
@@ -48,12 +44,10 @@ describe('first', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          new InputError('Expected string, received number', 'id'),
-          new Error('Error'),
-        ],
-      }),
+      failure([
+        new InputError('Expected string, received number', 'id'),
+        new Error('Error'),
+      ]),
     )
   })
 })

@@ -3,6 +3,7 @@ export {
   makeDomainFunction,
   makeSuccessResult,
   mdf,
+  success,
   toComposable,
 } from './constructor.ts'
 export {
@@ -28,6 +29,7 @@ export {
   inputFromUrl,
 } from './input-resolvers.ts'
 export {
+  failure,
   EnvironmentError,
   InputError,
   makeErrorResult,

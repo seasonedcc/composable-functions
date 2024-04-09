@@ -2,11 +2,11 @@ import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_er
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { merge } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { InputError, makeErrorResult } from './errors.ts'
+import { failure, InputError } from './errors.ts'
 
 describe('merge', () => {
   it('should combine two domain functions results into one object', async () => {
@@ -22,10 +22,7 @@ describe('merge', () => {
       Equal<typeof c, DomainFunction<{ resultA: number; resultB: number }>>
     >
 
-    assertEquals(
-      await c({ id: 1 }),
-      makeSuccessResult({ resultA: 2, resultB: 0 }),
-    )
+    assertEquals(await c({ id: 1 }), success({ resultA: 2, resultB: 0 }))
   })
 
   it('should combine many domain functions into one', async () => {
@@ -53,10 +50,7 @@ describe('merge', () => {
     >
 
     const results = await d({ id: 1 })
-    assertEquals(
-      results,
-      makeSuccessResult({ resultA: '1', resultB: 2, resultC: true }),
-    )
+    assertEquals(results, success({ resultA: '1', resultB: 2, resultC: true }))
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
@@ -79,9 +73,7 @@ describe('merge', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected string, received number', 'id')],
-      }),
+      failure([new InputError('Expected string, received number', 'id')]),
     )
   })
 
@@ -96,12 +88,7 @@ describe('merge', () => {
     const c: DomainFunction<never> = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertEquals(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('Error')],
-      }),
-    )
+    assertEquals(await c({ id: 1 }), failure([new Error('Error')]))
   })
 
   it('should combine the inputError messages of both functions', async () => {
@@ -119,12 +106,10 @@ describe('merge', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          new InputError('Expected string, received number', 'id'),
-          new InputError('Expected string, received number', 'id'),
-        ],
-      }),
+      failure([
+        new InputError('Expected string, received number', 'id'),
+        new InputError('Expected string, received number', 'id'),
+      ]),
     )
   })
 

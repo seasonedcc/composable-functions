@@ -1,11 +1,11 @@
 import { assertEquals, assertIsError, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { collect } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { InputError, makeErrorResult } from './errors.ts'
+import { failure, InputError } from './errors.ts'
 
 describe('collect', () => {
   it('should combine an object of domain functions', async () => {
@@ -15,7 +15,7 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: number }>>>
 
-    assertEquals(await c({ id: 1 }), makeSuccessResult({ a: 2, b: 0 }))
+    assertEquals(await c({ id: 1 }), success({ a: 2, b: 0 }))
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
@@ -27,9 +27,7 @@ describe('collect', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected string, received number', 'id')],
-      }),
+      failure([new InputError('Expected string, received number', 'id')]),
     )
   })
 
@@ -42,12 +40,7 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: never }>>>
 
-    assertEquals(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error('Error')],
-      }),
-    )
+    assertEquals(await c({ id: 1 }), failure([new Error('Error')]))
   })
 
   it('should combine the inputError messages of both functions', async () => {
@@ -59,12 +52,10 @@ describe('collect', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          new InputError('Expected string, received number', 'id'),
-          new InputError('Expected string, received number', 'id'),
-        ],
-      }),
+      failure([
+        new InputError('Expected string, received number', 'id'),
+        new InputError('Expected string, received number', 'id'),
+      ]),
     )
   })
 

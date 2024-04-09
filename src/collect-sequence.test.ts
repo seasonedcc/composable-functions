@@ -1,12 +1,12 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { collectSequence } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { InputError, makeErrorResult } from './errors.ts'
-import { EnvironmentError } from './errors.ts'
+import { InputError } from './errors.ts'
+import { failure, EnvironmentError } from './errors.ts'
 
 describe('collectSequence', () => {
   it('should compose domain functions keeping the given order of keys', async () => {
@@ -20,7 +20,7 @@ describe('collectSequence', () => {
       Equal<typeof c, DomainFunction<{ a: { id: number }; b: number }>>
     >
 
-    assertEquals(await c({ id: 1 }), makeSuccessResult({ a: { id: 3 }, b: 2 }))
+    assertEquals(await c({ id: 1 }), success({ a: { id: 3 }, b: 2 }))
   })
 
   it('should use the same environment in all composed functions', async () => {
@@ -42,7 +42,7 @@ describe('collectSequence', () => {
 
     assertEquals(
       await c(undefined, { env: 1 }),
-      makeSuccessResult({ a: { inp: 3 }, b: 4 }),
+      success({ a: { inp: 3 }, b: 4 }),
     )
   })
 
@@ -66,9 +66,7 @@ describe('collectSequence', () => {
 
     assertEquals(
       await c(undefined, {}),
-      makeErrorResult({
-        errors: [new EnvironmentError('Required', 'env')],
-      }),
+      failure([new EnvironmentError('Required', 'env')]),
     )
   })
 
@@ -93,9 +91,7 @@ describe('collectSequence', () => {
 
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected undefined, received object', '')],
-      }),
+      failure([new InputError('Expected undefined, received object', '')]),
     )
   })
 
@@ -118,9 +114,7 @@ describe('collectSequence', () => {
 
     assertEquals(
       await c(undefined, { env: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected number, received string', 'inp')],
-      }),
+      failure([new InputError('Expected number, received string', 'inp')]),
     )
   })
 
@@ -149,7 +143,7 @@ describe('collectSequence', () => {
 
     assertEquals(
       await d({ aNumber: 1 }),
-      makeSuccessResult({
+      success({
         a: { aString: '1' },
         b: { aBoolean: true },
         c: false,

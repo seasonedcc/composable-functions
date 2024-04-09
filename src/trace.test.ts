@@ -6,6 +6,7 @@ import { mdf } from './constructor.ts'
 import { fromSuccess, trace } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
+import { success } from './constructor.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to df failures', async () => {
@@ -39,7 +40,7 @@ describe('trace', () => {
     assertEquals(contextFromFunctionA, {
       input: { id: 1 },
       environment: undefined,
-      result: { success: true, errors: [], data: 2 },
+      result: success(2),
     })
   })
 })

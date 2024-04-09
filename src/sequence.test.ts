@@ -1,12 +1,11 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { sequence } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { InputError, makeErrorResult } from './errors.ts'
-import { EnvironmentError } from './errors.ts'
+import { failure, EnvironmentError, InputError } from './errors.ts'
 
 describe('sequence', () => {
   it('should compose domain functions from left-to-right saving the results sequentially', async () => {
@@ -24,10 +23,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeSuccessResult<[{ id: number }, { result: number }]>([
-        { id: 3 },
-        { result: 2 },
-      ]),
+      success<[{ id: number }, { result: number }]>([{ id: 3 }, { result: 2 }]),
     )
   })
 
@@ -50,7 +46,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c(undefined, { env: 1 }),
-      makeSuccessResult<[{ inp: number }, { result: number }]>([
+      success<[{ inp: number }, { result: number }]>([
         { inp: 3 },
         { result: 4 },
       ]),
@@ -75,9 +71,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c(undefined, {}),
-      makeErrorResult({
-        errors: [new EnvironmentError('Required', 'env')],
-      }),
+      failure([new EnvironmentError('Required', 'env')]),
     )
   })
 
@@ -100,9 +94,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected undefined, received object', '')],
-      }),
+      failure([new InputError('Expected undefined, received object', '')]),
     )
   })
 
@@ -123,9 +115,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c(undefined, { env: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected number, received string', 'inp')],
-      }),
+      failure([new InputError('Expected number, received string', 'inp')]),
     )
   })
 
@@ -156,7 +146,7 @@ describe('sequence', () => {
 
     assertEquals(
       await d({ aNumber: 1 }),
-      makeSuccessResult<
+      success<
         [
           { aString: string },
           { aBoolean: boolean },

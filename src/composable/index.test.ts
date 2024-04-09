@@ -3,6 +3,7 @@ import { map, mapError, pipe, sequence } from './index.ts'
 import type { Composable, Result } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
 import { all, catchError, collect, composable } from './composable.ts'
+import { success } from '../constructor.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)
@@ -25,7 +26,7 @@ describe('composable', () => {
     type _FN = Expect<Equal<typeof fn, Composable<() => void>>>
     type _R = Expect<Equal<typeof res, Result<void>>>
 
-    assertEquals(res, { success: true, data: undefined, errors: [] })
+    assertEquals(res, success(undefined))
   })
 
   it('infers the types if has arguments and a return', async () => {
@@ -37,7 +38,7 @@ describe('composable', () => {
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
-    assertEquals(res, { success: true, data: 3, errors: [] })
+    assertEquals(res, success(3))
   })
 
   it('infers the types of async functions', async () => {
@@ -49,7 +50,7 @@ describe('composable', () => {
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
-    assertEquals(res, { success: true, data: 3, errors: [] })
+    assertEquals(res, success(3))
   })
 
   it('catch errors', async () => {
@@ -76,7 +77,7 @@ describe('pipe', () => {
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
-    assertEquals(res, { success: true, data: '3', errors: [] })
+    assertEquals(res, success('3'))
   })
 
   it('type checks and composes async functions', async () => {
@@ -92,7 +93,7 @@ describe('pipe', () => {
     type _FN = Expect<Equal<typeof fn, Composable<() => number>>>
     type _R = Expect<Equal<typeof res, Result<number>>>
 
-    assertEquals(res, { success: true, data: 2, errors: [] })
+    assertEquals(res, success(2))
   })
 
   it('catches the errors from function A', async () => {
@@ -140,7 +141,7 @@ describe('sequence', () => {
     >
     type _R = Expect<Equal<typeof res, Result<[number, string]>>>
 
-    assertEquals(res, { success: true, data: [3, '3'], errors: [] })
+    assertEquals(res, success<[number, string]>([3, '3']))
   })
 
   it('type checks and composes async functions', async () => {
@@ -168,11 +169,13 @@ describe('sequence', () => {
       >
     >
 
-    assertEquals(res, {
-      success: true,
-      data: [{ toIncrement: 1, someOtherProperty: 'test' }, 2],
-      errors: [],
-    })
+    assertEquals(
+      res,
+      success<[{ toIncrement: number; someOtherProperty: string }, number]>([
+        { toIncrement: 1, someOtherProperty: 'test' },
+        2,
+      ]),
+    )
   })
 
   it('catches the errors from function A', async () => {
@@ -195,7 +198,7 @@ describe('all', () => {
 
     const res = await fn(1, 2)
 
-    assertEquals(res, { success: true, data: [3, '1', undefined], errors: [] })
+    assertEquals(res, success<[number, string, undefined]>([3, '1', undefined]))
   })
 })
 
@@ -227,11 +230,7 @@ describe('collect', () => {
       Equal<typeof res, Result<{ add: number; string: string; void: void }>>
     >
 
-    assertEquals(res, {
-      success: true,
-      data: { add: 3, string: '1', void: undefined },
-      errors: [],
-    })
+    assertEquals(res, success({ add: 3, string: '1', void: undefined }))
   })
 
   it('uses the same arguments for every function', async () => {
@@ -256,11 +255,7 @@ describe('collect', () => {
       >
     >
     type _R = Expect<Equal<typeof res, Result<any>>>
-    assertEquals(res, {
-      success: true,
-      data: { add: 3, string: '12' },
-      errors: [],
-    })
+    assertEquals(res, success({ add: 3, string: '12' }))
   })
 
   it('collects the errors in the error array', async () => {
@@ -304,7 +299,7 @@ describe('map', () => {
     >
     type _R = Expect<Equal<typeof res, Result<boolean>>>
 
-    assertEquals(res, { success: true, data: true, errors: [] })
+    assertEquals(res, success(true))
   })
 
   it('maps over a composition', async () => {
@@ -316,7 +311,7 @@ describe('map', () => {
     >
     type _R = Expect<Equal<typeof res, Result<boolean>>>
 
-    assertEquals(res, { success: true, data: true, errors: [] })
+    assertEquals(res, success(true))
   })
 
   it('does not do anything when the function fails', async () => {
@@ -394,11 +389,7 @@ describe('catchError', () => {
     >
     type _R = Expect<Equal<typeof res, Result<number | null>>>
 
-    assertEquals(res, {
-      success: true,
-      data: null,
-      errors: [],
-    })
+    assertEquals(res, success(null))
   })
 
   it('receives the list of errors as input to another function and returns a new composable', async () => {
@@ -412,11 +403,7 @@ describe('catchError', () => {
     >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
-    assertEquals(res, {
-      success: true,
-      data: 3,
-      errors: [],
-    })
+    assertEquals(res, success(3))
   })
 
   it('fails when catcher fail', async () => {

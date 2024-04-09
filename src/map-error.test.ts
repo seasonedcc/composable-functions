@@ -1,11 +1,11 @@
 import { assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
 import type { DomainFunction, Failure } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { failure } from './errors.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
@@ -17,7 +17,7 @@ describe('mapError', () => {
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: 1 }), makeSuccessResult(2))
+    assertEquals(await c({ id: 1 }), success(2))
   })
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
@@ -31,9 +31,7 @@ describe('mapError', () => {
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      makeErrorResult({
-        errors: [new Error('Number of errors: 1')],
-      }),
+      failure([new Error('Number of errors: 1')]),
     )
   })
 
@@ -49,9 +47,7 @@ describe('mapError', () => {
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      makeErrorResult({
-        errors: [new Error('Number of errors: 1')],
-      }),
+      failure([new Error('Number of errors: 1')]),
     )
   })
 
@@ -66,9 +62,7 @@ describe('mapError', () => {
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      makeErrorResult({
-        errors: [new Error('failed to map')],
-      }),
+      failure([new Error('failed to map')]),
     )
   })
 })

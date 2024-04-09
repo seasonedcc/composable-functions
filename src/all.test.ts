@@ -1,11 +1,11 @@
 import { describe, it, assertEquals } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult, InputError } from './errors.ts'
+import { failure, InputError } from './errors.ts'
 import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
 
 describe('all', () => {
@@ -16,10 +16,7 @@ describe('all', () => {
     const c = all(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<[number, number]>>>
 
-    assertEquals(
-      await c({ id: 1 }),
-      makeSuccessResult<[number, number]>([2, 0]),
-    )
+    assertEquals(await c({ id: 1 }), success<[number, number]>([2, 0]))
   })
 
   it('should combine many domain functions into one', async () => {
@@ -30,10 +27,7 @@ describe('all', () => {
     type _R = Expect<Equal<typeof d, DomainFunction<[string, number, boolean]>>>
 
     const results = await d({ id: 1 })
-    assertEquals(
-      results,
-      makeSuccessResult<[string, number, boolean]>(['1', 2, true]),
-    )
+    assertEquals(results, success<[string, number, boolean]>(['1', 2, true]))
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
@@ -45,9 +39,7 @@ describe('all', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected string, received number', 'id')],
-      }),
+      failure([new InputError('Expected string, received number', 'id')]),
     )
   })
 
@@ -60,12 +52,7 @@ describe('all', () => {
     const c = all(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<[number, never]>>>
 
-    assertEquals(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new Error()],
-      }),
-    )
+    assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
 
   it('should combine the inputError messages of both functions', async () => {
@@ -77,12 +64,10 @@ describe('all', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          new InputError('Expected string, received number', 'id'),
-          new InputError('Expected string, received number', 'id'),
-        ],
-      }),
+      failure([
+        new InputError('Expected string, received number', 'id'),
+        new InputError('Expected string, received number', 'id'),
+      ]),
     )
   })
 

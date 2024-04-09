@@ -1,11 +1,11 @@
 import { describe, it, assertEquals, assertIsError } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { branch, pipe, all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult, InputError } from './errors.ts'
+import { failure, InputError } from './errors.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {
@@ -17,7 +17,7 @@ describe('branch', () => {
     const c = branch(a, () => Promise.resolve(b))
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: 1 }), makeSuccessResult(2))
+    assertEquals(await c({ id: 1 }), success(2))
   })
 
   it('should enable conditionally choosing the next DF with the output of first one', async () => {
@@ -30,7 +30,7 @@ describe('branch', () => {
     const d = branch(a, (output) => (output.next === 'multiply' ? c : b))
     type _R = Expect<Equal<typeof d, DomainFunction<number | string>>>
 
-    assertEquals(await d({ id: 1 }), makeSuccessResult(6))
+    assertEquals(await d({ id: 1 }), success(6))
   })
 
   it('should not pipe if the predicate returns null', async () => {
@@ -44,10 +44,7 @@ describe('branch', () => {
       Equal<typeof d, DomainFunction<string | { id: number; next: string }>>
     >
 
-    assertEquals(
-      await d({ id: 1 }),
-      makeSuccessResult({ id: 3, next: 'multiply' }),
-    )
+    assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
   })
 
   it('should use the same environment in all composed functions', async () => {
@@ -65,7 +62,7 @@ describe('branch', () => {
     const c = branch(a, () => b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c(undefined, { env: 1 }), makeSuccessResult(4))
+    assertEquals(await c(undefined, { env: 1 }), success(4))
   })
 
   it('should gracefully fail if the first function fails', async () => {
@@ -78,9 +75,7 @@ describe('branch', () => {
 
     assertEquals(
       await c({ id: '1' }),
-      makeErrorResult({
-        errors: [new InputError('Expected number, received string', 'id')],
-      }),
+      failure([new InputError('Expected number, received string', 'id')]),
     )
   })
 
@@ -94,9 +89,7 @@ describe('branch', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        errors: [new InputError('Expected number, received string', 'id')],
-      }),
+      failure([new InputError('Expected number, received string', 'id')]),
     )
   })
 
@@ -135,7 +128,7 @@ describe('branch', () => {
 
     assertEquals(
       await d({ id: 1 }),
-      makeSuccessResult<[number, { id: number }]>([4, { id: 3 }]),
+      success<[number, { id: number }]>([4, { id: 3 }]),
     )
   })
 })

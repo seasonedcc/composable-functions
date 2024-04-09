@@ -1,4 +1,5 @@
-import { toError, ResultError } from '../errors.ts'
+import { success } from '../constructor.ts'
+import { toError, ResultError, failure } from '../errors.ts'
 import {
   AllArguments,
   CollectArguments,
@@ -29,14 +30,6 @@ import {
  */
 function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
   return Object.assign({}, ...objs) as MergeObjs<T>
-}
-
-function success<T>(data: T): Success<T> {
-  return { success: true, data, errors: [] }
-}
-
-function failure(errors: Error[]): Failure {
-  return { success: false, errors }
 }
 
 /**
@@ -246,11 +239,9 @@ export {
   catchError,
   collect,
   composable,
-  failure,
   map,
   mapError,
   mergeObjects,
   pipe,
   sequence,
-  success,
 }

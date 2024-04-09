@@ -1,14 +1,10 @@
-import { makeErrorResult, InputError, EnvironmentError } from './errors.ts'
-import type {
-  DomainFunction,
-  ParserIssue,
-  ParserSchema,
-  SuccessResult,
-} from './types.ts'
+import { InputError, EnvironmentError, failure } from './errors.ts'
+import type { DomainFunction, ParserIssue, ParserSchema } from './types.ts'
 import { Composable } from './composable/index.ts'
-import { composable } from './composable/composable.ts'
+import { composable } from './composable/index.ts'
+import { Success } from './composable/types.ts'
 
-function makeSuccessResult<const T>(data: T): SuccessResult<T> {
+function success<const T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
 }
 
@@ -81,7 +77,7 @@ function fromComposable<I, E, A extends Composable>(
       if (!envResult.success) {
         errors = errors.concat(getEnvironmentErrors(envResult.error.issues))
       }
-      return makeErrorResult({ errors })
+      return failure(errors)
     }
     return fn(...([result.data as I, envResult.data as E] as Parameters<A>))
   } as DomainFunction<Awaited<ReturnType<A>>>
@@ -114,8 +110,9 @@ const undefinedSchema: ParserSchema<undefined> = {
 
 export {
   fromComposable,
-  makeDomainFunction,
   makeDomainFunction as mdf,
+  makeDomainFunction,
+  success as makeSuccessResult,
+  success,
   toComposable,
-  makeSuccessResult,
 }
