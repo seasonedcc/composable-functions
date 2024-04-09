@@ -253,26 +253,6 @@ describe('makeDomainFunction', () => {
     )
   })
 
-  it('returns multiple inputErrors when the domain function throws an InputErrors', async () => {
-    const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new InputErrors([
-        { message: 'Custom input error', path: 'contact.id' },
-        { message: 'Another input error', path: 'contact.id' },
-      ])
-    })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
-
-    assertEquals(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          new InputError('Custom input error', 'contact.id'),
-          new InputError('Another input error', 'contact.id'),
-        ],
-      }),
-    )
-  })
-
   it('returns environmentErrors when the domain function throws an EnvironmentError', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
       throw new EnvironmentError('Custom env error', 'currentUser.role')
