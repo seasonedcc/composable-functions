@@ -1,11 +1,7 @@
-import { InputError, EnvironmentError, failure } from './errors.ts'
-import type { DomainFunction, ParserSchema, Success } from './types.ts'
-import { Composable } from './composable/index.ts'
-import { composable } from './composable/index.ts'
-
-function success<const T>(data: T): Success<T> {
-  return { success: true, data, errors: [] }
-}
+import { composable, failure } from '../constructors.ts'
+import { EnvironmentError, InputError } from '../errors.ts'
+import type { Composable } from '../types.ts'
+import type { DomainFunction, ParserSchema } from './types.ts'
 
 /**
  * Creates a domain function.
@@ -14,7 +10,7 @@ function success<const T>(data: T): Success<T> {
  * @param environmentSchema the schema for the environment
  * @returns a handler function that takes type safe input and environment
  * @example
- * const safeFunction = makeDomainFunction(
+ * const safeFunction = df.make(
  *  z.object({ greeting: z.string() }),
  *  z.object({ user: z.object({ name: z.string() }) }),
  * )
@@ -22,7 +18,7 @@ function success<const T>(data: T): Success<T> {
  *   return { message: `${greeting} ${user.name}` }
  * })
  */
-function makeDomainFunction<I, E>(
+function make<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
 ) {
@@ -85,9 +81,20 @@ const alwaysUndefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export {
-  fromComposable,
-  makeDomainFunction as mdf,
-  makeDomainFunction,
-  success,
+/**
+ * Takes a function with 2 parameters and partially applies the second one.
+ * This is useful when one wants to use a domain function having a fixed environment.
+ * @example
+ * import { mdf, applyEnvironment } from 'domain-functions'
+ *
+ * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
+ * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
+ * //    ^? (input: unknown) => Promise<Result<Date>>
+ */
+function applyEnvironment<
+  Fn extends (input: unknown, environment: unknown) => unknown,
+>(df: Fn, environment: unknown) {
+  return (input: unknown) => df(input, environment) as ReturnType<Fn>
 }
+
+export { applyEnvironment, make, fromComposable }

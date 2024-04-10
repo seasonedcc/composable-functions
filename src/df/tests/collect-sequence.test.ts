@@ -1,21 +1,27 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
-import { z } from './test-prelude.ts'
-
-import { success, mdf } from './constructor.ts'
-import { collectSequence } from './domain-functions.ts'
-import type { DomainFunction } from './types.ts'
-import type { Equal, Expect } from './types.test.ts'
-import { InputError } from './errors.ts'
-import { failure, EnvironmentError } from './errors.ts'
+import {
+  assertEquals,
+  assertIsError,
+  describe,
+  it,
+  z,
+} from '../../test-prelude.ts'
+import {
+  df,
+  EnvironmentError,
+  failure,
+  InputError,
+  success,
+} from '../../index.ts'
+import type { DomainFunction } from '../../index.ts'
 
 describe('collectSequence', () => {
   it('should compose domain functions keeping the given order of keys', async () => {
-    const a = mdf(z.object({ id: z.number() }))(({ id }) => ({
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = mdf(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = collectSequence({ a, b })
+    const c = df.collectSequence({ a, b })
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ a: { id: number }; b: number }>>
     >
@@ -24,18 +30,18 @@ describe('collectSequence', () => {
   })
 
   it('should use the same environment in all composed functions', async () => {
-    const a = mdf(
+    const a = df.make(
       z.undefined(),
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = collectSequence({ a, b })
+    const c = df.collectSequence({ a, b })
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
     >
@@ -48,18 +54,18 @@ describe('collectSequence', () => {
 
   it('should fail on the first environment parser failure', async () => {
     const envParser = z.object({ env: z.number() })
-    const a = mdf(
+    const a = df.make(
       z.undefined(),
       envParser,
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       envParser,
     )(({ inp }, { env }) => inp + env)
 
-    const c = collectSequence({ a, b })
+    const c = df.collectSequence({ a, b })
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
     >
@@ -73,18 +79,18 @@ describe('collectSequence', () => {
   it('should fail on the first input parser failure', async () => {
     const firstInputParser = z.undefined()
 
-    const a = mdf(
+    const a = df.make(
       firstInputParser,
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = collectSequence({ a, b })
+    const c = df.collectSequence({ a, b })
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
     >
@@ -96,18 +102,18 @@ describe('collectSequence', () => {
   })
 
   it('should fail on the second input parser failure', async () => {
-    const a = mdf(
+    const a = df.make(
       z.undefined(),
       z.object({ env: z.number() }),
     )(() => ({
       inp: 'some invalid input',
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = collectSequence({ a, b })
+    const c = df.collectSequence({ a, b })
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ a: { inp: string }; b: number }>>
     >
@@ -119,17 +125,17 @@ describe('collectSequence', () => {
   })
 
   it('should compose more than 2 functions', async () => {
-    const a = mdf(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
+    const a = df.make(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
       aString: String(aNumber),
     }))
-    const b = mdf(z.object({ aString: z.string() }))(({ aString }) => ({
+    const b = df.make(z.object({ aString: z.string() }))(({ aString }) => ({
       aBoolean: aString == '1',
     }))
-    const c = mdf(z.object({ aBoolean: z.boolean() }))(
+    const c = df.make(z.object({ aBoolean: z.boolean() }))(
       ({ aBoolean }) => !aBoolean,
     )
 
-    const d = collectSequence({ a, b, c })
+    const d = df.collectSequence({ a, b, c })
     type _R = Expect<
       Equal<
         typeof d,

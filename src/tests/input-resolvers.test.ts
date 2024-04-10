@@ -1,6 +1,5 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
-
-import * as subject from './input-resolvers.ts'
+import { describe, it, assertEquals } from '../test-prelude.ts'
+import * as subject from '../input-resolvers.ts'
 
 const makePost: (entries: Array<[string, string]>, url?: string) => Request = (
   entries,
@@ -24,11 +23,9 @@ const makeGet: (entries: Array<[string, string]>, url?: string) => Request = (
 
 describe('inputFromForm', () => {
   it('should parse all symbols correctly', async () => {
-    const request = makePost([
-      ['formula', '3 % 2']
-    ])
+    const request = makePost([['formula', '3 % 2']])
     assertEquals(await subject.inputFromForm(request), {
-      formula: '3 % 2'
+      formula: '3 % 2',
     })
   })
 

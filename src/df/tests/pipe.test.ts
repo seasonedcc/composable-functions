@@ -1,39 +1,39 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
-import { z } from './test-prelude.ts'
-
-import { success, mdf } from './constructor.ts'
-import { pipe } from './domain-functions.ts'
-import type { DomainFunction } from './types.ts'
-import type { Equal, Expect } from './types.test.ts'
-import { InputError } from './errors.ts'
-import { failure, EnvironmentError } from './errors.ts'
+import { assertEquals, describe, it, z } from '../../test-prelude.ts'
+import {
+  df,
+  EnvironmentError,
+  failure,
+  InputError,
+  success,
+} from '../../index.ts'
+import type { DomainFunction } from '../../index.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
-    const a = mdf(z.object({ id: z.number() }))(({ id }) => ({
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = mdf(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = pipe(a, b)
+    const c = df.pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
   })
 
   it('should use the same environment in all composed functions', async () => {
-    const a = mdf(
+    const a = df.make(
       z.undefined(),
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
+    const c = df.pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(await c(undefined, { env: 1 }), success(4))
@@ -41,18 +41,18 @@ describe('pipe', () => {
 
   it('should fail on the first environment parser failure', async () => {
     const envParser = z.object({ env: z.number() })
-    const a = mdf(
+    const a = df.make(
       z.undefined(),
       envParser,
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       envParser,
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
+    const c = df.pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(
@@ -64,18 +64,18 @@ describe('pipe', () => {
   it('should fail on the first input parser failure', async () => {
     const firstInputParser = z.undefined()
 
-    const a = mdf(
+    const a = df.make(
       firstInputParser,
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
+    const c = df.pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(
@@ -85,18 +85,18 @@ describe('pipe', () => {
   })
 
   it('should fail on the second input parser failure', async () => {
-    const a = mdf(
+    const a = df.make(
       z.undefined(),
       z.object({ env: z.number() }),
     )(() => ({
       inp: 'some invalid input',
     }))
-    const b = mdf(
+    const b = df.make(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = pipe(a, b)
+    const c = df.pipe(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(
@@ -106,17 +106,17 @@ describe('pipe', () => {
   })
 
   it('should compose more than 2 functions', async () => {
-    const a = mdf(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
+    const a = df.make(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
       aString: String(aNumber),
     }))
-    const b = mdf(z.object({ aString: z.string() }))(({ aString }) => ({
+    const b = df.make(z.object({ aString: z.string() }))(({ aString }) => ({
       aBoolean: aString == '1',
     }))
-    const c = mdf(z.object({ aBoolean: z.boolean() }))(
+    const c = df.make(z.object({ aBoolean: z.boolean() }))(
       ({ aBoolean }) => !aBoolean,
     )
 
-    const d = pipe(a, b, c)
+    const d = df.pipe(a, b, c)
     type _R = Expect<Equal<typeof d, DomainFunction<boolean>>>
 
     assertEquals(await d({ aNumber: 1 }), success(false))

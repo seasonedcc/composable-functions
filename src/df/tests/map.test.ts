@@ -1,28 +1,23 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
-import { z } from './test-prelude.ts'
-
-import { success, mdf } from './constructor.ts'
-import { map } from './domain-functions.ts'
-import type { DomainFunction } from './types.ts'
-import type { Equal, Expect } from './types.test.ts'
-import { failure, InputError } from './errors.ts'
+import { assertEquals, describe, it, z } from '../../test-prelude.ts'
+import { df, failure, InputError, success } from '../../index.ts'
+import type { DomainFunction } from '../../index.ts'
 
 describe('map', () => {
   it('returns a domain function function that will apply a function over the results of the first one', async () => {
-    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (id: number) => id + 1
 
-    const c = map(a, b)
+    const c = df.map(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(await c({ id: 1 }), success(3))
   })
 
   it('returns a domain function function that will apply an async function over the results of the first one', async () => {
-    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = (id: number) => Promise.resolve(id + 1)
 
-    const c = map(a, b)
+    const c = df.map(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(await c({ id: 1 }), success(3))
@@ -30,10 +25,10 @@ describe('map', () => {
 
   it('returns the error when the domain function fails', async () => {
     const firstInputParser = z.object({ id: z.number() })
-    const a = mdf(firstInputParser)(({ id }) => id + 1)
+    const a = df.make(firstInputParser)(({ id }) => id + 1)
     const b = (id: number) => id + 1
 
-    const c = map(a, b)
+    const c = df.map(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(
@@ -43,12 +38,12 @@ describe('map', () => {
   })
 
   it('returns the error when the mapping function fails', async () => {
-    const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = () => {
       throw 'failed to map'
     }
 
-    const c = map(a, b)
+    const c = df.map(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
     assertEquals(await c({ id: 1 }), failure([new Error('failed to map')]))

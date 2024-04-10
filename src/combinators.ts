@@ -1,63 +1,18 @@
-import { success } from '../constructor.ts'
-import { ErrorList, failure } from '../errors.ts'
-import { MergeObjs, Success, Failure } from '../types.ts'
-import {
+import type {
   AllArguments,
   CollectArguments,
   Composable,
+  Failure,
   First,
   Fn,
   PipeArguments,
   PipeReturn,
   RecordToTuple,
+  Success,
   UnpackAll,
   UnpackResult,
 } from './types.ts'
-
-function toError(maybeError: unknown): Error {
-  if (maybeError instanceof Error) return maybeError
-  try {
-    return new Error(JSON.stringify(maybeError))
-  } catch (_e) {
-    return new Error(String(maybeError))
-  }
-}
-
-/**
- * Merges a list of objects into a single object.
- * It is a type-safe version of Object.assign.
- * @param objs the list of objects to merge
- * @returns the merged object
- * @example
- * const obj1 = { a: 1, b: 2 }
- * const obj2 = { c: 3 }
- * const obj3 = { d: 4 }
- * const merged = mergeObjects([obj1, obj2, obj3])
- * //   ^? { a: number, b: number, c: number, d: number }
- */
-function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
-  return Object.assign({}, ...objs) as MergeObjs<T>
-}
-
-/**
- * Creates a composable function.
- * That function is gonna catch any errors and always return a Result.
- * @param fn a function to be used as a Composable
- */
-function composable<T extends Fn>(fn: T): Composable<T> {
-  return async (...args) => {
-    try {
-      // deno-lint-ignore no-explicit-any
-      const result = await fn(...(args as any[]))
-      return success(result)
-    } catch (e) {
-      if (e instanceof ErrorList) {
-        return failure(e.list)
-      }
-      return failure([toError(e)])
-    }
-  }
-}
+import { composable, failure, mergeObjects, success } from './constructors.ts'
 
 /**
  * Creates a single function out of a chain of multiple Composables. It will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
@@ -241,14 +196,4 @@ function mapError<T extends Composable, R>(
   }) as T
 }
 
-export {
-  all,
-  catchError,
-  collect,
-  composable,
-  map,
-  mapError,
-  mergeObjects,
-  pipe,
-  sequence,
-}
+export { pipe, all, collect, sequence, map, catchError, mapError }

@@ -1,8 +1,3 @@
-import type { Failure } from './types.ts'
-
-function failure(errors: Error[]): Failure {
-  return { success: false, errors }
-}
 /**
  * A custom error class for input errors.
  * @example
@@ -43,8 +38,8 @@ class ErrorList extends Error {
   constructor(errors: Error[]) {
     super('ErrorList')
     this.name = 'ErrorList'
-    this.list = failure(errors).errors
+    this.list = errors
   }
 }
 
-export { EnvironmentError, failure, InputError, ErrorList }
+export { EnvironmentError, InputError, ErrorList }

@@ -2,97 +2,14 @@ type Failure = {
   success: false
   errors: Array<Error>
 }
+
 type Success<T = void> = {
   success: true
   data: T
   errors: []
 }
+
 type Result<T = void> = Success<T> | Failure
-
-/**
- * A domain function.
- * It carries the output type which can be further unpacked with UnpackData and other type helpers.
- */
-type DomainFunction<Output = unknown> = {
-  (input?: unknown, environment?: unknown): Promise<Result<Output>>
-}
-
-/**
- * Unpacks the result of a domain function.
- * @example
- * type MyDF = DomainFunction<{ a: string }>
- * type MyResult = UnpackResult<MyDF>
- * //   ^? SuccessResult<{ a: string }> | ErrorResult
- */
-type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
-
-/**
- * Unpacks the data type of a successful domain function.
- * @example
- * type MyDF = DomainFunction<{ a: string }>
- * type MyData = UnpackSuccess<MyDF>
- * //   ^? SuccessResult<{ a: string }>
- */
-type UnpackSuccess<F extends DomainFunction> = Extract<
-  UnpackResult<F>,
-  { success: true }
->
-
-/**
- * Unpacks the data type of a successful domain function.
- * @example
- * type MyDF = DomainFunction<{ a: string }>
- * type MyData = UnpackData<MyDF>
- * //   ^? { a: string }
- */
-type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
-
-/**
- * Unpacks a list of DomainFunctions into a tuple of their data types.
- * @example
- * type MyDFs = [
- *  DomainFunction<{ a: string }>,
- *  DomainFunction<{ b: number }>,
- * ]
- * type MyData = UnpackAll<MyDFs>
- * //   ^? [{ a: string }, { b: number }]
- */
-type UnpackAll<List, output extends unknown[] = []> = List extends [
-  DomainFunction<infer first>,
-  ...infer rest,
-]
-  ? UnpackAll<rest, [...output, first]>
-  : output
-
-type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
-  | { [K in keyof Obj]: UnpackData<Obj[K]> }
-  | never
-
-/**
- * A parsing error when validating the input or environment schemas.
- * This will be transformed into an `InputError` before being returned from the domain function.
- * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
- */
-type ParserIssue = { path: PropertyKey[]; message: string }
-
-/**
- * The result of input or environment validation.
- * See the type `Result` for the return values of domain functions.
- * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
- */
-type ParserResult<T> =
-  | {
-      success: true
-      data: T
-    }
-  | { success: false; error: { issues: ParserIssue[] } }
-
-/**
- * The object used to validate either input or environment when creating domain functions.
- */
-type ParserSchema<T extends unknown = unknown> = {
-  safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
-}
 
 /**
  * Merges the data types of a list of objects.
@@ -148,23 +65,170 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
  */
 type TupleToUnion<T extends unknown[]> = T[number]
 
+type IsNever<A> =
+  // prettier is removing the parens thus worsening readability
+  // prettier-ignore
+  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends never ? 1 : 2)
+    ? true
+    : false
+
+type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
+  ? F
+  : never
+
+type Fn = (...args: any[]) => any
+type Composable<T extends Fn = Fn> = (
+  ...args: Parameters<T>
+) => Promise<Result<Awaited<ReturnType<T>>>>
+
+type UnpackResult<T> = Awaited<T> extends Result<infer R> ? R : never
+
+type UnpackAll<List extends Composable[]> = {
+  [K in keyof List]: UnpackResult<ReturnType<List[K]>>
+}
+
+type PipeReturn<Fns extends any[]> = Fns extends [
+  Composable<(...a: infer PA) => infer OA>,
+  Composable<(b: infer PB) => infer OB>,
+  ...infer rest,
+]
+  ? IsNever<OA> extends true
+    ? ['Fail to compose, "never" does not fit in', PB]
+    : Awaited<OA> extends PB
+    ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
+    : ['Fail to compose', Awaited<OA>, 'does not fit in', PB]
+  : Fns extends [Composable<(...args: infer P) => infer O>]
+  ? Composable<(...args: P) => O>
+  : never
+
+type PipeArguments<
+  Fns extends any[],
+  Arguments extends any[] = [],
+> = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
+  ? restA extends [
+      Composable<
+        (firstParameter: infer FirstBParameter, ...b: infer PB) => any
+      >,
+    ]
+    ? IsNever<Awaited<OA>> extends true
+      ? ['Fail to compose, "never" does not fit in', FirstBParameter]
+      : Awaited<OA> extends FirstBParameter
+      ? EveryElementTakesUndefined<PB> extends true
+        ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
+        : EveryElementTakesUndefined<PB>
+      : ['Fail to compose', Awaited<OA>, 'does not fit in', FirstBParameter]
+    : [...Arguments, Composable<(...a: PA) => OA>]
+  : never
+
+type EveryElementTakesUndefined<T extends any[]> = T extends [
+  infer HEAD,
+  ...infer TAIL,
+]
+  ? undefined extends HEAD
+    ? true & EveryElementTakesUndefined<TAIL>
+    : ['Fail to compose', undefined, 'does not fit in', HEAD]
+  : true
+
+type SubtypesTuple<
+  TA extends unknown[],
+  TB extends unknown[],
+  O extends unknown[],
+> = TA extends [infer headA, ...infer restA]
+  ? TB extends [infer headB, ...infer restB]
+    ? headA extends headB
+      ? SubtypesTuple<restA, restB, [...O, headA]>
+      : headB extends headA
+      ? SubtypesTuple<restA, restB, [...O, headB]>
+      : { 'Incompatible arguments ': true; argument1: headA; argument2: headB }
+    : SubtypesTuple<restA, [], [...O, headA]>
+  : TB extends [infer headBNoA, ...infer restBNoA]
+  ? SubtypesTuple<[], restBNoA, [...O, headBNoA]>
+  : O
+
+type AllArguments<
+  Fns extends any[],
+  Arguments extends any[] = [],
+> = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
+  ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
+    ? SubtypesTuple<PA, PB, []> extends [...infer MergedP]
+      ? AllArguments<
+          [Composable<(...args: MergedP) => OB>, ...restB],
+          [...Arguments, Composable<(...a: MergedP) => OA>]
+        >
+      : ['Fail to compose', PA, 'does not fit in', PB]
+    : [...Arguments, Composable<(...a: PA) => OA>]
+  : never
+
+// Thanks to https://github.com/tjjfvi
+// UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
+// This will not preserve union order but we don't care since this is for Composable paralel application
+type UnionToTuple<T> = (
+  (T extends any ? (t: T) => T : never) extends infer U
+    ? (U extends any ? (u: U) => any : never) extends (v: infer V) => any
+      ? V
+      : never
+    : never
+) extends (_: any) => infer W
+  ? [...UnionToTuple<Exclude<T, W>>, W]
+  : []
+
+type Keys<R extends Record<string, any>> = UnionToTuple<keyof R>
+
+type RecordValuesFromKeysTuple<
+  R extends Record<string, Composable>,
+  K extends unknown[],
+  ValuesTuple extends Composable[] = [],
+> = K extends [infer Head, ...infer rest]
+  ? Head extends string
+    ? rest extends string[]
+      ? RecordValuesFromKeysTuple<R, rest, [...ValuesTuple, R[Head]]>
+      : never
+    : ValuesTuple
+  : ValuesTuple
+
+type Zip<
+  K extends unknown[],
+  V extends Composable[],
+  O extends Record<string, Composable> = {},
+> = K extends [infer HeadK, ...infer restK]
+  ? V extends [infer HeadV, ...infer restV]
+    ? HeadK extends string
+      ? restK extends string[]
+        ? restV extends Composable[]
+          ? Zip<restK, restV, O & { [key in HeadK]: HeadV }>
+          : V // in this case V has the AllArguments failure type
+        : never
+      : never
+    : O
+  : O
+
+type CollectArguments<T extends Record<string, Composable>> = {} extends Zip<
+  Keys<T>,
+  AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>
+>
+  ? never
+  : Prettify<Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>>
+
+type RecordToTuple<T extends Record<string, Composable>> =
+  RecordValuesFromKeysTuple<T, Keys<T>>
+
 export type {
+  AllArguments,
   AtLeastOne,
-  DomainFunction,
+  CollectArguments,
+  Composable,
   Failure,
+  First,
+  Fn,
   Last,
   MergeObjs,
-  ParserIssue,
-  ParserResult,
-  ParserSchema,
+  PipeArguments,
+  PipeReturn,
   Prettify,
+  RecordToTuple,
   Result,
   Success,
-  Success as SuccessResult,
   TupleToUnion,
   UnpackAll,
-  UnpackData,
-  UnpackDFObject,
   UnpackResult,
-  UnpackSuccess,
 }
