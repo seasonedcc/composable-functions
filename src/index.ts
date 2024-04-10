@@ -35,15 +35,5 @@ export type {
 } from './types.ts'
 
 // DOMAIN FUNCTIONS
-export type {
-  DomainFunction,
-  ParserIssue,
-  ParserResult,
-  ParserSchema,
-  // UnpackAll, // DUPLICATE
-  UnpackData,
-  UnpackDFObject,
-  // UnpackResult, // DUPLICATE
-  UnpackSuccess,
-} from './df/types.ts'
 export * as df from './df/index.ts'
+export type { DomainFunction } from './df/index.ts'

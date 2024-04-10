@@ -13,11 +13,21 @@ const faultyAdd = composable((a: number, b: number) => {
 
 describe('collect', () => {
   it('collects the results of an object of Composables into a result with same format', async () => {
-    const fn = collect({
+    const fn: Composable<
+      (
+        args_0: number,
+        args_1: number,
+      ) => {
+        add: number
+        string: string
+        void: void
+      }
+    > = collect({
       add: add,
       string: toString,
       void: voidFn,
     })
+
     const res = await fn(1, 2)
 
     type _FN = Expect<
