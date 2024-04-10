@@ -55,6 +55,12 @@ function applyEnvironment<
   return (input: unknown) => df(input, environment) as ReturnType<Fn>
 }
 
+function applyEnvironmentToList<
+  Fns extends Array<(input: unknown, environment: unknown) => unknown>,
+>(fns: Fns, environment: unknown) {
+  return fns.map((fn) => applyEnvironment(fn, environment)) as [Composable]
+}
+
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
  * @example
@@ -69,10 +75,10 @@ function applyEnvironment<
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return ((input, environment) => {
-    const composables = fns.map((df) => applyEnvironment(df, environment))
-    return A.all(...(composables as [Composable]))(input)
-  }) as DomainFunction<UnpackAll<Fns>>
+  return ((input, environment) =>
+    A.all(...applyEnvironmentToList(fns, environment))(
+      input,
+    )) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**
@@ -162,8 +168,8 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
 function pipe<T extends DomainFunction[]>(
   ...fns: T
 ): DomainFunction<Last<UnpackAll<T>>> {
-  const last = <T>(ls: T[]): T => ls[ls.length - 1]
-  return map(sequence(...fns), last) as DomainFunction<Last<UnpackAll<T>>>
+  return (input, environment) =>
+    A.pipe(...applyEnvironmentToList(fns, environment))(input)
 }
 
 /**
@@ -207,11 +213,10 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return function (input: unknown, environment?: unknown) {
-    return A.sequence(
-      ...(fns.map((df) => applyEnvironment(df, environment)) as [Composable]),
-    )(input)
-  } as DomainFunction<UnpackAll<Fns>>
+  return ((input, environment) =>
+    A.sequence(...applyEnvironmentToList(fns, environment))(
+      input,
+    )) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**
@@ -227,7 +232,7 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R | Promise<R>,
 ): DomainFunction<R> {
-  return A.map(dfn, mapper) as DomainFunction<R>
+  return A.map(dfn, mapper)
 }
 
 /**

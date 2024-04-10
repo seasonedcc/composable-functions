@@ -47,23 +47,20 @@ function fromComposable<I, E, A extends Composable>(
     const result = await (inputSchema ?? undefinedSchema).safeParseAsync(input)
 
     if (!result.success || !envResult.success) {
-      let errors: Error[] = []
-      if (!result.success) {
-        errors = result.error.issues.map(
-          (error) => new InputError(error.message, error.path.join('.')),
-        )
-      }
-      if (!envResult.success) {
-        errors = errors.concat(
-          envResult.error.issues.map(
+      const inputErrors = result.success
+        ? []
+        : result.error.issues.map(
+            (error) => new InputError(error.message, error.path.join('.')),
+          )
+      const envErrors = envResult.success
+        ? []
+        : envResult.error.issues.map(
             (error) =>
               new EnvironmentError(error.message, error.path.join('.')),
-          ),
-        )
-      }
-      return failure(errors)
+          )
+      return failure([...inputErrors, ...envErrors])
     }
-    return fn(...([result.data as I, envResult.data as E] as Parameters<A>))
+    return fn(result.data, envResult.data)
   } as DomainFunction<Awaited<ReturnType<A>>>
 }
 
