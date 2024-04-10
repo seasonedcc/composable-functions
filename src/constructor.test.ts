@@ -209,13 +209,17 @@ describe('makeDomainFunction', () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
       throw new ErrorList([
         new InputError('Custom input error', ['contact', 'id']),
+        new EnvironmentError('Custom env error', ['currentUser', 'role']),
       ])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      failure([new InputError('Custom input error', ['contact', 'id'])]),
+      failure([
+        new InputError('Custom input error', ['contact', 'id']),
+        new EnvironmentError('Custom env error', ['currentUser', 'role']),
+      ]),
     )
   })
 })
