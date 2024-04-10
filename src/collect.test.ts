@@ -40,7 +40,7 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: never }>>>
 
-    assertEquals(await c({ id: 1 }), failure([new Error('Error')]))
+    assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
 
   it('should combine the inputError messages of both functions', async () => {

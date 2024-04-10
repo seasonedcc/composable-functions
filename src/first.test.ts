@@ -46,7 +46,7 @@ describe('first', () => {
       await c({ id: 1 }),
       failure([
         new InputError('Expected string, received number', ['id']),
-        new Error('Error'),
+        new Error(),
       ]),
     )
   })

@@ -1,4 +1,4 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { describe, it, assertEquals, assertIsError } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { success, mdf } from './constructor.ts'
@@ -6,7 +6,6 @@ import { all } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { failure, InputError } from './errors.ts'
-import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
 
 describe('all', () => {
   it('should combine two domain functions into one', async () => {

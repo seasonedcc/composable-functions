@@ -1,5 +1,4 @@
-import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
-import { assertEquals, describe, it } from './test-prelude.ts'
+import { assertIsError, assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'

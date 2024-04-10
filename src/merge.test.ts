@@ -1,5 +1,4 @@
-import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { describe, it, assertEquals, assertIsError } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { success, mdf } from './constructor.ts'
@@ -88,7 +87,7 @@ describe('merge', () => {
     const c: DomainFunction<never> = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertEquals(await c({ id: 1 }), failure([new Error('Error')]))
+    assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
 
   it('should combine the inputError messages of both functions', async () => {

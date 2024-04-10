@@ -1,7 +1,7 @@
-import { assertIsError } from 'https://deno.land/std@0.206.0/assert/assert_is_error.ts'
 import {
   assertEquals,
   assertObjectMatch,
+  assertIsError,
   describe,
   it,
 } from './test-prelude.ts'
@@ -164,7 +164,7 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertEquals(await handler({ id: 1 }), failure([new Error('Error')]))
+    assertEquals(await handler({ id: 1 }), failure([new Error()]))
   })
 
   it('returns error when the domain function throws an object with message', async () => {
