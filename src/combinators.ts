@@ -11,7 +11,7 @@ import type {
   RecordToTuple,
   Success,
   UnpackAll,
-  UnpackResult,
+  UnpackData,
 } from './types.ts'
 import { composable, failure, success } from './constructors.ts'
 
@@ -81,7 +81,7 @@ function all<T extends [Composable, ...Composable[]]>(
     return success((results as Success<any>[]).map(({ data }) => data))
   }) as Composable<
     (...args: Parameters<AllArguments<T>[0]>) => {
-      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
+      [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
     }
   >
 }
@@ -104,7 +104,7 @@ function collect<T extends Record<string, Composable>>(
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (...args: Parameters<AllArguments<RecordToTuple<T>>[0]>) => {
-      [key in keyof T]: UnpackResult<ReturnType<Extract<T[key], Composable>>>
+      [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
     }
   >
 }
@@ -151,7 +151,7 @@ function sequence<T extends [Composable, ...Composable[]]>(
  */
 function map<T extends Composable, R>(
   fn: T,
-  mapper: (res: UnpackResult<ReturnType<T>>) => R,
+  mapper: (res: UnpackData<ReturnType<T>>) => R,
 ) {
   return pipe(fn as Composable, composable(mapper) as Composable) as Composable<
     (...args: Parameters<T>) => R

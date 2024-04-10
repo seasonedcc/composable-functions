@@ -247,7 +247,7 @@ namespace CollectArguments {
 
 namespace UnpackResult {
   type testExtractsDataFromPromisedResult = Expect<
-    Equal<Subject.UnpackResult<Promise<Subject.Result<string>>>, string>
+    Equal<Subject.UnpackData<Promise<Subject.Result<string>>>, string>
   >
 }
 

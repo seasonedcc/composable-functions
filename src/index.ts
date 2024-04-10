@@ -26,7 +26,7 @@ export type {
   Success,
   TupleToUnion,
   UnpackAll,
-  UnpackResult,
+  UnpackData,
 } from './types.ts'
 
 // DOMAIN FUNCTIONS
