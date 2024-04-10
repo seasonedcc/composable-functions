@@ -30,7 +30,6 @@ export {
   failure,
   EnvironmentError,
   InputError,
-  makeErrorResult,
   ErrorList,
   toError,
 } from './errors.ts'

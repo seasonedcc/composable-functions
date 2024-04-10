@@ -73,11 +73,4 @@ function toError(maybeError: unknown): Error {
   return isError(maybeError) ? maybeError : new Error(String(maybeError))
 }
 
-export {
-  EnvironmentError,
-  failure as makeErrorResult,
-  failure,
-  InputError,
-  ErrorList,
-  toError,
-}
+export { EnvironmentError, failure, InputError, ErrorList, toError }
