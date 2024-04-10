@@ -240,7 +240,7 @@ function branch<T, R extends DomainFunction | null>(
     return A.composable(async () => {
       const nextDf = await resolver(result.data)
       if (typeof nextDf !== 'function') return result.data
-      return fromSuccess(nextDf)(result.data, environment)
+      return onErrorThrow(nextDf)(result.data, environment)
     })()
   }) as DomainFunction<
     R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
@@ -251,24 +251,29 @@ function branch<T, R extends DomainFunction | null>(
  * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
- * import { mdf, fromSuccess } from 'domain-functions'
+ * import { mdf, onErrorThrow } from 'domain-functions'
  *
  * const add1 = mdf(z.number())((n) => n + 1)
  * const result = await add1(1)
  * //    ^? Result<number>
- * const data = await fromSuccess(add1)(n)
+ * const data = await onErrorThrow(add1)(n)
  * //    ^? number
  * expect(data).toBe(n + 1)
  */
-function fromSuccess<T extends DomainFunction>(
-  df: T,
-): (...args: Parameters<DomainFunction>) => Promise<UnpackData<T>> {
-  return async function (...args) {
-    const result = await df(...args)
-    if (!result.success) throw new ErrorList(result.errors)
+function onErrorThrow<T extends Composable>(
+  fn: T,
+  onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
+): T extends Composable<(...a: infer A) => infer O>
+  ? (...a: A) => Promise<Awaited<O>>
+  : never {
+  return (async (...args) => {
+    const result = await A.mapError(fn, onError)(...args)
+    if (result.success) return result.data
 
-    return result.data
-  }
+    throw new ErrorList(result.errors)
+  }) as T extends Composable<(...a: infer A) => infer O>
+    ? (...a: A) => Promise<Awaited<O>>
+    : never
 }
 
 /**
@@ -290,14 +295,7 @@ function mapError<O>(
   dfn: DomainFunction<O>,
   mapper: (errors: Error[]) => Error[] | Promise<Error[]>,
 ): DomainFunction<O> {
-  return (async (input, environment) => {
-    const result = await dfn(input, environment)
-    if (result.success) return result
-
-    return A.composable(async () => {
-      throw new ErrorList(await mapper(result.errors))
-    })()
-  }) as DomainFunction<O>
+  return A.mapError(dfn, mapper)
 }
 
 type TraceData<T> = {
@@ -347,7 +345,7 @@ export {
   collect,
   collectSequence,
   first,
-  fromSuccess,
+  onErrorThrow,
   map,
   mapError,
   merge,
