@@ -1,11 +1,9 @@
-import { failureToErrorResult, ResultError } from './errors.ts'
+import { ErrorList, failure } from './errors.ts'
 import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
-  ErrorData,
   Last,
   MergeObjs,
-  Result,
   SuccessResult,
   TupleToUnion,
   UnpackAll,
@@ -13,32 +11,7 @@ import type {
   UnpackDFObject,
   UnpackResult,
 } from './types.ts'
-import { dfResultFromcomposable } from './constructor.ts'
-import { toErrorWithMessage } from './composable/errors.ts'
 import { Composable } from './index.ts'
-
-/**
- * A functions that turns the result of its callback into a Result object.
- * @example
- * const result = await safeResult(() => ({
- *   message: 'hello',
- * }))
- * // the type of result is Result<{ message: string }>
- * if (result.success) {
- *   console.log(result.data.message)
- * }
- *
- * const result = await safeResult(() => {
- *  throw new Error('something went wrong')
- * })
- * // the type of result is Result<never>
- * if (!result.success) {
- *  console.log(result.errors[0].message)
- * }
- */
-function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return dfResultFromcomposable(A.composable(fn))() as Promise<Result<T>>
-}
 
 /**
  * Takes a function with 2 parameters and partially applies the second one.
@@ -56,6 +29,12 @@ function applyEnvironment<
   return (input: unknown) => df(input, environment) as ReturnType<Fn>
 }
 
+function applyEnvironmentToList<
+  Fns extends Array<(input: unknown, environment: unknown) => unknown>,
+>(fns: Fns, environment: unknown) {
+  return fns.map((fn) => applyEnvironment(fn, environment)) as [Composable]
+}
+
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
  * @example
@@ -70,12 +49,10 @@ function applyEnvironment<
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return ((input, environment) => {
-    const composables = fns.map((df) =>
-      A.composable(() => fromSuccess(df)(input, environment)),
-    )
-    return dfResultFromcomposable(A.all(...(composables as [Composable])))()
-  }) as DomainFunction<UnpackAll<Fns>>
+  return ((input, environment) =>
+    A.all(...applyEnvironmentToList(fns, environment))(
+      input,
+    )) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**
@@ -113,24 +90,18 @@ function first<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<TupleToUnion<UnpackAll<Fns>>> {
   return ((input, environment) => {
-    return safeResult(async () => {
+    return A.composable(async () => {
       const results = await Promise.all(
         fns.map((fn) => (fn as DomainFunction)(input, environment)),
       )
 
       const result = results.find((r) => r.success) as SuccessResult | undefined
       if (!result) {
-        throw new ResultError({
-          errors: results.map(({ errors }) => errors).flat(),
-          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-          environmentErrors: results
-            .map(({ environmentErrors }) => environmentErrors)
-            .flat(),
-        })
+        throw new ErrorList(results.map(({ errors }) => errors).flat())
       }
 
       return result.data
-    })
+    })()
   }) as DomainFunction<TupleToUnion<UnpackAll<Fns>>>
 }
 
@@ -167,8 +138,8 @@ function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
 function pipe<T extends DomainFunction[]>(
   ...fns: T
 ): DomainFunction<Last<UnpackAll<T>>> {
-  const last = <T>(ls: T[]): T => ls[ls.length - 1]
-  return map(sequence(...fns), last) as DomainFunction<Last<UnpackAll<T>>> 
+  return (input, environment) =>
+    A.pipe(...applyEnvironmentToList(fns, environment))(input)
 }
 
 /**
@@ -212,14 +183,10 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return function (input: unknown, environment?: unknown) {
-    const dfsAsComposable = fns.map((df) =>
-      A.composable(fromSuccess(applyEnvironment(df, environment))),
-    )
-    return dfResultFromcomposable(
-      A.sequence(...(dfsAsComposable as [Composable])),
-    )(input)
-  } as DomainFunction<UnpackAll<Fns>>
+  return ((input, environment) =>
+    A.sequence(...applyEnvironmentToList(fns, environment))(
+      input,
+    )) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**
@@ -235,9 +202,7 @@ function map<O, R>(
   dfn: DomainFunction<O>,
   mapper: (element: O) => R | Promise<R>,
 ): DomainFunction<R> {
-  return dfResultFromcomposable(
-    A.map(A.composable(fromSuccess(dfn)), mapper),
-  ) as DomainFunction<R>
+  return A.map(dfn, mapper)
 }
 
 /**
@@ -272,18 +237,18 @@ function branch<T, R extends DomainFunction | null>(
     const result = await dfn(input, environment)
     if (!result.success) return result
 
-    return safeResult(async () => {
+    return A.composable(async () => {
       const nextDf = await resolver(result.data)
       if (typeof nextDf !== 'function') return result.data
       return fromSuccess(nextDf)(result.data, environment)
-    })
+    })()
   }) as DomainFunction<
     R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
   >
 }
 
 /**
- * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ResultError` that will bubble up to the parent function.
+ * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
  * import { mdf, fromSuccess } from 'domain-functions'
@@ -300,7 +265,7 @@ function fromSuccess<T extends DomainFunction>(
 ): (...args: Parameters<DomainFunction>) => Promise<UnpackData<T>> {
   return async function (...args) {
     const result = await df(...args)
-    if (!result.success) throw new ResultError(result)
+    if (!result.success) throw new ErrorList(result.errors)
 
     return result.data
   }
@@ -323,15 +288,15 @@ function fromSuccess<T extends DomainFunction>(
  */
 function mapError<O>(
   dfn: DomainFunction<O>,
-  mapper: (element: ErrorData) => ErrorData | Promise<ErrorData>,
+  mapper: (errors: Error[]) => Error[] | Promise<Error[]>,
 ): DomainFunction<O> {
   return (async (input, environment) => {
     const result = await dfn(input, environment)
     if (result.success) return result
 
-    return safeResult(async () => {
-      throw new ResultError({ ...(await mapper(result)) })
-    })
+    return A.composable(async () => {
+      throw new ErrorList(await mapper(result.errors))
+    })()
   }) as DomainFunction<O>
 }
 
@@ -362,15 +327,16 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
   }: TraceData<UnpackResult<D>>) => Promise<void> | void,
 ): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
-    const result = await fn(input, environment)
-    try {
-      await traceFn({ input, environment, result } as TraceData<
-        UnpackResult<D>
-      >)
-      return result
-    } catch (e) {
-      return failureToErrorResult(A.error([toErrorWithMessage(e)]))
-    }
+    const originalResult = await fn(input, environment)
+    const traceResult = await A.composable(traceFn)({
+      input,
+      environment,
+      // TODO: Remove this casting when we unify the Unpack types
+      result: originalResult as Awaited<ReturnType<D>>,
+    })
+    if (traceResult.success) return originalResult
+
+    return failure(traceResult.errors)
   }
 }
 
@@ -386,7 +352,6 @@ export {
   mapError,
   merge,
   pipe,
-  safeResult,
   sequence,
   trace,
 }

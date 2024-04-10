@@ -1,57 +1,10 @@
-import {
-  assertEquals,
-  assertObjectMatch,
-  describe,
-  it,
-} from './test-prelude.ts'
+import { assertEquals, assertIsError, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf, toComposable } from './constructor.ts'
-import {
-  EnvironmentError,
-  InputError,
-  InputErrors,
-  ResultError,
-  makeErrorResult,
-} from './errors.ts'
+import { success, mdf } from './constructor.ts'
+import { failure, EnvironmentError, InputError, ErrorList } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { Composable } from './composable/index.ts'
-
-describe('toComposable', () => {
-  it('returns a Composable with the same computation and all input errors in errors field', async () => {
-    const handler = mdf(z.string())(() => 'no input!')
-    const c = toComposable(handler)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => string>
-      >
-    >
-
-    assertEquals(await c(), {
-      success: false,
-      errors: [{ message: 'Required' }],
-    })
-  })
-
-  it('returns a Composable with the same computation and same success result (we just care about the structural typing match)', async () => {
-    const handler = mdf()(() => 'no input!')
-    const c = toComposable(handler)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => string>
-      >
-    >
-
-    assertObjectMatch(await c(), {
-      success: true,
-      data: 'no input!',
-      errors: [],
-    })
-  })
-})
 
 describe('makeDomainFunction', () => {
   describe('when it has no input', () => {
@@ -59,7 +12,7 @@ describe('makeDomainFunction', () => {
       const handler = mdf()(() => 'no input!')
       type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
 
-      assertEquals(await handler(), makeSuccessResult('no input!'))
+      assertEquals(await handler(), success('no input!'))
     })
 
     it('fails gracefully if gets something other than undefined', async () => {
@@ -68,9 +21,7 @@ describe('makeDomainFunction', () => {
 
       assertEquals(
         await handler('some input'),
-        makeErrorResult({
-          inputErrors: [{ path: [], message: 'Expected undefined' }],
-        }),
+        failure([new InputError('Expected undefined')]),
       )
     })
   })
@@ -82,7 +33,7 @@ describe('makeDomainFunction', () => {
       const handler = mdf(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
 
-      assertEquals(await handler({ id: '1' }), makeSuccessResult(1))
+      assertEquals(await handler({ id: '1' }), success(1))
     })
 
     it('fails gracefully if gets something other than empty record', async () => {
@@ -91,9 +42,7 @@ describe('makeDomainFunction', () => {
 
       assertEquals(
         await handler(undefined, ''),
-        makeErrorResult({
-          environmentErrors: [{ path: [], message: 'Expected an object' }],
-        }),
+        failure([new EnvironmentError('Expected an object')]),
       )
     })
 
@@ -104,11 +53,7 @@ describe('makeDomainFunction', () => {
 
       assertEquals(
         await handler({ missingId: '1' }),
-        makeErrorResult({
-          inputErrors: [
-            { message: 'Expected number, received nan', path: ['id'] },
-          ],
-        }),
+        failure([new InputError('Expected number, received nan', ['id'])]),
       )
     })
   })
@@ -125,10 +70,7 @@ describe('makeDomainFunction', () => {
       Equal<typeof handler, DomainFunction<readonly [number, number]>>
     >
 
-    assertEquals(
-      await handler({ id: '1' }, { uid: '2' }),
-      makeSuccessResult([1, 2]),
-    )
+    assertEquals(await handler({ id: '1' }, { uid: '2' }), success([1, 2]))
   })
 
   it('applies async validations', async () => {
@@ -149,10 +91,10 @@ describe('makeDomainFunction', () => {
 
     assertEquals(
       await handler({ id: '1' }, { uid: '2' }),
-      makeErrorResult({
-        inputErrors: [{ message: 'ID already taken', path: ['id'] }],
-        environmentErrors: [{ message: 'UID already taken', path: ['uid'] }],
-      }),
+      failure([
+        new InputError('ID already taken', ['id']),
+        new EnvironmentError('UID already taken', ['uid']),
+      ]),
     )
   })
 
@@ -181,11 +123,7 @@ describe('makeDomainFunction', () => {
 
     assertEquals(
       await handler({ id: '1' }, {}),
-      makeErrorResult({
-        environmentErrors: [
-          { message: 'Expected number, received nan', path: ['uid'] },
-        ],
-      }),
+      failure([new EnvironmentError('Expected number, received nan', ['uid'])]),
     )
   })
 
@@ -195,12 +133,10 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [{ message: 'Error' }],
-      }),
-    )
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+    assertIsError(err, Error, 'Error')
   })
 
   it('preserves entire original exception when the domain function throws an Error', async () => {
@@ -209,20 +145,11 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          {
-            message: 'Some message',
-            exception: {
-              message: 'Some message',
-              cause: { someUnknownFields: true },
-            },
-          },
-        ],
-      }),
-    )
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+    assertIsError(err, Error, 'Some message')
+    assertEquals(err.cause, { someUnknownFields: true })
   })
 
   it('returns error when the domain function throws a string', async () => {
@@ -231,12 +158,7 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [{ message: 'Error', exception: 'Error' }],
-      }),
-    )
+    assertEquals(await handler({ id: 1 }), failure([new Error()]))
   })
 
   it('returns error when the domain function throws an object with message', async () => {
@@ -245,85 +167,54 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertEquals(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        errors: [{ message: 'Error', exception: { message: 'Error' } }],
-      }),
-    )
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+
+    assertIsError(err, Error, JSON.stringify({ message: 'Error' }))
   })
 
   it('returns inputErrors when the domain function throws an InputError', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new InputError('Custom input error', 'contact.id')
+      throw new InputError('Custom input error', ['contact', 'id'])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      makeErrorResult({
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-        ],
-      }),
+      failure([new InputError('Custom input error', ['contact', 'id'])]),
     )
   })
 
-  it('returns multiple inputErrors when the domain function throws an InputErrors', async () => {
+  it('returns environmentErrors when the domain function throws an EnvironmentError', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new InputErrors([
-        { message: 'Custom input error', path: 'contact.id' },
-        { message: 'Another input error', path: 'contact.id' },
+      throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
+    })
+    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+
+    assertEquals(
+      await handler({ id: 1 }),
+      failure([
+        new EnvironmentError('Custom env error', ['currentUser', 'role']),
+      ]),
+    )
+  })
+
+  it('returns an error result when the domain function throws an ErrorList', async () => {
+    const handler = mdf(z.object({ id: z.number() }))(() => {
+      throw new ErrorList([
+        new InputError('Custom input error', ['contact', 'id']),
+        new EnvironmentError('Custom env error', ['currentUser', 'role']),
       ])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      makeErrorResult({
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-          { message: 'Another input error', path: ['contact', 'id'] },
-        ],
-      }),
-    )
-  })
-
-  it('returns environmentErrors when the domain function throws an EnvironmentError', async () => {
-    const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new EnvironmentError('Custom env error', 'currentUser.role')
-    })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
-
-    assertEquals(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        environmentErrors: [
-          { message: 'Custom env error', path: ['currentUser', 'role'] },
-        ],
-      }),
-    )
-  })
-
-  it('returns an error result when the domain function throws an ResultError', async () => {
-    const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new ResultError({
-        errors: [],
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-        ],
-        environmentErrors: [],
-      })
-    })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
-
-    assertEquals(
-      await handler({ id: 1 }),
-      makeErrorResult({
-        inputErrors: [
-          { message: 'Custom input error', path: ['contact', 'id'] },
-        ],
-      }),
+      failure([
+        new InputError('Custom input error', ['contact', 'id']),
+        new EnvironmentError('Custom env error', ['currentUser', 'role']),
+      ]),
     )
   })
 })

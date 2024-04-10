@@ -149,7 +149,7 @@ The error result has the following structure:
 ```ts
 type ErrorResult = {
   success: false
-  errors: ErrorWithMessage[]
+  errors: Error[]
   inputErrors: SchemaError[]
   environmentErrors: SchemaError[]
 }
@@ -205,25 +205,6 @@ failedResult = {
   success: false,
   errors: [],
   inputErrors: [{ message: 'Email already taken', path: ['email'] }],
-  environmentErrors: [],
-}
-*/
-```
-
-To throw several input errors at once, you can use the pluralized version `InputErrors` like this:
-
-```ts
-const alwaysFails = mdf(input, environment)(async () => {
-  throw new InputErrors([{message: 'Email already taken', path: 'email'}, {message: 'Password too short', path: 'password'}])
-})
-
-const failedResult = await alwaysFails(someInput)
-//    ^? Result<never>
-/*
-failedResult = {
-  success: false,
-  errors: [],
-  inputErrors: [{ message: 'Email already taken', path: ['email'] }, { message: 'Password too short', path: ['password'] }],
   environmentErrors: [],
 }
 */

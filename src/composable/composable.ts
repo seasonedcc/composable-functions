@@ -1,20 +1,27 @@
-import { toErrorWithMessage } from './errors.ts'
+import { success } from '../constructor.ts'
+import { ErrorList, failure } from '../errors.ts'
+import { MergeObjs, Success, Failure } from '../types.ts'
 import {
   AllArguments,
   CollectArguments,
   Composable,
-  ErrorWithMessage,
-  Failure,
   First,
   Fn,
-  MergeObjs,
   PipeArguments,
   PipeReturn,
   RecordToTuple,
-  Success,
   UnpackAll,
   UnpackResult,
 } from './types.ts'
+
+function toError(maybeError: unknown): Error {
+  if (maybeError instanceof Error) return maybeError
+  try {
+    return new Error(JSON.stringify(maybeError))
+  } catch (_e) {
+    return new Error(String(maybeError))
+  }
+}
 
 /**
  * Merges a list of objects into a single object.
@@ -32,14 +39,6 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
   return Object.assign({}, ...objs) as MergeObjs<T>
 }
 
-function success<T>(data: T): Success<T> {
-  return { success: true, data, errors: [] }
-}
-
-function error(errors: ErrorWithMessage[]): Failure {
-  return { success: false, errors }
-}
-
 /**
  * Creates a composable function.
  * That function is gonna catch any errors and always return a Result.
@@ -52,7 +51,10 @@ function composable<T extends Fn>(fn: T): Composable<T> {
       const result = await fn(...(args as any[]))
       return success(result)
     } catch (e) {
-      return error([toErrorWithMessage(e)])
+      if (e instanceof ErrorList) {
+        return failure(e.list)
+      }
+      return failure([toError(e)])
     }
   }
 }
@@ -79,7 +81,7 @@ function pipe<T extends [Composable, ...Composable[]]>(
     //           I don't understand what is the issue here but ignoring the errors
     //           is safe and much nicer than a bunch of casts to any
     const res = await sequence(...fns)(...args)
-    return !res.success ? error(res.errors) : success(res.data.at(-1))
+    return !res.success ? failure(res.errors) : success(res.data.at(-1))
   }) as PipeReturn<T>
 }
 
@@ -101,7 +103,7 @@ function all<T extends [Composable, ...Composable[]]>(
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (results.some(({ success }) => success === false)) {
-      return error(results.map(({ errors }) => errors).flat())
+      return failure(results.map(({ errors }) => errors).flat())
     }
 
     return success((results as Success<any>[]).map(({ data }) => data))
@@ -152,12 +154,12 @@ function sequence<T extends [Composable, ...Composable[]]>(
     const [head, ...tail] = fns as T
 
     const res = await head(...args)
-    if (!res.success) return error(res.errors)
+    if (!res.success) return failure(res.errors)
 
     const result = [res.data]
     for await (const fn of tail) {
       const res = await fn(result.at(-1))
-      if (!res.success) return error(res.errors)
+      if (!res.success) return failure(res.errors)
       result.push(res.data)
     }
     return success(result)
@@ -232,9 +234,9 @@ function mapError<T extends Composable, R>(
     if (res.success) return success(res.data)
     const mapped = await composable(mapper)(res)
     if (mapped.success) {
-      return error(mapped.data.errors)
+      return failure(mapped.data.errors)
     } else {
-      return error(mapped.errors)
+      return failure(mapped.errors)
     }
   }) as T
 }
@@ -244,11 +246,9 @@ export {
   catchError,
   collect,
   composable,
-  error,
   map,
   mapError,
   mergeObjects,
   pipe,
   sequence,
-  success,
 }

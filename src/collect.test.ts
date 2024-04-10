@@ -1,16 +1,11 @@
-import {
-  describe,
-  it,
-  assertObjectMatch,
-  assertEquals,
-} from './test-prelude.ts'
+import { assertEquals, assertIsError, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { collect } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { failure, InputError } from './errors.ts'
 
 describe('collect', () => {
   it('should combine an object of domain functions', async () => {
@@ -20,7 +15,7 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: number }>>>
 
-    assertEquals(await c({ id: 1 }), makeSuccessResult({ a: 2, b: 0 }))
+    assertEquals(await c({ id: 1 }), success({ a: 2, b: 0 }))
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
@@ -32,11 +27,7 @@ describe('collect', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        inputErrors: [
-          { message: 'Expected string, received number', path: ['id'] },
-        ],
-      }),
+      failure([new InputError('Expected string, received number', ['id'])]),
     )
   })
 
@@ -49,12 +40,7 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: never }>>>
 
-    assertEquals(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [{ message: 'Error', exception: 'Error' }],
-      }),
-    )
+    assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
 
   it('should combine the inputError messages of both functions', async () => {
@@ -66,18 +52,10 @@ describe('collect', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      makeErrorResult({
-        inputErrors: [
-          {
-            message: 'Expected string, received number',
-            path: ['id'],
-          },
-          {
-            message: 'Expected string, received number',
-            path: ['id'],
-          },
-        ],
-      }),
+      failure([
+        new InputError('Expected string, received number', ['id']),
+        new InputError('Expected string, received number', ['id']),
+      ]),
     )
   })
 
@@ -92,14 +70,10 @@ describe('collect', () => {
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: never; b: never }>>>
 
-    assertObjectMatch(
-      await c({ id: 1 }),
-      makeErrorResult({
-        errors: [
-          { message: 'Error A', exception: { message: 'Error A' } },
-          { message: 'Error B', exception: { message: 'Error B' } },
-        ],
-      }),
-    )
+    const {
+      errors: [errA, errB],
+    } = await c({ id: 1 })
+    assertIsError(errA, Error, 'Error A')
+    assertIsError(errB, Error, 'Error B')
   })
 })

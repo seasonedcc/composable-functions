@@ -1,16 +1,11 @@
-import {
-  assertEquals,
-  assertObjectMatch,
-  describe,
-  it,
-} from './test-prelude.ts'
+import { assertIsError, assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'
 import { fromSuccess, trace } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { success } from './constructor.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to df failures', async () => {
@@ -23,12 +18,7 @@ describe('trace', () => {
 
     const result = await c({ id: 1 })
 
-    assertObjectMatch(
-      result,
-      makeErrorResult({
-        errors: [{ message: 'Problem in tracing' }],
-      }),
-    )
+    assertIsError(result.errors[0], Error, 'Problem in tracing')
   })
 
   it('intercepts inputs and outputs of a given domain function', async () => {
@@ -49,13 +39,7 @@ describe('trace', () => {
     assertEquals(contextFromFunctionA, {
       input: { id: 1 },
       environment: undefined,
-      result: {
-        success: true,
-        errors: [],
-        inputErrors: [],
-        environmentErrors: [],
-        data: 2,
-      },
+      result: success(2),
     })
   })
 })

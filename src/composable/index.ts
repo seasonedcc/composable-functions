@@ -1,12 +1,11 @@
-export type { Composable, Result, ErrorWithMessage } from './types.ts'
-export { toErrorWithMessage } from './errors.ts'
+export type { Composable, Result } from './types.ts'
 export {
+  all,
   catchError,
+  collect,
   composable,
-  pipe,
   map,
   mapError,
+  pipe,
   sequence,
-  all,
-  collect,
 } from './composable.ts'

@@ -1,76 +1,49 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
-import { makeSuccessResult, mdf } from './constructor.ts'
+import { success, mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
-import type { DomainFunction, ErrorData } from './types.ts'
+import type { DomainFunction, Failure } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
-import { makeErrorResult } from './errors.ts'
+import { failure } from './errors.ts'
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = () =>
-      ({
-        errors: [{ message: 'New Error Message' }],
-        inputErrors: [{ message: 'New Input Error Message' }],
-      } as ErrorData)
+    const b = () => [new Error('New Error Message')]
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ id: 1 }), makeSuccessResult(2))
+    assertEquals(await c({ id: 1 }), success(2))
   })
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = (result: ErrorData) =>
-      ({
-        errors: [{ message: 'Number of errors: ' + result.errors.length }],
-        environmentErrors: [],
-        inputErrors: [
-          {
-            message: 'Number of input errors: ' + result.inputErrors.length,
-            path: [],
-          },
-        ],
-      } as ErrorData)
+    const errorMapper = (errors: Error[]) => [
+      new Error('Number of errors: ' + errors.length),
+    ]
 
-    const c = mapError(a, b)
+    const c = mapError(a, errorMapper)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      makeErrorResult({
-        errors: [{ message: 'Number of errors: 0' }],
-        inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
-      }),
+      failure([new Error('Number of errors: 1')]),
     )
   })
 
   it('returns a domain function function that will apply an async function over the error of the first one', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = (result: ErrorData) =>
-      Promise.resolve({
-        errors: [{ message: 'Number of errors: ' + result.errors.length }],
-        environmentErrors: [],
-        inputErrors: [
-          {
-            message: 'Number of input errors: ' + result.inputErrors.length,
-            path: [],
-          },
-        ],
-      }) as Promise<ErrorData>
+    const errorMapper = (errors: Error[]) =>
+      Promise.resolve([new Error('Number of errors: ' + errors.length)])
 
-    const c = mapError(a, b)
+    const c = mapError(a, errorMapper)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      makeErrorResult({
-        errors: [{ message: 'Number of errors: 0' }],
-        inputErrors: [{ message: 'Number of input errors: 1', path: [] }],
-      }),
+      failure([new Error('Number of errors: 1')]),
     )
   })
 
@@ -85,9 +58,7 @@ describe('mapError', () => {
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      makeErrorResult({
-        errors: [{ message: 'failed to map', exception: 'failed to map' }],
-      }),
+      failure([new Error('failed to map')]),
     )
   })
 })
