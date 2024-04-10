@@ -44,7 +44,9 @@ function fromComposable<I, E, A extends Composable>(
     const envResult = await (environmentSchema ?? objectSchema).safeParseAsync(
       environment,
     )
-    const result = await (inputSchema ?? undefinedSchema).safeParseAsync(input)
+    const result = await (inputSchema ?? alwaysUndefinedSchema).safeParseAsync(
+      input,
+    )
 
     if (!result.success || !envResult.success) {
       const inputErrors = result.success
@@ -77,15 +79,9 @@ const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
   },
 }
 
-const undefinedSchema: ParserSchema<undefined> = {
-  safeParseAsync: (data: unknown) => {
-    if (data !== undefined) {
-      return Promise.resolve({
-        success: false,
-        error: { issues: [{ path: [], message: 'Expected undefined' }] },
-      })
-    }
-    return Promise.resolve({ success: true, data })
+const alwaysUndefinedSchema: ParserSchema<undefined> = {
+  safeParseAsync: (_data: unknown) => {
+    return Promise.resolve({ success: true, data: undefined })
   },
 }
 
