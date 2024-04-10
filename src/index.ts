@@ -1,7 +1,6 @@
 export {
   fromComposable,
   makeDomainFunction,
-  makeSuccessResult,
   mdf,
   success,
 } from './constructor.ts'

@@ -93,6 +93,5 @@ export {
   fromComposable,
   makeDomainFunction as mdf,
   makeDomainFunction,
-  success as makeSuccessResult,
   success,
 }
