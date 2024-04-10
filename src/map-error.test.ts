@@ -10,9 +10,7 @@ import { failure } from './errors.ts'
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = () => ({
-      errors: [new Error('New Error Message')],
-    })
+    const b = () => [new Error('New Error Message')]
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
@@ -22,9 +20,9 @@ describe('mapError', () => {
 
   it('returns a domain function function that will apply a function over the error of the first one', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const errorMapper = (result: Pick<Failure, 'errors'>) => ({
-      errors: [new Error('Number of errors: ' + result.errors.length)],
-    })
+    const errorMapper = (errors: Error[]) => [
+      new Error('Number of errors: ' + errors.length),
+    ]
 
     const c = mapError(a, errorMapper)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
@@ -37,10 +35,8 @@ describe('mapError', () => {
 
   it('returns a domain function function that will apply an async function over the error of the first one', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const errorMapper = (result: Pick<Failure, 'errors'>) =>
-      Promise.resolve({
-        errors: [new Error('Number of errors: ' + result.errors.length)],
-      })
+    const errorMapper = (errors: Error[]) =>
+      Promise.resolve([new Error('Number of errors: ' + errors.length)])
 
     const c = mapError(a, errorMapper)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>

@@ -121,9 +121,7 @@ function first<Fns extends DomainFunction[]>(
         fns.map((fn) => (fn as DomainFunction)(input, environment)),
       )
 
-      const result = results.find((r) => r.success) as
-        | SuccessResult<any>
-        | undefined
+      const result = results.find((r) => r.success) as SuccessResult | undefined
       if (!result) {
         throw new ErrorList(results.map(({ errors }) => errors).flat())
       }
@@ -316,16 +314,14 @@ function fromSuccess<T extends DomainFunction>(
  */
 function mapError<O>(
   dfn: DomainFunction<O>,
-  mapper: (
-    element: Pick<Failure, 'errors'>,
-  ) => Pick<Failure, 'errors'> | Promise<Pick<Failure, 'errors'>>,
+  mapper: (errors: Error[]) => Error[] | Promise<Error[]>,
 ): DomainFunction<O> {
   return (async (input, environment) => {
     const result = await dfn(input, environment)
     if (result.success) return result
 
     return A.composable(async () => {
-      throw new ErrorList((await mapper(result)).errors)
+      throw new ErrorList(await mapper(result.errors))
     })()
   }) as DomainFunction<O>
 }
