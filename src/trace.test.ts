@@ -2,7 +2,7 @@ import { assertIsError, assertEquals, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'
-import { onErrorThrow, trace } from './domain-functions.ts'
+import { fromSuccess, trace } from './domain-functions.ts'
 import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { success } from './constructor.ts'
@@ -35,7 +35,7 @@ describe('trace', () => {
     })(a)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await onErrorThrow(c)({ id: 1 }), 2)
+    assertEquals(await fromSuccess(c)({ id: 1 }), 2)
     assertEquals(contextFromFunctionA, {
       input: { id: 1 },
       environment: undefined,

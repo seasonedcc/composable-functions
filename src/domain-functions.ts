@@ -240,7 +240,7 @@ function branch<T, R extends DomainFunction | null>(
     return A.composable(async () => {
       const nextDf = await resolver(result.data)
       if (typeof nextDf !== 'function') return result.data
-      return onErrorThrow(nextDf)(result.data, environment)
+      return fromSuccess(nextDf)(result.data, environment)
     })()
   }) as DomainFunction<
     R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
@@ -251,16 +251,16 @@ function branch<T, R extends DomainFunction | null>(
  * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
- * import { mdf, onErrorThrow } from 'domain-functions'
+ * import { mdf, fromSuccess } from 'domain-functions'
  *
  * const add1 = mdf(z.number())((n) => n + 1)
  * const result = await add1(1)
  * //    ^? Result<number>
- * const data = await onErrorThrow(add1)(n)
+ * const data = await fromSuccess(add1)(n)
  * //    ^? number
  * expect(data).toBe(n + 1)
  */
-function onErrorThrow<T extends Composable>(
+function fromSuccess<T extends Composable>(
   fn: T,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ): T extends Composable<(...a: infer A) => infer O>
@@ -345,7 +345,7 @@ export {
   collect,
   collectSequence,
   first,
-  onErrorThrow,
+  fromSuccess,
   map,
   mapError,
   merge,

@@ -14,7 +14,7 @@ export {
   map,
   mapError,
   merge,
-  onErrorThrow,
+  fromSuccess,
   pipe,
   sequence,
   trace,
