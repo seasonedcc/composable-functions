@@ -4,40 +4,14 @@ import type {
   DomainFunction,
   Last,
   MergeObjs,
-  Result,
   SuccessResult,
   TupleToUnion,
   UnpackAll,
   UnpackData,
   UnpackDFObject,
   UnpackResult,
-  Failure,
 } from './types.ts'
 import { Composable } from './index.ts'
-
-/**
- * @deprecated Use `composable` instead.
- * A functions that turns the result of its callback into a Result object.
- * @example
- * const result = await safeResult(() => ({
- *   message: 'hello',
- * }))
- * // the type of result is Result<{ message: string }>
- * if (result.success) {
- *   console.log(result.data.message)
- * }
- *
- * const result = await safeResult(() => {
- *  throw new Error('something went wrong')
- * })
- * // the type of result is Result<never>
- * if (!result.success) {
- *  console.log(result.errors[0].message)
- * }
- */
-function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return A.composable(fn)() as Promise<Result<T>>
-}
 
 /**
  * Takes a function with 2 parameters and partially applies the second one.
@@ -377,7 +351,6 @@ export {
   mapError,
   merge,
   pipe,
-  safeResult,
   sequence,
   trace,
 }

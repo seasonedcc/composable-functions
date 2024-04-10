@@ -16,7 +16,6 @@ export {
   mapError,
   merge,
   pipe,
-  safeResult,
   sequence,
   trace,
 } from './domain-functions.ts'
