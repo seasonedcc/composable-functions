@@ -32,7 +32,7 @@ export {
   EnvironmentError,
   InputError,
   makeErrorResult,
-  ResultError,
+  ErrorList,
   toError,
 } from './errors.ts'
 export { mergeObjects } from './composable/composable.ts'

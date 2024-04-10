@@ -3,7 +3,7 @@ import { z } from './test-prelude.ts'
 
 import { mdf } from './constructor.ts'
 import { fromSuccess } from './domain-functions.ts'
-import { ResultError } from './errors.ts'
+import { ErrorList } from './errors.ts'
 import type { Equal, Expect } from './types.test.ts'
 
 describe('fromSuccess', () => {
@@ -34,6 +34,6 @@ describe('fromSuccess', () => {
 
     assertRejects(async () => {
       await c({ invalidInput: 'should error' })
-    }, ResultError)
+    }, ErrorList)
   })
 })

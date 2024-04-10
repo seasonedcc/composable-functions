@@ -1,10 +1,10 @@
 import { assertEquals, describe, it } from '../test-prelude.ts'
-import { map, mapError, pipe, sequence } from './index.ts'
 import { Equal, Expect } from './types.test.ts'
 import type { Result } from '../types.ts'
 import type { Composable } from './types.ts'
 import { all, catchError, collect, composable } from './composable.ts'
 import { success } from '../constructor.ts'
+import { map, mapError, pipe, sequence } from './index.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)

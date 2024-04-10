@@ -1,5 +1,5 @@
 import { success } from '../constructor.ts'
-import { toError, ResultError, failure } from '../errors.ts'
+import { toError, ErrorList, failure } from '../errors.ts'
 import { MergeObjs, Success, Failure } from '../types.ts'
 import {
   AllArguments,
@@ -42,8 +42,8 @@ function composable<T extends Fn>(fn: T): Composable<T> {
       const result = await fn(...(args as any[]))
       return success(result)
     } catch (e) {
-      if (e instanceof ResultError) {
-        return failure(e.result.errors)
+      if (e instanceof ErrorList) {
+        return failure(e.list)
       }
       return failure([toError(e)])
     }

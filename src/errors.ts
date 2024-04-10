@@ -37,69 +37,15 @@ class EnvironmentError extends Error {
   }
 }
 
-/**
- * A custom error class for creating ErrorResult.
- * @example
- * const df = mdf()(() => {
- *   throw new ResultError({
- *     errors: [{ message: 'Some error' }],
- *     inputErrors: [{ message: 'Some input error', path: 'user.name' }],
- *   })
- * })
- */
-class ResultError extends Error {
-  result: Failure
+class ErrorList extends Error {
+  list: Error[]
 
-  constructor(result: Pick<Failure, 'errors'>) {
-    super('ResultError')
-    this.name = 'ResultError'
-    this.result = failure(result.errors)
+  constructor(errors: Error[]) {
+    super('ErrorList')
+    this.name = 'ErrorList'
+    this.list = failure(errors).errors
   }
 }
-
-// function failureToErrorResult({ errors }: Failure): ErrorResult {
-//   return makeErrorResult({
-//     errors: errors
-//       .filter(
-//         (exception) =>
-//           !(
-//             exception instanceof InputError ||
-//             exception instanceof InputErrors ||
-//             exception instanceof EnvironmentError
-//           ),
-//       )
-//       .flatMap((e) => (e instanceof ResultError ? e.result.errors : e)),
-//     inputErrors: errors.flatMap((exception) =>
-//       exception instanceof InputError
-//         ? [
-//             {
-//               path: exception.path.split('.'),
-//               message: exception.message,
-//             },
-//           ]
-//         : exception instanceof InputErrors
-//         ? exception.errors.map((e) => ({
-//             path: e.path.split('.'),
-//             message: e.message,
-//           }))
-//         : exception instanceof ResultError
-//         ? exception.result.inputErrors
-//         : [],
-//     ),
-//     environmentErrors: errors.flatMap((exception) =>
-//       exception instanceof EnvironmentError
-//         ? [
-//             {
-//               path: exception.path.split('.'),
-//               message: exception.message,
-//             },
-//           ]
-//         : exception instanceof ResultError
-//         ? exception.result.environmentErrors
-//         : [],
-//     ),
-//   })
-// }
 
 function objectHasKey<T extends string>(
   obj: unknown,
@@ -132,6 +78,6 @@ export {
   failure as makeErrorResult,
   failure,
   InputError,
-  ResultError,
+  ErrorList,
   toError,
 }

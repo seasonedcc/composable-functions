@@ -8,7 +8,7 @@ import {
 import { z } from './test-prelude.ts'
 
 import { success, mdf } from './constructor.ts'
-import { failure, EnvironmentError, InputError, ResultError } from './errors.ts'
+import { failure, EnvironmentError, InputError, ErrorList } from './errors.ts'
 import type { DomainFunction, SuccessResult } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 
@@ -203,11 +203,9 @@ describe('makeDomainFunction', () => {
     )
   })
 
-  it('returns an error result when the domain function throws an ResultError', async () => {
+  it('returns an error result when the domain function throws an ErrorList', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new ResultError({
-        errors: [new InputError('Custom input error', 'contact.id')],
-      })
+      throw new ErrorList([new InputError('Custom input error', 'contact.id')])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 

@@ -1,4 +1,4 @@
-import { ResultError, failure, toError } from './errors.ts'
+import { ErrorList, failure, toError } from './errors.ts'
 import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
@@ -125,9 +125,7 @@ function first<Fns extends DomainFunction[]>(
         | SuccessResult<any>
         | undefined
       if (!result) {
-        throw new ResultError({
-          errors: results.map(({ errors }) => errors).flat(),
-        })
+        throw new ErrorList(results.map(({ errors }) => errors).flat())
       }
 
       return result.data
@@ -278,7 +276,7 @@ function branch<T, R extends DomainFunction | null>(
 }
 
 /**
- * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ResultError` that will bubble up to the parent function.
+ * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
  * import { mdf, fromSuccess } from 'domain-functions'
@@ -295,7 +293,7 @@ function fromSuccess<T extends DomainFunction>(
 ): (...args: Parameters<DomainFunction>) => Promise<UnpackData<T>> {
   return async function (...args) {
     const result = await df(...args)
-    if (!result.success) throw new ResultError(result)
+    if (!result.success) throw new ErrorList(result.errors)
 
     return result.data
   }
@@ -327,7 +325,7 @@ function mapError<O>(
     if (result.success) return result
 
     return A.composable(async () => {
-      throw new ResultError({ ...(await mapper(result)) })
+      throw new ErrorList((await mapper(result)).errors)
     })()
   }) as DomainFunction<O>
 }
