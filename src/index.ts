@@ -4,7 +4,6 @@ export {
   makeSuccessResult,
   mdf,
   success,
-  toComposable,
 } from './constructor.ts'
 export {
   all,

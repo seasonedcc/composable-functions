@@ -35,15 +35,6 @@ function makeDomainFunction<I, E>(
   }
 }
 
-function toComposable<I = unknown, E = unknown, O = unknown>(
-  df: DomainFunction<O>,
-) {
-  return ((input = undefined, environment = {}) =>
-    df(input, environment)) as unknown as Composable<
-    (input?: I, environment?: E) => O
-  >
-}
-
 function fromComposable<I, E, A extends Composable>(
   fn: A,
   inputSchema?: ParserSchema<I>,
@@ -107,5 +98,4 @@ export {
   makeDomainFunction,
   success as makeSuccessResult,
   success,
-  toComposable,
 }
