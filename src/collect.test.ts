@@ -27,7 +27,7 @@ describe('collect', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      failure([new InputError('Expected string, received number', 'id')]),
+      failure([new InputError('Expected string, received number', ['id'])]),
     )
   })
 
@@ -53,8 +53,8 @@ describe('collect', () => {
     assertEquals(
       await c({ id: 1 }),
       failure([
-        new InputError('Expected string, received number', 'id'),
-        new InputError('Expected string, received number', 'id'),
+        new InputError('Expected string, received number', ['id']),
+        new InputError('Expected string, received number', ['id']),
       ]),
     )
   })

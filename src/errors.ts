@@ -11,9 +11,9 @@ function failure(errors: Error[]): Failure {
  * })
  */
 class InputError extends Error {
-  path: string
+  path: string[]
 
-  constructor(message: string, path: string) {
+  constructor(message: string, path: string[] = []) {
     super(message)
     this.name = 'InputError'
     this.path = path
@@ -28,9 +28,9 @@ class InputError extends Error {
  * })
  */
 class EnvironmentError extends Error {
-  path: string
+  path: string[]
 
-  constructor(message: string, path: string) {
+  constructor(message: string, path: string[] = []) {
     super(message)
     this.name = 'EnvironmentError'
     this.path = path

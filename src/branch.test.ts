@@ -75,7 +75,7 @@ describe('branch', () => {
 
     assertEquals(
       await c({ id: '1' }),
-      failure([new InputError('Expected number, received string', 'id')]),
+      failure([new InputError('Expected number, received string', ['id'])]),
     )
   })
 
@@ -89,7 +89,7 @@ describe('branch', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      failure([new InputError('Expected number, received string', 'id')]),
+      failure([new InputError('Expected number, received string', ['id'])]),
     )
   })
 

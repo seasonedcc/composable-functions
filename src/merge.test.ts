@@ -73,7 +73,7 @@ describe('merge', () => {
 
     assertEquals(
       await c({ id: 1 }),
-      failure([new InputError('Expected string, received number', 'id')]),
+      failure([new InputError('Expected string, received number', ['id'])]),
     )
   })
 
@@ -107,8 +107,8 @@ describe('merge', () => {
     assertEquals(
       await c({ id: 1 }),
       failure([
-        new InputError('Expected string, received number', 'id'),
-        new InputError('Expected string, received number', 'id'),
+        new InputError('Expected string, received number', ['id']),
+        new InputError('Expected string, received number', ['id']),
       ]),
     )
   })

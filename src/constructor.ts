@@ -50,13 +50,13 @@ function fromComposable<I, E, A extends Composable>(
       const inputErrors = result.success
         ? []
         : result.error.issues.map(
-            (error) => new InputError(error.message, error.path.join('.')),
+            (error) => new InputError(error.message, error.path as string[]),
           )
       const envErrors = envResult.success
         ? []
         : envResult.error.issues.map(
             (error) =>
-              new EnvironmentError(error.message, error.path.join('.')),
+              new EnvironmentError(error.message, error.path as string[]),
           )
       return failure([...inputErrors, ...envErrors])
     }

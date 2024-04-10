@@ -27,7 +27,7 @@ describe('makeDomainFunction', () => {
 
       assertEquals(
         await handler('some input'),
-        failure([new InputError('Expected undefined', '')]),
+        failure([new InputError('Expected undefined')]),
       )
     })
   })
@@ -48,7 +48,7 @@ describe('makeDomainFunction', () => {
 
       assertEquals(
         await handler(undefined, ''),
-        failure([new EnvironmentError('Expected an object', '')]),
+        failure([new EnvironmentError('Expected an object')]),
       )
     })
 
@@ -59,7 +59,7 @@ describe('makeDomainFunction', () => {
 
       assertEquals(
         await handler({ missingId: '1' }),
-        failure([new InputError('Expected number, received nan', 'id')]),
+        failure([new InputError('Expected number, received nan', ['id'])]),
       )
     })
   })
@@ -98,8 +98,8 @@ describe('makeDomainFunction', () => {
     assertEquals(
       await handler({ id: '1' }, { uid: '2' }),
       failure([
-        new InputError('ID already taken', 'id'),
-        new EnvironmentError('UID already taken', 'uid'),
+        new InputError('ID already taken', ['id']),
+        new EnvironmentError('UID already taken', ['uid']),
       ]),
     )
   })
@@ -129,7 +129,7 @@ describe('makeDomainFunction', () => {
 
     assertEquals(
       await handler({ id: '1' }, {}),
-      failure([new EnvironmentError('Expected number, received nan', 'uid')]),
+      failure([new EnvironmentError('Expected number, received nan', ['uid'])]),
     )
   })
 
@@ -181,37 +181,41 @@ describe('makeDomainFunction', () => {
 
   it('returns inputErrors when the domain function throws an InputError', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new InputError('Custom input error', 'contact.id')
+      throw new InputError('Custom input error', ['contact', 'id'])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      failure([new InputError('Custom input error', 'contact.id')]),
+      failure([new InputError('Custom input error', ['contact', 'id'])]),
     )
   })
 
   it('returns environmentErrors when the domain function throws an EnvironmentError', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new EnvironmentError('Custom env error', 'currentUser.role')
+      throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      failure([new EnvironmentError('Custom env error', 'currentUser.role')]),
+      failure([
+        new EnvironmentError('Custom env error', ['currentUser', 'role']),
+      ]),
     )
   })
 
   it('returns an error result when the domain function throws an ErrorList', async () => {
     const handler = mdf(z.object({ id: z.number() }))(() => {
-      throw new ErrorList([new InputError('Custom input error', 'contact.id')])
+      throw new ErrorList([
+        new InputError('Custom input error', ['contact', 'id']),
+      ])
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      failure([new InputError('Custom input error', 'contact.id')]),
+      failure([new InputError('Custom input error', ['contact', 'id'])]),
     )
   })
 })

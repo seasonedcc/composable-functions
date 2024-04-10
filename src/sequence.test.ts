@@ -71,7 +71,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c(undefined, {}),
-      failure([new EnvironmentError('Required', 'env')]),
+      failure([new EnvironmentError('Required', ['env'])]),
     )
   })
 
@@ -94,7 +94,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
-      failure([new InputError('Expected undefined, received object', '')]),
+      failure([new InputError('Expected undefined, received object')]),
     )
   })
 
@@ -115,7 +115,7 @@ describe('sequence', () => {
 
     assertEquals(
       await c(undefined, { env: 1 }),
-      failure([new InputError('Expected number, received string', 'inp')]),
+      failure([new InputError('Expected number, received string', ['inp'])]),
     )
   })
 

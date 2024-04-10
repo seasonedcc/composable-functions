@@ -16,7 +16,7 @@ describe('applyEnvironment', () => {
 
     assertEquals(
       await getEnvWithEnvironment('some input'),
-      failure([new EnvironmentError('Expected number, received string', '')]),
+      failure([new EnvironmentError('Expected number, received string')]),
     )
   })
 

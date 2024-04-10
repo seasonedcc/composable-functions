@@ -45,7 +45,7 @@ describe('first', () => {
     assertEquals(
       await c({ id: 1 }),
       failure([
-        new InputError('Expected string, received number', 'id'),
+        new InputError('Expected string, received number', ['id']),
         new Error('Error'),
       ]),
     )

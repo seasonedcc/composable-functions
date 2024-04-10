@@ -38,7 +38,7 @@ describe('map', () => {
 
     assertEquals(
       await c({ invalidInput: '1' }),
-      failure([new InputError('Required', 'id')]),
+      failure([new InputError('Required', ['id'])]),
     )
   })
 
