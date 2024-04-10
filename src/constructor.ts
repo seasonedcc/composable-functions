@@ -85,9 +85,6 @@ const alwaysUndefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-// Ainda chamamos de Environment?
-// Ainda chamamos de DF? Dado a nova definicao
-
 export {
   fromComposable,
   makeDomainFunction as mdf,
