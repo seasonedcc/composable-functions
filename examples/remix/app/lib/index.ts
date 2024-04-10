@@ -1,5 +1,5 @@
 import { Cookie, json, TypedResponse } from '@remix-run/node'
-import { Result } from 'domain-functions'
+import { Result } from 'composable-functions'
 
 /**
  * Given a Cookie and a Request it returns the stored cookie's value as an object
