@@ -2,12 +2,12 @@ type Failure = {
   success: false
   errors: Array<Error>
 }
-type Success<T = any> = {
+type Success<T = void> = {
   success: true
   data: T
   errors: []
 }
-type Result<T = any> = Success<T> | Failure
+type Result<T = void> = Success<T> | Failure
 
 /**
  * A domain function.
