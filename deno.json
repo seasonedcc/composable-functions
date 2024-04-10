@@ -16,5 +16,8 @@
         "ban-types"
       ]
     }
+  },
+  "compilerOptions": {
+    "types": ["./src/test.d.ts"]
   }
 }

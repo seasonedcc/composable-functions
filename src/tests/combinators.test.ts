@@ -1,71 +1,27 @@
 import { assertEquals, describe, it } from '../test-prelude.ts'
-import { Equal, Expect } from './types.test.ts'
-import type { Result } from '../types.ts'
-import type { Composable } from './types.ts'
-import { all, catchError, collect, composable } from './composable.ts'
-import { success } from '../constructor.ts'
-import { map, mapError, pipe, sequence } from './index.ts'
+import type { Result, Composable } from '../index.ts'
+import {
+  all,
+  catchError,
+  collect,
+  composable,
+  map,
+  mapError,
+  pipe,
+  sequence,
+  success,
+} from '../index.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)
 const append = composable((a: string, b: string) => `${a}${b}`)
 const add = composable((a: number, b: number) => a + b)
-const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b
 })
 const alwaysThrow = composable(() => {
   throw new Error('always throw', { cause: 'it was made for this' })
-})
-
-describe('composable', () => {
-  it('infers the types if has no arguments or return', async () => {
-    const fn = composable(() => {})
-    const res = await fn()
-
-    type _FN = Expect<Equal<typeof fn, Composable<() => void>>>
-    type _R = Expect<Equal<typeof res, Result<void>>>
-
-    assertEquals(res, success(undefined))
-  })
-
-  it('infers the types if has arguments and a return', async () => {
-    const fn = add
-    const res = await fn(1, 2)
-
-    type _FN = Expect<
-      Equal<typeof fn, Composable<(a: number, b: number) => number>>
-    >
-    type _R = Expect<Equal<typeof res, Result<number>>>
-
-    assertEquals(res, success(3))
-  })
-
-  it('infers the types of async functions', async () => {
-    const fn = composable(asyncAdd)
-    const res = await fn(1, 2)
-
-    type _FN = Expect<
-      Equal<typeof fn, Composable<(a: number, b: number) => number>>
-    >
-    type _R = Expect<Equal<typeof res, Result<number>>>
-
-    assertEquals(res, success(3))
-  })
-
-  it('catch errors', async () => {
-    const fn = faultyAdd
-    const res = await fn(1, 2)
-
-    type _FN = Expect<
-      Equal<typeof fn, Composable<(a: number, b: number) => number>>
-    >
-    type _R = Expect<Equal<typeof res, Result<number>>>
-
-    assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'a is 1')
-  })
 })
 
 describe('pipe', () => {
