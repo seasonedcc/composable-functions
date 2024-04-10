@@ -1,16 +1,11 @@
-export {
-  composable,
-  failure,
-  fromSuccess,
-  mergeObjects,
-  success,
-} from './constructors.ts'
+export { composable, failure, fromSuccess, success } from './constructors.ts'
 export {
   all,
   catchError,
   collect,
   map,
   mapError,
+  mergeObjects,
   pipe,
   sequence,
 } from './combinators.ts'

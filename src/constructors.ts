@@ -1,6 +1,6 @@
 import { mapError } from './combinators.ts'
 import { ErrorList } from './errors.ts'
-import type { Composable, Failure, Fn, MergeObjs, Success } from './types.ts'
+import type { Composable, Failure, Fn, Success } from './types.ts'
 
 function success<const T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
@@ -17,22 +17,6 @@ function toError(maybeError: unknown): Error {
   } catch (_e) {
     return new Error(String(maybeError))
   }
-}
-
-/**
- * Merges a list of objects into a single object.
- * It is a type-safe version of Object.assign.
- * @param objs the list of objects to merge
- * @returns the merged object
- * @example
- * const obj1 = { a: 1, b: 2 }
- * const obj2 = { c: 3 }
- * const obj3 = { d: 4 }
- * const merged = mergeObjects([obj1, obj2, obj3])
- * //   ^? { a: number, b: number, c: number, d: number }
- */
-function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
-  return Object.assign({}, ...objs) as MergeObjs<T>
 }
 
 /**
@@ -84,4 +68,4 @@ function fromSuccess<T extends Composable>(
     : never
 }
 
-export { composable, failure, fromSuccess, mergeObjects, success }
+export { composable, failure, fromSuccess, success }

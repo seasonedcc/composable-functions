@@ -13,12 +13,7 @@ import type {
   UnpackData,
   UnpackResult,
 } from './types.ts'
-import {
-  composable,
-  failure,
-  fromSuccess,
-  mergeObjects,
-} from '../constructors.ts'
+import { composable, failure, fromSuccess } from '../constructors.ts'
 import { ErrorList } from '../errors.ts'
 import { applyEnvironment } from './constructors.ts'
 
@@ -64,7 +59,7 @@ function collect<Fns extends Record<string, DomainFunction>>(
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
     map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), mergeObjects) as DomainFunction<
+  return map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
     UnpackDFObject<Fns>
   >
 }
@@ -111,7 +106,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), mergeObjects)
+  return map(all(...fns), A.mergeObjects)
 }
 
 /**
@@ -159,7 +154,7 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
         [keys[i]]: o,
       })),
     ),
-    mergeObjects,
+    A.mergeObjects,
   ) as DomainFunction<UnpackDFObject<Fns>>
 }
 

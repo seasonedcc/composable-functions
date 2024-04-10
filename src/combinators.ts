@@ -5,6 +5,7 @@ import type {
   Failure,
   First,
   Fn,
+  MergeObjs,
   PipeArguments,
   PipeReturn,
   RecordToTuple,
@@ -12,7 +13,23 @@ import type {
   UnpackAll,
   UnpackResult,
 } from './types.ts'
-import { composable, failure, mergeObjects, success } from './constructors.ts'
+import { composable, failure, success } from './constructors.ts'
+
+/**
+ * Merges a list of objects into a single object.
+ * It is a type-safe version of Object.assign.
+ * @param objs the list of objects to merge
+ * @returns the merged object
+ * @example
+ * const obj1 = { a: 1, b: 2 }
+ * const obj2 = { c: 3 }
+ * const obj3 = { d: 4 }
+ * const merged = mergeObjects([obj1, obj2, obj3])
+ * //   ^? { a: number, b: number, c: number, d: number }
+ */
+function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
+  return Object.assign({}, ...objs) as MergeObjs<T>
+}
 
 /**
  * Creates a single function out of a chain of multiple Composables. It will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
@@ -196,4 +213,4 @@ function mapError<T extends Composable, R>(
   }) as T
 }
 
-export { pipe, all, collect, sequence, map, catchError, mapError }
+export { pipe, all, collect, sequence, map, catchError, mapError, mergeObjects }
