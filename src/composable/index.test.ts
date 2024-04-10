@@ -350,9 +350,7 @@ const cleanError = (err: Error) => ({
 })
 describe('mapError', () => {
   it('maps over the error results of an Composable function', async () => {
-    const fn = mapError(faultyAdd, ({ errors }) => ({
-      errors: errors.map(cleanError),
-    }))
+    const fn = mapError(faultyAdd, (errors) => errors.map(cleanError))
     const res = await fn(1, 2)
 
     type _FN = Expect<

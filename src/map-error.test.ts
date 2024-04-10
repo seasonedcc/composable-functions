@@ -3,7 +3,7 @@ import { z } from './test-prelude.ts'
 
 import { success, mdf } from './constructor.ts'
 import { mapError } from './domain-functions.ts'
-import type { DomainFunction, Failure } from './types.ts'
+import type { DomainFunction } from './types.ts'
 import type { Equal, Expect } from './types.test.ts'
 import { failure } from './errors.ts'
 

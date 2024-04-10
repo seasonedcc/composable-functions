@@ -227,14 +227,14 @@ function catchError<T extends Fn, R>(
  */
 function mapError<T extends Composable, R>(
   fn: T,
-  mapper: (err: Omit<Failure, 'success'>) => Omit<Failure, 'success'>,
+  mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ) {
   return (async (...args) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
-    const mapped = await composable(mapper)(res)
+    const mapped = await composable(mapper)(res.errors)
     if (mapped.success) {
-      return failure(mapped.data.errors)
+      return failure(mapped.data)
     } else {
       return failure(mapped.errors)
     }

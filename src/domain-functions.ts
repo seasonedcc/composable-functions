@@ -267,10 +267,10 @@ function onErrorThrow<T extends Composable>(
   ? (...a: A) => Promise<Awaited<O>>
   : never {
   return (async (...args) => {
-    const result = await fn(...args)
+    const result = await A.mapError(fn, onError)(...args)
     if (result.success) return result.data
 
-    throw new ErrorList(await onError(result.errors))
+    throw new ErrorList(result.errors)
   }) as T extends Composable<(...a: infer A) => infer O>
     ? (...a: A) => Promise<Awaited<O>>
     : never
@@ -295,14 +295,7 @@ function mapError<O>(
   dfn: DomainFunction<O>,
   mapper: (errors: Error[]) => Error[] | Promise<Error[]>,
 ): DomainFunction<O> {
-  return (async (input, environment) => {
-    const result = await dfn(input, environment)
-    if (result.success) return result
-
-    return A.composable(async () => {
-      throw new ErrorList(await mapper(result.errors))
-    })()
-  }) as DomainFunction<O>
+  return A.mapError(dfn, mapper)
 }
 
 type TraceData<T> = {
