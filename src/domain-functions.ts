@@ -1,4 +1,4 @@
-import { ErrorList, failure, toError } from './errors.ts'
+import { ErrorList, failure } from './errors.ts'
 import * as A from './composable/composable.ts'
 import type {
   DomainFunction,
@@ -327,15 +327,16 @@ function trace<D extends DomainFunction = DomainFunction<unknown>>(
   }: TraceData<UnpackResult<D>>) => Promise<void> | void,
 ): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
   return (fn) => async (input, environment) => {
-    const result = await fn(input, environment)
-    try {
-      await traceFn({ input, environment, result } as TraceData<
-        UnpackResult<D>
-      >)
-      return result
-    } catch (e) {
-      return failure([toError(e)])
-    }
+    const originalResult = await fn(input, environment)
+    const traceResult = await A.composable(traceFn)({
+      input,
+      environment,
+      // TODO: Remove this casting when we unify the Unpack types
+      result: originalResult as Awaited<ReturnType<D>>,
+    })
+    if (traceResult.success) return originalResult
+
+    return failure(traceResult.errors)
   }
 }
 

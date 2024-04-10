@@ -1,5 +1,5 @@
 import { success } from '../constructor.ts'
-import { toError, ErrorList, failure } from '../errors.ts'
+import { ErrorList, failure } from '../errors.ts'
 import { MergeObjs, Success, Failure } from '../types.ts'
 import {
   AllArguments,
@@ -13,6 +13,15 @@ import {
   UnpackAll,
   UnpackResult,
 } from './types.ts'
+
+function toError(maybeError: unknown): Error {
+  if (maybeError instanceof Error) return maybeError
+  try {
+    return new Error(JSON.stringify(maybeError))
+  } catch (_e) {
+    return new Error(String(maybeError))
+  }
+}
 
 /**
  * Merges a list of objects into a single object.

@@ -25,13 +25,7 @@ export {
   inputFromSearch,
   inputFromUrl,
 } from './input-resolvers.ts'
-export {
-  failure,
-  EnvironmentError,
-  InputError,
-  ErrorList,
-  toError,
-} from './errors.ts'
+export { failure, EnvironmentError, InputError, ErrorList } from './errors.ts'
 export { mergeObjects } from './composable/composable.ts'
 export type { Composable } from './composable/index.ts'
 import * as composable from './composable/index.ts'

@@ -1,10 +1,4 @@
-import {
-  assertEquals,
-  assertObjectMatch,
-  assertIsError,
-  describe,
-  it,
-} from './test-prelude.ts'
+import { assertEquals, assertIsError, describe, it } from './test-prelude.ts'
 import { z } from './test-prelude.ts'
 
 import { success, mdf } from './constructor.ts'
@@ -173,10 +167,11 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertObjectMatch(
-      await handler({ id: 1 }),
-      failure([{ message: 'Error' } as Error]),
-    )
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+
+    assertIsError(err, Error, JSON.stringify({ message: 'Error' }))
   })
 
   it('returns inputErrors when the domain function throws an InputError', async () => {
