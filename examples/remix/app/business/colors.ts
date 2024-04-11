@@ -34,7 +34,7 @@ const mutateColor = df.make(
     params: { id },
     body: { color },
   })
-  return response.json(colorSchema.pick({ color: true, id: true }))
+  return response.json(colorSchema.pick({ id: true, color: true }))
 })
 
 export { listColors, getColor, mutateColor }
