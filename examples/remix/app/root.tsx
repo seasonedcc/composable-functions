@@ -13,12 +13,11 @@ import {
   ActionFunctionArgs,
   LinksFunction,
   LoaderFunctionArgs,
-  json,
 } from '@remix-run/node'
 
 import styles from './tailwind.css?url'
 
-import { envFromCookie, loaderResponseOrThrow } from '~/lib'
+import { actionResponse, envFromCookie, loaderResponseOrThrow } from '~/lib'
 import { agreeToGPD, cookie, getGPDInfo } from '~/business/gpd'
 import { inputFromForm } from 'composable-functions'
 
@@ -50,9 +49,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const result = await agreeToGPD(await inputFromForm(request))
   if (!result.success || result.data.agreed === false) {
-    return json(result)
+    return actionResponse(result)
   }
-  return json(result, {
+  return actionResponse(result, {
     headers: { 'Set-Cookie': await cookie.serialize(result.data) },
   })
 }

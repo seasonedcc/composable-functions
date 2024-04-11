@@ -20,7 +20,7 @@ export default function Index() {
         href={user.link}
         className="hover:text-cyan-500"
         target="_blank"
-        rel="noreferer"
+        rel="noreferer noreferrer"
       >
         <h1 className="text-7xl font-extrabold">{user.initials}</h1>
         <h2>{user.name}</h2>

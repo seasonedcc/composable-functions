@@ -1,6 +1,7 @@
 import { EnvironmentError, InputError } from '../errors.ts'
 import { toErrorPayload } from '../serializer.ts'
-import { Result, SerializableError } from '../types.ts'
+import { Result } from '../types.ts'
+import { SerializedResult } from './types.ts'
 
 const isInputError = (error: Error): error is InputError =>
   error instanceof InputError
@@ -8,20 +9,7 @@ const isInputError = (error: Error): error is InputError =>
 const isEnvironmentError = (error: Error): error is EnvironmentError =>
   error instanceof EnvironmentError
 
-function serialize<T>(result: Result<T>):
-  | {
-      success: true
-      data: T
-      errors: []
-      inputErrors: []
-      environmentErrors: []
-    }
-  | {
-      success: false
-      errors: SerializableError[]
-      inputErrors: SerializableError<InputError>[]
-      environmentErrors: SerializableError<EnvironmentError>[]
-    } {
+function serialize<T>(result: Result<T>): SerializedResult<T> {
   if (result.success) {
     return {
       ...result,

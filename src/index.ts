@@ -25,6 +25,7 @@ export type {
   MergeObjs,
   Result,
   SerializableError,
+  SerializedResult,
   Success,
   TupleToUnion,
   UnpackAll,

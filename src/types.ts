@@ -223,6 +223,10 @@ type SerializableError<T extends Error = Error> = {
   path: string[]
 }
 
+type SerializedResult<T> =
+  | Success<T>
+  | { success: false; errors: SerializableError[] }
+
 export type {
   AllArguments,
   AtLeastOne,
@@ -239,6 +243,7 @@ export type {
   RecordToTuple,
   Result,
   SerializableError,
+  SerializedResult,
   Success,
   TupleToUnion,
   UnpackAll,

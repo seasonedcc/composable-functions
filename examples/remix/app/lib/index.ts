@@ -1,5 +1,7 @@
-import { Cookie, json, TypedResponse } from '@remix-run/node'
-import { Result } from 'composable-functions'
+import type { Cookie, TypedResponse } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import type { Result, SerializedResult } from 'composable-functions'
+import { serialize } from 'composable-functions'
 
 /**
  * Given a Cookie and a Request it returns the stored cookie's value as an object
@@ -14,10 +16,11 @@ function envFromCookie(
   }
 }
 
-const actionResponse = <T extends Result<X>, X>(
-  result: T,
+const actionResponse = <X>(
+  result: Result<X>,
   opts?: RequestInit,
-) => json(result, { status: result.success ? 200 : 422, ...opts })
+): TypedResponse<SerializedResult<X>> =>
+  json(serialize(result), { status: result.success ? 200 : 422, ...opts })
 
 const loaderResponseOrThrow = <T extends Result<unknown>>(
   result: T,
