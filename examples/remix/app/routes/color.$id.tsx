@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { inputFromForm } from 'composable-functions'
+import { inputFromForm, serialize } from 'composable-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/business/colors'
 import { actionResponse, loaderResponseOrThrow } from '~/lib'
@@ -13,8 +13,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const input = await inputFromForm(request)
   const result = await mutateColor(input)
-  console.warn({ input, result })
-  return actionResponse(result)
+  return actionResponse(serialize(result))
 }
 
 export default function Index() {

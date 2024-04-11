@@ -95,11 +95,11 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   ? IsNever<OA> extends true
     ? ['Fail to compose, "never" does not fit in', PB]
     : Awaited<OA> extends PB
-      ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
-      : ['Fail to compose', Awaited<OA>, 'does not fit in', PB]
+    ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
+    : ['Fail to compose', Awaited<OA>, 'does not fit in', PB]
   : Fns extends [Composable<(...args: infer P) => infer O>]
-    ? Composable<(...args: P) => O>
-    : never
+  ? Composable<(...args: P) => O>
+  : never
 
 type PipeArguments<
   Fns extends any[],
@@ -113,10 +113,10 @@ type PipeArguments<
     ? IsNever<Awaited<OA>> extends true
       ? ['Fail to compose, "never" does not fit in', FirstBParameter]
       : Awaited<OA> extends FirstBParameter
-        ? EveryElementTakesUndefined<PB> extends true
-          ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
-          : EveryElementTakesUndefined<PB>
-        : ['Fail to compose', Awaited<OA>, 'does not fit in', FirstBParameter]
+      ? EveryElementTakesUndefined<PB> extends true
+        ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
+        : EveryElementTakesUndefined<PB>
+      : ['Fail to compose', Awaited<OA>, 'does not fit in', FirstBParameter]
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
@@ -138,16 +138,16 @@ type SubtypesTuple<
     ? headA extends headB
       ? SubtypesTuple<restA, restB, [...O, headA]>
       : headB extends headA
-        ? SubtypesTuple<restA, restB, [...O, headB]>
-        : {
-            'Incompatible arguments ': true
-            argument1: headA
-            argument2: headB
-          }
+      ? SubtypesTuple<restA, restB, [...O, headB]>
+      : {
+          'Incompatible arguments ': true
+          argument1: headA
+          argument2: headB
+        }
     : SubtypesTuple<restA, [], [...O, headA]>
   : TB extends [infer headBNoA, ...infer restBNoA]
-    ? SubtypesTuple<[], restBNoA, [...O, headBNoA]>
-    : O
+  ? SubtypesTuple<[], restBNoA, [...O, headBNoA]>
+  : O
 
 type AllArguments<
   Fns extends any[],
@@ -206,15 +206,22 @@ type Zip<
     : O
   : O
 
-type CollectArguments<T extends Record<string, Composable>> =
-  {} extends Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>
-    ? never
-    : Prettify<
-        Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>
-      >
+type CollectArguments<T extends Record<string, Composable>> = {} extends Zip<
+  Keys<T>,
+  AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>
+>
+  ? never
+  : Prettify<Zip<Keys<T>, AllArguments<RecordValuesFromKeysTuple<T, Keys<T>>>>>
 
 type RecordToTuple<T extends Record<string, Composable>> =
   RecordValuesFromKeysTuple<T, Keys<T>>
+
+type SerializableError<T extends Error = Error> = {
+  exception: T
+  message: string
+  name: string
+  path: string[]
+}
 
 export type {
   AllArguments,
@@ -231,6 +238,7 @@ export type {
   Prettify,
   RecordToTuple,
   Result,
+  SerializableError,
   Success,
   TupleToUnion,
   UnpackAll,
