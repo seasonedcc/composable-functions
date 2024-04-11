@@ -15,6 +15,7 @@ export {
   inputFromSearch,
   inputFromUrl,
 } from './input-resolvers.ts'
+export { toErrorPayload, serialize } from './serializer.ts'
 export { EnvironmentError, ErrorList, InputError } from './errors.ts'
 export type {
   AtLeastOne,
@@ -23,6 +24,8 @@ export type {
   Last,
   MergeObjs,
   Result,
+  SerializableError,
+  SerializedResult,
   Success,
   TupleToUnion,
   UnpackAll,
@@ -32,3 +35,6 @@ export type {
 // DOMAIN FUNCTIONS
 export * as df from './df/index.ts'
 export type { DomainFunction } from './df/index.ts'
+
+// COMPAT MODULE
+export * as compat from './compat/index.ts'

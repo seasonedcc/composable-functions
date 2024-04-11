@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { makeDomainFunction as mdf } from 'domain-functions'
+import { df } from 'composable-functions'
 import { makeService } from 'make-service'
 
 const jsonPlaceholder = makeService('https://jsonplaceholder.typicode.com')
@@ -15,17 +15,17 @@ const userSchema = z.object({
   website: z.string(),
 })
 
-const listUsers = mdf(z.any())(async () => {
+const listUsers = df.make(z.any())(async () => {
   const response = await jsonPlaceholder.get('/users')
   return response.json(z.array(userSchema))
 })
 
-const getUser = mdf(z.object({ id: z.string() }))(async ({ id }) => {
+const getUser = df.make(z.object({ id: z.string() }))(async ({ id }) => {
   const response = await jsonPlaceholder.get('/users/:id', { params: { id } })
   return response.json(userSchema)
 })
 
-const formatUser = mdf(userSchema)((user) => {
+const formatUser = df.make(userSchema)((user) => {
   return {
     user: {
       ...user,

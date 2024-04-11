@@ -1,11 +1,11 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
-import { pipe } from 'domain-functions'
-import { formatUser, getUser } from '~/domain/users'
+import { df } from 'composable-functions'
+import { formatUser, getUser } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
 
 // The output of getUser will be the input of formatUser
-const getData = pipe(getUser, formatUser)
+const getData = df.pipe(getUser, formatUser)
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const result = await getData(params)
@@ -20,7 +20,7 @@ export default function Index() {
         href={user.link}
         className="hover:text-cyan-500"
         target="_blank"
-        rel="noreferer noopener"
+        rel="noreferer noreferrer"
       >
         <h1 className="text-7xl font-extrabold">{user.initials}</h1>
         <h2>{user.name}</h2>
