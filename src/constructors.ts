@@ -1,5 +1,6 @@
 import { mapError } from './combinators.ts'
 import { ErrorList } from './errors.ts'
+import { DomainFunction } from './index.ts'
 import type { Composable, Failure, Fn, Success } from './types.ts'
 
 function success<const T>(data: T): Success<T> {
@@ -52,20 +53,24 @@ function composable<T extends Fn>(fn: T): Composable<T> {
  * //    ^? number
  * expect(data).toBe(n + 1)
  */
-function fromSuccess<T extends Composable>(
+type OnError = (errors: Error[]) => Error[] | Promise<Error[]>
+function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
   fn: T,
-  onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
-): T extends Composable<(...a: infer A) => infer O>
-  ? (...a: A) => Promise<Awaited<O>>
-  : never {
-  return (async (...args) => {
+  onError?: OnError,
+): T extends Composable<(...a: infer P) => infer O>
+  ? (...args: P) => Promise<O>
+  : never
+function fromSuccess<O, T extends DomainFunction<O>>(
+  fn: T,
+  onError?: OnError,
+): (...args: Parameters<DomainFunction>) => Promise<O>
+function fromSuccess<T extends Fn>(fn: T, onError: OnError = (e) => e) {
+  return async (...args: any[]) => {
     const result = await mapError(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }) as T extends Composable<(...a: infer A) => infer O>
-    ? (...a: A) => Promise<Awaited<O>>
-    : never
+  }
 }
 
 export { composable, failure, fromSuccess, success }
