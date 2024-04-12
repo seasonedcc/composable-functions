@@ -2,9 +2,7 @@ import type {
   AllArguments,
   CollectArguments,
   Composable,
-  Failure,
   First,
-  Fn,
   MergeObjs,
   PipeArguments,
   PipeReturn,
@@ -168,22 +166,22 @@ function map<T extends Composable, R>(
  *  originalInput.id * -1
  * ))
  */
-function catchError<T extends Fn, R>(
-  fn: Composable<T>,
-  catcher: (err: Failure['errors'], ...originalInput: Parameters<T>) => R,
-) {
-  return (async (...args: Parameters<T>) => {
+function catchError<
+  F extends Composable,
+  C extends (err: Error[], ...originalInput: Parameters<F>) => any,
+>(fn: F, catcher: C) {
+  return (async (...args: Parameters<F>) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
-    return composable(catcher)(res.errors, ...(args as any))
+    return composable(catcher)(res.errors as never, ...(args as any as never))
   }) as Composable<
     (
-      ...args: Parameters<T>
-    ) => ReturnType<T> extends any[]
-      ? R extends never[]
-        ? ReturnType<T>
-        : ReturnType<T> | R
-      : ReturnType<T> | R
+      ...args: Parameters<F>
+    ) => Awaited<ReturnType<C>> extends never[]
+      ? UnpackData<ReturnType<F>> extends any[]
+        ? UnpackData<ReturnType<F>>
+        : Awaited<ReturnType<C>> | UnpackData<ReturnType<F>>
+      : Awaited<ReturnType<C>> | UnpackData<ReturnType<F>>
   >
 }
 
@@ -213,4 +211,4 @@ function mapError<T extends Composable, R>(
   }) as T
 }
 
-export { pipe, all, collect, sequence, map, catchError, mapError, mergeObjects }
+export { all, catchError, collect, map, mapError, mergeObjects, pipe, sequence }
