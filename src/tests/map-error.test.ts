@@ -1,6 +1,7 @@
 import { assertEquals, describe, it } from '../test-prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import { composable, mapError } from '../index.ts'
+import { success } from '../constructors.ts'
 
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
@@ -12,8 +13,35 @@ const cleanError = (err: Error) => ({
   message: err.message + '!!!',
 })
 describe('mapError', () => {
-  it('maps over the error results of an Composable function', async () => {
+  it('maps over the error results of a Composable function', async () => {
     const fn = mapError(faultyAdd, (errors) => errors.map(cleanError))
+    const res = await fn(2, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(4))
+  })
+
+  it('maps over the error results of a Composable function', async () => {
+    const fn = mapError(faultyAdd, (errors) => errors.map(cleanError))
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors![0].message, 'a is 1!!!')
+  })
+
+  it('accepts an async mapper', async () => {
+    const fn = mapError(faultyAdd, (errors) =>
+      Promise.resolve(errors.map(cleanError)),
+    )
     const res = await fn(1, 2)
 
     type _FN = Expect<

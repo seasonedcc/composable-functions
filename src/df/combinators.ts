@@ -57,9 +57,9 @@ function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): DomainFunction<UnpackDFObject<Fns>> {
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
-    map(df, (result) => ({ [key]: result })),
+    A.map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
+  return A.map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
     UnpackDFObject<Fns>
   >
 }
@@ -106,7 +106,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), A.mergeObjects)
+  return A.map(all(...fns), A.mergeObjects)
 }
 
 /**
@@ -148,8 +148,8 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 ): DomainFunction<UnpackDFObject<Fns>> {
   const keys = Object.keys(fns)
 
-  return map(
-    map(sequence(...Object.values(fns)), (outputs) =>
+  return A.map(
+    A.map(sequence(...Object.values(fns)), (outputs) =>
       outputs.map((o, i) => ({
         [keys[i]]: o,
       })),
@@ -175,22 +175,6 @@ function sequence<Fns extends DomainFunction[]>(
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
     )) as DomainFunction<UnpackAll<Fns>>
-}
-
-/**
- * It takes a domain function and a predicate to apply a transformation over the result.data of that function. It only runs if the function was successfull. When the given domain function fails, its error is returned wihout changes.
- * @example
- * import { mdf, map } from 'domain-functions'
- *
- * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
- * const df = map(a, (n) => String(n))
- * //    ^? DomainFunction<string>
- */
-function map<O, R>(
-  dfn: DomainFunction<O>,
-  mapper: (element: O) => R | Promise<R>,
-): DomainFunction<R> {
-  return A.map(dfn, mapper)
 }
 
 /**
@@ -233,28 +217,6 @@ function branch<T, R extends DomainFunction | null>(
   }) as DomainFunction<
     R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
   >
-}
-
-/**
- * Creates a single domain function that will apply a transformation over the ErrorResult of a failed DomainFunction. When the given domain function succeeds, its result is returned without changes.
- * @example
- * import { mdf, mapError } from 'domain-functions'
- *
- * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
- * const summarizeErrors = (result: ErrorData) =>
- *   ({
- *     errors: [{ message: 'Errors count: ' + result.errors.length }],
- *     inputErrors: [{ message: 'Input errors count: ' + result.inputErrors.length }],
- *     environmentErrors: [{ message: 'Environment errors count: ' + result.environmentErrors.length }],
- *   } as ErrorData)
- *
- * const incrementWithErrorSummary = mapError(increment, summarizeErrors)
- */
-function mapError<O>(
-  dfn: DomainFunction<O>,
-  mapper: (errors: Error[]) => Error[] | Promise<Error[]>,
-): DomainFunction<O> {
-  return A.mapError(dfn, mapper)
 }
 
 type TraceData<T> = {
@@ -303,8 +265,6 @@ export {
   collect,
   collectSequence,
   first,
-  map,
-  mapError,
   merge,
   pipe,
   sequence,
