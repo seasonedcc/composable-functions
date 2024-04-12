@@ -2,13 +2,12 @@ import type {
   AllArguments,
   CollectArguments,
   Composable,
-  Failure,
   First,
-  Fn,
   MergeObjs,
   PipeArguments,
   PipeReturn,
   RecordToTuple,
+  Result,
   Success,
   UnpackAll,
   UnpackData,
@@ -168,22 +167,22 @@ function map<T extends Composable, R>(
  *  originalInput.id * -1
  * ))
  */
-function catchError<T extends Fn, R>(
-  fn: Composable<T>,
-  catcher: (err: Failure['errors'], ...originalInput: Parameters<T>) => R,
-) {
-  return (async (...args: Parameters<T>) => {
+function catchError<
+  F extends Composable,
+  C extends (err: Error[], ...originalInput: Parameters<F>) => any,
+>(fn: F, catcher: C) {
+  return (async (...args: Parameters<F>) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
-    return composable(catcher)(res.errors, ...(args as any))
+    return composable(catcher)(res.errors as never, ...(args as any as never))
   }) as Composable<
     (
-      ...args: Parameters<T>
-    ) => ReturnType<T> extends any[]
-      ? R extends never[]
-        ? ReturnType<T>
-        : ReturnType<T> | R
-      : ReturnType<T> | R
+      ...args: Parameters<F>
+    ) => Awaited<ReturnType<C>> extends never[]
+      ? UnpackData<ReturnType<F>> extends any[]
+        ? UnpackData<ReturnType<F>>
+        : Awaited<ReturnType<C>> | UnpackData<ReturnType<F>>
+      : Awaited<ReturnType<C>> | UnpackData<ReturnType<F>>
   >
 }
 
@@ -213,4 +212,44 @@ function mapError<T extends Composable, R>(
   }) as T
 }
 
-export { pipe, all, collect, sequence, map, catchError, mapError, mergeObjects }
+/**
+ * Whenever you need to intercept inputs and a domain function result without changing them you can use this function.
+ * The most common use case is to log failures to the console or to an external service.
+ * @param traceFn A function that receives the input, environment and result of a domain function.
+ * @example
+ * import { mdf, trace } from 'domain-functions'
+ *
+ * const trackErrors = trace(({ input, output, result }) => {
+ *   if(!result.success) sendToExternalService({ input, output, result })
+ * })
+ * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+ * const incrementAndTrackErrors = trackErrors(increment)
+ * //    ^? DomainFunction<number>
+ */
+function trace(
+  traceFn: (
+    result: Result<unknown>,
+    ...originalInput: unknown[]
+  ) => Promise<void> | void,
+) {
+  return <C extends Composable>(fn: C) =>
+    (async (...args) => {
+      const originalResult = await fn(...args)
+      const traceResult = await composable(traceFn)(originalResult, ...args)
+      if (traceResult.success) return originalResult
+
+      return failure(traceResult.errors)
+    }) as C
+}
+
+export {
+  all,
+  catchError,
+  collect,
+  map,
+  mapError,
+  mergeObjects,
+  pipe,
+  sequence,
+  trace,
+}

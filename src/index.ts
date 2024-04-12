@@ -8,6 +8,7 @@ export {
   mergeObjects,
   pipe,
   sequence,
+  trace
 } from './combinators.ts'
 export {
   inputFromForm,

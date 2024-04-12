@@ -15,10 +15,7 @@ export {
   collect,
   collectSequence,
   first,
-  map,
-  mapError,
   merge,
   pipe,
   sequence,
-  trace,
 } from './combinators.ts'

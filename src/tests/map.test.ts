@@ -22,6 +22,18 @@ describe('map', () => {
     assertEquals(res, success(true))
   })
 
+  it('maps with an async function', async () => {
+    const fn = map(add, (a) => Promise.resolve(a + 1 === 4))
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => boolean>>
+    >
+    type _R = Expect<Equal<typeof res, Result<boolean>>>
+
+    assertEquals(res, success(true))
+  })
+
   it('maps over a composition', async () => {
     const fn = map(pipe(add, toString), (a) => typeof a === 'string')
     const res = await fn(1, 2)
@@ -34,7 +46,7 @@ describe('map', () => {
     assertEquals(res, success(true))
   })
 
-  it('does not do anything when the function fails', async () => {
+  it('returns a Failure when the function fails', async () => {
     const fn = map(faultyAdd, (a) => a + 1 === 4)
     const res = await fn(1, 2)
 

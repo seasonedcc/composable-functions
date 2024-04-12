@@ -11,9 +11,8 @@ import type {
   DomainFunction,
   UnpackDFObject,
   UnpackData,
-  UnpackResult,
 } from './types.ts'
-import { composable, failure, fromSuccess } from '../constructors.ts'
+import { composable, fromSuccess } from '../constructors.ts'
 import { ErrorList } from '../errors.ts'
 import { applyEnvironment } from './constructors.ts'
 
@@ -57,9 +56,9 @@ function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): DomainFunction<UnpackDFObject<Fns>> {
   const dfsWithKey = Object.entries(fns).map(([key, df]) =>
-    map(df, (result) => ({ [key]: result })),
+    A.map(df, (result) => ({ [key]: result })),
   )
-  return map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
+  return A.map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
     UnpackDFObject<Fns>
   >
 }
@@ -106,7 +105,7 @@ function first<Fns extends DomainFunction[]>(
 function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
   ...fns: Fns
 ): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return map(all(...fns), A.mergeObjects)
+  return A.map(all(...fns), A.mergeObjects)
 }
 
 /**
@@ -148,8 +147,8 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 ): DomainFunction<UnpackDFObject<Fns>> {
   const keys = Object.keys(fns)
 
-  return map(
-    map(sequence(...Object.values(fns)), (outputs) =>
+  return A.map(
+    A.map(sequence(...Object.values(fns)), (outputs) =>
       outputs.map((o, i) => ({
         [keys[i]]: o,
       })),
@@ -175,22 +174,6 @@ function sequence<Fns extends DomainFunction[]>(
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
     )) as DomainFunction<UnpackAll<Fns>>
-}
-
-/**
- * It takes a domain function and a predicate to apply a transformation over the result.data of that function. It only runs if the function was successfull. When the given domain function fails, its error is returned wihout changes.
- * @example
- * import { mdf, map } from 'domain-functions'
- *
- * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
- * const df = map(a, (n) => String(n))
- * //    ^? DomainFunction<string>
- */
-function map<O, R>(
-  dfn: DomainFunction<O>,
-  mapper: (element: O) => R | Promise<R>,
-): DomainFunction<R> {
-  return A.map(dfn, mapper)
 }
 
 /**
@@ -235,78 +218,13 @@ function branch<T, R extends DomainFunction | null>(
   >
 }
 
-/**
- * Creates a single domain function that will apply a transformation over the ErrorResult of a failed DomainFunction. When the given domain function succeeds, its result is returned without changes.
- * @example
- * import { mdf, mapError } from 'domain-functions'
- *
- * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
- * const summarizeErrors = (result: ErrorData) =>
- *   ({
- *     errors: [{ message: 'Errors count: ' + result.errors.length }],
- *     inputErrors: [{ message: 'Input errors count: ' + result.inputErrors.length }],
- *     environmentErrors: [{ message: 'Environment errors count: ' + result.environmentErrors.length }],
- *   } as ErrorData)
- *
- * const incrementWithErrorSummary = mapError(increment, summarizeErrors)
- */
-function mapError<O>(
-  dfn: DomainFunction<O>,
-  mapper: (errors: Error[]) => Error[] | Promise<Error[]>,
-): DomainFunction<O> {
-  return A.mapError(dfn, mapper)
-}
-
-type TraceData<T> = {
-  input: unknown
-  environment: unknown
-  result: T
-}
-/**
- * Whenever you need to intercept inputs and a domain function result without changing them you can use this function.
- * The most common use case is to log failures to the console or to an external service.
- * @param traceFn A function that receives the input, environment and result of a domain function.
- * @example
- * import { mdf, trace } from 'domain-functions'
- *
- * const trackErrors = trace(({ input, output, result }) => {
- *   if(!result.success) sendToExternalService({ input, output, result })
- * })
- * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
- * const incrementAndTrackErrors = trackErrors(increment)
- * //    ^? DomainFunction<number>
- */
-function trace<D extends DomainFunction = DomainFunction<unknown>>(
-  traceFn: ({
-    input,
-    environment,
-    result,
-  }: TraceData<UnpackResult<D>>) => Promise<void> | void,
-): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
-  return (fn) => async (input, environment) => {
-    const originalResult = await fn(input, environment)
-    const traceResult = await composable(traceFn)({
-      input,
-      environment,
-      // TODO: Remove this casting when we unify the Unpack types
-      result: originalResult as Awaited<ReturnType<D>>,
-    })
-    if (traceResult.success) return originalResult
-
-    return failure(traceResult.errors)
-  }
-}
-
 export {
   all,
   branch,
   collect,
   collectSequence,
   first,
-  map,
-  mapError,
   merge,
   pipe,
   sequence,
-  trace,
 }
