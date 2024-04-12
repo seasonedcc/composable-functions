@@ -1,12 +1,12 @@
-import { Result } from '../types.ts'
+import { Composable } from '../types.ts'
 
 /**
  * A domain function.
  * It carries the output type which can be further unpacked with UnpackData and other type helpers.
  */
-type DomainFunction<Output = unknown> = {
-  (input?: unknown, environment?: unknown): Promise<Result<Output>>
-}
+type DomainFunction<Output = unknown> = Composable<
+  (input?: unknown, environment?: unknown) => Output
+>
 
 /**
  * Unpacks the result of a domain function.
