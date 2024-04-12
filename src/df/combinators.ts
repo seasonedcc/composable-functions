@@ -11,9 +11,8 @@ import type {
   DomainFunction,
   UnpackDFObject,
   UnpackData,
-  UnpackResult,
 } from './types.ts'
-import { composable, failure, fromSuccess } from '../constructors.ts'
+import { composable, fromSuccess } from '../constructors.ts'
 import { ErrorList } from '../errors.ts'
 import { applyEnvironment } from './constructors.ts'
 
@@ -219,46 +218,6 @@ function branch<T, R extends DomainFunction | null>(
   >
 }
 
-type TraceData<T> = {
-  input: unknown
-  environment: unknown
-  result: T
-}
-/**
- * Whenever you need to intercept inputs and a domain function result without changing them you can use this function.
- * The most common use case is to log failures to the console or to an external service.
- * @param traceFn A function that receives the input, environment and result of a domain function.
- * @example
- * import { mdf, trace } from 'domain-functions'
- *
- * const trackErrors = trace(({ input, output, result }) => {
- *   if(!result.success) sendToExternalService({ input, output, result })
- * })
- * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
- * const incrementAndTrackErrors = trackErrors(increment)
- * //    ^? DomainFunction<number>
- */
-function trace<D extends DomainFunction = DomainFunction<unknown>>(
-  traceFn: ({
-    input,
-    environment,
-    result,
-  }: TraceData<UnpackResult<D>>) => Promise<void> | void,
-): <T>(fn: DomainFunction<T>) => DomainFunction<T> {
-  return (fn) => async (input, environment) => {
-    const originalResult = await fn(input, environment)
-    const traceResult = await composable(traceFn)({
-      input,
-      environment,
-      // TODO: Remove this casting when we unify the Unpack types
-      result: originalResult as Awaited<ReturnType<D>>,
-    })
-    if (traceResult.success) return originalResult
-
-    return failure(traceResult.errors)
-  }
-}
-
 export {
   all,
   branch,
@@ -268,5 +227,4 @@ export {
   merge,
   pipe,
   sequence,
-  trace,
 }

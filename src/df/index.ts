@@ -18,5 +18,4 @@ export {
   merge,
   pipe,
   sequence,
-  trace,
 } from './combinators.ts'

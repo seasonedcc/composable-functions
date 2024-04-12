@@ -7,6 +7,7 @@ import type {
   PipeArguments,
   PipeReturn,
   RecordToTuple,
+  Result,
   Success,
   UnpackAll,
   UnpackData,
@@ -211,4 +212,44 @@ function mapError<T extends Composable, R>(
   }) as T
 }
 
-export { all, catchError, collect, map, mapError, mergeObjects, pipe, sequence }
+/**
+ * Whenever you need to intercept inputs and a domain function result without changing them you can use this function.
+ * The most common use case is to log failures to the console or to an external service.
+ * @param traceFn A function that receives the input, environment and result of a domain function.
+ * @example
+ * import { mdf, trace } from 'domain-functions'
+ *
+ * const trackErrors = trace(({ input, output, result }) => {
+ *   if(!result.success) sendToExternalService({ input, output, result })
+ * })
+ * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+ * const incrementAndTrackErrors = trackErrors(increment)
+ * //    ^? DomainFunction<number>
+ */
+function trace(
+  traceFn: (
+    result: Result<unknown>,
+    ...originalInput: unknown[]
+  ) => Promise<void> | void,
+) {
+  return <C extends Composable>(fn: C) =>
+    (async (...args) => {
+      const originalResult = await fn(...args)
+      const traceResult = await composable(traceFn)(originalResult, ...args)
+      if (traceResult.success) return originalResult
+
+      return failure(traceResult.errors)
+    }) as C
+}
+
+export {
+  all,
+  catchError,
+  collect,
+  map,
+  mapError,
+  mergeObjects,
+  pipe,
+  sequence,
+  trace,
+}
