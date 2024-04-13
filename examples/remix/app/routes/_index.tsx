@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { inputFromUrl, df } from 'composable-functions'
+import { inputFromUrl, df, map } from 'composable-functions'
 import { listColors } from '~/business/colors'
 import { listUsers } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
@@ -9,7 +9,7 @@ import { loaderResponseOrThrow } from '~/lib'
 const getData = df.collect({
   // The second argument will transform the successful result of listColors,
   // we only care about what is in the "data" field
-  colors: df.map(listColors, ({ data }) => data),
+  colors: map(listColors, ({ data }) => data),
   users: listUsers,
 })
 export const loader = async ({ request }: LoaderFunctionArgs) => {
