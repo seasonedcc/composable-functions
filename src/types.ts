@@ -144,10 +144,62 @@ type SubtypesTuple<
           argument1: headA
           argument2: headB
         }
+    // TB is empty (or partial)
+    // We should go down a SubtypesPartialTuple
     : SubtypesTuple<restA, [], [...O, headA]>
-  : TB extends [infer headBNoA, ...infer restBNoA]
-  ? SubtypesTuple<[], restBNoA, [...O, headBNoA]>
-  : O
+  : TB extends [infer headBNoA, []]
+  // TA is empty (or partial)
+  // We should go down a SubtypesPartialTuple
+  ? SubtypesTuple<[], [], [...O, headBNoA]>
+  /* 
+   * We should continue the recursion checking optional parameters
+   * We can pattern match optionals using Partial
+   * We should start handling partials as soon one side of mandatory ends
+   * Remove ...TA, ...TB bellow
+  */
+  : [...O, ...TA, ...TB] 
+
+type AllMandatory = SubtypesTuple<
+  Parameters<(a: string, b: number) => void>,
+  Parameters<(a: string, b: number) => void>,
+  []
+>
+type WithOptional = SubtypesTuple<
+  Parameters<(a: string, b?: number) => void>,
+  Parameters<(a: string, b: number) => void>,
+  []
+>
+type WithBothOptional = SubtypesTuple<
+  Parameters<(a: string, b?: number) => void>,
+  Parameters<(a: string, b?: number) => void>,
+  []
+>
+type WithOptionalOnSecond = SubtypesTuple<
+  Parameters<(a: unknown) => void>,
+  Parameters<(a: number, b?: number) => void>,
+  []
+>
+
+type WithOptionalOnFirst = SubtypesTuple<
+  Parameters<(a: unknown, b?: number) => void>,
+  Parameters<(a: number) => void>,
+  []
+>
+
+type WithMultipleOptionals = SubtypesTuple<
+  Parameters<(a: unknown, b?: number, c?: boolean) => void>,
+  Parameters<(a: number, b?: 1) => void>,
+  []
+>
+type X = WithMultipleOptionals[0] extends Partial<[infer A, ...infer B]>
+  ? [A, B]
+  : false
+
+type WithConflictingOptionals = SubtypesTuple<
+  Parameters<(a: unknown, b?: number) => void>,
+  Parameters<(a: number, b: string) => void>,
+  []
+>
 
 type AllArguments<
   Fns extends any[],

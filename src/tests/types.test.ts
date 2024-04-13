@@ -163,12 +163,68 @@ namespace AllArguments {
       ]
     >
   >
+  type testSubtypesForStricterOptional = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string, y?: 1) => void>,
+          Subject.Composable<(x: 'foo', y: number) => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo', y: 1) => void>,
+        Subject.Composable<(x: 'foo', y: 1) => void>,
+      ]
+    >
+  >
+  type testSubtypesForOptionalsOnBoth = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string, y?: number) => void>,
+          Subject.Composable<(x: 'foo', y?: number) => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo', y?: number) => void>,
+        Subject.Composable<(x: 'foo', y?: number) => void>,
+      ]
+    >
+  >
+  type testSubtypesForConflictingOptionals = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string, y?: number) => void>,
+          Subject.Composable<(x: 'foo', y?: string) => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo') => void>,
+        Subject.Composable<(x: 'foo') => void>,
+      ]
+    >
+  >
   type testMaxArityForTwoComposables = Expect<
     Equal<
       Subject.AllArguments<
         [
           Subject.Composable<(x: string, y: number) => void>,
           Subject.Composable<(x: 'foo') => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo', y: number) => void>,
+        Subject.Composable<(x: 'foo', y: number) => void>,
+      ]
+    >
+  >
+  type testMaxArityForTwoComposablesInverse = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: string) => void>,
+          Subject.Composable<(x: 'foo', y: number) => void>,
         ]
       >,
       [
