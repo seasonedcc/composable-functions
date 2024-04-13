@@ -2,7 +2,7 @@ import { assertEquals, describe, it } from '../test-prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import { composable, pipe, success } from '../index.ts'
 
-const toString = composable((a: unknown) => `${a}`)
+const toString = composable(String)
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
