@@ -200,8 +200,8 @@ namespace AllArguments {
         ]
       >,
       [
-        Subject.Composable<(x: 'foo') => void>,
-        Subject.Composable<(x: 'foo') => void>,
+        Subject.Composable<(x: 'foo', y?: undefined) => void>,
+        Subject.Composable<(x: 'foo', y?: undefined) => void>,
       ]
     >
   >
