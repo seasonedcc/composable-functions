@@ -157,7 +157,11 @@ type SubtypesTuple<
        * We should start handling partials as soon one side of mandatory ends
        * Remove ...TA, ...TB bellow
        */
-      O
+      TA extends []
+      ? [...O, ...TB]
+      : TB extends []
+        ? [...O, ...TA]
+        : ['both partial']
 
 type WithBothOptional = SubtypesTuple<
   Parameters<(a: string, b?: number) => void>,
