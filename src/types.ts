@@ -133,41 +133,81 @@ type SubtypesTuple<
   TA extends unknown[],
   TB extends unknown[],
   O extends unknown[],
-> = TA extends [infer headA, ...infer restA]
-  ? TB extends [infer headB, ...infer restB]
-    ? headA extends headB
-      ? SubtypesTuple<restA, restB, [...O, headA]>
-      : headB extends headA
-        ? SubtypesTuple<restA, restB, [...O, headB]>
-        : {
+> = TA extends []
+  ? [...O, ...TB]
+  : TB extends []
+    ? [...O, ...TA]
+    : TA extends [infer headA, ...infer restA]
+      ? TB extends [infer headB, ...infer restB]
+        ? CommonSubType<headA, headB> extends {
             'Incompatible arguments ': true
-            argument1: headA
-            argument2: headB
           }
-    : // TB is empty (or partial)
-      // We should go down a SubtypesPartialTuple
-      SubtypesTuple<restA, [], [...O, headA]>
-  : TB extends [infer headBNoA, ...infer restB]
-    ? // TA is empty (or partial)
-      // We should go down a SubtypesPartialTuple
-      SubtypesTuple<[], restB, [...O, headBNoA]>
-    : /*
-       * We should continue the recursion checking optional parameters
-       * We can pattern match optionals using Partial
-       * We should start handling partials as soon one side of mandatory ends
-       * Remove ...TA, ...TB bellow
-       */
-      TA extends []
-      ? [...O, ...TB]
-      : TB extends []
-        ? [...O, ...TA]
-        : ['both partial']
+          ? CommonSubType<headA, headB>
+          : SubtypesTuple<restA, restB, [...O, CommonSubType<headA, headB>]>
+        : // TB is partial
+          // We should handle partial case before recursion
+          TB extends Partial<[infer headPartial, ...infer restPartial]>
+          ? CommonSubType<headA, headPartial> extends {
+              'Incompatible arguments ': true
+            }
+            ? CommonSubType<headA, headPartial>
+            : SubtypesTuple<
+                restA,
+                restPartial,
+                [...O, CommonSubType<headA, headPartial>]
+              >
+          : never
+      : TB extends [infer headBNoA, ...infer restB]
+        ? // TA is partial
+          // We should handle partial case before recursion
+          TA extends Partial<[infer headPartial, ...infer restPartial]>
+          ? CommonSubType<headBNoA, headPartial> extends {
+              'Incompatible arguments ': true
+            }
+            ? CommonSubType<headBNoA, headPartial>
+            : SubtypesTuple<
+                restB,
+                restPartial,
+                [...O, CommonSubType<headBNoA, headPartial>]
+              >
+          : never
+        : /*
+           * We should continue the recursion checking optional parameters
+           * We can pattern match optionals using Partial
+           * We should start handling partials as soon one side of mandatory ends
+           * Remove ...TA, ...TB bellow
+           */
+          ['both partial']
+
+type CommonSubType<A, B> = A extends B
+  ? A
+  : B extends A
+    ? B
+    : {
+        'Incompatible arguments ': true
+        argument1: A
+        argument2: B
+      }
 
 type WithBothOptional = SubtypesTuple<
   Parameters<(a: string, b?: number) => void>,
   Parameters<(a: string, b?: number) => void>,
   []
 >
+type WithMultipleOptionals = SubtypesTuple<
+  Parameters<(a: unknown, b?: number, c?: boolean) => void>,
+  Parameters<(a: number, b?: 1) => void>,
+  []
+>
+
+// Pass with new partial handling and CommonSubtype
+type WithConflictingOptionals = SubtypesTuple<
+  Parameters<(a: unknown, b?: number) => void>,
+  Parameters<(a: number, b: string) => void>,
+  []
+>
+
+// Pass with new base cases for []
 type WithOptionalOnSecond = SubtypesTuple<
   Parameters<(a: unknown) => void>,
   Parameters<(a: number, b?: number) => void>,
@@ -176,16 +216,6 @@ type WithOptionalOnSecond = SubtypesTuple<
 type WithOptionalOnFirst = SubtypesTuple<
   Parameters<(a: unknown, b?: number) => void>,
   Parameters<(a: number) => void>,
-  []
->
-type WithMultipleOptionals = SubtypesTuple<
-  Parameters<(a: unknown, b?: number, c?: boolean) => void>,
-  Parameters<(a: number, b?: 1) => void>,
-  []
->
-type WithConflictingOptionals = SubtypesTuple<
-  Parameters<(a: unknown, b?: number) => void>,
-  Parameters<(a: number, b: string) => void>,
   []
 >
 
@@ -203,69 +233,6 @@ type WithOptional = SubtypesTuple<
 type WithOptional2 = SubtypesTuple<
   Parameters<(a: string, b: number) => void>,
   Parameters<(a: string, b?: number) => void>,
-  []
->
-type SubtypesWithAPartialTuple<
-  MandatoryTuple extends unknown[],
-  PartialTuble extends unknown[],
-  O extends unknown[],
-> = MandatoryTuple extends [infer head, ...infer rest]
-  ? PartialTuble extends Partial<[infer headPartial, ...infer restPartial]>
-    ? head extends headPartial
-      ? SubtypesWithAPartialTuple<rest, Partial<restPartial>, [...O, head]>
-      : headPartial extends head
-        ? SubtypesWithAPartialTuple<
-            rest,
-            Partial<restPartial>,
-            [...O, headPartial]
-          >
-        : {
-            'Incompatible arguments ': true
-            argument1: head
-            argument2: headPartial
-          }
-    : // Partial is empty
-      // so I need the mandatory parameters list
-      [...O, ...MandatoryTuple]
-  : PartialTuble extends Partial<[...infer restPartial]>
-    ? // Mandatory is empty (or partial)
-      // We should go down a SubtypesPartialPartialTuple
-      MandatoryTuple extends Partial<[...infer restMandatory]>
-      ? SubtypesTuple<restMandatory, restPartial, []> extends []
-        ? O
-        : [...O, Partial<SubtypesTuple<restMandatory, restPartial, []>>]
-      : never
-    : /*
-       * We should continue the recursion checking optional parameters
-       * We can pattern match optionals using Partial
-       * We should start handling partials as soon one side of mandatory ends
-       * Remove ...TA, ...TB bellow
-       */
-      never
-
-type PartialTestSubtype = SubtypesWithAPartialTuple<
-  Parameters<(b: number) => void>,
-  Parameters<(b?: 1) => void>,
-  []
->
-type PartialTestConflict = SubtypesWithAPartialTuple<
-  Parameters<(b: string) => void>,
-  Parameters<(b?: 1) => void>,
-  []
->
-type PartialTestLongerPartial = SubtypesWithAPartialTuple<
-  Parameters<(b: number) => void>,
-  Parameters<(b?: 1, c?: string) => void>,
-  []
->
-type PartialTestLongerMandatory = SubtypesWithAPartialTuple<
-  Parameters<(b: number, c: string) => void>,
-  Parameters<(b?: 1) => void>,
-  []
->
-type PartialTestLongerMandatoryPlusPartial = SubtypesWithAPartialTuple<
-  Parameters<(b: number, c: string, d?: string) => void>,
-  Parameters<(b?: 1) => void>,
   []
 >
 
