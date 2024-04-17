@@ -130,23 +130,23 @@ type EveryElementTakesUndefined<T extends any[]> = T extends [
   : true
 
 type SubtypesTuple<
-  TA extends unknown[],
-  TB extends unknown[],
-  O extends unknown[],
-> = TA extends []
-  ? [...O, ...TB]
-  : TB extends []
-    ? [...O, ...TA]
-    : TA extends [infer headA, ...infer restA]
-      ? TB extends [infer headB, ...infer restB]
+  TupleA extends unknown[],
+  TupleB extends unknown[],
+  Output extends unknown[],
+> = TupleA extends []
+  ? [...Output, ...TupleB]
+  : TupleB extends []
+    ? [...Output, ...TupleA]
+    : TupleA extends [infer headA, ...infer restA]
+      ? TupleB extends [infer headB, ...infer restB]
         ? CommonSubType<headA, headB> extends {
             'Incompatible arguments ': true
           }
           ? CommonSubType<headA, headB>
-          : SubtypesTuple<restA, restB, [...O, CommonSubType<headA, headB>]>
+          : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
         : // TB is partial
           // We should handle partial case before recursion
-          TB extends Partial<[infer headPartial, ...infer restPartial]>
+          TupleB extends Partial<[infer headPartial, ...infer restPartial]>
           ? CommonSubType<headA, headPartial> extends {
               'Incompatible arguments ': true
             }
@@ -154,13 +154,13 @@ type SubtypesTuple<
             : SubtypesTuple<
                 restA,
                 restPartial,
-                [...O, CommonSubType<headA, headPartial>]
+                [...Output, CommonSubType<headA, headPartial>]
               >
           : never
-      : TB extends [infer headBNoA, ...infer restB]
+      : TupleB extends [infer headBNoA, ...infer restB]
         ? // TA is partial
           // We should handle partial case before recursion
-          TA extends Partial<[infer headPartial, ...infer restPartial]>
+          TupleA extends Partial<[infer headPartial, ...infer restPartial]>
           ? CommonSubType<headBNoA, headPartial> extends {
               'Incompatible arguments ': true
             }
@@ -168,7 +168,7 @@ type SubtypesTuple<
             : SubtypesTuple<
                 restB,
                 restPartial,
-                [...O, CommonSubType<headBNoA, headPartial>]
+                [...Output, CommonSubType<headBNoA, headPartial>]
               >
           : never
         : /*
@@ -177,21 +177,21 @@ type SubtypesTuple<
            * We should start handling partials as soon one side of mandatory ends
            * Remove ...TA, ...TB bellow
            */
-          TA extends Partial<[infer headAPartial, ...infer restAPartial]>
-          ? TB extends Partial<[infer headBPartial, ...infer restBPartial]>
+          TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
+          ? TupleB extends Partial<[infer headBPartial, ...infer restBPartial]>
             ? CommonSubType<headAPartial, headBPartial> extends {
                 'Incompatible arguments ': true
               }
               ? SubtypesTuple<
                   Partial<restAPartial>,
                   Partial<restBPartial>,
-                  [...O, ...Partial<[undefined]>]
+                  [...Output, ...Partial<[undefined]>]
                 >
 
               : SubtypesTuple<
                   Partial<restAPartial>,
                   Partial<restBPartial>,
-                  [...O, ...Partial<[CommonSubType<headAPartial, headBPartial>]>]
+                  [...Output, ...Partial<[CommonSubType<headAPartial, headBPartial>]>]
                 >
             : never
           : never
@@ -246,8 +246,8 @@ type WithOptionalOnFirst = SubtypesTuple<
 
 // Current pass
 type AllMandatory = SubtypesTuple<
-  Parameters<(a: string, b: number) => void>,
-  Parameters<(a: string, b: number) => void>,
+  Parameters<(a: string, b: 1) => void>,
+  Parameters<(a: 'foo', b: number) => void>,
   []
 >
 type WithOptional = SubtypesTuple<
