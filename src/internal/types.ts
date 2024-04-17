@@ -51,7 +51,7 @@ namespace Internal {
     ...infer TAIL,
   ]
     ? undefined extends HEAD
-      ? true & EveryElementTakesUndefined<TAIL>
+      ? EveryElementTakesUndefined<TAIL>
       : ['Fail to compose', undefined, 'does not fit in', HEAD]
     : true
 
@@ -123,7 +123,7 @@ namespace Internal {
 
   export type CommonSubType<A, B> = [A] extends [B]
     ? A
-    : B extends A
+    : [B] extends [A]
     ? B
     : {
         'Incompatible arguments ': true
