@@ -27,13 +27,8 @@ type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
   infer first,
   ...infer rest,
 ]
-  ? MergeObjs<rest, Prettify<Omit<output, keyof first> & first>>
+  ? MergeObjs<rest, Internal.Prettify<Omit<output, keyof first> & first>>
   : output
-
-type Prettify<T> = {
-  [K in keyof T]: T[K]
-  // deno-lint-ignore ban-types
-} & {}
 
 /**
  * It is similar to Partial<T> but it requires at least one property to be defined.
@@ -115,9 +110,9 @@ type PipeArguments<
     ? IsNever<Awaited<OA>> extends true
       ? ['Fail to compose, "never" does not fit in', FirstBParameter]
       : Awaited<OA> extends FirstBParameter
-      ? Internal.EveryElementTakesUndefined<PB> extends true
+      ? Internal.EveryElementTakes<PB, undefined> extends true
         ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
-        : Internal.EveryElementTakesUndefined<PB>
+        : Internal.EveryElementTakes<PB, undefined>
       : ['Fail to compose', Awaited<OA>, 'does not fit in', FirstBParameter]
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
@@ -142,11 +137,9 @@ type CollectArguments<T extends Record<string, Composable>> =
     AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
   >
     ? never
-    : Prettify<
-        Internal.Zip<
-          Internal.Keys<T>,
-          AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-        >
+    : Internal.Zip<
+        Internal.Keys<T>,
+        AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
       >
 
 type RecordToTuple<T extends Record<string, Composable>> =
@@ -175,7 +168,6 @@ export type {
   MergeObjs,
   PipeArguments,
   PipeReturn,
-  Prettify,
   RecordToTuple,
   Result,
   SerializableError,

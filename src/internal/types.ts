@@ -1,8 +1,11 @@
 // deno-lint-ignore-file no-namespace
 
-import { Composable } from '../types.ts'
-
 namespace Internal {
+  export type Prettify<T> = {
+    [K in keyof T]: T[K]
+    // deno-lint-ignore ban-types
+  } & {}
+
   // Thanks to https://github.com/tjjfvi
   // UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
   // This will not preserve union order but we don't care since this is for Composable paralel application
@@ -19,9 +22,9 @@ namespace Internal {
   export type Keys<R extends Record<string, any>> = UnionToTuple<keyof R>
 
   export type RecordValuesFromKeysTuple<
-    R extends Record<string, Composable>,
+    R extends Record<string, unknown>,
     K extends unknown[],
-    ValuesTuple extends Composable[] = [],
+    ValuesTuple extends unknown[] = [],
   > = K extends [infer Head, ...infer rest]
     ? Head extends string
       ? rest extends string[]
@@ -32,26 +35,26 @@ namespace Internal {
 
   export type Zip<
     K extends unknown[],
-    V extends Composable[],
-    O extends Record<string, Composable> = {},
+    V extends unknown[],
+    O extends Record<string, unknown> = {},
   > = K extends [infer HeadK, ...infer restK]
     ? V extends [infer HeadV, ...infer restV]
       ? HeadK extends string
         ? restK extends string[]
-          ? restV extends Composable[]
-            ? Zip<restK, restV, O & { [key in HeadK]: HeadV }>
+          ? restV extends unknown[]
+            ? Prettify<Zip<restK, restV, O & { [key in HeadK]: HeadV }>>
             : V // in this case V has the AllArguments failure type
           : never
         : never
       : O
     : O
 
-  export type EveryElementTakesUndefined<T extends any[]> = T extends [
+  export type EveryElementTakes<T extends any[], U> = T extends [
     infer HEAD,
     ...infer TAIL,
   ]
-    ? undefined extends HEAD
-      ? EveryElementTakesUndefined<TAIL>
+    ? U extends HEAD
+      ? EveryElementTakes<TAIL, U>
       : ['Fail to compose', undefined, 'does not fit in', HEAD]
     : true
 

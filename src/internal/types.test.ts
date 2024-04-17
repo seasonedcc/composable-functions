@@ -158,15 +158,46 @@ namespace SubtypesTuple {
   >
 }
 
-namespace EveryElementTakesUndefined {
+namespace EveryElementTakes {
   type WithAllUndefined = Expect<
-    Equal<Internal.EveryElementTakesUndefined<[undefined, undefined]>, true>
+    Equal<Internal.EveryElementTakes<[undefined, undefined], undefined>, true>
   >
 
   type WithSomeDefined = Expect<
     Equal<
-      Internal.EveryElementTakesUndefined<[undefined, 'foo', undefined]>,
+      Internal.EveryElementTakes<[undefined, 'foo', undefined], undefined>,
       ['Fail to compose', undefined, 'does not fit in', 'foo']
+    >
+  >
+}
+
+namespace Keys {
+  type WithEmptyRecord = Expect<Equal<Internal.Keys<{}>, []>>
+  type WithRecord = Expect<Equal<Internal.Keys<{ a: 1; b: 2 }>, ['a', 'b']>>
+}
+
+namespace Zip {
+  type WithEmpty = Expect<Equal<Internal.Zip<[], []>, {}>>
+  type WithSingle = Expect<
+    Equal<Internal.Zip<['a'], [() => 1]>, { a: () => 1 }>
+  >
+  type WithMultiple = Expect<
+    Equal<Internal.Zip<['a', 'b'], [1, 2]>, { a: 1; b: 2 }>
+  >
+  type WithExtraKeys = Expect<
+    Equal<Internal.Zip<['a', 'b'], [1, 2, 3]>, { a: 1; b: 2 }>
+  >
+}
+
+namespace RecordValuesFromKeysTuple {
+  type WithEmpty = Expect<Equal<Internal.RecordValuesFromKeysTuple<{}, []>, []>>
+  type WithSingle = Expect<
+    Equal<Internal.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a']>, [1]>
+  >
+  type WithMultiple = Expect<
+    Equal<
+      Internal.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a', 'b']>,
+      [1, 2]
     >
   >
 }
