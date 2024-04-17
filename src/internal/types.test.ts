@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-namespace
+// deno-lint-ignore-file no-namespace ban-ts-comment
 import { assertEquals, describe, it } from '../test-prelude.ts'
 import { Internal } from './types.ts'
 
@@ -198,6 +198,22 @@ namespace RecordValuesFromKeysTuple {
     Equal<
       Internal.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a', 'b']>,
       [1, 2]
+    >
+  >
+}
+
+namespace Prettify {
+  type test1 = Expect<
+    Equal<
+      Internal.Prettify<{ a: number } & { b: string }>,
+      { a: number; b: string }
+    >
+  >
+  type error1 = Expect<
+    // @ts-expect-error
+    Equal<
+      Internal.Prettify<{ a: number } & { b: string }>,
+      { a: number } & { b: string }
     >
   >
 }

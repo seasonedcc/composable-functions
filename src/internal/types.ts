@@ -61,7 +61,7 @@ namespace Internal {
   export type SubtypesTuple<
     TupleA extends unknown[],
     TupleB extends unknown[],
-    Output extends unknown[],
+    Output extends unknown[] = [],
   > = TupleA extends []
     ? [...Output, ...TupleB]
     : TupleB extends []
