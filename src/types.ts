@@ -177,7 +177,24 @@ type SubtypesTuple<
            * We should start handling partials as soon one side of mandatory ends
            * Remove ...TA, ...TB bellow
            */
-          ['both partial']
+          TA extends Partial<[infer headAPartial, ...infer restAPartial]>
+          ? TB extends Partial<[infer headBPartial, ...infer restBPartial]>
+            ? CommonSubType<headAPartial, headBPartial> extends {
+                'Incompatible arguments ': true
+              }
+              ? SubtypesTuple<
+                  Partial<restAPartial>,
+                  Partial<restBPartial>,
+                  [...O, ...Partial<[undefined]>]
+                >
+
+              : SubtypesTuple<
+                  Partial<restAPartial>,
+                  Partial<restBPartial>,
+                  [...O, ...Partial<[CommonSubType<headAPartial, headBPartial>]>]
+                >
+            : never
+          : never
 
 type CommonSubType<A, B> = A extends B
   ? A
@@ -189,11 +206,19 @@ type CommonSubType<A, B> = A extends B
         argument2: B
       }
 
+type WithOnlyUdnefinedAsCommonSubtype = SubtypesTuple<
+  Parameters<(a: string, b?: number) => void>,
+  Parameters<(a: string, b?: string) => void>,
+  []
+>
+
+// Pass with implementation for both partials
 type WithBothOptional = SubtypesTuple<
   Parameters<(a: string, b?: number) => void>,
   Parameters<(a: string, b?: number) => void>,
   []
 >
+
 type WithMultipleOptionals = SubtypesTuple<
   Parameters<(a: unknown, b?: number, c?: boolean) => void>,
   Parameters<(a: number, b?: 1) => void>,
