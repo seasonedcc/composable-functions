@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-namespace ban-ts-comment no-unused-vars
 import { assertEquals, describe, it } from '../test-prelude.ts'
 import * as Subject from '../types.ts'
 

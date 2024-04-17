@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-namespace ban-ts-comment
 import { assertEquals, describe, it } from '../../test-prelude.ts'
 import { Result, Success } from '../../types.ts'
 import { make } from '../index.ts'
