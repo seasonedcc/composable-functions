@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { df } from 'composable-functions'
+import { withSchema } from 'composable-functions'
 import { makeService } from 'make-service'
 
 const reqRes = makeService('https://reqres.in/api')

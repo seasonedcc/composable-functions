@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { df } from 'composable-functions'
+import { withSchema } from 'composable-functions'
 import { createCookie } from '@remix-run/node'
 
 const cookie = createCookie('gpd', {
