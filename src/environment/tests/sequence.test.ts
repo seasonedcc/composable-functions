@@ -1,6 +1,6 @@
 import { assertEquals, describe, it, z } from '../../test-prelude.ts'
 import {
-  df,
+  environment,
   EnvironmentError,
   failure,
   InputError,
@@ -9,22 +9,32 @@ import {
 } from '../../index.ts'
 import type { Composable } from '../../index.ts'
 
-describe('pipe', () => {
-  it('should compose domain functions from left-to-right', async () => {
+describe('sequence', () => {
+  it('should compose domain functions from left-to-right saving the results sequentially', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+      result: id - 1,
+    }))
 
-    const c = df.pipe(a, b)
+    const c = environment.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => [{ id: number }, { result: number }]
+        >
       >
     >
 
-    assertEquals(await c({ id: 1 }), success(2))
+    assertEquals(
+      await c({ id: 1 }),
+      success<[{ id: number }, { result: number }]>([{ id: 3 }, { result: 2 }]),
+    )
   })
 
   it('should use the same environment in all composed functions', async () => {
@@ -37,17 +47,28 @@ describe('pipe', () => {
     const b = withSchema(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
-    )(({ inp }, { env }) => inp + env)
+    )(({ inp }, { env }) => ({ result: inp + env }))
 
-    const c = df.pipe(a, b)
+    const c = environment.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => [{ inp: number }, { result: number }]
+        >
       >
     >
 
-    assertEquals(await c(undefined, { env: 1 }), success(4))
+    assertEquals(
+      await c(undefined, { env: 1 }),
+      success<[{ inp: number }, { result: number }]>([
+        { inp: 3 },
+        { result: 4 },
+      ]),
+    )
   })
 
   it('should fail on the first environment parser failure', async () => {
@@ -63,11 +84,13 @@ describe('pipe', () => {
       envParser,
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.pipe(a, b)
+    const c = environment.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        Composable<
+          (input?: unknown, environment?: unknown) => [{ inp: number }, number]
+        >
       >
     >
 
@@ -91,11 +114,13 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.pipe(a, b)
+    const c = environment.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        Composable<
+          (input?: unknown, environment?: unknown) => [{ inp: number }, number]
+        >
       >
     >
 
@@ -117,11 +142,13 @@ describe('pipe', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.pipe(a, b)
+    const c = environment.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        Composable<
+          (input?: unknown, environment?: unknown) => [{ inp: string }, number]
+        >
       >
     >
 
@@ -139,17 +166,37 @@ describe('pipe', () => {
       aBoolean: aString == '1',
     }))
     const c = withSchema(z.object({ aBoolean: z.boolean() }))(
-      ({ aBoolean }) => !aBoolean,
+      ({ aBoolean }) => ({
+        anotherBoolean: !aBoolean,
+      }),
     )
 
-    const d = df.pipe(a, b, c)
+    const d = environment.sequence(a, b, c)
     type _R = Expect<
       Equal<
         typeof d,
-        Composable<(input?: unknown, environment?: unknown) => boolean>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => [
+            { aString: string },
+            { aBoolean: boolean },
+            { anotherBoolean: boolean },
+          ]
+        >
       >
     >
 
-    assertEquals(await d({ aNumber: 1 }), success(false))
+    assertEquals(
+      await d({ aNumber: 1 }),
+      success<
+        [
+          { aString: string },
+          { aBoolean: boolean },
+          { anotherBoolean: boolean },
+        ]
+      >([{ aString: '1' }, { aBoolean: true }, { anotherBoolean: false }]),
+    )
   })
 })

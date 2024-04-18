@@ -8,7 +8,7 @@ import {
 import {
   all,
   composable,
-  df,
+  environment,
   withSchema,
   failure,
   InputError,
@@ -23,7 +23,7 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = df.branch(a, () => Promise.resolve(b))
+    const c = environment.branch(a, () => Promise.resolve(b))
     type _R = Expect<
       Equal<
         typeof c,
@@ -41,7 +41,9 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
-    const d = df.branch(a, (output) => (output.next === 'multiply' ? c : b))
+    const d = environment.branch(a, (output) =>
+      output.next === 'multiply' ? c : b,
+    )
     type _R = Expect<
       Equal<
         typeof d,
@@ -58,7 +60,9 @@ describe('branch', () => {
       next: 'multiply',
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const d = df.branch(a, (output) => (output.next === 'multiply' ? null : b))
+    const d = environment.branch(a, (output) =>
+      output.next === 'multiply' ? null : b,
+    )
     type _R = Expect<
       Equal<
         typeof d,
@@ -86,7 +90,7 @@ describe('branch', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.branch(a, () => b)
+    const c = environment.branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -102,7 +106,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = df.branch(a, () => b)
+    const c = environment.branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -121,7 +125,7 @@ describe('branch', () => {
       id: String(id),
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = df.branch(a, () => b)
+    const c = environment.branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -140,7 +144,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = df.branch(a, (_) => {
+    const c = environment.branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable
       return b
@@ -164,8 +168,8 @@ describe('branch', () => {
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
     const c = composable((n: number) => n * 2)
-    const dfPipe = df.pipe(
-      df.branch(a, () => b),
+    const dfPipe = environment.pipe(
+      environment.branch(a, () => b),
       c,
     )
     const d = all(dfPipe, a)

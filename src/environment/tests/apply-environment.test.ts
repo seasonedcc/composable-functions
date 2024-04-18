@@ -1,17 +1,17 @@
 import { assertEquals, describe, it, z } from '../../test-prelude.ts'
 import {
-  df,
-  withSchema,
+  environment,
   EnvironmentError,
   failure,
   success,
+  withSchema,
 } from '../../index.ts'
 
 describe('applyEnvironment', () => {
   it('fails when environment fails parser', async () => {
     const getEnv = withSchema(z.unknown(), z.number())((_, e) => e)
 
-    const getEnvWithEnvironment = df.applyEnvironment(
+    const getEnvWithEnvironment = environment.applyEnvironment(
       getEnv,
       'invalid environment',
     )
@@ -25,7 +25,7 @@ describe('applyEnvironment', () => {
   it('should apply environment', async () => {
     const getEnv = withSchema(z.unknown(), z.string())((_, e) => e)
 
-    const getEnvWithEnvironment = df.applyEnvironment(
+    const getEnvWithEnvironment = environment.applyEnvironment(
       getEnv,
       'constant environment',
     )

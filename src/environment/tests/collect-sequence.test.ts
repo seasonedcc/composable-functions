@@ -1,6 +1,6 @@
 import { assertEquals, describe, it, z } from '../../test-prelude.ts'
 import {
-  df,
+  environment,
   withSchema,
   EnvironmentError,
   failure,
@@ -16,7 +16,7 @@ describe('collectSequence', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = df.collectSequence({ a, b })
+    const c = environment.collectSequence({ a, b })
     type _R = Expect<
       Equal<
         typeof c,
@@ -44,7 +44,7 @@ describe('collectSequence', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.collectSequence({ a, b })
+    const c = environment.collectSequence({ a, b })
     type _R = Expect<
       Equal<
         typeof c,
@@ -76,7 +76,7 @@ describe('collectSequence', () => {
       envParser,
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.collectSequence({ a, b })
+    const c = environment.collectSequence({ a, b })
     type _R = Expect<
       Equal<
         typeof c,
@@ -109,7 +109,7 @@ describe('collectSequence', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.collectSequence({ a, b })
+    const c = environment.collectSequence({ a, b })
     type _R = Expect<
       Equal<
         typeof c,
@@ -140,7 +140,7 @@ describe('collectSequence', () => {
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
 
-    const c = df.collectSequence({ a, b })
+    const c = environment.collectSequence({ a, b })
     type _R = Expect<
       Equal<
         typeof c,
@@ -170,7 +170,7 @@ describe('collectSequence', () => {
       ({ aBoolean }) => !aBoolean,
     )
 
-    const d = df.collectSequence({ a, b, c })
+    const d = environment.collectSequence({ a, b, c })
     type _R = Expect<
       Equal<
         typeof d,
