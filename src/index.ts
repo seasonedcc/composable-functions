@@ -3,6 +3,7 @@ export {
   all,
   catchError,
   collect,
+  first,
   map,
   mapError,
   merge,

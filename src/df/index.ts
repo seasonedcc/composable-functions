@@ -9,10 +9,4 @@ export type {
   UnpackDFObject,
   UnpackSuccess,
 } from './types.ts'
-export {
-  branch,
-  collectSequence,
-  first,
-  pipe,
-  sequence,
-} from './combinators.ts'
+export { branch, collectSequence, pipe, sequence } from './combinators.ts'

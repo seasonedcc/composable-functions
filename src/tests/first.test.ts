@@ -1,13 +1,13 @@
-import { assertEquals, describe, it, z } from '../../test-prelude.ts'
-import { df, failure, InputError, success } from '../../index.ts'
-import type { DomainFunction } from '../../index.ts'
+import { assertEquals, describe, it, z } from '../test-prelude.ts'
+import { df, first, failure, InputError, success } from '../index.ts'
+import type { DomainFunction } from '../index.ts'
 
 describe('first', () => {
   it('should return the result of the first successful domain function', async () => {
     const a = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
     const c = df.make(z.object({ id: z.number() }))(({ id }) => Boolean(id))
-    const d = df.first(a, b, c)
+    const d = first(a, b, c)
     type _R = Expect<Equal<typeof d, DomainFunction<string | number | boolean>>>
 
     const results = await d({ id: 1 })
@@ -22,7 +22,7 @@ describe('first', () => {
       z.object({ n: z.number(), operation: z.literal('decrement') }),
     )(({ n }) => n - 1)
 
-    const c = df.first(a, b)
+    const c = first(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
     assertEquals(await c({ n: 1, operation: 'increment' }), success(2))
@@ -34,7 +34,7 @@ describe('first', () => {
       throw 'Error'
     })
 
-    const c = df.first(a, b)
+    const c = first(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<string>>>
 
     assertEquals(

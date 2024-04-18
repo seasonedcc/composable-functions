@@ -1,49 +1,13 @@
-import type {
-  Composable,
-  Last,
-  Success,
-  TupleToUnion,
-  UnpackAll,
-} from '../types.ts'
+import type { Composable, Last, UnpackAll } from '../types.ts'
 import * as A from '../combinators.ts'
 import type { DomainFunction, UnpackDFObject, UnpackData } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import { ErrorList } from '../errors.ts'
 import { applyEnvironment } from './constructors.ts'
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
 >(fns: Fns, environment: unknown) {
   return fns.map((fn) => applyEnvironment(fn, environment)) as [Composable]
-}
-
-/**
- * Creates a composite domain function that will return the result of the first successful constituent domain function. **It is important to notice** that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
- * @example
- * import { mdf, first } from 'domain-functions'
- *
- * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
-const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
-const df = first(a, b)
-//    ^? DomainFunction<string | number>
- */
-function first<Fns extends DomainFunction[]>(
-  ...fns: Fns
-): DomainFunction<TupleToUnion<UnpackAll<Fns>>> {
-  return ((input, environment) => {
-    return composable(async () => {
-      const results = await Promise.all(
-        fns.map((fn) => (fn as DomainFunction)(input, environment)),
-      )
-
-      const result = results.find((r) => r.success) as Success | undefined
-      if (!result) {
-        throw new ErrorList(results.map(({ errors }) => errors).flat())
-      }
-
-      return result.data
-    })()
-  }) as DomainFunction<TupleToUnion<UnpackAll<Fns>>>
 }
 
 /**
@@ -156,4 +120,4 @@ function branch<T, R extends DomainFunction | null>(
   >
 }
 
-export { branch, collectSequence, first, pipe, sequence }
+export { branch, collectSequence, pipe, sequence }
