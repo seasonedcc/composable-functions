@@ -67,17 +67,15 @@ function pipe<T extends [Composable, ...Composable[]]>(
  * const cf = C.all(a, b, c)
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
-function all<T extends any[]>(
-  ...fns: T & AllArguments<T>
-) {
-  return (async (...args: any) => {
+function all<T extends Composable[]>(...fns: T & AllArguments<T>) {
+  return (async (...args) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (results.some(({ success }) => success === false)) {
       return failure(results.map(({ errors }) => errors).flat())
     }
 
-    return success((results as Success<any>[]).map(({ data }) => data))
+    return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
     (...args: Parameters<AllArguments<T>[0]>) => {
       [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
