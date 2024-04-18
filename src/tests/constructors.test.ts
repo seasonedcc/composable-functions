@@ -17,6 +17,7 @@ import {
   InputError,
   withSchema,
 } from '../index.ts'
+import { applySchema } from '../index.ts'
 
 const add = composable((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
@@ -75,7 +76,7 @@ describe('composable', () => {
 })
 
 describe('fromSuccess', () => {
-  it('returns the result.data when the domain function suceeds', async () => {
+  it('returns the result.data when the schema function suceeds', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     const c = fromSuccess(a)
@@ -89,7 +90,7 @@ describe('fromSuccess', () => {
     assertEquals(await c({ id: 1 }), 2)
   })
 
-  it('throws an exception when the domain function fails', () => {
+  it('throws an exception when the schema function fails', () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     const c = fromSuccess(a)
@@ -130,9 +131,9 @@ describe('fromSuccess', () => {
   })
 })
 
-describe('make', () => {
+describe('withSchema', () => {
   describe('when it has no input', () => {
-    it('uses zod parser to create parse the input and call the domain function', async () => {
+    it('uses zod parser to create parse the input and call the schema function', async () => {
       const handler = withSchema()(() => 'no input!')
       type _R = Expect<
         Equal<
@@ -162,7 +163,7 @@ describe('make', () => {
   })
 
   describe('when it has no environment', () => {
-    it('uses zod parser to create parse the input and call the domain function', async () => {
+    it('uses zod parser to create parse the input and call the schema function', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
       const handler = withSchema(parser)(({ id }) => id)
@@ -208,7 +209,7 @@ describe('make', () => {
     })
   })
 
-  it('uses zod parsers to parse the input and environment and call the domain function', async () => {
+  it('uses zod parsers to parse the input and environment and call the schema function', async () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
@@ -261,7 +262,7 @@ describe('make', () => {
     )
   })
 
-  it('accepts literals as input of domain functions', async () => {
+  it('accepts literals as input of schema functions', async () => {
     const handler = withSchema(z.number(), z.string())((n) => n + 1)
     type _R = Expect<
       Equal<
@@ -308,7 +309,7 @@ describe('make', () => {
     )
   })
 
-  it('returns error when the domain function throws an Error', async () => {
+  it('returns error when the schema function throws an Error', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Error')
     })
@@ -325,7 +326,7 @@ describe('make', () => {
     assertIsError(err, Error, 'Error')
   })
 
-  it('preserves entire original exception when the domain function throws an Error', async () => {
+  it('preserves entire original exception when the schema function throws an Error', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Some message', { cause: { someUnknownFields: true } })
     })
@@ -343,7 +344,7 @@ describe('make', () => {
     assertEquals(err.cause, { someUnknownFields: true })
   })
 
-  it('returns error when the domain function throws a string', async () => {
+  it('returns error when the schema function throws a string', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw 'Error'
     })
@@ -357,7 +358,7 @@ describe('make', () => {
     assertEquals(await handler({ id: 1 }), failure([new Error()]))
   })
 
-  it('returns error when the domain function throws an object with message', async () => {
+  it('returns error when the schema function throws an object with message', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw { message: 'Error' }
     })
@@ -375,7 +376,7 @@ describe('make', () => {
     assertIsError(err, Error, JSON.stringify({ message: 'Error' }))
   })
 
-  it('returns inputErrors when the domain function throws an InputError', async () => {
+  it('returns inputErrors when the schema function throws an InputError', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new InputError('Custom input error', ['contact', 'id'])
     })
@@ -392,7 +393,7 @@ describe('make', () => {
     )
   })
 
-  it('returns environmentErrors when the domain function throws an EnvironmentError', async () => {
+  it('returns environmentErrors when the schema function throws an EnvironmentError', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
     })
@@ -411,7 +412,7 @@ describe('make', () => {
     )
   })
 
-  it('returns an error result when the domain function throws an ErrorList', async () => {
+  it('returns an error result when the schema function throws an ErrorList', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new ErrorList([
         new InputError('Custom input error', ['contact', 'id']),
@@ -432,5 +433,31 @@ describe('make', () => {
         new EnvironmentError('Custom env error', ['currentUser', 'role']),
       ]),
     )
+  })
+})
+
+describe('applySchema', () => {
+  it('uses zod parsers to parse the input and environment turning it into a schema function', async () => {
+    const parser = z.object({ id: z.preprocess(Number, z.number()) })
+    const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
+
+    const handler = applySchema(
+      composable(
+        ({ id }: { id: number }, { uid }: { uid: number }) =>
+          [id, uid] as const,
+      ),
+      parser,
+      envParser,
+    )
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<
+          (input?: unknown, environment?: unknown) => readonly [number, number]
+        >
+      >
+    >
+
+    assertEquals(await handler({ id: 1 }, { uid: 2 }), success([1, 2]))
   })
 })
