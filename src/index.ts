@@ -5,10 +5,11 @@ export {
   collect,
   map,
   mapError,
+  merge,
   mergeObjects,
   pipe,
   sequence,
-  trace
+  trace,
 } from './combinators.ts'
 export {
   inputFromForm,

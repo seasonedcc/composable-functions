@@ -1,7 +1,6 @@
 import type {
   Composable,
   Last,
-  MergeObjs,
   Success,
   TupleToUnion,
   UnpackAll,
@@ -16,23 +15,6 @@ function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
 >(fns: Fns, environment: unknown) {
   return fns.map((fn) => applyEnvironment(fn, environment)) as [Composable]
-}
-
-/**
- * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
- * @example
- * import { mdf, all } from 'domain-functions'
- *
- * const a = mdf(z.object({ id: z.number() }))(({ id }) => String(id))
- * const b = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
- * const c = mdf(z.object({ id: z.number() }))(({ id }) => Boolean(id))
- * const df = all(a, b, c)
-//       ^? DomainFunction<[string, number, boolean]>
- */
-function all<Fns extends DomainFunction[]>(
-  ...fns: Fns
-): DomainFunction<UnpackAll<Fns>> {
-  return A.all(...(fns as never)) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**
@@ -78,22 +60,6 @@ function first<Fns extends DomainFunction[]>(
       return result.data
     })()
   }) as DomainFunction<TupleToUnion<UnpackAll<Fns>>>
-}
-
-/**
- * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
- * @example
- * import { mdf, merge } from 'domain-functions'
- *
- * const a = mdf(z.object({}))(() => ({ a: 'a' }))
- * const b = mdf(z.object({}))(() => ({ b: 2 }))
- * const df = merge(a, b)
- * //    ^? DomainFunction<{ a: string, b: number }>
- */
-function merge<Fns extends DomainFunction<Record<string, unknown>>[]>(
-  ...fns: Fns
-): DomainFunction<MergeObjs<UnpackAll<Fns>>> {
-  return A.map(all(...fns), A.mergeObjects)
 }
 
 /**
@@ -206,4 +172,4 @@ function branch<T, R extends DomainFunction | null>(
   >
 }
 
-export { all, branch, collect, collectSequence, first, merge, pipe, sequence }
+export { branch, collect, collectSequence, first, pipe, sequence }

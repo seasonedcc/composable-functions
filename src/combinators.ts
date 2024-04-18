@@ -156,6 +156,26 @@ function map<T extends Composable, R>(
 }
 
 /**
+ * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+ * @example
+ * import { mdf, merge } from 'domain-functions'
+ *
+ * const a = mdf(z.object({}))(() => ({ a: 'a' }))
+ * const b = mdf(z.object({}))(() => ({ b: 2 }))
+ * const df = merge(a, b)
+ * //    ^? DomainFunction<{ a: string, b: number }>
+ */
+function merge<T extends Composable[]>(
+  ...fns: T & AllArguments<T>
+): Composable<
+  (...args: Parameters<AllArguments<T>[0]>) => MergeObjs<{
+    [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
+  }>
+> {
+  return map(all(...(fns as never)), mergeObjects as never)
+}
+
+/**
  * Creates a new function that will try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
  * @example
  * import { cf as C } from 'domain-functions'
@@ -246,6 +266,7 @@ export {
   collect,
   map,
   mapError,
+  merge,
   mergeObjects,
   pipe,
   sequence,

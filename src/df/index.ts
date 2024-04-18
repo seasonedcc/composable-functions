@@ -10,12 +10,10 @@ export type {
   UnpackSuccess,
 } from './types.ts'
 export {
-  all,
   branch,
   collect,
   collectSequence,
   first,
-  merge,
   pipe,
   sequence,
 } from './combinators.ts'

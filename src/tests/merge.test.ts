@@ -4,9 +4,9 @@ import {
   describe,
   it,
   z,
-} from '../../test-prelude.ts'
-import { df, failure, InputError, success } from '../../index.ts'
-import type { DomainFunction } from '../../index.ts'
+} from '../test-prelude.ts'
+import { merge, df, failure, InputError, success } from '../index.ts'
+import type { DomainFunction } from '../index.ts'
 
 describe('merge', () => {
   it('should combine two domain functions results into one object', async () => {
@@ -17,7 +17,7 @@ describe('merge', () => {
       resultB: id - 1,
     }))
 
-    const c = df.merge(a, b)
+    const c = merge(a, b)
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ resultA: number; resultB: number }>>
     >
@@ -37,7 +37,7 @@ describe('merge', () => {
     const c = df.make(z.object({ id: z.number() }))(({ id }) => ({
       resultC: Boolean(id),
     }))
-    const d = df.merge(a, b, c)
+    const d = merge(a, b, c)
     type _R = Expect<
       Equal<
         typeof d,
@@ -61,7 +61,7 @@ describe('merge', () => {
       id,
     }))
 
-    const c: DomainFunction<{ id: string }> = df.merge(a, b)
+    const c: DomainFunction<{ id: string }> = merge(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -85,7 +85,7 @@ describe('merge', () => {
       throw 'Error'
     })
 
-    const c: DomainFunction<never> = df.merge(a, b)
+    const c: DomainFunction<never> = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
     assertEquals(await c({ id: 1 }), failure([new Error()]))
@@ -99,7 +99,7 @@ describe('merge', () => {
       resultB: id,
     }))
 
-    const c = df.merge(a, b)
+    const c = merge(a, b)
     type _R = Expect<
       Equal<typeof c, DomainFunction<{ resultA: string; resultB: string }>>
     >
@@ -121,7 +121,7 @@ describe('merge', () => {
       throw new Error('Error B')
     })
 
-    const c = df.merge(a, b)
+    const c = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
     const {
