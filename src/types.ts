@@ -116,6 +116,10 @@ type CollectArguments<T extends Record<string, Composable>> =
     AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
   >
     ? never
+    : AllArguments<
+        Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
+      > extends ['Fail to compose', ...any[]]
+    ? AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
     : Internal.Zip<
         Internal.Keys<T>,
         AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>

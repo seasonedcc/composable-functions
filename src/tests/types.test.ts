@@ -235,21 +235,20 @@ namespace CollectArguments {
     >
   >
 
-  // TODO: Fix this error
-  // type testCompositionFailure = Expect<
-  //   Equal<
-  //     Subject.CollectArguments<{
-  //       a: Subject.Composable<(x: string, y: string) => void>
-  //       b: Subject.Composable<(x: 'foo', y: number) => void>
-  //     }>,
-  //     [
-  //       'Fail to compose',
-  //       [x: string, y: string],
-  //       'does not fit in',
-  //       [x: 'foo', y: number],
-  //     ]
-  //   >
-  // >
+  type testCompositionFailure = Expect<
+    Equal<
+      Subject.CollectArguments<{
+        a: Subject.Composable<(x: string, y: string) => void>
+        b: Subject.Composable<(x: 'foo', y: number) => void>
+      }>,
+      [
+        'Fail to compose',
+        [x: string, y: string],
+        'does not fit in',
+        [x: 'foo', y: number],
+      ]
+    >
+  >
 }
 
 namespace UnpackResult {
