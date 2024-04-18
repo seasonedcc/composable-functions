@@ -13,20 +13,30 @@ import {
   InputError,
   success,
 } from '../../index.ts'
-import type { DomainFunction, Success } from '../../index.ts'
+import type { Composable, Success } from '../../index.ts'
 
 describe('make', () => {
   describe('when it has no input', () => {
     it('uses zod parser to create parse the input and call the domain function', async () => {
       const handler = df.make()(() => 'no input!')
-      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+      type _R = Expect<
+        Equal<
+          typeof handler,
+          Composable<(input?: unknown, environment?: unknown) => string>
+        >
+      >
 
       assertEquals(await handler(), success('no input!'))
     })
 
     it('ignores the input and pass undefined', async () => {
       const handler = df.make()((args) => args)
-      type _R = Expect<Equal<typeof handler, DomainFunction<unknown>>>
+      type _R = Expect<
+        Equal<
+          typeof handler,
+          Composable<(input?: unknown, environment?: unknown) => unknown>
+        >
+      >
 
       assertEquals(await handler('some input'), {
         success: true,
@@ -41,14 +51,24 @@ describe('make', () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
       const handler = df.make(parser)(({ id }) => id)
-      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+      type _R = Expect<
+        Equal<
+          typeof handler,
+          Composable<(input?: unknown, environment?: unknown) => number>
+        >
+      >
 
       assertEquals(await handler({ id: '1' }), success(1))
     })
 
     it('fails gracefully if gets something other than empty record', async () => {
       const handler = df.make()(() => 'no input!')
-      type _R = Expect<Equal<typeof handler, DomainFunction<string>>>
+      type _R = Expect<
+        Equal<
+          typeof handler,
+          Composable<(input?: unknown, environment?: unknown) => string>
+        >
+      >
 
       assertEquals(
         await handler(undefined, ''),
@@ -59,7 +79,12 @@ describe('make', () => {
     it('returns error when parsing fails', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
       const handler = df.make(parser)(({ id }) => id)
-      type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+      type _R = Expect<
+        Equal<
+          typeof handler,
+          Composable<(input?: unknown, environment?: unknown) => number>
+        >
+      >
 
       assertEquals(
         await handler({ missingId: '1' }),
@@ -77,7 +102,12 @@ describe('make', () => {
       envParser,
     )(({ id }, { uid }) => [id, uid] as const)
     type _R = Expect<
-      Equal<typeof handler, DomainFunction<readonly [number, number]>>
+      Equal<
+        typeof handler,
+        Composable<
+          (input?: unknown, environment?: unknown) => readonly [number, number]
+        >
+      >
     >
 
     assertEquals(await handler({ id: '1' }, { uid: '2' }), success([1, 2]))
@@ -97,7 +127,12 @@ describe('make', () => {
     })
 
     const handler = df.make(parser, envParser)(({ id }, { uid }) => [id, uid])
-    type _R = Expect<Equal<typeof handler, DomainFunction<number[]>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => number[]>
+      >
+    >
 
     assertEquals(
       await handler({ id: '1' }, { uid: '2' }),
@@ -110,7 +145,12 @@ describe('make', () => {
 
   it('accepts literals as input of domain functions', async () => {
     const handler = df.make(z.number(), z.string())((n) => n + 1)
-    type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     const result = await handler(1, 'not going to be used')
     assertEquals((result as Success<number>).data, 2)
@@ -118,7 +158,12 @@ describe('make', () => {
 
   it('accepts sync functions', async () => {
     const handler = df.make(z.number())((n) => n + 1)
-    type _R = Expect<Equal<typeof handler, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     const result = await handler(1)
     assertEquals((result as Success<number>).data, 2)
@@ -129,7 +174,12 @@ describe('make', () => {
     const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = df.make(parser, envParser)(({ id }, { uid }) => [id, uid])
-    type _R = Expect<Equal<typeof handler, DomainFunction<number[]>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => number[]>
+      >
+    >
 
     assertEquals(
       await handler({ id: '1' }, {}),
@@ -141,7 +191,12 @@ describe('make', () => {
     const handler = df.make(z.object({ id: z.number() }))(() => {
       throw new Error('Error')
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     const {
       errors: [err],
@@ -153,7 +208,12 @@ describe('make', () => {
     const handler = df.make(z.object({ id: z.number() }))(() => {
       throw new Error('Some message', { cause: { someUnknownFields: true } })
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     const {
       errors: [err],
@@ -166,7 +226,12 @@ describe('make', () => {
     const handler = df.make(z.object({ id: z.number() }))(() => {
       throw 'Error'
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     assertEquals(await handler({ id: 1 }), failure([new Error()]))
   })
@@ -175,7 +240,12 @@ describe('make', () => {
     const handler = df.make(z.object({ id: z.number() }))(() => {
       throw { message: 'Error' }
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     const {
       errors: [err],
@@ -188,7 +258,12 @@ describe('make', () => {
     const handler = df.make(z.object({ id: z.number() }))(() => {
       throw new InputError('Custom input error', ['contact', 'id'])
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     assertEquals(
       await handler({ id: 1 }),
@@ -200,7 +275,12 @@ describe('make', () => {
     const handler = df.make(z.object({ id: z.number() }))(() => {
       throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     assertEquals(
       await handler({ id: 1 }),
@@ -217,7 +297,12 @@ describe('make', () => {
         new EnvironmentError('Custom env error', ['currentUser', 'role']),
       ])
     })
-    type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     assertEquals(
       await handler({ id: 1 }),

@@ -6,7 +6,7 @@ import {
   InputError,
   success,
 } from '../../index.ts'
-import type { DomainFunction } from '../../index.ts'
+import type { Composable } from '../../index.ts'
 
 describe('sequence', () => {
   it('should compose domain functions from left-to-right saving the results sequentially', async () => {
@@ -19,7 +19,15 @@ describe('sequence', () => {
 
     const c = df.sequence(a, b)
     type _R = Expect<
-      Equal<typeof c, DomainFunction<[{ id: number }, { result: number }]>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => [{ id: number }, { result: number }]
+        >
+      >
     >
 
     assertEquals(
@@ -42,7 +50,15 @@ describe('sequence', () => {
 
     const c = df.sequence(a, b)
     type _R = Expect<
-      Equal<typeof c, DomainFunction<[{ inp: number }, { result: number }]>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => [{ inp: number }, { result: number }]
+        >
+      >
     >
 
     assertEquals(
@@ -68,7 +84,14 @@ describe('sequence', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.sequence(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[{ inp: number }, number]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => [{ inp: number }, number]
+        >
+      >
+    >
 
     assertEquals(
       await c(undefined, {}),
@@ -91,7 +114,14 @@ describe('sequence', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.sequence(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[{ inp: number }, number]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => [{ inp: number }, number]
+        >
+      >
+    >
 
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
@@ -112,7 +142,14 @@ describe('sequence', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.sequence(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[{ inp: string }, number]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => [{ inp: string }, number]
+        >
+      >
+    >
 
     assertEquals(
       await c(undefined, { env: 1 }),
@@ -135,8 +172,11 @@ describe('sequence', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        DomainFunction<
-          [
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => [
             { aString: string },
             { aBoolean: boolean },
             { anotherBoolean: boolean },

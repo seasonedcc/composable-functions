@@ -1,10 +1,4 @@
-import {
-  assertEquals,
-  assertIsError,
-  describe,
-  it,
-  z,
-} from '../../test-prelude.ts'
+import { assertEquals, describe, it, z } from '../../test-prelude.ts'
 import {
   df,
   EnvironmentError,
@@ -12,7 +6,7 @@ import {
   InputError,
   success,
 } from '../../index.ts'
-import type { DomainFunction } from '../../index.ts'
+import type { Composable } from '../../index.ts'
 
 describe('collectSequence', () => {
   it('should compose domain functions keeping the given order of keys', async () => {
@@ -23,7 +17,15 @@ describe('collectSequence', () => {
 
     const c = df.collectSequence({ a, b })
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ a: { id: number }; b: number }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { a: { id: number }; b: number }
+        >
+      >
     >
 
     assertEquals(await c({ id: 1 }), success({ a: { id: 3 }, b: 2 }))
@@ -43,7 +45,15 @@ describe('collectSequence', () => {
 
     const c = df.collectSequence({ a, b })
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { a: { inp: number }; b: number }
+        >
+      >
     >
 
     assertEquals(
@@ -67,7 +77,15 @@ describe('collectSequence', () => {
 
     const c = df.collectSequence({ a, b })
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { a: { inp: number }; b: number }
+        >
+      >
     >
 
     assertEquals(
@@ -92,7 +110,15 @@ describe('collectSequence', () => {
 
     const c = df.collectSequence({ a, b })
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ a: { inp: number }; b: number }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { a: { inp: number }; b: number }
+        >
+      >
     >
 
     assertEquals(
@@ -115,7 +141,15 @@ describe('collectSequence', () => {
 
     const c = df.collectSequence({ a, b })
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ a: { inp: string }; b: number }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { a: { inp: string }; b: number }
+        >
+      >
     >
 
     assertEquals(
@@ -139,11 +173,16 @@ describe('collectSequence', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        DomainFunction<{
-          a: { aString: string }
-          b: { aBoolean: boolean }
-          c: boolean
-        }>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => {
+            a: { aString: string }
+            b: { aBoolean: boolean }
+            c: boolean
+          }
+        >
       >
     >
 

@@ -1,7 +1,7 @@
 import { composable, failure } from '../constructors.ts'
 import { EnvironmentError, InputError } from '../errors.ts'
 import type { Composable } from '../types.ts'
-import type { DomainFunction, ParserSchema } from './types.ts'
+import type { ParserSchema } from './types.ts'
 
 /**
  * Creates a domain function.
@@ -27,7 +27,7 @@ function make<I, E>(
       composable(handler),
       inputSchema,
       environmentSchema,
-    ) as DomainFunction<Awaited<Output>>
+    ) as Composable<(input?: unknown, environment?: unknown) => Awaited<Output>>
   }
 }
 
@@ -59,7 +59,9 @@ function fromComposable<I, E, A extends Composable>(
       return failure([...inputErrors, ...envErrors])
     }
     return fn(result.data, envResult.data)
-  } as DomainFunction<Awaited<ReturnType<A>>>
+  } as Composable<
+    (input?: unknown, environment?: unknown) => Awaited<ReturnType<A>>
+  >
 }
 
 const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {

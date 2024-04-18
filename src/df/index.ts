@@ -1,6 +1,5 @@
 export { applyEnvironment, make, fromComposable } from './constructors.ts'
 export type {
-  DomainFunction,
   ParserIssue,
   ParserResult,
   ParserSchema,

@@ -6,7 +6,7 @@ import {
   z,
 } from '../../test-prelude.ts'
 import { df, failure, InputError, success } from '../../index.ts'
-import type { DomainFunction } from '../../index.ts'
+import { Composable } from '../../types.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {
@@ -16,7 +16,12 @@ describe('branch', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = df.branch(a, () => Promise.resolve(b))
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), success(2))
   })
@@ -29,7 +34,12 @@ describe('branch', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
     const c = df.make(z.object({ id: z.number() }))(({ id }) => id * 2)
     const d = df.branch(a, (output) => (output.next === 'multiply' ? c : b))
-    type _R = Expect<Equal<typeof d, DomainFunction<number | string>>>
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<(input?: unknown, environment?: unknown) => number | string>
+      >
+    >
 
     assertEquals(await d({ id: 1 }), success(6))
   })
@@ -42,7 +52,15 @@ describe('branch', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
     const d = df.branch(a, (output) => (output.next === 'multiply' ? null : b))
     type _R = Expect<
-      Equal<typeof d, DomainFunction<string | { id: number; next: string }>>
+      Equal<
+        typeof d,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => string | { id: number; next: string }
+        >
+      >
     >
 
     assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
@@ -61,7 +79,12 @@ describe('branch', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.branch(a, () => b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await c(undefined, { env: 1 }), success(4))
   })
@@ -72,7 +95,12 @@ describe('branch', () => {
     }))
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = df.branch(a, () => b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(
       await c({ id: '1' }),
@@ -86,7 +114,12 @@ describe('branch', () => {
     }))
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = df.branch(a, () => b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -104,7 +137,12 @@ describe('branch', () => {
       // deno-lint-ignore no-unreachable
       return b
     })
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     const {
       errors: [err],
@@ -126,7 +164,7 @@ describe('branch', () => {
   //     ),
   //     a,
   //   )
-  //   type _R = Expect<Equal<typeof d, DomainFunction<[number, { id: number }]>>>
+  //   type _R = Expect<Equal<typeof d, Composable<(input?: unknown, environment?: unknown) => [number, { id: number }]>>>
 
   //   assertEquals(
   //     await d({ id: 1 }),

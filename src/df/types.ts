@@ -1,30 +1,22 @@
 import { Composable } from '../types.ts'
 
 /**
- * A domain function.
- * It carries the output type which can be further unpacked with UnpackData and other type helpers.
- */
-type DomainFunction<Output = unknown> = Composable<
-  (input?: unknown, environment?: unknown) => Output
->
-
-/**
  * Unpacks the result of a domain function.
  * @example
- * type MyDF = DomainFunction<{ a: string }>
+ * type MyDF = Composable<(input?: unknown, environment?: unknown) => { a: string }>
  * type MyResult = UnpackResult<MyDF>
  * //   ^? SuccessResult<{ a: string }> | ErrorResult
  */
-type UnpackResult<F extends DomainFunction> = Awaited<ReturnType<F>>
+type UnpackResult<F extends Composable> = Awaited<ReturnType<F>>
 
 /**
  * Unpacks the data type of a successful domain function.
  * @example
- * type MyDF = DomainFunction<{ a: string }>
+ * type MyDF = Composable<(input?: unknown, environment?: unknown) => { a: string }>
  * type MyData = UnpackSuccess<MyDF>
  * //   ^? SuccessResult<{ a: string }>
  */
-type UnpackSuccess<F extends DomainFunction> = Extract<
+type UnpackSuccess<F extends Composable> = Extract<
   UnpackResult<F>,
   { success: true }
 >
@@ -32,30 +24,30 @@ type UnpackSuccess<F extends DomainFunction> = Extract<
 /**
  * Unpacks the data type of a successful domain function.
  * @example
- * type MyDF = DomainFunction<{ a: string }>
+ * type MyDF = Composable<(input?: unknown, environment?: unknown) => { a: string }>
  * type MyData = UnpackData<MyDF>
  * //   ^? { a: string }
  */
-type UnpackData<F extends DomainFunction> = UnpackSuccess<F>['data']
+type UnpackData<F extends Composable> = UnpackSuccess<F>['data']
 
 /**
- * Unpacks a list of DomainFunctions into a tuple of their data types.
+ * Unpacks a list of Composable into a tuple of their data types.
  * @example
  * type MyDFs = [
- *  DomainFunction<{ a: string }>,
- *  DomainFunction<{ b: number }>,
+ *  Composable<(input?: unknown, environment?: unknown) => { a: string }>,
+ *  Composable<(input?: unknown, environment?: unknown) => { b: number }>,
  * ]
  * type MyData = UnpackAll<MyDFs>
  * //   ^? [{ a: string }, { b: number }]
  */
 type UnpackAll<List, output extends unknown[] = []> = List extends [
-  DomainFunction<infer first>,
+  Composable<(input?: unknown, environment?: unknown) => infer first>,
   ...infer rest,
 ]
   ? UnpackAll<rest, [...output, first]>
   : output
 
-type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
+type UnpackDFObject<Obj extends Record<string, Composable>> =
   | { [K in keyof Obj]: UnpackData<Obj[K]> }
   | never
 
@@ -86,7 +78,6 @@ type ParserSchema<T extends unknown = unknown> = {
 }
 
 export type {
-  DomainFunction,
   ParserIssue,
   ParserResult,
   ParserSchema,

@@ -35,7 +35,6 @@ export type {
 
 // DOMAIN FUNCTIONS
 export * as df from './df/index.ts'
-export type { DomainFunction } from './df/index.ts'
 
 // COMPAT MODULE
 export * as compat from './compat/index.ts'

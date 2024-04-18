@@ -6,7 +6,7 @@ import {
   InputError,
   success,
 } from '../../index.ts'
-import type { DomainFunction } from '../../index.ts'
+import type { Composable } from '../../index.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
@@ -16,7 +16,12 @@ describe('pipe', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = df.pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), success(2))
   })
@@ -34,7 +39,12 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await c(undefined, { env: 1 }), success(4))
   })
@@ -53,7 +63,12 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(
       await c(undefined, {}),
@@ -76,7 +91,12 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
@@ -97,7 +117,12 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = df.pipe(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(
       await c(undefined, { env: 1 }),
@@ -117,7 +142,12 @@ describe('pipe', () => {
     )
 
     const d = df.pipe(a, b, c)
-    type _R = Expect<Equal<typeof d, DomainFunction<boolean>>>
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<(input?: unknown, environment?: unknown) => boolean>
+      >
+    >
 
     assertEquals(await d({ aNumber: 1 }), success(false))
   })

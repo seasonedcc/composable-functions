@@ -10,7 +10,7 @@ import {
   composable,
   success,
   df,
-  DomainFunction,
+  Composable,
   InputError,
   failure,
 } from '../index.ts'
@@ -42,7 +42,12 @@ describe('all', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[number, number]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [number, number]>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), success<[number, number]>([2, 0]))
   })
@@ -52,7 +57,14 @@ describe('all', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
     const c = df.make(z.object({ id: z.number() }))(({ id }) => Boolean(id))
     const d = all(a, b, c)
-    type _R = Expect<Equal<typeof d, DomainFunction<[string, number, boolean]>>>
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<
+          (input?: unknown, environment?: unknown) => [string, number, boolean]
+        >
+      >
+    >
 
     const results = await d({ id: 1 })
     assertEquals(results, success<[string, number, boolean]>(['1', 2, true]))
@@ -63,7 +75,12 @@ describe('all', () => {
     const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[number, string]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [number, string]>
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -78,7 +95,12 @@ describe('all', () => {
     })
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[number, never]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [number, never]>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
@@ -88,7 +110,12 @@ describe('all', () => {
     const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[string, string]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [string, string]>
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -108,7 +135,12 @@ describe('all', () => {
     })
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[never, never]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [never, never]>
+      >
+    >
 
     const {
       errors: [errA, errB],

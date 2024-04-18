@@ -6,7 +6,7 @@ import {
   z,
 } from '../test-prelude.ts'
 import { composable, df, trace, fromSuccess, success } from '../index.ts'
-import type { Composable, DomainFunction } from '../index.ts'
+import type { Composable } from '../index.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to df failures', async () => {
@@ -50,7 +50,12 @@ describe('trace', () => {
     const c = trace((...context) => {
       contextFromFunctionA = context
     })(a)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await fromSuccess(c)({ id: 1 }), 2)
     assertEquals(contextFromFunctionA, [success(2), { id: 1 }])

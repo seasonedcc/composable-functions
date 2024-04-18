@@ -1,6 +1,6 @@
 import { assertEquals, describe, it, z } from '../test-prelude.ts'
 import { df, first, failure, InputError, success } from '../index.ts'
-import type { DomainFunction } from '../index.ts'
+import type { Composable } from '../index.ts'
 
 describe('first', () => {
   it('should return the result of the first successful domain function', async () => {
@@ -8,7 +8,14 @@ describe('first', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
     const c = df.make(z.object({ id: z.number() }))(({ id }) => Boolean(id))
     const d = first(a, b, c)
-    type _R = Expect<Equal<typeof d, DomainFunction<string | number | boolean>>>
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<
+          (input?: unknown, environment?: unknown) => string | number | boolean
+        >
+      >
+    >
 
     const results = await d({ id: 1 })
     assertEquals(results, success('1'))
@@ -23,7 +30,12 @@ describe('first', () => {
     )(({ n }) => n - 1)
 
     const c = first(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await c({ n: 1, operation: 'increment' }), success(2))
   })
@@ -35,7 +47,12 @@ describe('first', () => {
     })
 
     const c = first(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<string>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => string>
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),

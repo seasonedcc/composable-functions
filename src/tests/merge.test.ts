@@ -6,7 +6,7 @@ import {
   z,
 } from '../test-prelude.ts'
 import { merge, df, failure, InputError, success } from '../index.ts'
-import type { DomainFunction } from '../index.ts'
+import type { Composable } from '../index.ts'
 
 describe('merge', () => {
   it('should combine two domain functions results into one object', async () => {
@@ -19,7 +19,15 @@ describe('merge', () => {
 
     const c = merge(a, b)
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ resultA: number; resultB: number }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { resultA: number; resultB: number }
+        >
+      >
     >
 
     assertEquals(await c({ id: 1 }), success({ resultA: 2, resultB: 0 }))
@@ -41,11 +49,16 @@ describe('merge', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        DomainFunction<{
-          resultA: string
-          resultB: number
-          resultC: boolean
-        }>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => {
+            resultA: string
+            resultB: number
+            resultC: boolean
+          }
+        >
       >
     >
 
@@ -61,13 +74,20 @@ describe('merge', () => {
       id,
     }))
 
-    const c: DomainFunction<{ id: string }> = merge(a, b)
+    const c: Composable<
+      (input?: unknown, environment?: unknown) => { id: string }
+    > = merge(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        DomainFunction<{
-          id: string
-        }>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => {
+            id: string
+          }
+        >
       >
     >
 
@@ -85,8 +105,14 @@ describe('merge', () => {
       throw 'Error'
     })
 
-    const c: DomainFunction<never> = merge(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<never>>>
+    const c: Composable<(input?: unknown, environment?: unknown) => never> =
+      merge(a, b)
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
@@ -101,7 +127,15 @@ describe('merge', () => {
 
     const c = merge(a, b)
     type _R = Expect<
-      Equal<typeof c, DomainFunction<{ resultA: string; resultB: string }>>
+      Equal<
+        typeof c,
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => { resultA: string; resultB: string }
+        >
+      >
     >
 
     assertEquals(
@@ -122,7 +156,12 @@ describe('merge', () => {
     })
 
     const c = merge(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<never>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => never>
+      >
+    >
 
     const {
       errors: [errA, errB],

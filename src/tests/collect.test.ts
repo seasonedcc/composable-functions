@@ -5,7 +5,7 @@ import {
   it,
   z,
 } from '../test-prelude.ts'
-import type { Result, Composable, DomainFunction } from '../index.ts'
+import type { Result, Composable } from '../index.ts'
 import {
   collect,
   df,
@@ -126,7 +126,14 @@ describe('collect', () => {
     const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = collect({ a, b })
-    type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: number }>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => { a: number; b: number }
+        >
+      >
+    >
 
     assertEquals(await c({ id: 1 }), success({ a: 2, b: 0 }))
   })
@@ -136,7 +143,14 @@ describe('collect', () => {
     const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = collect({ a, b })
-    type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: string }>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => { a: number; b: string }
+        >
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -151,7 +165,14 @@ describe('collect', () => {
     })
 
     const c = collect({ a, b })
-    type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: never }>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => { a: number; b: never }
+        >
+      >
+    >
 
     assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
@@ -161,7 +182,14 @@ describe('collect', () => {
     const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = collect({ a, b })
-    type _R = Expect<Equal<typeof c, DomainFunction<{ a: string; b: string }>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => { a: string; b: string }
+        >
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -181,7 +209,14 @@ describe('collect', () => {
     })
 
     const c = collect({ a, b })
-    type _R = Expect<Equal<typeof c, DomainFunction<{ a: never; b: never }>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<
+          (input?: unknown, environment?: unknown) => { a: never; b: never }
+        >
+      >
+    >
 
     const {
       errors: [errA, errB],
