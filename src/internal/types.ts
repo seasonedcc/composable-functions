@@ -128,6 +128,14 @@ namespace Internal {
     ? A
     : [B] extends [A]
     ? B
+    : A extends Record<PropertyKey, any>
+    ? B extends Record<PropertyKey, any>
+      ? Prettify<A & B>
+      : {
+          'Incompatible arguments ': true
+          argument1: A
+          argument2: B
+        }
     : {
         'Incompatible arguments ': true
         argument1: A

@@ -51,6 +51,12 @@ namespace CommonSubType {
   type WithPartial = Expect<
     Equal<Internal.CommonSubType<string | undefined, string>, string>
   >
+  type WithRecords = Expect<
+    Equal<
+      Internal.CommonSubType<{ a: number }, { b: boolean; a: number | string }>,
+      { a: number; b: boolean }
+    >
+  >
 }
 
 namespace SubtypesTuple {
@@ -154,6 +160,25 @@ namespace SubtypesTuple {
         []
       >,
       [string, number]
+    >
+  >
+
+  type WithObjects = Expect<
+    Equal<
+      Internal.SubtypesTuple<
+        Parameters<(obj: { a: string }) => void>,
+        Parameters<(obj: { b: number }) => void>
+      >,
+      [{ a: string; b: number }]
+    >
+  >
+  type WithArrays = Expect<
+    Equal<
+      Internal.SubtypesTuple<
+        Parameters<(obj: (string | number)[]) => void>,
+        Parameters<(obj: (1 | 2)[]) => void>
+      >,
+      [(1 | 2)[]]
     >
   >
 }
