@@ -31,18 +31,6 @@ type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
   : output
 
 /**
- * It is similar to Partial<T> but it requires at least one property to be defined.
- * @example
- * type MyType = AtLeastOne<{ a: string, b: number }>
- * const a: MyType = { a: 'hello' }
- * const b: MyType = { b: 123 }
- * const c: MyType = { a: 'hello', b: 123 }
- * // The following won't compile:
- * const d: MyType = {}
- */
-type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]
-
-/**
  * Returns the last item of a tuple type.
  * @example
  * type MyTuple = [string, number]
@@ -149,7 +137,6 @@ type SerializedResult<T> =
 
 export type {
   AllArguments,
-  AtLeastOne,
   CollectArguments,
   Composable,
   Failure,

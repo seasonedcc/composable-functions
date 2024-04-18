@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-namespace ban-ts-comment no-unused-vars
+// deno-lint-ignore-file no-namespace
 import { assertEquals, describe, it } from '../test-prelude.ts'
 import * as Subject from '../types.ts'
 
@@ -19,18 +19,6 @@ namespace Last {
   type test3 = Expect<Equal<Subject.Last<[]>, never>>
 }
 
-namespace AtLeastOne {
-  type Result = Subject.AtLeastOne<{ a: 1; b: 2 }>
-
-  const test1: Result = { a: 1 }
-  const test2: Result = { b: 2 }
-  const test3: Result = { a: 1, b: 2 }
-  // @ts-expect-error
-  const error1: Result = {}
-  // @ts-expect-error
-  const error2: Result = { a: 1, c: 3 }
-}
-
 namespace MergeObjs {
   const obj1 = { a: 1, b: 2 } as const
   const obj2 = {}
@@ -46,18 +34,6 @@ namespace Last {
   type test1 = Expect<Equal<Subject.Last<[1, 2, 3]>, 3>>
   type test2 = Expect<Equal<Subject.Last<[1]>, 1>>
   type test3 = Expect<Equal<Subject.Last<[]>, never>>
-}
-
-namespace AtLeastOne {
-  type Result = Subject.AtLeastOne<{ a: 1; b: 2 }>
-
-  const test1: Result = { a: 1 }
-  const test2: Result = { b: 2 }
-  const test3: Result = { a: 1, b: 2 }
-  // @ts-expect-error
-  const error1: Result = {}
-  // @ts-expect-error
-  const error2: Result = { a: 1, c: 3 }
 }
 
 namespace PipeArguments {

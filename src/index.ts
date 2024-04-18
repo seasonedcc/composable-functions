@@ -21,7 +21,6 @@ export {
 export { toErrorPayload, serialize } from './serializer.ts'
 export { EnvironmentError, ErrorList, InputError } from './errors.ts'
 export type {
-  AtLeastOne,
   Composable,
   Failure,
   Last,
