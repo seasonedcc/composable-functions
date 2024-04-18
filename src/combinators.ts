@@ -67,7 +67,7 @@ function pipe<T extends [Composable, ...Composable[]]>(
  * const cf = C.all(a, b, c)
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
-function all<T extends [Composable, ...Composable[]]>(
+function all<T extends any[]>(
   ...fns: T & AllArguments<T>
 ) {
   return (async (...args: any) => {
