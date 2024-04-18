@@ -16,7 +16,7 @@ import {
 } from '../index.ts'
 
 const voidFn = composable(() => {})
-const toString = composable((a: unknown) => `${a}`)
+const toString = df.make(z.unknown(), z.any())(String)
 const append = composable((a: string, b: string) => `${a}${b}`)
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {

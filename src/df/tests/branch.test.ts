@@ -5,7 +5,14 @@ import {
   it,
   z,
 } from '../../test-prelude.ts'
-import { df, failure, InputError, success } from '../../index.ts'
+import {
+  all,
+  composable,
+  df,
+  failure,
+  InputError,
+  success,
+} from '../../index.ts'
 import { Composable } from '../../types.ts'
 
 describe('branch', () => {
@@ -150,25 +157,29 @@ describe('branch', () => {
     assertIsError(err, Error, 'condition function failed')
   })
 
-  // TODO: FIX THIS
-  // it('should not break composition with other combinators', async () => {
-  //   const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
-  //     id: id + 2,
-  //   }))
-  //   const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
-  //   const c = df.make(z.number())((n) => n * 2)
-  //   const d = all(
-  //     df.pipe(
-  //       df.branch(a, () => b),
-  //       c,
-  //     ),
-  //     a,
-  //   )
-  //   type _R = Expect<Equal<typeof d, Composable<(input?: unknown, environment?: unknown) => [number, { id: number }]>>>
+  it('should not break composition with other combinators', async () => {
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+      id: id + 2,
+    }))
+    const b = composable(({ id }: { id: number }) => id - 1)
+    const c = composable((n: number) => n * 2)
+    const dfPipe = df.pipe(
+      df.branch(a, () => b),
+      c,
+    )
+    const d = all(dfPipe, a)
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<
+          (input?: unknown, environment?: unknown) => [number, { id: number }]
+        >
+      >
+    >
 
-  //   assertEquals(
-  //     await d({ id: 1 }),
-  //     success<[number, { id: number }]>([4, { id: 3 }]),
-  //   )
-  // })
+    assertEquals(
+      await d({ id: 1 }),
+      success<[number, { id: number }]>([4, { id: 3 }]),
+    )
+  })
 })
