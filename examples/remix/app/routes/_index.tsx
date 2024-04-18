@@ -1,15 +1,16 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { inputFromUrl, df, map } from 'composable-functions'
+import { inputFromUrl, collect, map } from 'composable-functions'
 import { listColors } from '~/business/colors'
 import { listUsers } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
 
 // We'll run these 2 domain functions in parallel with Promise.all
-const getData = df.collect({
+const mappedColors = map(listColors, ({ data }) => data)
+const getData = collect({
   // The second argument will transform the successful result of listColors,
   // we only care about what is in the "data" field
-  colors: map(listColors, ({ data }) => data),
+  colors: mappedColors,
   users: listUsers,
 })
 export const loader = async ({ request }: LoaderFunctionArgs) => {

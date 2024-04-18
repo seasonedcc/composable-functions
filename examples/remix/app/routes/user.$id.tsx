@@ -1,11 +1,11 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
-import { df } from 'composable-functions'
+import { pipe } from 'composable-functions'
 import { formatUser, getUser } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
 
 // The output of getUser will be the input of formatUser
-const getData = df.pipe(getUser, formatUser)
+const getData = pipe(getUser, formatUser)
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const result = await getData(params)
