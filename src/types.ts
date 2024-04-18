@@ -53,15 +53,6 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
   ? L
   : never
 
-/**
- * Converts a tuple type to a union type.
- * @example
- * type MyTuple = [string, number]
- * type MyUnion = TupleToUnion<MyTuple>
- * //   ^? string | number
- */
-type TupleToUnion<T extends unknown[]> = T[number]
-
 type IsNever<A> =
   // prettier is removing the parens thus worsening readability
   // prettier-ignore
@@ -173,7 +164,6 @@ export type {
   SerializableError,
   SerializedResult,
   Success,
-  TupleToUnion,
   UnpackAll,
   UnpackData,
 }

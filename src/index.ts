@@ -30,7 +30,6 @@ export type {
   SerializableError,
   SerializedResult,
   Success,
-  TupleToUnion,
   UnpackAll,
   UnpackData,
 } from './types.ts'
