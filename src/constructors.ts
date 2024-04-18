@@ -52,24 +52,18 @@ function composable<T extends Fn>(fn: T): Composable<T> {
  * //    ^? number
  * expect(data).toBe(n + 1)
  */
-type OnError = (errors: Error[]) => Error[] | Promise<Error[]>
 function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
   fn: T,
-  onError?: OnError,
-): T extends Composable<(...a: infer P) => infer O>
-  ? (...args: P) => Promise<O>
-  : never
-function fromSuccess<
-  O,
-  T extends Composable<(input?: unknown, environment?: unknown) => O>,
->(fn: T, onError?: OnError): (...args: Parameters<Composable>) => Promise<O>
-function fromSuccess<T extends Fn>(fn: T, onError: OnError = (e) => e) {
-  return async (...args: any[]) => {
+  onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
+) {
+  return (async (...args: any[]) => {
     const result = await mapError(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }
+  }) as T extends Composable<(...a: infer P) => infer O>
+    ? (...args: P) => Promise<O>
+    : never
 }
 
 export { composable, failure, fromSuccess, success }
