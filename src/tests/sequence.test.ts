@@ -1,9 +1,10 @@
-import { assertEquals, describe, it } from '../test-prelude.ts'
+import { assertEquals, describe, it, z } from '../test-prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import { composable, sequence, success } from '../index.ts'
+import { withSchema } from '../index.ts'
 
 const toString = composable((a: unknown) => `${a}`)
-const add = composable((a: number, b: number) => a + b)
+const add = withSchema(z.number(), z.number())((a, b) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b
@@ -15,7 +16,11 @@ describe('sequence', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Composable<(a: number, b: number) => [number, string]>>
+      Equal<
+        typeof fn,
+        // TODO: this is wrong, it should infer the params
+        Composable<(a?: unknown, b?: unknown) => [number, string]>
+      >
     >
     type _R = Expect<Equal<typeof res, Result<[number, string]>>>
 

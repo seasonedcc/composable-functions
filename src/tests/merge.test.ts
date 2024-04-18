@@ -7,13 +7,14 @@ import {
 } from '../test-prelude.ts'
 import { merge, withSchema, failure, InputError, success } from '../index.ts'
 import type { Composable } from '../index.ts'
+import { composable } from '../index.ts'
 
 describe('merge', () => {
-  it('should combine two domain functions results into one object', async () => {
+  it('should combine two schema functions results into one object', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       resultA: id + 1,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const b = composable(({ id }: { id: number }) => ({
       resultB: id - 1,
     }))
 
@@ -23,17 +24,17 @@ describe('merge', () => {
         typeof c,
         Composable<
           (
-            input?: unknown,
-            environment?: unknown,
+            input: { id: number },
+            environment: unknown,
           ) => { resultA: number; resultB: number }
         >
       >
     >
 
-    assertEquals(await c({ id: 1 }), success({ resultA: 2, resultB: 0 }))
+    assertEquals(await c({ id: 1 }, {}), success({ resultA: 2, resultB: 0 }))
   })
 
-  it('should combine many domain functions into one', async () => {
+  it('should combine many schema functions into one', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       resultA: String(id),
       resultB: String(id),
@@ -66,7 +67,7 @@ describe('merge', () => {
     assertEquals(results, success({ resultA: '1', resultB: 2, resultC: true }))
   })
 
-  it('should return error when one of the domain functions has input errors', async () => {
+  it('should return error when one of the schema functions has input errors', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id,
     }))
@@ -97,7 +98,7 @@ describe('merge', () => {
     )
   })
 
-  it('should return error when one of the domain functions fails', async () => {
+  it('should return error when one of the schema functions fails', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id,
     }))

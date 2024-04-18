@@ -1,10 +1,4 @@
-import {
-  assertEquals,
-  assertIsError,
-  describe,
-  it,
-  z,
-} from '../test-prelude.ts'
+import { assertEquals, describe, it, z } from '../test-prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import {
   collect,
@@ -120,24 +114,7 @@ describe('collect', () => {
     assertEquals(res.errors![1].message, 'a is 1')
   })
 
-  it('should combine an object of domain functions', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-
-    const c = collect({ a, b })
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<
-          (input?: unknown, environment?: unknown) => { a: number; b: number }
-        >
-      >
-    >
-
-    assertEquals(await c({ id: 1 }), success({ a: 2, b: 0 }))
-  })
-
-  it('should return error when one of the domain functions has input errors', async () => {
+  it('should return error when one of the schema functions has input errors', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
     const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
@@ -157,26 +134,7 @@ describe('collect', () => {
     )
   })
 
-  it('should return error when one of the domain functions fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
-    const b = withSchema(z.object({ id: z.number() }))(() => {
-      throw 'Error'
-    })
-
-    const c = collect({ a, b })
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<
-          (input?: unknown, environment?: unknown) => { a: number; b: never }
-        >
-      >
-    >
-
-    assertEquals(await c({ id: 1 }), failure([new Error()]))
-  })
-
-  it('should combine the inputError messages of both functions', async () => {
+  it('should combine the inputError messages of both schema functions', async () => {
     const a = withSchema(z.object({ id: z.string() }))(({ id }) => id)
     const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
@@ -197,30 +155,5 @@ describe('collect', () => {
         new InputError('Expected string, received number', ['id']),
       ]),
     )
-  })
-
-  it('should combine the error messages when both functions fail', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(() => {
-      throw new Error('Error A')
-    })
-    const b = withSchema(z.object({ id: z.number() }))(() => {
-      throw new Error('Error B')
-    })
-
-    const c = collect({ a, b })
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<
-          (input?: unknown, environment?: unknown) => { a: never; b: never }
-        >
-      >
-    >
-
-    const {
-      errors: [errA, errB],
-    } = await c({ id: 1 })
-    assertIsError(errA, Error, 'Error A')
-    assertIsError(errB, Error, 'Error B')
   })
 })

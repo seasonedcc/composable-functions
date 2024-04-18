@@ -15,7 +15,7 @@ import {
 import type { Composable } from '../index.ts'
 
 describe('trace', () => {
-  it('converts trace exceptions to df failures', async () => {
+  it('converts trace exceptions to failures', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     const c = trace(() => {
@@ -33,7 +33,7 @@ describe('trace', () => {
     assertIsError(result.errors[0], Error, 'Problem in tracing')
   })
 
-  it('converts trace exceptions to df failures', async () => {
+  it('converts trace exceptions to failures', async () => {
     const a = composable(({ id }: { id: number }) => id + 1)
 
     const c = trace(() => {

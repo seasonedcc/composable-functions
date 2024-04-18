@@ -2,7 +2,7 @@ import { assertEquals, describe, it, z } from '../test-prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import { catchError, composable, success, withSchema } from '../index.ts'
 
-const dfFaultyAdd = withSchema(
+const schemaFaultyAdd = withSchema(
   z.number(),
   z.number(),
 )((a: number, b: number) => {
@@ -16,8 +16,8 @@ const faultyAdd = composable((a: number, b: number) => {
 })
 
 describe('catchError', () => {
-  it('changes the type of DF to accomodate catcher return type', async () => {
-    const fn = catchError(dfFaultyAdd, () => null)
+  it('changes the type to accomodate catcher return type', async () => {
+    const fn = catchError(schemaFaultyAdd, () => null)
     const res = await fn(1, 2)
 
     type _FN = Expect<
