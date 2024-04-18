@@ -9,8 +9,8 @@ import {
   all,
   composable,
   success,
-  df,
-  DomainFunction,
+  withSchema,
+  Composable,
   InputError,
   failure,
 } from '../index.ts'
@@ -38,32 +38,49 @@ describe('all', () => {
   })
 
   it('should combine two domain functions into one', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[number, number]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [number, number]>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), success<[number, number]>([2, 0]))
   })
 
   it('should combine many domain functions into one', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const c = df.make(z.object({ id: z.number() }))(({ id }) => Boolean(id))
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const c = withSchema(z.object({ id: z.number() }))(({ id }) => Boolean(id))
     const d = all(a, b, c)
-    type _R = Expect<Equal<typeof d, DomainFunction<[string, number, boolean]>>>
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<
+          (input?: unknown, environment?: unknown) => [string, number, boolean]
+        >
+      >
+    >
 
     const results = await d({ id: 1 })
     assertEquals(results, success<[string, number, boolean]>(['1', 2, true]))
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id)
-    const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
+    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[number, string]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [number, string]>
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -72,23 +89,33 @@ describe('all', () => {
   })
 
   it('should return error when one of the domain functions fails', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id)
-    const b = df.make(z.object({ id: z.number() }))(() => {
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
+    const b = withSchema(z.object({ id: z.number() }))(() => {
       throw 'Error'
     })
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[number, never]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [number, never]>
+      >
+    >
 
     assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
 
   it('should combine the inputError messages of both functions', async () => {
-    const a = df.make(z.object({ id: z.string() }))(({ id }) => id)
-    const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
+    const a = withSchema(z.object({ id: z.string() }))(({ id }) => id)
+    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[string, string]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [string, string]>
+      >
+    >
 
     assertEquals(
       await c({ id: 1 }),
@@ -100,15 +127,20 @@ describe('all', () => {
   })
 
   it('should combine the error messages when both functions fail', async () => {
-    const a = df.make(z.object({ id: z.number() }))(() => {
+    const a = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Error A')
     })
-    const b = df.make(z.object({ id: z.number() }))(() => {
+    const b = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Error B')
     })
 
     const c = all(a, b)
-    type _R = Expect<Equal<typeof c, DomainFunction<[never, never]>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => [never, never]>
+      >
+    >
 
     const {
       errors: [errA, errB],

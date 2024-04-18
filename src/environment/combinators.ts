@@ -1,8 +1,23 @@
-import type { Composable, Last, UnpackAll } from '../types.ts'
+import type { Composable, Last, UnpackAll, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
-import type { DomainFunction, UnpackDFObject, UnpackData } from './types.ts'
+import type { UnpackDFObject } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import { applyEnvironment } from './constructors.ts'
+
+/**
+ * Takes a function with 2 parameters and partially applies the second one.
+ * This is useful when one wants to use a domain function having a fixed environment.
+ * @example
+ * import { mdf, applyEnvironment } from 'domain-functions'
+ *
+ * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
+ * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
+ * //    ^? (input: unknown) => Promise<Result<Date>>
+ */
+function applyEnvironment<
+  Fn extends (input: unknown, environment: unknown) => unknown,
+>(df: Fn, environment: unknown) {
+  return (input: unknown) => df(input, environment) as ReturnType<Fn>
+}
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
@@ -22,11 +37,11 @@ function applyEnvironmentToList<
  *   ({ aString }) => ({ aBoolean: aString == '1' }),
  * )
  * const d = pipe(a, b)
- * //    ^? DomainFunction<{ aBoolean: boolean }>
+ * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
-function pipe<T extends DomainFunction[]>(
+function pipe<T extends Composable[]>(
   ...fns: T
-): DomainFunction<Last<UnpackAll<T>>> {
+): Composable<(input?: unknown, environment?: unknown) => Last<UnpackAll<T>>> {
   return (input, environment) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(input)
 }
@@ -42,11 +57,11 @@ function pipe<T extends DomainFunction[]>(
  * const a = mdf(z.object({}))(() => '1')
 const b = mdf(z.number())((n) => n + 2)
 const df = collectSequence({ a, b })
-//    ^? DomainFunction<{ a: string, b: number }>
+//    ^? Composable<(input?: unknown, environment?: unknown) => { a: string, b: number }>
  */
-function collectSequence<Fns extends Record<string, DomainFunction>>(
+function collectSequence<Fns extends Record<string, Composable>>(
   fns: Fns,
-): DomainFunction<UnpackDFObject<Fns>> {
+): Composable<(input?: unknown, environment?: unknown) => UnpackDFObject<Fns>> {
   const keys = Object.keys(fns)
 
   return A.map(
@@ -56,7 +71,7 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
       })),
     ),
     A.mergeObjects,
-  ) as DomainFunction<UnpackDFObject<Fns>>
+  )
 }
 
 /**
@@ -67,15 +82,13 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
  * const a = mdf(z.number())((aNumber) => String(aNumber))
  * const b = mdf(z.string())((aString) => aString === '1')
  * const df = sequence(a, b)
- * //    ^? DomainFunction<[string, boolean]>
+ * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
  */
-function sequence<Fns extends DomainFunction[]>(
-  ...fns: Fns
-): DomainFunction<UnpackAll<Fns>> {
+function sequence<Fns extends Composable[]>(...fns: Fns) {
   return ((input, environment) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as DomainFunction<UnpackAll<Fns>>
+    )) as Composable<(input?: unknown, environment?: unknown) => UnpackAll<Fns>>
 }
 
 /**
@@ -91,7 +104,7 @@ function sequence<Fns extends DomainFunction[]>(
  *   getIdOrEmail,
  *   (output) => (typeof output === "number" ? findUserById : findUserByEmail)
  * )
- * //    ^? DomainFunction<User>
+ * //    ^? Composable<(input?: unknown, environment?: unknown) => User>
  *
  * const getStock = mdf(z.any(), z.object({ id: z.number() }))(_, ({ id }) => db.stocks.find({ id }))
  * const getExtraStock = mdf(z.any(), z.object({ id: z.number() }))(_, ({ id }) => db.stockes.find({ id, extra: true }))
@@ -100,10 +113,10 @@ function sequence<Fns extends DomainFunction[]>(
  *  getStock,
  *  ({ items }) => (items.length >= 0 ? null : getExtraStock)
  * )
- * //   ^? DomainFunction<{ items: Item[] }>
+ * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
  */
-function branch<T, R extends DomainFunction | null>(
-  dfn: DomainFunction<T>,
+function branch<T, R extends Composable | null>(
+  dfn: Composable<(input?: unknown, environment?: unknown) => T>,
   resolver: (o: T) => Promise<R> | R,
 ) {
   return (async (input, environment) => {
@@ -115,9 +128,16 @@ function branch<T, R extends DomainFunction | null>(
       if (typeof nextDf !== 'function') return result.data
       return fromSuccess(nextDf)(result.data, environment)
     })()
-  }) as DomainFunction<
-    R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
+  }) as Composable<
+    (
+      input?: unknown,
+      environment?: unknown,
+    ) => R extends Composable<
+      (input?: unknown, environment?: unknown) => infer U
+    >
+      ? U
+      : UnpackData<NonNullable<R>> | T
   >
 }
 
-export { branch, collectSequence, pipe, sequence }
+export { applyEnvironment, branch, collectSequence, pipe, sequence }

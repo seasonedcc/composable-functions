@@ -1,4 +1,5 @@
-// deno-lint-ignore-file no-namespace
+// deno-lint-ignore-file no-namespace ban-ts-comment
+import { withSchema } from '../index.ts'
 import { assertEquals, describe, it } from '../test-prelude.ts'
 import * as Subject from '../types.ts'
 
@@ -251,9 +252,19 @@ namespace CollectArguments {
   >
 }
 
-namespace UnpackResult {
+namespace UnpackData {
   type testExtractsDataFromPromisedResult = Expect<
-    Equal<Subject.UnpackData<Promise<Subject.Result<string>>>, string>
+    Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>
+  >
+
+  const result = withSchema()(() => ({ name: 'foo' } as const))
+
+  type test = Expect<
+    Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>
+  >
+  type error = Expect<
+    // @ts-expect-error
+    Equal<Subject.UnpackData<typeof result>, { name: string }>
   >
 }
 

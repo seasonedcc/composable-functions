@@ -5,12 +5,18 @@ import {
   it,
   z,
 } from '../test-prelude.ts'
-import { composable, df, trace, fromSuccess, success } from '../index.ts'
-import type { Composable, DomainFunction } from '../index.ts'
+import {
+  composable,
+  withSchema,
+  trace,
+  fromSuccess,
+  success,
+} from '../index.ts'
+import type { Composable } from '../index.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to df failures', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     const c = trace(() => {
       throw new Error('Problem in tracing')
@@ -43,14 +49,19 @@ describe('trace', () => {
   })
 
   it('intercepts inputs and outputs of a given domain function', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     let contextFromFunctionA: unknown[] = []
 
     const c = trace((...context) => {
       contextFromFunctionA = context
     })(a)
-    type _R = Expect<Equal<typeof c, DomainFunction<number>>>
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
 
     assertEquals(await fromSuccess(c)({ id: 1 }), 2)
     assertEquals(contextFromFunctionA, [success(2), { id: 1 }])

@@ -1,4 +1,11 @@
-export { composable, failure, fromSuccess, success } from './constructors.ts'
+export {
+  applySchema,
+  composable,
+  failure,
+  fromSuccess,
+  success,
+  withSchema,
+} from './constructors.ts'
 export {
   all,
   catchError,
@@ -33,9 +40,8 @@ export type {
   UnpackData,
 } from './types.ts'
 
-// DOMAIN FUNCTIONS
-export * as df from './df/index.ts'
-export type { DomainFunction } from './df/index.ts'
+// FUNCTIONS WITH ENVIRONMENT
+export * as environment from './environment/index.ts'
 
 // COMPAT MODULE
 export * as compat from './compat/index.ts'

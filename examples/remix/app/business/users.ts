@@ -15,17 +15,17 @@ const userSchema = z.object({
   website: z.string(),
 })
 
-const listUsers = df.make(z.any())(async () => {
+const listUsers = withSchema(z.any())(async () => {
   const response = await jsonPlaceholder.get('/users')
   return response.json(z.array(userSchema))
 })
 
-const getUser = df.make(z.object({ id: z.string() }))(async ({ id }) => {
+const getUser = withSchema(z.object({ id: z.string() }))(async ({ id }) => {
   const response = await jsonPlaceholder.get('/users/:id', { params: { id } })
   return response.json(userSchema)
 })
 
-const formatUser = df.make(userSchema)((user) => {
+const formatUser = withSchema(userSchema)((user) => {
   return {
     user: {
       ...user,
