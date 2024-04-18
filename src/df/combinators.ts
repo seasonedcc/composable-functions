@@ -7,11 +7,7 @@ import type {
   UnpackAll,
 } from '../types.ts'
 import * as A from '../combinators.ts'
-import type {
-  DomainFunction,
-  UnpackDFObject,
-  UnpackData,
-} from './types.ts'
+import type { DomainFunction, UnpackDFObject, UnpackData } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import { ErrorList } from '../errors.ts'
 import { applyEnvironment } from './constructors.ts'
@@ -36,10 +32,7 @@ function applyEnvironmentToList<
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return ((input, environment) =>
-    A.all(...applyEnvironmentToList(fns, environment))(
-      input,
-    )) as DomainFunction<UnpackAll<Fns>>
+  return A.all(...(fns as never)) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**
@@ -55,12 +48,7 @@ function all<Fns extends DomainFunction[]>(
 function collect<Fns extends Record<string, DomainFunction>>(
   fns: Fns,
 ): DomainFunction<UnpackDFObject<Fns>> {
-  const dfsWithKey = Object.entries(fns).map(([key, df]) =>
-    A.map(df, (result) => ({ [key]: result })),
-  )
-  return A.map(all(...dfsWithKey), A.mergeObjects) as DomainFunction<
-    UnpackDFObject<Fns>
-  >
+  return A.collect(fns as never) as DomainFunction<UnpackDFObject<Fns>>
 }
 
 /**
@@ -218,13 +206,4 @@ function branch<T, R extends DomainFunction | null>(
   >
 }
 
-export {
-  all,
-  branch,
-  collect,
-  collectSequence,
-  first,
-  merge,
-  pipe,
-  sequence,
-}
+export { all, branch, collect, collectSequence, first, merge, pipe, sequence }

@@ -53,10 +53,11 @@ describe('collect', () => {
   })
 
   it('uses the same arguments for every function', async () => {
-    //@ts-expect-error add and append parameters are incompatible
     // The runtime will work since passing 1, 2 will be coerced to '1', '2'
     const fn = collect({
+      //@ts-expect-error add and append parameters are incompatible
       add: add,
+      //@ts-expect-error add and append parameters are incompatible
       string: append,
     })
     //@ts-expect-error add and append parameters are incompatible
