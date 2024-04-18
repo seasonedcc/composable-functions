@@ -79,7 +79,7 @@ function all<T extends Composable[]>(...fns: T & AllArguments<T>) {
     return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
     (...args: Parameters<AllArguments<T>[0]>) => {
-      [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
+      [key in keyof T]: UnpackData<Extract<T[key], Composable>>
     }
   >
 }
@@ -102,7 +102,7 @@ function collect<T extends Record<string, Composable>>(
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (...args: Parameters<AllArguments<RecordToTuple<T>>[0]>) => {
-      [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
+      [key in keyof T]: UnpackData<Extract<T[key], Composable>>
     }
   >
 }
@@ -149,7 +149,7 @@ function sequence<T extends [Composable, ...Composable[]]>(
  */
 function map<T extends Composable, R>(
   fn: T,
-  mapper: (res: UnpackData<ReturnType<T>>) => R,
+  mapper: (res: UnpackData<T>) => R,
 ) {
   return pipe(fn as Composable, composable(mapper) as Composable) as Composable<
     (...args: Parameters<T>) => R
@@ -170,7 +170,7 @@ function merge<T extends Composable[]>(
   ...fns: T & AllArguments<T>
 ): Composable<
   (...args: Parameters<AllArguments<T>[0]>) => MergeObjs<{
-    [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
+    [key in keyof T]: UnpackData<Extract<T[key], Composable>>
   }>
 > {
   return map(all(...(fns as never)), mergeObjects as never)
@@ -201,7 +201,7 @@ function first<T extends Composable[]>(...fns: T & AllArguments<T>) {
   }) as Composable<
     (
       ...args: Parameters<AllArguments<T>[0]>
-    ) => UnpackData<ReturnType<Extract<T[number], Composable>>>
+    ) => UnpackData<Extract<T[number], Composable>>
   >
 }
 
@@ -227,10 +227,10 @@ function catchError<
     (
       ...args: Parameters<F>
     ) => Awaited<ReturnType<C>> extends never[]
-      ? UnpackData<ReturnType<F>> extends any[]
-        ? UnpackData<ReturnType<F>>
-        : Awaited<ReturnType<C>> | UnpackData<ReturnType<F>>
-      : Awaited<ReturnType<C>> | UnpackData<ReturnType<F>>
+      ? UnpackData<F> extends any[]
+        ? UnpackData<F>
+        : Awaited<ReturnType<C>> | UnpackData<F>
+      : Awaited<ReturnType<C>> | UnpackData<F>
   >
 }
 

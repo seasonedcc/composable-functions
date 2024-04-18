@@ -57,10 +57,13 @@ type Composable<T extends Fn = Fn> = (
   ...args: Parameters<T>
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
-type UnpackData<T> = Awaited<T> extends Result<infer R> ? R : never
+type UnpackData<T extends Composable> = Extract<
+  Awaited<ReturnType<T>>,
+  { success: true }
+>['data']
 
 type UnpackAll<List extends Composable[]> = {
-  [K in keyof List]: UnpackData<ReturnType<List[K]>>
+  [K in keyof List]: UnpackData<List[K]>
 }
 
 type PipeReturn<Fns extends any[]> = Fns extends [

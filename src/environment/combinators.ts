@@ -1,6 +1,6 @@
-import type { Composable, Last, UnpackAll } from '../types.ts'
+import type { Composable, Last, UnpackAll, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
-import type { UnpackDFObject, UnpackData } from './types.ts'
+import type { UnpackDFObject } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 
 /**
