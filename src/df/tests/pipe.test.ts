@@ -5,15 +5,16 @@ import {
   failure,
   InputError,
   success,
+  withSchema,
 } from '../../index.ts'
 import type { Composable } from '../../index.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = df.pipe(a, b)
     type _R = Expect<
@@ -27,13 +28,13 @@ describe('pipe', () => {
   })
 
   it('should use the same environment in all composed functions', async () => {
-    const a = df.make(
+    const a = withSchema(
       z.undefined(),
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = df.make(
+    const b = withSchema(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -51,13 +52,13 @@ describe('pipe', () => {
 
   it('should fail on the first environment parser failure', async () => {
     const envParser = z.object({ env: z.number() })
-    const a = df.make(
+    const a = withSchema(
       z.undefined(),
       envParser,
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = df.make(
+    const b = withSchema(
       z.object({ inp: z.number() }),
       envParser,
     )(({ inp }, { env }) => inp + env)
@@ -79,13 +80,13 @@ describe('pipe', () => {
   it('should fail on the first input parser failure', async () => {
     const firstInputParser = z.undefined()
 
-    const a = df.make(
+    const a = withSchema(
       firstInputParser,
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = df.make(
+    const b = withSchema(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -105,13 +106,13 @@ describe('pipe', () => {
   })
 
   it('should fail on the second input parser failure', async () => {
-    const a = df.make(
+    const a = withSchema(
       z.undefined(),
       z.object({ env: z.number() }),
     )(() => ({
       inp: 'some invalid input',
     }))
-    const b = df.make(
+    const b = withSchema(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -131,13 +132,13 @@ describe('pipe', () => {
   })
 
   it('should compose more than 2 functions', async () => {
-    const a = df.make(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
+    const a = withSchema(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
       aString: String(aNumber),
     }))
-    const b = df.make(z.object({ aString: z.string() }))(({ aString }) => ({
+    const b = withSchema(z.object({ aString: z.string() }))(({ aString }) => ({
       aBoolean: aString == '1',
     }))
-    const c = df.make(z.object({ aBoolean: z.boolean() }))(
+    const c = withSchema(z.object({ aBoolean: z.boolean() }))(
       ({ aBoolean }) => !aBoolean,
     )
 

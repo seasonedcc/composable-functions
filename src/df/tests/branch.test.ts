@@ -9,6 +9,7 @@ import {
   all,
   composable,
   df,
+  withSchema,
   failure,
   InputError,
   success,
@@ -17,10 +18,10 @@ import { Composable } from '../../types.ts'
 
 describe('branch', () => {
   it('should pipe a domain function with a function that returns a DF', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = df.branch(a, () => Promise.resolve(b))
     type _R = Expect<
@@ -34,12 +35,12 @@ describe('branch', () => {
   })
 
   it('should enable conditionally choosing the next DF with the output of first one', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
       next: 'multiply',
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
-    const c = df.make(z.object({ id: z.number() }))(({ id }) => id * 2)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
+    const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
     const d = df.branch(a, (output) => (output.next === 'multiply' ? c : b))
     type _R = Expect<
       Equal<
@@ -52,11 +53,11 @@ describe('branch', () => {
   })
 
   it('should not pipe if the predicate returns null', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
       next: 'multiply',
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const d = df.branch(a, (output) => (output.next === 'multiply' ? null : b))
     type _R = Expect<
       Equal<
@@ -74,13 +75,13 @@ describe('branch', () => {
   })
 
   it('should use the same environment in all composed functions', async () => {
-    const a = df.make(
+    const a = withSchema(
       z.undefined(),
       z.object({ env: z.number() }),
     )((_input, { env }) => ({
       inp: env + 2,
     }))
-    const b = df.make(
+    const b = withSchema(
       z.object({ inp: z.number() }),
       z.object({ env: z.number() }),
     )(({ inp }, { env }) => inp + env)
@@ -97,10 +98,10 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the first function fails', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = df.branch(a, () => b)
     type _R = Expect<
       Equal<
@@ -116,10 +117,10 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the second function fails', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: String(id),
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = df.branch(a, () => b)
     type _R = Expect<
       Equal<
@@ -135,10 +136,10 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the condition function fails', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = df.branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable
@@ -158,7 +159,7 @@ describe('branch', () => {
   })
 
   it('should not break composition with other combinators', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)

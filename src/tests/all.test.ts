@@ -9,7 +9,7 @@ import {
   all,
   composable,
   success,
-  df,
+  withSchema,
   Composable,
   InputError,
   failure,
@@ -38,8 +38,8 @@ describe('all', () => {
   })
 
   it('should combine two domain functions into one', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = all(a, b)
     type _R = Expect<
@@ -53,9 +53,9 @@ describe('all', () => {
   })
 
   it('should combine many domain functions into one', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => String(id))
-    const b = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const c = df.make(z.object({ id: z.number() }))(({ id }) => Boolean(id))
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
+    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const c = withSchema(z.object({ id: z.number() }))(({ id }) => Boolean(id))
     const d = all(a, b, c)
     type _R = Expect<
       Equal<
@@ -71,8 +71,8 @@ describe('all', () => {
   })
 
   it('should return error when one of the domain functions has input errors', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id)
-    const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
+    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
     type _R = Expect<
@@ -89,8 +89,8 @@ describe('all', () => {
   })
 
   it('should return error when one of the domain functions fails', async () => {
-    const a = df.make(z.object({ id: z.number() }))(({ id }) => id)
-    const b = df.make(z.object({ id: z.number() }))(() => {
+    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
+    const b = withSchema(z.object({ id: z.number() }))(() => {
       throw 'Error'
     })
 
@@ -106,8 +106,8 @@ describe('all', () => {
   })
 
   it('should combine the inputError messages of both functions', async () => {
-    const a = df.make(z.object({ id: z.string() }))(({ id }) => id)
-    const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
+    const a = withSchema(z.object({ id: z.string() }))(({ id }) => id)
+    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
     type _R = Expect<
@@ -127,10 +127,10 @@ describe('all', () => {
   })
 
   it('should combine the error messages when both functions fail', async () => {
-    const a = df.make(z.object({ id: z.number() }))(() => {
+    const a = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Error A')
     })
-    const b = df.make(z.object({ id: z.number() }))(() => {
+    const b = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Error B')
     })
 

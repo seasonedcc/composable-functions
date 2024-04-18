@@ -1,8 +1,8 @@
 import { assertEquals, describe, it, z } from '../test-prelude.ts'
 import type { Result, Composable } from '../index.ts'
-import { catchError, composable, success, df } from '../index.ts'
+import { catchError, composable, success, withSchema } from '../index.ts'
 
-const dfFaultyAdd = df.make(
+const dfFaultyAdd = withSchema(
   z.number(),
   z.number(),
 )((a: number, b: number) => {

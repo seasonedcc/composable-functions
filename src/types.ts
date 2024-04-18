@@ -135,6 +135,32 @@ type SerializedResult<T> =
   | Success<T>
   | { success: false; errors: SerializableError[] }
 
+/**
+ * A parsing error when validating the input or environment schemas.
+ * This will be transformed into an `InputError` before being returned from the domain function.
+ * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
+ */
+type ParserIssue = { path: PropertyKey[]; message: string }
+
+/**
+ * The result of input or environment validation.
+ * See the type `Result` for the return values of domain functions.
+ * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
+ */
+type ParserResult<T> =
+  | {
+      success: true
+      data: T
+    }
+  | { success: false; error: { issues: ParserIssue[] } }
+
+/**
+ * The object used to validate either input or environment when creating domain functions.
+ */
+type ParserSchema<T extends unknown = unknown> = {
+  safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
+}
+
 export type {
   AllArguments,
   CollectArguments,
@@ -144,6 +170,9 @@ export type {
   Fn,
   Last,
   MergeObjs,
+  ParserIssue,
+  ParserResult,
+  ParserSchema,
   PipeArguments,
   PipeReturn,
   RecordToTuple,

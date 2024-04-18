@@ -1,4 +1,11 @@
-export { composable, failure, fromSuccess, success } from './constructors.ts'
+export {
+  applySchema,
+  composable,
+  failure,
+  fromSuccess,
+  success,
+  withSchema,
+} from './constructors.ts'
 export {
   all,
   catchError,

@@ -12,19 +12,19 @@ const colorSchema = z.object({
   pantone_value: z.string(),
 })
 
-const listColors = df.make(z.object({ page: z.string().optional() }))(
+const listColors = withSchema(z.object({ page: z.string().optional() }))(
   async ({ page = '1' }) => {
     const response = await reqRes.get('/colors', { query: { page } })
     return response.json(z.object({ data: z.array(colorSchema) }))
   },
 )
 
-const getColor = df.make(z.object({ id: z.string() }))(async ({ id }) => {
+const getColor = withSchema(z.object({ id: z.string() }))(async ({ id }) => {
   const response = await reqRes.get('/colors/:id', { params: { id } })
   return response.json(z.object({ data: colorSchema }))
 })
 
-const mutateColor = df.make(
+const mutateColor = withSchema(
   z.object({
     id: z.string(),
     color: z.string().min(1, 'Color is required'),

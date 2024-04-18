@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
 import { assertEquals, describe, it } from '../../test-prelude.ts'
 import { Result, Success } from '../../types.ts'
-import { make } from '../index.ts'
+import { withSchema } from '../../index.ts'
 import * as Subject from '../types.ts'
 
 namespace UnpackData {
-  const result = make()(() => ({ name: 'foo' } as const))
+  const result = withSchema()(() => ({ name: 'foo' } as const))
 
   type test = Expect<
     Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>
@@ -17,7 +17,7 @@ namespace UnpackData {
 }
 
 namespace UnpackResult {
-  const result = make()(() => ({ name: 'foo' }))
+  const result = withSchema()(() => ({ name: 'foo' }))
 
   type test = Expect<
     Equal<Subject.UnpackResult<typeof result>, Result<{ name: string }>>
@@ -25,7 +25,7 @@ namespace UnpackResult {
 }
 
 namespace UnpackSuccess {
-  const result = make()(() => ({ name: 'foo' }))
+  const result = withSchema()(() => ({ name: 'foo' }))
 
   type test = Expect<
     Equal<Subject.UnpackSuccess<typeof result>, Success<{ name: string }>>
@@ -33,8 +33,8 @@ namespace UnpackSuccess {
 }
 
 namespace UnpackAll {
-  const dfA = make()(() => ({ a: 1 } as const))
-  const dfB = make()(() => ({ b: 2 } as const))
+  const dfA = withSchema()(() => ({ a: 1 } as const))
+  const dfB = withSchema()(() => ({ b: 2 } as const))
 
   type Result = Subject.UnpackAll<[typeof dfA, typeof dfB]>
 

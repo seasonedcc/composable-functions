@@ -2,7 +2,22 @@ import type { Composable, Last, UnpackAll } from '../types.ts'
 import * as A from '../combinators.ts'
 import type { UnpackDFObject, UnpackData } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import { applyEnvironment } from './constructors.ts'
+
+/**
+ * Takes a function with 2 parameters and partially applies the second one.
+ * This is useful when one wants to use a domain function having a fixed environment.
+ * @example
+ * import { mdf, applyEnvironment } from 'domain-functions'
+ *
+ * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
+ * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
+ * //    ^? (input: unknown) => Promise<Result<Date>>
+ */
+function applyEnvironment<
+  Fn extends (input: unknown, environment: unknown) => unknown,
+>(df: Fn, environment: unknown) {
+  return (input: unknown) => df(input, environment) as ReturnType<Fn>
+}
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
@@ -125,4 +140,4 @@ function branch<T, R extends Composable | null>(
   >
 }
 
-export { branch, collectSequence, pipe, sequence }
+export { applyEnvironment, branch, collectSequence, pipe, sequence }
