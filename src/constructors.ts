@@ -86,12 +86,10 @@ function withSchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
 ) {
-  return function <Output>(handler: (input: I, environment: E) => Output) {
-    return applySchema(
-      composable(handler),
-      inputSchema,
-      environmentSchema,
-    ) as Composable<(input?: unknown, environment?: unknown) => Awaited<Output>>
+  return function <Output>(
+    handler: (input: I, environment: E) => Output,
+  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> {
+    return applySchema(composable(handler), inputSchema, environmentSchema)
   }
 }
 
@@ -99,7 +97,7 @@ function applySchema<I, E, A extends Composable>(
   fn: A,
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-) {
+): Composable<(input?: unknown, environment?: unknown) => UnpackData<A>> {
   return async function (input, environment = {}) {
     const envResult = await (environmentSchema ?? objectSchema).safeParseAsync(
       environment,
@@ -123,7 +121,7 @@ function applySchema<I, E, A extends Composable>(
       return failure([...inputErrors, ...envErrors])
     }
     return fn(result.data, envResult.data)
-  } as Composable<(input?: unknown, environment?: unknown) => UnpackData<A>>
+  }
 }
 
 const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
