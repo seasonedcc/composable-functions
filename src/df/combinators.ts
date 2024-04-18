@@ -18,22 +18,6 @@ function applyEnvironmentToList<
 }
 
 /**
- * Receives a Record of domain functions, runs them all in parallel and preserves the shape of this record for the data property in successful results.
- * @example
- * import { mdf, collect } from 'domain-functions'
- *
- * const a = mdf(z.object({}))(() => '1')
- * const b = mdf(z.object({}))(() => 2)
- * const df = collect({ a, b })
-//       ^? DomainFunction<{ a: string, b: number }>
- */
-function collect<Fns extends Record<string, DomainFunction>>(
-  fns: Fns,
-): DomainFunction<UnpackDFObject<Fns>> {
-  return A.collect(fns as never) as DomainFunction<UnpackDFObject<Fns>>
-}
-
-/**
  * Creates a composite domain function that will return the result of the first successful constituent domain function. **It is important to notice** that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
  * @example
  * import { mdf, first } from 'domain-functions'
@@ -172,4 +156,4 @@ function branch<T, R extends DomainFunction | null>(
   >
 }
 
-export { branch, collect, collectSequence, first, pipe, sequence }
+export { branch, collectSequence, first, pipe, sequence }

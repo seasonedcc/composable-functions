@@ -11,7 +11,6 @@ export type {
 } from './types.ts'
 export {
   branch,
-  collect,
   collectSequence,
   first,
   pipe,

@@ -5,7 +5,7 @@ import {
   it,
   z,
 } from '../../test-prelude.ts'
-import { all, df, failure, InputError, success } from '../../index.ts'
+import { df, failure, InputError, success } from '../../index.ts'
 import type { DomainFunction } from '../../index.ts'
 
 describe('branch', () => {
