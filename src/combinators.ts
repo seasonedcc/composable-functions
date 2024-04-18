@@ -13,6 +13,7 @@ import type {
   UnpackData,
 } from './types.ts'
 import { composable, failure, success } from './constructors.ts'
+import { ErrorList } from './errors.ts'
 
 /**
  * Merges a list of objects into a single object.
@@ -156,6 +157,55 @@ function map<T extends Composable, R>(
 }
 
 /**
+ * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+ * @example
+ * import { mdf, merge } from 'domain-functions'
+ *
+ * const a = mdf(z.object({}))(() => ({ a: 'a' }))
+ * const b = mdf(z.object({}))(() => ({ b: 2 }))
+ * const df = merge(a, b)
+ * //    ^? DomainFunction<{ a: string, b: number }>
+ */
+function merge<T extends Composable[]>(
+  ...fns: T & AllArguments<T>
+): Composable<
+  (...args: Parameters<AllArguments<T>[0]>) => MergeObjs<{
+    [key in keyof T]: UnpackData<ReturnType<Extract<T[key], Composable>>>
+  }>
+> {
+  return map(all(...(fns as never)), mergeObjects as never)
+}
+
+/**
+ * Creates a composite domain function that will return the result of the first successful constituent domain function. **It is important to notice** that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
+ * @example
+ * import { mdf, first } from 'domain-functions'
+ *
+ * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
+const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
+const df = first(a, b)
+//    ^? DomainFunction<string | number>
+ */
+function first<T extends Composable[]>(...fns: T & AllArguments<T>) {
+  return ((...args) => {
+    return composable(async () => {
+      const results = await Promise.all(fns.map((fn) => fn(...args)))
+
+      const result = results.find((r) => r.success) as Success | undefined
+      if (!result) {
+        throw new ErrorList(results.map(({ errors }) => errors).flat())
+      }
+
+      return result.data
+    })()
+  }) as Composable<
+    (
+      ...args: Parameters<AllArguments<T>[0]>
+    ) => UnpackData<ReturnType<Extract<T[number], Composable>>>
+  >
+}
+
+/**
  * Creates a new function that will try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
  * @example
  * import { cf as C } from 'domain-functions'
@@ -244,8 +294,10 @@ export {
   all,
   catchError,
   collect,
+  first,
   map,
   mapError,
+  merge,
   mergeObjects,
   pipe,
   sequence,

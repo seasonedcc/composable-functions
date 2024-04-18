@@ -13,12 +13,6 @@ namespace MergeObjs {
   type test2 = Expect<Equal<Result[keyof Result], 1 | 2 | 3 | 4>>
 }
 
-namespace TupleToUnion {
-  type Result = Subject.TupleToUnion<[1, 2, 3]>
-
-  type test = Expect<Equal<Result, 1 | 2 | 3>>
-}
-
 namespace Last {
   type test1 = Expect<Equal<Subject.Last<[1, 2, 3]>, 3>>
   type test2 = Expect<Equal<Subject.Last<[1]>, 1>>
@@ -46,12 +40,6 @@ namespace MergeObjs {
 
   type test1 = Expect<Equal<keyof Result, 'a' | 'b' | 'c' | 'd'>>
   type test2 = Expect<Equal<Result[keyof Result], 1 | 2 | 3 | 4>>
-}
-
-namespace TupleToUnion {
-  type Result = Subject.TupleToUnion<[1, 2, 3]>
-
-  type test = Expect<Equal<Result, 1 | 2 | 3>>
 }
 
 namespace Last {

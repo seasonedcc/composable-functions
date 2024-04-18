@@ -1,6 +1,19 @@
-import { assertEquals, describe, it } from '../test-prelude.ts'
-import type { Result, Composable } from '../index.ts'
-import { collect, composable, success } from '../index.ts'
+import {
+  assertEquals,
+  assertIsError,
+  describe,
+  it,
+  z,
+} from '../test-prelude.ts'
+import type { Result, Composable, DomainFunction } from '../index.ts'
+import {
+  collect,
+  df,
+  failure,
+  InputError,
+  composable,
+  success,
+} from '../index.ts'
 
 const voidFn = composable(() => {})
 const toString = composable((a: unknown) => `${a}`)
@@ -106,5 +119,74 @@ describe('collect', () => {
     assertEquals(res.success, false)
     assertEquals(res.errors![0].message, 'a is 1')
     assertEquals(res.errors![1].message, 'a is 1')
+  })
+
+  it('should combine an object of domain functions', async () => {
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const b = df.make(z.object({ id: z.number() }))(({ id }) => id - 1)
+
+    const c = collect({ a, b })
+    type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: number }>>>
+
+    assertEquals(await c({ id: 1 }), success({ a: 2, b: 0 }))
+  })
+
+  it('should return error when one of the domain functions has input errors', async () => {
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => id)
+    const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
+
+    const c = collect({ a, b })
+    type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: string }>>>
+
+    assertEquals(
+      await c({ id: 1 }),
+      failure([new InputError('Expected string, received number', ['id'])]),
+    )
+  })
+
+  it('should return error when one of the domain functions fails', async () => {
+    const a = df.make(z.object({ id: z.number() }))(({ id }) => id)
+    const b = df.make(z.object({ id: z.number() }))(() => {
+      throw 'Error'
+    })
+
+    const c = collect({ a, b })
+    type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: never }>>>
+
+    assertEquals(await c({ id: 1 }), failure([new Error()]))
+  })
+
+  it('should combine the inputError messages of both functions', async () => {
+    const a = df.make(z.object({ id: z.string() }))(({ id }) => id)
+    const b = df.make(z.object({ id: z.string() }))(({ id }) => id)
+
+    const c = collect({ a, b })
+    type _R = Expect<Equal<typeof c, DomainFunction<{ a: string; b: string }>>>
+
+    assertEquals(
+      await c({ id: 1 }),
+      failure([
+        new InputError('Expected string, received number', ['id']),
+        new InputError('Expected string, received number', ['id']),
+      ]),
+    )
+  })
+
+  it('should combine the error messages when both functions fail', async () => {
+    const a = df.make(z.object({ id: z.number() }))(() => {
+      throw new Error('Error A')
+    })
+    const b = df.make(z.object({ id: z.number() }))(() => {
+      throw new Error('Error B')
+    })
+
+    const c = collect({ a, b })
+    type _R = Expect<Equal<typeof c, DomainFunction<{ a: never; b: never }>>>
+
+    const {
+      errors: [errA, errB],
+    } = await c({ id: 1 })
+    assertIsError(errA, Error, 'Error A')
+    assertIsError(errB, Error, 'Error B')
   })
 })

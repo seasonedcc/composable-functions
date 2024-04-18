@@ -3,12 +3,14 @@ export {
   all,
   catchError,
   collect,
+  first,
   map,
   mapError,
+  merge,
   mergeObjects,
   pipe,
   sequence,
-  trace
+  trace,
 } from './combinators.ts'
 export {
   inputFromForm,
@@ -28,7 +30,6 @@ export type {
   SerializableError,
   SerializedResult,
   Success,
-  TupleToUnion,
   UnpackAll,
   UnpackData,
 } from './types.ts'
