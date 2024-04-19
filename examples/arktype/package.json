@@ -1,0 +1,18 @@
+{
+  "name": "composable-functions-arktype-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2"
+  },
+  "dependencies": {
+    "arktype": "2.0.0-dev.7",
+    "composable-functions": "file:../../npm",
+    "typescript": "^5.4.5"
+  }
+}
