@@ -125,6 +125,22 @@ namespace AllArguments {
       ]
     >
   >
+  type testSubtypesForThreeComposables = Expect<
+    Equal<
+      Subject.AllArguments<
+        [
+          Subject.Composable<(x: unknown) => void>,
+          Subject.Composable<(x: string) => void>,
+          Subject.Composable<(x: 'foo') => void>,
+        ]
+      >,
+      [
+        Subject.Composable<(x: 'foo') => void>,
+        Subject.Composable<(x: 'foo') => void>,
+        Subject.Composable<(x: 'foo') => void>,
+      ]
+    >
+  >
   type testSubtypesForStricterOptional = Expect<
     Equal<
       Subject.AllArguments<
