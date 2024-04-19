@@ -88,6 +88,7 @@ type PipeArguments<
       Composable<
         (firstParameter: infer FirstBParameter, ...b: infer PB) => any
       >,
+      ...unknown[],
     ]
     ? IsNever<Awaited<OA>> extends true
       ? ['Fail to compose, "never" does not fit in', FirstBParameter]
