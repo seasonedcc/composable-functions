@@ -7,7 +7,6 @@ namespace Internal {
   } & {}
 
   export type IsNever<A> =
-    // prettier is removing the parens thus worsening readability
     // prettier-ignore
     (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends never ? 1 : 2)
     ? true

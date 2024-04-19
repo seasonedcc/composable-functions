@@ -91,20 +91,14 @@ type AllArguments<
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
-type CollectArguments<T extends Record<string, Composable>> =
-  {} extends Internal.Zip<
-    Internal.Keys<T>,
-    AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-  >
-    ? never
-    : AllArguments<
-        Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
-      > extends ['Fail to compose', ...any[]]
-    ? AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-    : Internal.Zip<
-        Internal.Keys<T>,
-        AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-      >
+type CollectArguments<T extends Record<string, Composable>> = AllArguments<
+  Internal.UnionToTuple<T[keyof T]>
+> extends ['Fail to compose', ...any[]]
+  ? AllArguments<Internal.UnionToTuple<T[keyof T]>>
+  : Internal.Zip<
+      Internal.Keys<T>,
+      AllArguments<Internal.UnionToTuple<T[keyof T]>>
+    >
 
 type RecordToTuple<T extends Record<string, Composable>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>

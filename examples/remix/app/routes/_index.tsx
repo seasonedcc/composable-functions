@@ -6,11 +6,10 @@ import { listUsers } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
 
 // We'll run these 2 domain functions in parallel with Promise.all
-const mappedColors = map(listColors, ({ data }) => data)
 const getData = collect({
   // The second argument will transform the successful result of listColors,
   // we only care about what is in the "data" field
-  colors: mappedColors,
+  colors: map(listColors, ({ data }) => data),
   users: listUsers,
 })
 export const loader = async ({ request }: LoaderFunctionArgs) => {
