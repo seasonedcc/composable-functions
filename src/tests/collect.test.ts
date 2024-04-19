@@ -29,7 +29,7 @@ describe('collect', () => {
         string: string
         void: void
       }
-    > = collect({ add, string: toString, void: voidFn })
+    > = collect({ add: add, string: toString, void: voidFn })
 
     const res = await fn(1, 2)
 

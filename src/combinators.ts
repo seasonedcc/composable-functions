@@ -76,7 +76,7 @@ function all<Fns extends Composable[]>(...fns: Fns & AllArguments<Fns>) {
 
     return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
-    (...args: Parameters<AllArguments<Fns>[0]>) => {
+    (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => {
       [k in keyof Fns]: UnpackData<Fns[k]>
     }
   >
@@ -99,7 +99,11 @@ function collect<Fns extends Record<string, Composable>>(
     map(cf, (result) => ({ [key]: result })),
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
-    (...args: Parameters<AllArguments<RecordToTuple<Fns>>[0]>) => {
+    (
+      ...args: Parameters<
+        Exclude<AllArguments<RecordToTuple<Fns>>[0], undefined>
+      >
+    ) => {
       [key in keyof Fns]: UnpackData<Fns[key]>
     }
   >
@@ -115,8 +119,8 @@ function collect<Fns extends Record<string, Composable>>(
  * const cf = C.sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
-function sequence<Fn extends [Composable, ...Composable[]]>(
-  ...fns: Fn & PipeArguments<Fn>
+function sequence<Fns extends [Composable, ...Composable[]]>(
+  ...fns: Fns & PipeArguments<Fns>
 ) {
   return (async (...args) => {
     const [head, ...tail] = fns
@@ -131,7 +135,7 @@ function sequence<Fn extends [Composable, ...Composable[]]>(
       result.push(res.data)
     }
     return success(result)
-  }) as Composable<(...args: Parameters<Fn[0]>) => UnpackAll<Fn>>
+  }) as Composable<(...args: Parameters<Fns[0]>) => UnpackAll<Fns>>
 }
 
 /**
@@ -160,11 +164,11 @@ function map<Fn extends Composable, O>(
  * const df = merge(a, b)
  * //    ^? DomainFunction<{ a: string, b: number }>
  */
-function merge<Fn extends Composable[]>(
-  ...fns: Fn & AllArguments<Fn>
+function merge<Fns extends Composable[]>(
+  ...fns: Fns & AllArguments<Fns>
 ): Composable<
-  (...args: Parameters<AllArguments<Fn>[0]>) => MergeObjs<{
-    [key in keyof Fn]: UnpackData<Fn[key]>
+  (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => MergeObjs<{
+    [key in keyof Fns]: UnpackData<Fns[key]>
   }>
 > {
   return map(all(...(fns as never)), mergeObjects)
@@ -180,7 +184,7 @@ const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
 const df = first(a, b)
 //    ^? DomainFunction<string | number>
  */
-function first<Fn extends Composable[]>(...fns: Fn & AllArguments<Fn>) {
+function first<Fns extends Composable[]>(...fns: Fns & AllArguments<Fns>) {
   return ((...args) => {
     return composable(async () => {
       const results = await Promise.all(fns.map((fn) => fn(...args)))
@@ -193,7 +197,9 @@ function first<Fn extends Composable[]>(...fns: Fn & AllArguments<Fn>) {
       return result.data
     })()
   }) as Composable<
-    (...args: Parameters<AllArguments<Fn>[0]>) => UnpackData<Fn[number]>
+    (
+      ...args: Parameters<NonNullable<AllArguments<Fns>[0]>>
+    ) => UnpackData<Fns[number]>
   >
 }
 

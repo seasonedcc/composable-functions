@@ -111,6 +111,13 @@ namespace AllArguments {
   type testOneComposable = Expect<
     Equal<Subject.AllArguments<[Subject.Composable]>, [Subject.Composable]>
   >
+  type Foo = Subject.AllArguments<
+    [
+      Subject.Composable<(x: unknown) => void>,
+      Subject.Composable<(x: string) => void>,
+      Subject.Composable<(x: 'foo') => void>,
+    ]
+  >
   type testSubtypesForTwoComposables = Expect<
     Equal<
       Subject.AllArguments<

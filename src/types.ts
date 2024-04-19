@@ -79,17 +79,25 @@ type PipeArguments<
 
 type AllArguments<
   Fns extends any[],
-  Arguments extends any[] = [],
-> = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
+  OriginalFns extends any[] = Fns,
+> = Fns extends [Composable<(...a: infer PA) => any>, ...infer restA]
   ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
-    ? Internal.SubtypesTuple<PA, PB, []> extends [...infer MergedP]
+    ? Internal.SubtypesTuple<PA, PB> extends [...infer MergedP]
       ? AllArguments<
           [Composable<(...args: MergedP) => OB>, ...restB],
-          [...Arguments, Composable<(...a: MergedP) => OA>]
+          OriginalFns
         >
       : ['Fail to compose', PA, 'does not fit in', PB]
-    : [...Arguments, Composable<(...a: PA) => OA>]
+    : ApplyArgumentsToFns<OriginalFns, PA>
   : never
+
+type ApplyArgumentsToFns<
+  Fns extends any[],
+  Args extends any[],
+  Output extends any[] = [],
+> = Fns extends [(...a: any[]) => infer OA, ...infer restA]
+  ? ApplyArgumentsToFns<restA, Args, [...Output, (...a: Args) => OA]>
+  : Output
 
 type CollectArguments<T extends Record<string, Composable>> = AllArguments<
   Internal.UnionToTuple<T[keyof T]>
