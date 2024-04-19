@@ -2,7 +2,6 @@ import type {
   AllArguments,
   CollectArguments,
   Composable,
-  First,
   MergeObjs,
   PipeArguments,
   PipeReturn,
@@ -134,7 +133,7 @@ function sequence<T extends [Composable, ...Composable[]]>(
     }
     return success(result)
   }) as Composable<
-    (...args: Parameters<Extract<First<T>, Composable>>) => UnpackAll<T>
+    (...args: Parameters<Extract<T[0], Composable>>) => UnpackAll<T>
   >
 }
 

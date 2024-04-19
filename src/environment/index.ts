@@ -1,4 +1,3 @@
-export type { UnpackDFObject } from './types.ts'
 export {
   applyEnvironment,
   branch,

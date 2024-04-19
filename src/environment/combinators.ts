@@ -1,6 +1,5 @@
 import type { Composable, Last, UnpackAll, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
-import type { UnpackDFObject } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 
 /**
@@ -61,7 +60,12 @@ const df = collectSequence({ a, b })
  */
 function collectSequence<Fns extends Record<string, Composable>>(
   fns: Fns,
-): Composable<(input?: unknown, environment?: unknown) => UnpackDFObject<Fns>> {
+): Composable<
+  (
+    input?: unknown,
+    environment?: unknown,
+  ) => { [K in keyof Fns]: UnpackData<Fns[K]> }
+> {
   const keys = Object.keys(fns)
 
   return A.map(

@@ -30,30 +30,7 @@ type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
   ? MergeObjs<rest, Internal.Prettify<Omit<output, keyof first> & first>>
   : output
 
-/**
- * Returns the last item of a tuple type.
- * @example
- * type MyTuple = [string, number]
- * type Result = Last<MyTuple>
- * //   ^? number
- */
-type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
-  ? L
-  : never
-
-type IsNever<A> =
-  // prettier is removing the parens thus worsening readability
-  // prettier-ignore
-  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends never ? 1 : 2)
-    ? true
-    : false
-
-type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
-  ? F
-  : never
-
-type Fn = (...args: any[]) => any
-type Composable<T extends Fn = Fn> = (
+type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> = (
   ...args: Parameters<T>
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
@@ -71,7 +48,7 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? IsNever<OA> extends true
+  ? Internal.IsNever<OA> extends true
     ? ['Fail to compose, "never" does not fit in', PB]
     : Awaited<OA> extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
@@ -90,7 +67,7 @@ type PipeArguments<
       >,
       ...unknown[],
     ]
-    ? IsNever<Awaited<OA>> extends true
+    ? Internal.IsNever<Awaited<OA>> extends true
       ? ['Fail to compose, "never" does not fit in', FirstBParameter]
       : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
@@ -169,13 +146,15 @@ type ParserSchema<T extends unknown = unknown> = {
   safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
 }
 
+type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
+  ? L
+  : never
+
 export type {
   AllArguments,
   CollectArguments,
   Composable,
   Failure,
-  First,
-  Fn,
   Last,
   MergeObjs,
   ParserIssue,

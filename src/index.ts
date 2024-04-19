@@ -30,7 +30,6 @@ export { EnvironmentError, ErrorList, InputError } from './errors.ts'
 export type {
   Composable,
   Failure,
-  Last,
   MergeObjs,
   Result,
   SerializableError,

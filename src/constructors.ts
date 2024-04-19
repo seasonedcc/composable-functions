@@ -1,6 +1,6 @@
 import { mapError } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
-import type { Composable, Failure, Fn, ParserSchema, Success } from './types.ts'
+import type { Composable, Failure, ParserSchema, Success } from './types.ts'
 import { UnpackData } from './types.ts'
 
 function success<const T>(data: T): Success<T> {
@@ -25,7 +25,7 @@ function toError(maybeError: unknown): Error {
  * That function is gonna catch any errors and always return a Result.
  * @param fn a function to be used as a Composable
  */
-function composable<T extends Fn>(fn: T): Composable<T> {
+function composable<T extends (...args: any[]) => any>(fn: T): Composable<T> {
   return async (...args) => {
     try {
       // deno-lint-ignore no-explicit-any
