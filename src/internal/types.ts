@@ -6,6 +6,12 @@ namespace Internal {
     // deno-lint-ignore ban-types
   } & {}
 
+  export type IsNever<A> =
+    // prettier-ignore
+    (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends never ? 1 : 2)
+    ? true
+    : false
+
   // Thanks to https://github.com/tjjfvi
   // UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
   // This will not preserve union order but we don't care since this is for Composable paralel application

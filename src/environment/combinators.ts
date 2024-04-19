@@ -1,6 +1,5 @@
 import type { Composable, Last, UnpackAll, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
-import type { UnpackDFObject } from './types.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 
 /**
@@ -39,9 +38,11 @@ function applyEnvironmentToList<
  * const d = pipe(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
-function pipe<T extends Composable[]>(
-  ...fns: T
-): Composable<(input?: unknown, environment?: unknown) => Last<UnpackAll<T>>> {
+function pipe<Fns extends Composable[]>(
+  ...fns: Fns
+): Composable<
+  (input?: unknown, environment?: unknown) => Last<UnpackAll<Fns>>
+> {
   return (input, environment) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(input)
 }
@@ -61,7 +62,12 @@ const df = collectSequence({ a, b })
  */
 function collectSequence<Fns extends Record<string, Composable>>(
   fns: Fns,
-): Composable<(input?: unknown, environment?: unknown) => UnpackDFObject<Fns>> {
+): Composable<
+  (
+    input?: unknown,
+    environment?: unknown,
+  ) => { [K in keyof Fns]: UnpackData<Fns[K]> }
+> {
   const keys = Object.keys(fns)
 
   return A.map(
@@ -115,9 +121,9 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
  * )
  * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
  */
-function branch<T, R extends Composable | null>(
-  dfn: Composable<(input?: unknown, environment?: unknown) => T>,
-  resolver: (o: T) => Promise<R> | R,
+function branch<O, MaybeFn extends Composable | null>(
+  dfn: Composable<(input?: unknown, environment?: unknown) => O>,
+  resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
 ) {
   return (async (input, environment) => {
     const result = await dfn(input, environment)
@@ -132,11 +138,11 @@ function branch<T, R extends Composable | null>(
     (
       input?: unknown,
       environment?: unknown,
-    ) => R extends Composable<
-      (input?: unknown, environment?: unknown) => infer U
+    ) => MaybeFn extends Composable<
+      (input?: unknown, environment?: unknown) => infer BranchOutput
     >
-      ? U
-      : UnpackData<NonNullable<R>> | T
+      ? BranchOutput
+      : UnpackData<NonNullable<MaybeFn>> | O
   >
 }
 

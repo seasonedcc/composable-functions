@@ -10,8 +10,8 @@ import {
 } from '../index.ts'
 
 const voidFn = composable(() => {})
-const toString = withSchema(z.unknown(), z.any())(String)
 const append = composable((a: string, b: string) => `${a}${b}`)
+const toString = withSchema(z.unknown(), z.any())((a) => String(a))
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
@@ -29,11 +29,7 @@ describe('collect', () => {
         string: string
         void: void
       }
-    > = collect({
-      add: add,
-      string: toString,
-      void: voidFn,
-    })
+    > = collect({ add, string: toString, void: voidFn })
 
     const res = await fn(1, 2)
 

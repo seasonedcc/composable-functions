@@ -30,30 +30,7 @@ type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
   ? MergeObjs<rest, Internal.Prettify<Omit<output, keyof first> & first>>
   : output
 
-/**
- * Returns the last item of a tuple type.
- * @example
- * type MyTuple = [string, number]
- * type Result = Last<MyTuple>
- * //   ^? number
- */
-type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
-  ? L
-  : never
-
-type IsNever<A> =
-  // prettier is removing the parens thus worsening readability
-  // prettier-ignore
-  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends never ? 1 : 2)
-    ? true
-    : false
-
-type First<T extends readonly any[]> = T extends [infer F, ...infer _I]
-  ? F
-  : never
-
-type Fn = (...args: any[]) => any
-type Composable<T extends Fn = Fn> = (
+type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> = (
   ...args: Parameters<T>
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
@@ -71,7 +48,7 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   Composable<(b: infer PB) => infer OB>,
   ...infer rest,
 ]
-  ? IsNever<OA> extends true
+  ? Internal.IsNever<OA> extends true
     ? ['Fail to compose, "never" does not fit in', PB]
     : Awaited<OA> extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
@@ -90,7 +67,7 @@ type PipeArguments<
       >,
       ...unknown[],
     ]
-    ? IsNever<Awaited<OA>> extends true
+    ? Internal.IsNever<Awaited<OA>> extends true
       ? ['Fail to compose, "never" does not fit in', FirstBParameter]
       : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
@@ -114,20 +91,14 @@ type AllArguments<
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
-type CollectArguments<T extends Record<string, Composable>> =
-  {} extends Internal.Zip<
-    Internal.Keys<T>,
-    AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-  >
-    ? never
-    : AllArguments<
-        Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
-      > extends ['Fail to compose', ...any[]]
-    ? AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-    : Internal.Zip<
-        Internal.Keys<T>,
-        AllArguments<Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>>
-      >
+type CollectArguments<T extends Record<string, Composable>> = AllArguments<
+  Internal.UnionToTuple<T[keyof T]>
+> extends ['Fail to compose', ...any[]]
+  ? AllArguments<Internal.UnionToTuple<T[keyof T]>>
+  : Internal.Zip<
+      Internal.Keys<T>,
+      AllArguments<Internal.UnionToTuple<T[keyof T]>>
+    >
 
 type RecordToTuple<T extends Record<string, Composable>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
@@ -144,42 +115,32 @@ type SerializedResult<T> =
   | { success: false; errors: SerializableError[] }
 
 /**
- * A parsing error when validating the input or environment schemas.
- * This will be transformed into an `InputError` before being returned from the domain function.
- * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
- */
-type ParserIssue = { path: PropertyKey[]; message: string }
-
-/**
- * The result of input or environment validation.
- * See the type `Result` for the return values of domain functions.
- * It is usually not visible to the end user unless one wants to write an adapter for a schema validator.
- */
-type ParserResult<T> =
-  | {
-      success: true
-      data: T
-    }
-  | { success: false; error: { issues: ParserIssue[] } }
-
-/**
  * The object used to validate either input or environment when creating domain functions.
  */
 type ParserSchema<T extends unknown = unknown> = {
-  safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
+  safeParseAsync: (a: unknown) => Promise<
+    | {
+        success: true
+        data: T
+      }
+    | {
+        success: false
+        error: { issues: { path: PropertyKey[]; message: string }[] }
+      }
+  >
 }
+
+type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
+  ? L
+  : never
 
 export type {
   AllArguments,
   CollectArguments,
   Composable,
   Failure,
-  First,
-  Fn,
   Last,
   MergeObjs,
-  ParserIssue,
-  ParserResult,
   ParserSchema,
   PipeArguments,
   PipeReturn,
