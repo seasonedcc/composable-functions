@@ -1,4 +1,4 @@
-![Composable Functions](https://github.com/seasonedcc/composable-functions/assets/566971/bc025ec6-420a-40bd-9d66-78bdd85569b7)
+![Composable Functions](https://github.com/seasonedcc/composable-functions/assets/566971/17048e80-271a-4c8b-9914-7bd10fba5e42)
 
 ## Quickstart
 
