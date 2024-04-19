@@ -92,6 +92,18 @@ namespace PipeArguments {
       ['Fail to compose', void, 'does not fit in', number]
     >
   >
+  type testFailureToComposeOnThirdElement = Expect<
+    Equal<
+      Subject.PipeArguments<
+        [
+          Subject.Composable<(x: string) => number>,
+          Subject.Composable<(y: number) => string>,
+          Subject.Composable<(z: boolean) => void>,
+        ]
+      >,
+      ['Fail to compose', string, 'does not fit in', boolean]
+    >
+  >
 }
 
 namespace AllArguments {
