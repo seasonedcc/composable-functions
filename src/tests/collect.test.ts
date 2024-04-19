@@ -11,6 +11,7 @@ import {
 
 const voidFn = composable(() => {})
 const append = composable((a: string, b: string) => `${a}${b}`)
+const toString = withSchema(z.unknown(), z.any())((a) => String(a))
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
@@ -25,14 +26,10 @@ describe('collect', () => {
         args_1: number,
       ) => {
         add: number
-        str: string
+        string: string
         void: void
       }
-    > = collect({
-      add,
-      str: withSchema(z.unknown(), z.any())((a) => String(a)),
-      void: voidFn,
-    })
+    > = collect({ add, string: toString, void: voidFn })
 
     const res = await fn(1, 2)
 
@@ -45,17 +42,17 @@ describe('collect', () => {
             b: number,
           ) => {
             add: number
-            str: string
+            string: string
             void: void
           }
         >
       >
     >
     type _R = Expect<
-      Equal<typeof res, Result<{ add: number; str: string; void: void }>>
+      Equal<typeof res, Result<{ add: number; string: string; void: void }>>
     >
 
-    assertEquals(res, success({ add: 3, str: '1', void: undefined }))
+    assertEquals(res, success({ add: 3, string: '1', void: undefined }))
   })
 
   it('uses the same arguments for every function', async () => {
