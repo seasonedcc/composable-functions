@@ -25,12 +25,12 @@ describe('collect', () => {
         args_1: number,
       ) => {
         add: number
-        stringfied: string
+        str: string
         void: void
       }
     > = collect({
-      add: add,
-      stringfied: withSchema(z.unknown(), z.any())((a) => String(a)),
+      add,
+      str: withSchema(z.unknown(), z.any())((a) => String(a)),
       void: voidFn,
     })
 
@@ -45,17 +45,17 @@ describe('collect', () => {
             b: number,
           ) => {
             add: number
-            stringfied: string
+            str: string
             void: void
           }
         >
       >
     >
     type _R = Expect<
-      Equal<typeof res, Result<{ add: number; stringfied: string; void: void }>>
+      Equal<typeof res, Result<{ add: number; str: string; void: void }>>
     >
 
-    assertEquals(res, success({ add: 3, stringfied: '1', void: undefined }))
+    assertEquals(res, success({ add: 3, str: '1', void: undefined }))
   })
 
   it('uses the same arguments for every function', async () => {

@@ -26,8 +26,8 @@ import { ErrorList } from './errors.ts'
  * const merged = mergeObjects([obj1, obj2, obj3])
  * //   ^? { a: number, b: number, c: number, d: number }
  */
-function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
-  return Object.assign({}, ...objs) as MergeObjs<T>
+function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
+  return Object.assign({}, ...objs)
 }
 
 /**
@@ -44,13 +44,15 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
  * const d = C.pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
-function pipe<T extends [Composable, ...Composable[]]>(
-  ...fns: T & PipeArguments<T>
+function pipe<Fns extends [Composable, ...Composable[]]>(
+  ...fns: Fns & PipeArguments<Fns>
 ) {
   return (async (...args) => {
     const res = await sequence(...(fns as never))(...(args as never))
-    return !res.success ? failure(res.errors) : success(res.data.at(-1))
-  }) as PipeReturn<T>
+    return !res.success
+      ? failure(res.errors)
+      : success(res.data[res.data.length - 1])
+  }) as PipeReturn<Fns>
 }
 
 /**
@@ -64,7 +66,7 @@ function pipe<T extends [Composable, ...Composable[]]>(
  * const cf = C.all(a, b, c)
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
-function all<T extends Composable[]>(...fns: T & AllArguments<T>) {
+function all<Fns extends Composable[]>(...fns: Fns & AllArguments<Fns>) {
   return (async (...args) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
@@ -74,8 +76,8 @@ function all<T extends Composable[]>(...fns: T & AllArguments<T>) {
 
     return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
-    (...args: Parameters<AllArguments<T>[0]>) => {
-      [key in keyof T]: UnpackData<Extract<T[key], Composable>>
+    (...args: Parameters<AllArguments<Fns>[0]>) => {
+      [k in keyof Fns]: UnpackData<Fns[k]>
     }
   >
 }
@@ -90,15 +92,15 @@ function all<T extends Composable[]>(...fns: T & AllArguments<T>) {
  * const df = collect({ a, b })
 //       ^? Composable<() => { a: string, b: number }>
  */
-function collect<T extends Record<string, Composable>>(
-  fns: T & CollectArguments<T>,
+function collect<Fns extends Record<string, Composable>>(
+  fns: Fns & CollectArguments<Fns>,
 ) {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
     map(cf, (result) => ({ [key]: result })),
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
-    (...args: Parameters<AllArguments<RecordToTuple<T>>[0]>) => {
-      [key in keyof T]: UnpackData<Extract<T[key], Composable>>
+    (...args: Parameters<AllArguments<RecordToTuple<Fns>>[0]>) => {
+      [key in keyof Fns]: UnpackData<Fns[key]>
     }
   >
 }
@@ -113,11 +115,11 @@ function collect<T extends Record<string, Composable>>(
  * const cf = C.sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
-function sequence<T extends [Composable, ...Composable[]]>(
-  ...fns: T & PipeArguments<T>
+function sequence<Fn extends [Composable, ...Composable[]]>(
+  ...fns: Fn & PipeArguments<Fn>
 ) {
   return (async (...args) => {
-    const [head, ...tail] = fns as T
+    const [head, ...tail] = fns
 
     const res = await head(...args)
     if (!res.success) return failure(res.errors)
@@ -129,9 +131,7 @@ function sequence<T extends [Composable, ...Composable[]]>(
       result.push(res.data)
     }
     return success(result)
-  }) as Composable<
-    (...args: Parameters<Extract<T[0], Composable>>) => UnpackAll<T>
-  >
+  }) as Composable<(...args: Parameters<Fn[0]>) => UnpackAll<Fn>>
 }
 
 /**
@@ -143,13 +143,11 @@ function sequence<T extends [Composable, ...Composable[]]>(
  * const incrementToString = C.map(increment, String)
  * //    ^? Composable<string>
  */
-function map<T extends Composable, R>(
-  fn: T,
-  mapper: (res: UnpackData<T>) => R,
-) {
-  return pipe(fn as Composable, composable(mapper) as Composable) as Composable<
-    (...args: Parameters<T>) => R
-  >
+function map<Fn extends Composable, O>(
+  fn: Fn,
+  mapper: (res: UnpackData<Fn>) => O,
+): Composable<(...args: Parameters<Fn>) => O> {
+  return pipe(fn as Composable, composable(mapper) as Composable)
 }
 
 /**
@@ -162,14 +160,14 @@ function map<T extends Composable, R>(
  * const df = merge(a, b)
  * //    ^? DomainFunction<{ a: string, b: number }>
  */
-function merge<T extends Composable[]>(
-  ...fns: T & AllArguments<T>
+function merge<Fn extends Composable[]>(
+  ...fns: Fn & AllArguments<Fn>
 ): Composable<
-  (...args: Parameters<AllArguments<T>[0]>) => MergeObjs<{
-    [key in keyof T]: UnpackData<Extract<T[key], Composable>>
+  (...args: Parameters<AllArguments<Fn>[0]>) => MergeObjs<{
+    [key in keyof Fn]: UnpackData<Fn[key]>
   }>
 > {
-  return map(all(...(fns as never)), mergeObjects as never)
+  return map(all(...(fns as never)), mergeObjects)
 }
 
 /**
@@ -182,7 +180,7 @@ const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
 const df = first(a, b)
 //    ^? DomainFunction<string | number>
  */
-function first<T extends Composable[]>(...fns: T & AllArguments<T>) {
+function first<Fn extends Composable[]>(...fns: Fn & AllArguments<Fn>) {
   return ((...args) => {
     return composable(async () => {
       const results = await Promise.all(fns.map((fn) => fn(...args)))
@@ -195,9 +193,7 @@ function first<T extends Composable[]>(...fns: T & AllArguments<T>) {
       return result.data
     })()
   }) as Composable<
-    (
-      ...args: Parameters<AllArguments<T>[0]>
-    ) => UnpackData<Extract<T[number], Composable>>
+    (...args: Parameters<AllArguments<Fn>[0]>) => UnpackData<Fn[number]>
   >
 }
 
@@ -212,22 +208,25 @@ function first<T extends Composable[]>(...fns: T & AllArguments<T>) {
  * ))
  */
 function catchError<
-  F extends Composable,
-  C extends (err: Error[], ...originalInput: Parameters<F>) => any,
->(fn: F, catcher: C) {
-  return (async (...args: Parameters<F>) => {
+  Fn extends Composable,
+  C extends (err: Error[], ...originalInput: Parameters<Fn>) => any,
+>(
+  fn: Fn,
+  catcher: C,
+): Composable<
+  (
+    ...args: Parameters<Fn>
+  ) => Awaited<ReturnType<C>> extends never[]
+    ? UnpackData<Fn> extends any[]
+      ? UnpackData<Fn>
+      : Awaited<ReturnType<C>> | UnpackData<Fn>
+    : Awaited<ReturnType<C>> | UnpackData<Fn>
+> {
+  return async (...args: Parameters<Fn>) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
-    return composable(catcher)(res.errors as never, ...(args as any as never))
-  }) as Composable<
-    (
-      ...args: Parameters<F>
-    ) => Awaited<ReturnType<C>> extends never[]
-      ? UnpackData<F> extends any[]
-        ? UnpackData<F>
-        : Awaited<ReturnType<C>> | UnpackData<F>
-      : Awaited<ReturnType<C>> | UnpackData<F>
-  >
+    return composable(catcher)(res.errors, ...(args as never))
+  }
 }
 
 /**
@@ -240,8 +239,8 @@ function catchError<
  *   errors: [{ message: 'Errors count: ' + result.errors.length }],
  * }))
  */
-function mapError<T extends Composable, R>(
-  fn: T,
+function mapError<Fn extends Composable>(
+  fn: Fn,
   mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ) {
   return (async (...args) => {
@@ -253,7 +252,7 @@ function mapError<T extends Composable, R>(
     } else {
       return failure(mapped.errors)
     }
-  }) as T
+  }) as Fn
 }
 
 /**
@@ -276,14 +275,14 @@ function trace(
     ...originalInput: unknown[]
   ) => Promise<void> | void,
 ) {
-  return <C extends Composable>(fn: C) =>
+  return <Fn extends Composable>(fn: Fn) =>
     (async (...args) => {
       const originalResult = await fn(...args)
       const traceResult = await composable(traceFn)(originalResult, ...args)
       if (traceResult.success) return originalResult
 
       return failure(traceResult.errors)
-    }) as C
+    }) as Fn
 }
 
 export {
