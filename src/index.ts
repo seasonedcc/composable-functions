@@ -31,6 +31,7 @@ export type {
   Composable,
   Failure,
   MergeObjs,
+  ParserSchema,
   Result,
   SerializableError,
   SerializedResult,
