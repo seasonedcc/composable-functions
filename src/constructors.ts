@@ -1,6 +1,7 @@
 import { mapError } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
 import type { Composable, Failure, Fn, ParserSchema, Success } from './types.ts'
+import { UnpackData } from './types.ts'
 
 function success<const T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
@@ -85,12 +86,10 @@ function withSchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
 ) {
-  return function <Output>(handler: (input: I, environment: E) => Output) {
-    return applySchema(
-      composable(handler),
-      inputSchema,
-      environmentSchema,
-    ) as Composable<(input?: unknown, environment?: unknown) => Awaited<Output>>
+  return function <Output>(
+    handler: (input: I, environment: E) => Output,
+  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> {
+    return applySchema(composable(handler), inputSchema, environmentSchema)
   }
 }
 
@@ -98,7 +97,7 @@ function applySchema<I, E, A extends Composable>(
   fn: A,
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-) {
+): Composable<(input?: unknown, environment?: unknown) => UnpackData<A>> {
   return async function (input, environment = {}) {
     const envResult = await (environmentSchema ?? objectSchema).safeParseAsync(
       environment,
@@ -122,9 +121,7 @@ function applySchema<I, E, A extends Composable>(
       return failure([...inputErrors, ...envErrors])
     }
     return fn(result.data, envResult.data)
-  } as Composable<
-    (input?: unknown, environment?: unknown) => Awaited<ReturnType<A>>
-  >
+  }
 }
 
 const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {

@@ -16,7 +16,7 @@ import {
 } from '../index.ts'
 
 const voidFn = composable(() => {})
-const toString = composable(String)
+const toString = withSchema(z.unknown(), z.any())(String)
 const add = composable((a: number, b: number) => a + b)
 const optionalAdd = composable((a: number, b?: number) => a + (b ?? 1))
 
@@ -37,40 +37,7 @@ describe('all', () => {
     assertEquals(res, success<[number, string, undefined]>([3, '1', undefined]))
   })
 
-  it('should combine two domain functions into one', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-
-    const c = all(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => [number, number]>
-      >
-    >
-
-    assertEquals(await c({ id: 1 }), success<[number, number]>([2, 0]))
-  })
-
-  it('should combine many domain functions into one', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const c = withSchema(z.object({ id: z.number() }))(({ id }) => Boolean(id))
-    const d = all(a, b, c)
-    type _R = Expect<
-      Equal<
-        typeof d,
-        Composable<
-          (input?: unknown, environment?: unknown) => [string, number, boolean]
-        >
-      >
-    >
-
-    const results = await d({ id: 1 })
-    assertEquals(results, success<[string, number, boolean]>(['1', 2, true]))
-  })
-
-  it('should return error when one of the domain functions has input errors', async () => {
+  it('should return error when one of the schema functions has input errors', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
     const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
@@ -88,24 +55,21 @@ describe('all', () => {
     )
   })
 
-  it('should return error when one of the domain functions fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
-    const b = withSchema(z.object({ id: z.number() }))(() => {
+  it('should return error when one of the functions fails', async () => {
+    const a = composable(({ id }: { id: number }) => id)
+    const b = composable(() => {
       throw 'Error'
     })
 
     const c = all(a, b)
     type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => [number, never]>
-      >
+      Equal<typeof c, Composable<(obj: { id: number }) => [number, never]>>
     >
 
     assertEquals(await c({ id: 1 }), failure([new Error()]))
   })
 
-  it('should combine the inputError messages of both functions', async () => {
+  it('should combine the InputError messages of both schema functions', async () => {
     const a = withSchema(z.object({ id: z.string() }))(({ id }) => id)
     const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
@@ -127,24 +91,19 @@ describe('all', () => {
   })
 
   it('should combine the error messages when both functions fail', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(() => {
+    const a = composable(() => {
       throw new Error('Error A')
     })
-    const b = withSchema(z.object({ id: z.number() }))(() => {
+    const b = composable(() => {
       throw new Error('Error B')
     })
 
     const c = all(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => [never, never]>
-      >
-    >
+    type _R = Expect<Equal<typeof c, Composable<() => [never, never]>>>
 
     const {
       errors: [errA, errB],
-    } = await c({ id: 1 })
+    } = await c()
     assertIsError(errA, Error, 'Error A')
     assertIsError(errB, Error, 'Error B')
   })
