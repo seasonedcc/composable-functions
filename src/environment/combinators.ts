@@ -1,6 +1,13 @@
-import type { Composable, Last, UnpackAll, UnpackData } from '../types.ts'
+import type {
+  Composable,
+  Last,
+  PipeArguments,
+  UnpackAll,
+  UnpackData,
+} from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
+import { CommonEnvironment } from './types.ts'
 
 /**
  * Takes a function with 2 parameters and partially applies the second one.
@@ -13,9 +20,11 @@ import { composable, fromSuccess } from '../constructors.ts'
  * //    ^? (input: unknown) => Promise<Result<Date>>
  */
 function applyEnvironment<
-  Fn extends (input: unknown, environment: unknown) => unknown,
->(df: Fn, environment: unknown) {
-  return (input: unknown) => df(input, environment) as ReturnType<Fn>
+  I extends any,
+  E extends any,
+  Fn extends (input: I, environment: E) => any,
+>(df: Fn, environment: E) {
+  return (input: I) => df(input, environment) as ReturnType<Fn>
 }
 
 function applyEnvironmentToList<
@@ -39,9 +48,12 @@ function applyEnvironmentToList<
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
 function pipe<Fns extends Composable[]>(
-  ...fns: Fns
+  ...fns: Fns & PipeArguments<CommonEnvironment<Fns>>
 ): Composable<
-  (input?: unknown, environment?: unknown) => Last<UnpackAll<Fns>>
+  (
+    input?: Parameters<Fns[0]>[0],
+    environment?: Parameters<PipeArguments<CommonEnvironment<Fns>>[0]>[1],
+  ) => Last<UnpackAll<Fns>>
 > {
   return (input, environment) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(input)
@@ -69,9 +81,9 @@ function collectSequence<Fns extends Record<string, Composable>>(
   ) => { [K in keyof Fns]: UnpackData<Fns[K]> }
 > {
   const keys = Object.keys(fns)
-
+  const values = Object.values(fns) as [Composable]
   return A.map(
-    A.map(sequence(...Object.values(fns)), (outputs) =>
+    A.map(sequence(...values), (outputs) =>
       outputs.map((o, i) => ({
         [keys[i]]: o,
       })),
@@ -90,11 +102,19 @@ function collectSequence<Fns extends Record<string, Composable>>(
  * const df = sequence(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
  */
-function sequence<Fns extends Composable[]>(...fns: Fns) {
+
+function sequence<Fns extends Composable[]>(
+  ...fns: Fns & PipeArguments<CommonEnvironment<Fns>>
+) {
   return ((input, environment) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as Composable<(input?: unknown, environment?: unknown) => UnpackAll<Fns>>
+    )) as Composable<
+    (
+      input?: Parameters<Fns[0]>[0],
+      environment?: Parameters<PipeArguments<CommonEnvironment<Fns>>[0]>[1],
+    ) => UnpackAll<Fns>
+  >
 }
 
 /**
@@ -121,11 +141,11 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
  * )
  * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
  */
-function branch<O, MaybeFn extends Composable | null>(
-  dfn: Composable<(input?: unknown, environment?: unknown) => O>,
+function branch<O, E extends any, MaybeFn extends Composable | null>(
+  dfn: Composable<(input?: unknown, environment?: E) => O>,
   resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
 ) {
-  return (async (input, environment) => {
+  return (async (input, environment: E) => {
     const result = await dfn(input, environment)
     if (!result.success) return result
 

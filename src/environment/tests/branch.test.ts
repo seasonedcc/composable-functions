@@ -3,10 +3,10 @@ import {
   all,
   composable,
   environment,
-  withSchema,
   failure,
   InputError,
   success,
+  withSchema,
 } from '../../index.ts'
 import { Composable } from '../../types.ts'
 
@@ -162,10 +162,8 @@ describe('branch', () => {
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
     const c = composable((n: number) => n * 2)
-    const dfPipe = environment.pipe(
-      environment.branch(a, () => b),
-      c,
-    )
+    const br = environment.branch(a, () => b)
+    const dfPipe = environment.pipe(br, c)
     const d = all(dfPipe, a)
     type _R = Expect<
       Equal<
