@@ -229,57 +229,6 @@ namespace AllArguments {
   >
 }
 
-namespace CollectArguments {
-  type testNoEmptyArgumentList = Expect<
-    Equal<Subject.CollectArguments<{}>, never>
-  >
-  type testOneComposable = Expect<
-    Equal<
-      Subject.CollectArguments<{ a: Subject.Composable }>,
-      { a: Subject.Composable }
-    >
-  >
-  type testSubtypesForTwoComposables = Expect<
-    Equal<
-      Subject.CollectArguments<{
-        a: Subject.Composable<(x: string, y: 1) => void>
-        b: Subject.Composable<(x: 'foo', y: number) => void>
-      }>,
-      {
-        a: Subject.Composable<(x: 'foo', y: 1) => void>
-        b: Subject.Composable<(x: 'foo', y: 1) => void>
-      }
-    >
-  >
-  type testMaxArityForTwoComposables = Expect<
-    Equal<
-      Subject.CollectArguments<{
-        a: Subject.Composable<(x: string, y: number) => void>
-        b: Subject.Composable<(x: 'foo') => void>
-      }>,
-      {
-        a: Subject.Composable<(x: 'foo', y: number) => void>
-        b: Subject.Composable<(x: 'foo', y: number) => void>
-      }
-    >
-  >
-
-  type testCompositionFailure = Expect<
-    Equal<
-      Subject.CollectArguments<{
-        a: Subject.Composable<(x: string, y: string) => void>
-        b: Subject.Composable<(x: 'foo', y: number) => void>
-      }>,
-      [
-        'Fail to compose',
-        [x: string, y: string],
-        'does not fit in',
-        [x: 'foo', y: number],
-      ]
-    >
-  >
-}
-
 namespace UnpackData {
   type testExtractsDataFromPromisedResult = Expect<
     Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>

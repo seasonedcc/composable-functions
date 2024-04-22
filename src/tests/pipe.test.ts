@@ -2,7 +2,7 @@ import { assertEquals, describe, it } from './prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import { composable, pipe, success } from '../index.ts'
 
-const toString = composable(String)
+const toString = composable((a: unknown) => `${a}`)
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
@@ -51,27 +51,21 @@ describe('pipe', () => {
     type _R = Expect<Equal<typeof res, Result<string>>>
 
     assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'a is 1')
+    assertEquals(res.errors[0].message, 'a is 1')
   })
 
   it('catches the errors from function B', async () => {
-    //@ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
     const fn = pipe(add, alwaysThrow, toString)
-    //@ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
+    // @ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      //@ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
-      Equal<typeof fn, Composable<(a: number, b: number) => string>>
+      Equal<typeof fn, ['Fail to compose, "never" does not fit in', unknown]>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
     assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'always throw')
-    assertEquals(
-      // deno-lint-ignore no-explicit-any
-      (res.errors[0] as any).cause,
-      'it was made for this',
-    )
+    assertEquals(res.errors[0].message, 'always throw')
+    assertEquals(res.errors[0].cause, 'it was made for this')
   })
 })

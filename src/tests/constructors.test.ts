@@ -71,7 +71,7 @@ describe('composable', () => {
     type _R = Expect<Equal<typeof res, Result<number>>>
 
     assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'a is 1')
+    assertEquals(res.errors[0].message, 'a is 1')
   })
 })
 

@@ -56,7 +56,7 @@ describe('map', () => {
     type _R = Expect<Equal<typeof res, Result<boolean>>>
 
     assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'a is 1')
+    assertEquals(res.errors[0].message, 'a is 1')
   })
 
   it('fails when mapper fail', async () => {
@@ -71,6 +71,6 @@ describe('map', () => {
     type _R = Expect<Equal<typeof res, Result<never>>>
 
     assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'Mapper also has problems')
+    assertEquals(res.errors[0].message, 'Mapper also has problems')
   })
 })
