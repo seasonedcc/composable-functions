@@ -19,13 +19,13 @@ describe('merge', () => {
         Composable<
           (
             input: { id: number },
-            environment: unknown,
+            environment?: unknown,
           ) => { resultA: number; resultB: number }
         >
       >
     >
 
-    assertEquals(await c({ id: 1 }, {}), success({ resultA: 2, resultB: 0 }))
+    assertEquals(await c({ id: 1 }), success({ resultA: 2, resultB: 0 }))
   })
 
   it('should combine many schema functions into one', async () => {

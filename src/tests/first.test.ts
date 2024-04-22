@@ -15,14 +15,13 @@ describe('first', () => {
         Composable<
           (
             input: { id: number },
-            environment: unknown,
+            environment?: unknown,
           ) => string | number | boolean
         >
       >
     >
 
-    // TODO: we should keep the environment optional when composing with interoperability
-    const results = await d({ id: 1 }, {})
+    const results = await d({ id: 1 })
     assertEquals(results, success('1'))
   })
 

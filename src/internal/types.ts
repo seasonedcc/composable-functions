@@ -96,8 +96,8 @@ namespace Internal {
         ? Incompatible<headA, headPartial>
         : SubtypesTuple<
             restA,
-            restPartial,
-            [...Output, CommonSubType<headA, headPartial>]
+            Partial<restPartial>,
+            [...Output, CommonSubType<headA, Partial<headPartial>>]
           >
       : never
     : TupleB extends [infer headBNoA, ...infer restB]
@@ -108,8 +108,8 @@ namespace Internal {
         ? Incompatible<headBNoA, headPartial>
         : SubtypesTuple<
             restB,
-            restPartial,
-            [...Output, CommonSubType<headBNoA, headPartial>]
+            Partial<restPartial>,
+            [...Output, CommonSubType<headBNoA, Partial<headPartial>>]
           >
       : never
     : /*

@@ -163,6 +163,17 @@ namespace SubtypesTuple {
     >
   >
 
+  type WithOptional3 = Expect<
+    Equal<
+      Internal.SubtypesTuple<
+        Parameters<(a?: string, b?: number) => void>,
+        Parameters<(a: string) => void>,
+        []
+      >,
+      [string, number?]
+    >
+  >
+
   type WithObjects = Expect<
     Equal<
       Internal.SubtypesTuple<
