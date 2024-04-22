@@ -10,8 +10,8 @@ import {
 } from '../index.ts'
 
 const voidFn = composable(() => {})
-const append = composable((a: string, b: string) => `${a}${b}`)
 const toString = withSchema(z.unknown(), z.any())((a) => String(a))
+const append = composable((a: string, b: string) => `${a}${b}`)
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
@@ -57,7 +57,6 @@ describe('collect', () => {
 
   it('uses the same arguments for every function', async () => {
     // The runtime will work since passing 1, 2 will be coerced to '1', '2'
-    //@ts-expect-error add and append parameters are incompatible
     const fn = collect({
       add: add,
       string: append,

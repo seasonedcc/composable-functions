@@ -99,15 +99,6 @@ type ApplyArgumentsToFns<
   ? ApplyArgumentsToFns<restA, Args, [...Output, (...a: Args) => OA]>
   : Output
 
-type CollectArguments<T extends Record<string, Composable>> = AllArguments<
-  Internal.UnionToTuple<T[keyof T]>
-> extends ['Fail to compose', ...any[]]
-  ? AllArguments<Internal.UnionToTuple<T[keyof T]>>
-  : Internal.Zip<
-      Internal.Keys<T>,
-      AllArguments<Internal.UnionToTuple<T[keyof T]>>
-    >
-
 type RecordToTuple<T extends Record<string, Composable>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
 
@@ -144,7 +135,6 @@ type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
 
 export type {
   AllArguments,
-  CollectArguments,
   Composable,
   Failure,
   Last,

@@ -1,6 +1,5 @@
 import type {
   AllArguments,
-  CollectArguments,
   Composable,
   MergeObjs,
   PipeArguments,
@@ -66,7 +65,7 @@ function pipe<Fns extends [Composable, ...Composable[]]>(
  * const cf = C.all(a, b, c)
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
-function all<Fns extends Composable[]>(...fns: Fns & AllArguments<Fns>) {
+function all<Fns extends Composable[]>(...fns: Fns) {
   return (async (...args) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
@@ -92,9 +91,7 @@ function all<Fns extends Composable[]>(...fns: Fns & AllArguments<Fns>) {
  * const df = collect({ a, b })
 //       ^? Composable<() => { a: string, b: number }>
  */
-function collect<Fns extends Record<string, Composable>>(
-  fns: Fns & CollectArguments<Fns>,
-) {
+function collect<Fns extends Record<string, Composable>>(fns: Fns) {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
     map(cf, (result) => ({ [key]: result })),
   )
@@ -119,9 +116,7 @@ function collect<Fns extends Record<string, Composable>>(
  * const cf = C.sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
-function sequence<Fns extends [Composable, ...Composable[]]>(
-  ...fns: Fns & PipeArguments<Fns>
-) {
+function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
   return (async (...args) => {
     const [head, ...tail] = fns
 
@@ -165,7 +160,7 @@ function map<Fn extends Composable, O>(
  * //    ^? DomainFunction<{ a: string, b: number }>
  */
 function merge<Fns extends Composable[]>(
-  ...fns: Fns & AllArguments<Fns>
+  ...fns: Fns
 ): Composable<
   (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => MergeObjs<{
     [key in keyof Fns]: UnpackData<Fns[key]>
@@ -184,7 +179,7 @@ const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
 const df = first(a, b)
 //    ^? DomainFunction<string | number>
  */
-function first<Fns extends Composable[]>(...fns: Fns & AllArguments<Fns>) {
+function first<Fns extends Composable[]>(...fns: Fns) {
   return ((...args) => {
     return composable(async () => {
       const results = await Promise.all(fns.map((fn) => fn(...args)))

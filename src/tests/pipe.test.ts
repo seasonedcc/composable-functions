@@ -61,8 +61,7 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      //@ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
-      Equal<typeof fn, Composable<(a: number, b: number) => string>>
+      Equal<typeof fn, ['Fail to compose, "never" does not fit in', any]>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
