@@ -105,8 +105,8 @@ describe('collect', () => {
     >
 
     assertEquals(res.success, false)
-    assertEquals(res.errors![0].message, 'a is 1')
-    assertEquals(res.errors![1].message, 'a is 1')
+    assertEquals(res.errors[0].message, 'a is 1')
+    assertEquals(res.errors[1].message, 'a is 1')
   })
 
   it('should return error when one of the schema functions has input errors', async () => {
