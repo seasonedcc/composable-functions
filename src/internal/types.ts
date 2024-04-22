@@ -74,18 +74,14 @@ namespace Internal {
     ? [...Output, ...TupleA]
     : TupleA extends [infer headA, ...infer restA]
     ? TupleB extends [infer headB, ...infer restB]
-      ? CommonSubType<headA, headB> extends {
-          'Incompatible arguments ': true
-        }
-        ? CommonSubType<headA, headB>
+      ? IsIncompatible<headA, headB> extends true
+        ? Incompatible<headA, headB>
         : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
       : // TB is partial
       // We should handle partial case before recursion
       TupleB extends Partial<[infer headPartial, ...infer restPartial]>
-      ? CommonSubType<headA, headPartial> extends {
-          'Incompatible arguments ': true
-        }
-        ? CommonSubType<headA, headPartial>
+      ? IsIncompatible<headA, headPartial> extends true
+        ? Incompatible<headA, headPartial>
         : SubtypesTuple<
             restA,
             restPartial,
@@ -96,10 +92,8 @@ namespace Internal {
     ? // TA is partial
       // We should handle partial case before recursion
       TupleA extends Partial<[infer headPartial, ...infer restPartial]>
-      ? CommonSubType<headBNoA, headPartial> extends {
-          'Incompatible arguments ': true
-        }
-        ? CommonSubType<headBNoA, headPartial>
+      ? IsIncompatible<headBNoA, headPartial> extends true
+        ? Incompatible<headBNoA, headPartial>
         : SubtypesTuple<
             restB,
             restPartial,
@@ -114,9 +108,7 @@ namespace Internal {
      */
     TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
     ? TupleB extends Partial<[infer headBPartial, ...infer restBPartial]>
-      ? CommonSubType<headAPartial, headBPartial> extends {
-          'Incompatible arguments ': true
-        }
+      ? IsIncompatible<headAPartial, headBPartial> extends true
         ? SubtypesTuple<
             Partial<restAPartial>,
             Partial<restBPartial>,
@@ -137,16 +129,20 @@ namespace Internal {
     : A extends Record<PropertyKey, any>
     ? B extends Record<PropertyKey, any>
       ? Prettify<A & B>
-      : {
-          'Incompatible arguments ': true
-          argument1: A
-          argument2: B
-        }
-    : {
-        'Incompatible arguments ': true
-        argument1: A
-        argument2: B
-      }
+      : Incompatible<A, B>
+    : Incompatible<A, B>
+
+  type Incompatible<A, B> = {
+    'Incompatible arguments ': true
+    argument1: A
+    argument2: B
+  }
+
+  type IsIncompatible<A, B> = CommonSubType<A, B> extends {
+    'Incompatible arguments ': true
+  }
+    ? true
+    : false
 }
 
 export type { Internal }
