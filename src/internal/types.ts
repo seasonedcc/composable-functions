@@ -1,18 +1,20 @@
 // deno-lint-ignore-file no-namespace
 
-type Incompatible<A, B> = {
-  'Incompatible arguments ': true
-  argument1: A
-  argument2: B
-}
-
-type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends {
-  'Incompatible arguments ': true
-}
-  ? true
-  : false
-
 namespace Internal {
+  export type IncompatibleArguments<A, B> = {
+    'Incompatible arguments ': true
+    argument1: A
+    argument2: B
+  }
+
+  export type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends {
+    'Incompatible arguments ': true
+  }
+    ? true
+    : false
+
+  export type FailToCompose<A, B> = ['Fail to compose', A, 'does not fit in', B]
+
   export type Prettify<T> = {
     [K in keyof T]: T[K]
     // deno-lint-ignore ban-types
@@ -73,7 +75,7 @@ namespace Internal {
   ]
     ? U extends HEAD
       ? EveryElementTakes<TAIL, U>
-      : ['Fail to compose', undefined, 'does not fit in', HEAD]
+      : FailToCompose<undefined, HEAD>
     : true
 
   export type SubtypesTuple<
@@ -87,13 +89,13 @@ namespace Internal {
     : TupleA extends [infer headA, ...infer restA]
     ? TupleB extends [infer headB, ...infer restB]
       ? IsIncompatible<headA, headB> extends true
-        ? Incompatible<headA, headB>
+        ? IncompatibleArguments<headA, headB>
         : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
       : // TupleB is partial
       // We should handle partial case before recursion
       TupleB extends Partial<[infer headPartial, ...infer restPartial]>
       ? IsIncompatible<headA, headPartial> extends true
-        ? Incompatible<headA, headPartial>
+        ? IncompatibleArguments<headA, headPartial>
         : SubtypesTuple<
             restA,
             Partial<restPartial>,
@@ -105,7 +107,7 @@ namespace Internal {
       // We should handle partial case before recursion
       TupleA extends Partial<[infer headPartial, ...infer restPartial]>
       ? IsIncompatible<headBNoA, headPartial> extends true
-        ? Incompatible<headBNoA, headPartial>
+        ? IncompatibleArguments<headBNoA, headPartial>
         : SubtypesTuple<
             restB,
             Partial<restPartial>,
@@ -141,8 +143,8 @@ namespace Internal {
     : A extends Record<PropertyKey, any>
     ? B extends Record<PropertyKey, any>
       ? Prettify<A & B>
-      : Incompatible<A, B>
-    : Incompatible<A, B>
+      : IncompatibleArguments<A, B>
+    : IncompatibleArguments<A, B>
 }
 
 export type { Internal }

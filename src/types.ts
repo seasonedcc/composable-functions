@@ -49,10 +49,10 @@ type PipeReturn<Fns extends any[]> = Fns extends [
   ...infer rest,
 ]
   ? Internal.IsNever<OA> extends true
-    ? ['Fail to compose, "never" does not fit in', PB]
+    ? Internal.FailToCompose<never, PB>
     : Awaited<OA> extends PB
     ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
-    : ['Fail to compose', Awaited<OA>, 'does not fit in', PB]
+    : Internal.FailToCompose<Awaited<OA>, PB>
   : Fns extends [Composable<(...args: infer P) => infer O>]
   ? Composable<(...args: P) => O>
   : Fns
@@ -68,12 +68,12 @@ type PipeArguments<
       ...unknown[],
     ]
     ? Internal.IsNever<Awaited<OA>> extends true
-      ? ['Fail to compose, "never" does not fit in', FirstBParameter]
+      ? Internal.FailToCompose<never, FirstBParameter>
       : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
         ? PipeArguments<restA, [...Arguments, Composable<(...a: PA) => OA>]>
         : Internal.EveryElementTakes<PB, undefined>
-      : ['Fail to compose', Awaited<OA>, 'does not fit in', FirstBParameter]
+      : Internal.FailToCompose<Awaited<OA>, FirstBParameter>
     : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
@@ -87,7 +87,7 @@ type AllArguments<
           [Composable<(...args: MergedP) => OB>, ...restB],
           OriginalFns
         >
-      : ['Fail to compose', PA, 'does not fit in', PB]
+      : Internal.FailToCompose<PA, PB>
     : ApplyArgumentsToFns<OriginalFns, PA>
   : never
 

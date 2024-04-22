@@ -60,7 +60,7 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, ['Fail to compose, "never" does not fit in', unknown]>
+      Equal<typeof fn, ['Fail to compose', never, 'does not fit in', unknown]>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
