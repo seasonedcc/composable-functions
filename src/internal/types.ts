@@ -1,5 +1,17 @@
 // deno-lint-ignore-file no-namespace
 
+type Incompatible<A, B> = {
+  'Incompatible arguments ': true
+  argument1: A
+  argument2: B
+}
+
+type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends {
+  'Incompatible arguments ': true
+}
+  ? true
+  : false
+
 namespace Internal {
   export type Prettify<T> = {
     [K in keyof T]: T[K]
@@ -77,7 +89,7 @@ namespace Internal {
       ? IsIncompatible<headA, headB> extends true
         ? Incompatible<headA, headB>
         : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
-      : // TB is partial
+      : // TupleB is partial
       // We should handle partial case before recursion
       TupleB extends Partial<[infer headPartial, ...infer restPartial]>
       ? IsIncompatible<headA, headPartial> extends true
@@ -89,7 +101,7 @@ namespace Internal {
           >
       : never
     : TupleB extends [infer headBNoA, ...infer restB]
-    ? // TA is partial
+    ? // TupleA is partial
       // We should handle partial case before recursion
       TupleA extends Partial<[infer headPartial, ...infer restPartial]>
       ? IsIncompatible<headBNoA, headPartial> extends true
@@ -104,7 +116,7 @@ namespace Internal {
      * We should continue the recursion checking optional parameters
      * We can pattern match optionals using Partial
      * We should start handling partials as soon one side of mandatory ends
-     * Remove ...TA, ...TB bellow
+     * Remove ...TupleA, ...TupleB bellow
      */
     TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
     ? TupleB extends Partial<[infer headBPartial, ...infer restBPartial]>
@@ -131,18 +143,6 @@ namespace Internal {
       ? Prettify<A & B>
       : Incompatible<A, B>
     : Incompatible<A, B>
-
-  type Incompatible<A, B> = {
-    'Incompatible arguments ': true
-    argument1: A
-    argument2: B
-  }
-
-  type IsIncompatible<A, B> = CommonSubType<A, B> extends {
-    'Incompatible arguments ': true
-  }
-    ? true
-    : false
 }
 
 export type { Internal }
