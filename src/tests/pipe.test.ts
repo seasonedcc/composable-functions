@@ -55,9 +55,8 @@ describe('pipe', () => {
   })
 
   it('catches the errors from function B', async () => {
-    //@ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
     const fn = pipe(add, alwaysThrow, toString)
-    //@ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
+    // @ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
     const res = await fn(1, 2)
 
     type _FN = Expect<

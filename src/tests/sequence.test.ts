@@ -4,7 +4,7 @@ import { composable, sequence, success } from '../index.ts'
 import { withSchema } from '../index.ts'
 
 const toString = composable((a: unknown) => `${a}`)
-const add = withSchema(z.number(), z.number())((a, b) => a + b)
+const schemaAdd = withSchema(z.number(), z.number())((a, b) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b
@@ -12,13 +12,12 @@ const faultyAdd = composable((a: number, b: number) => {
 
 describe('sequence', () => {
   it('sends the results of the first function to the second and saves every step of the result', async () => {
-    const fn = sequence(add, toString)
+    const fn = sequence(schemaAdd, toString)
     const res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<
         typeof fn,
-        // TODO: this is wrong, it should infer the params
         Composable<(a?: unknown, b?: unknown) => [number, string]>
       >
     >

@@ -43,15 +43,13 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
  * const d = C.pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
-function pipe<Fns extends [Composable, ...Composable[]]>(
-  ...fns: Fns & PipeArguments<Fns>
-) {
+function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
   return (async (...args) => {
     const res = await sequence(...(fns as never))(...(args as never))
     return !res.success
       ? failure(res.errors)
       : success(res.data[res.data.length - 1])
-  }) as PipeReturn<Fns>
+  }) as PipeReturn<PipeArguments<Fns>>
 }
 
 /**

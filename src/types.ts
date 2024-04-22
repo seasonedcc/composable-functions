@@ -55,7 +55,7 @@ type PipeReturn<Fns extends any[]> = Fns extends [
     : ['Fail to compose', Awaited<OA>, 'does not fit in', PB]
   : Fns extends [Composable<(...args: infer P) => infer O>]
   ? Composable<(...args: P) => O>
-  : never
+  : Fns
 
 type PipeArguments<
   Fns extends any[],
