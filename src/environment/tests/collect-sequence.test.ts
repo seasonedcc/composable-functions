@@ -1,4 +1,4 @@
-import { assertEquals, describe, it, z } from '../../test-prelude.ts'
+import { assertEquals, describe, it, z } from './prelude.ts'
 import {
   environment,
   withSchema,

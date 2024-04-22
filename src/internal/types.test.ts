@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
-import { assertEquals, describe, it } from '../test-prelude.ts'
+import { assertEquals, describe, it } from '../tests/prelude.ts'
 import { Internal } from './types.ts'
 
 namespace UnionToTuple {

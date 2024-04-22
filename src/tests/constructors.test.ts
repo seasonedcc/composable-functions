@@ -5,7 +5,7 @@ import {
   describe,
   it,
   z,
-} from '../test-prelude.ts'
+} from './prelude.ts'
 import type { Result, Composable, Success } from '../index.ts'
 import {
   composable,

@@ -1,10 +1,4 @@
-import {
-  assertEquals,
-  assertIsError,
-  describe,
-  it,
-  z,
-} from '../test-prelude.ts'
+import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
   all,
   composable,

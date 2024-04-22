@@ -1,4 +1,4 @@
-import { assertEquals, describe, it } from '../test-prelude.ts'
+import { assertEquals, describe, it } from './prelude.ts'
 import type { Result, Composable } from '../index.ts'
 import { composable, mapError } from '../index.ts'
 import { success } from '../constructors.ts'

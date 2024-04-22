@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
 import { withSchema } from '../index.ts'
-import { assertEquals, describe, it } from '../test-prelude.ts'
+import { assertEquals, describe, it } from './prelude.ts'
 import * as Subject from '../types.ts'
 
 namespace MergeObjs {
