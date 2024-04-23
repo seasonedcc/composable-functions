@@ -1,15 +1,16 @@
+import { UnpackData } from '../index.ts'
 import { Internal } from '../internal/types.ts'
-import { Composable } from '../types.ts'
+import { Composable, Last } from '../types.ts'
 
 type CommonEnvironment<
   Fns extends any[],
   OriginalFns extends any[] = Fns,
 > = Fns extends [
-  Composable<(a: any, envA: infer EnvA, ...rest: any[]) => any>,
+  Composable<(a: any, envA: infer EnvA) => infer O>,
   ...infer restA,
 ]
   ? restA extends [
-      Composable<(b: any, envB: infer EnvB, ...rest: any[]) => any>,
+      Composable<(b: any, envB: infer EnvB) => any>,
       ...infer restB,
     ]
     ? Internal.IsIncompatible<EnvA, EnvB> extends true
@@ -17,39 +18,35 @@ type CommonEnvironment<
       : CommonEnvironment<
           [
             Composable<
-              (
-                a: any,
-                envA: Internal.CommonSubType<EnvA, EnvB>,
-                ...rest: any[]
-              ) => any
+              (a: any, envA: Internal.CommonSubType<EnvA, EnvB>) => any
             >,
             ...restB,
           ],
           OriginalFns
         >
-    : ApplyEnvironmentsToFns<OriginalFns, EnvA>
+    : Composable<
+        // TODO: Find where is the infinite loop when we use:
+        // (...args: ReplaceEnv<Parameters<OriginalFns[0]>, EnvA>) => UnpackData<Last<OriginalFns>>
+        (
+          ...args: ReplaceEnv<[string, unknown], EnvA>
+        ) => UnpackData<Last<OriginalFns>>
+      >
   : never
 
-type ApplyEnvironmentsToFns<
-  Fns extends any[],
-  Environment extends any,
-  Output extends any[] = [],
-> = Fns extends [
-  (
-    a: infer FirstParameter,
-    env: any,
-    ...rest: infer RestParameters
-  ) => infer OA,
-  ...infer restA,
-]
-  ? ApplyEnvironmentsToFns<
-      restA,
-      Environment,
-      [
-        ...Output,
-        (a: FirstParameter, env: Environment, ...rest: RestParameters) => OA,
-      ]
+type ReplaceEnv<
+  Params extends unknown[],
+  Env,
+  Output extends unknown[] = [],
+> = Params extends []
+  ? Output
+  : Params extends [infer headA, ...infer restA]
+  ? ReplaceEnv<restA, Env, [...Output, headA]>
+  : Params extends Partial<[infer headAPartial, ...infer restAPartial]>
+  ? ReplaceEnv<
+      Partial<restAPartial>,
+      Env,
+      [...Output, (headAPartial | undefined)?]
     >
-  : Output
+  : never
 
 export type { CommonEnvironment }

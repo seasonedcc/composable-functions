@@ -1,10 +1,4 @@
-import type {
-  Composable,
-  Last,
-  PipeArguments,
-  UnpackAll,
-  UnpackData,
-} from '../types.ts'
+import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import { CommonEnvironment } from './types.ts'
@@ -47,49 +41,11 @@ function applyEnvironmentToList<
  * const d = pipe(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
-function pipe<Fns extends Composable[]>(
-  ...fns: Fns
-): Composable<
-  (
-    input?: Parameters<Fns[0]>[0],
-    environment?: Parameters<PipeArguments<CommonEnvironment<Fns>>[0]>[1],
-  ) => Last<UnpackAll<Fns>>
-> {
-  return (input, environment) =>
-    A.pipe(...applyEnvironmentToList(fns, environment))(input)
-}
-
-/**
- * Receives a Record of domain functions, runs them all in sequence like `pipe` but preserves the shape of that record for the data property in successful results.
- * It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in the given order.
- *
- * **NOTE :** After ECMAScript2015 JS is able to keep the order of keys in an object, we are relying on that. However, number-like keys such as { 1: 'foo' } will be ordered and may break the given order.
- * @example
- * import { mdf, collectSequence } from 'domain-functions'
- *
- * const a = mdf(z.object({}))(() => '1')
-const b = mdf(z.number())((n) => n + 2)
-const df = collectSequence({ a, b })
-//    ^? Composable<(input?: unknown, environment?: unknown) => { a: string, b: number }>
- */
-function collectSequence<Fns extends Record<string, Composable>>(
-  fns: Fns,
-): Composable<
-  (
-    input?: unknown,
-    environment?: unknown,
-  ) => { [K in keyof Fns]: UnpackData<Fns[K]> }
-> {
-  const keys = Object.keys(fns)
-  const values = Object.values(fns) as [Composable]
-  return A.map(
-    A.map(sequence(...values), (outputs) =>
-      outputs.map((o, i) => ({
-        [keys[i]]: o,
-      })),
-    ),
-    A.mergeObjects,
-  )
+function pipe<Fns extends Composable[]>(...fns: Fns) {
+  return ((input, environment) =>
+    A.pipe(...applyEnvironmentToList(fns, environment))(
+      input,
+    )) as CommonEnvironment<Fns>
 }
 
 /**
@@ -107,12 +63,7 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
   return ((input, environment) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as Composable<
-    (
-      input?: Parameters<Fns[0]>[0],
-      environment?: Parameters<PipeArguments<CommonEnvironment<Fns>>[0]>[1],
-    ) => UnpackAll<Fns>
-  >
+    )) as CommonEnvironment<Fns>
 }
 
 /**
@@ -164,4 +115,4 @@ function branch<O, E extends any, MaybeFn extends Composable | null>(
   >
 }
 
-export { applyEnvironment, branch, collectSequence, pipe, sequence }
+export { applyEnvironment, branch, pipe, sequence }
