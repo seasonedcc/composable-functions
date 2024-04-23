@@ -48,7 +48,7 @@ function applyEnvironmentToList<
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
 function pipe<Fns extends Composable[]>(
-  ...fns: Fns & PipeArguments<CommonEnvironment<Fns>>
+  ...fns: Fns
 ): Composable<
   (
     input?: Parameters<Fns[0]>[0],
@@ -103,9 +103,7 @@ function collectSequence<Fns extends Record<string, Composable>>(
  * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
  */
 
-function sequence<Fns extends Composable[]>(
-  ...fns: Fns & PipeArguments<CommonEnvironment<Fns>>
-) {
+function sequence<Fns extends Composable[]>(...fns: Fns) {
   return ((input, environment) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,

@@ -12,10 +12,8 @@ type CommonEnvironment<
       Composable<(b: any, envB: infer EnvB, ...rest: any[]) => any>,
       ...infer restB,
     ]
-    ? Internal.CommonSubType<EnvA, EnvB> extends {
-        'Incompatible arguments ': true
-      }
-      ? Internal.CommonSubType<EnvA, EnvB>
+    ? Internal.IsIncompatible<EnvA, EnvB> extends true
+      ? Internal.IncompatibleArguments<EnvA, EnvB>
       : CommonEnvironment<
           [
             Composable<

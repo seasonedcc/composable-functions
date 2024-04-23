@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-namespace ban-ts-comment
+// deno-lint-ignore-file no-namespace
 
 import { Composable } from '../../types.ts'
 import * as Subject from '../types.ts'
