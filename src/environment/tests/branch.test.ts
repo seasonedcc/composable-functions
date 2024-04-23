@@ -162,9 +162,13 @@ describe('branch', () => {
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
     const c = composable((n: number) => n * 2)
-    const br = environment.branch(a, () => b)
-    const dfPipe = environment.pipe(br, c)
-    const d = all(dfPipe, a)
+    const d = all(
+      environment.pipe(
+        environment.branch(a, () => b),
+        c,
+      ),
+      a,
+    )
     type _R = Expect<
       Equal<
         typeof d,
