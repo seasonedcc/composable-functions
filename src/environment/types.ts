@@ -42,14 +42,6 @@ type PipeReturnWithEnvironment<Fns extends Composable[]> =
         >
     : PipeReturn<Fns>
 
-type X = PipeReturnWithEnvironment<
-  [
-    Composable<(a: number, e?: unknown) => number>,
-    Composable<(a: number, e: number) => number>,
-    Composable<(a: number) => void>,
-  ]
->
-
 type GetEnv<Params extends unknown[]> = Params extends [
   unknown,
   infer envMandatory,
@@ -63,13 +55,6 @@ type GetEnv<Params extends unknown[]> = Params extends [
   ? [AnyArg[1]]
   : never
 
-type GE1 = GetEnv<Parameters<Composable<(a: number, e: number) => void>>>
-type GE2 = GetEnv<Parameters<Composable<() => void>>>
-type GE3 = GetEnv<Parameters<Composable<(a: number, e?: number) => void>>>
-type GE4 = GetEnv<Parameters<Composable<(a?: number, e?: number) => void>>>
-type GE5 = GetEnv<Parameters<Composable>>
-type GE6 = GetEnv<Parameters<Composable<(a?: unknown, b?: unknown) => void>>>
-
 type SetEnv<
   Params extends unknown[],
   Env extends [unknown?] = [unknown?],
@@ -79,34 +64,9 @@ type SetEnv<
   ? [firstOptional?, ...Env]
   : never
 
-type Y1 = SetEnv<Parameters<Composable<(a: number) => void>>>
-type Y2 = SetEnv<Parameters<Composable<(a: number) => void>>, [number]>
-type Y3 = SetEnv<Parameters<Composable<(a?: number) => void>>, [number]>
-type Y4 = SetEnv<Parameters<Composable<() => void>>>
-type Y5 = SetEnv<
-  Parameters<Composable<(a?: unknown, e?: unknown) => void>>,
-  [unknown?]
->
-type CE = CommonEnvironment<
-  [
-    Composable<(a?: unknown, e?: unknown) => void>,
-    Composable<(a?: unknown, e?: unknown) => void>,
-  ]
->
-type PRWE = PipeReturnWithEnvironment<
-  [
-    Composable<(a?: unknown, e?: unknown) => { id: number }>,
-    Composable<(a?: unknown, e?: unknown) => number>,
-  ]
->
-type PR = PipeReturn<
-  [
-    Composable<(a?: unknown, e?: unknown) => { id: number }>,
-    Composable<(a?: unknown, e?: unknown) => number>,
-  ]
->
-
 export type {
+  GetEnv,
+  SetEnv,
   CommonEnvironment,
   PipeReturnWithEnvironment,
   SequenceReturnWithEnvironment,

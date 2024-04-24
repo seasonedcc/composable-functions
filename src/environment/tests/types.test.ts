@@ -71,4 +71,139 @@ namespace CommonEnvironment {
       }
     >
   >
+
+  type testMultipleOptionalUnknown = Expect<
+    Equal<
+      Subject.CommonEnvironment<
+        [
+          Composable<(a?: unknown, e?: unknown) => void>,
+          Composable<(a?: unknown, e?: unknown) => void>,
+        ]
+      >,
+      [unknown?]
+    >
+  >
+}
+
+namespace SequenceReturnWithEnvironment {
+  type test = Expect<
+    Equal<
+      Subject.SequenceReturnWithEnvironment<
+        [
+          Composable<(a: number, e?: unknown) => number>,
+          Composable<(a: number, e: number) => number>,
+          Composable<(a: number) => void>,
+        ]
+      >,
+      Composable<(a: number, b: number) => [number, number, void]>
+    >
+  >
+
+  type test2 = Expect<
+    Equal<
+      Subject.SequenceReturnWithEnvironment<
+        [
+          Composable<(a?: unknown, e?: unknown) => { id: number }>,
+          Composable<(a?: unknown, e?: unknown) => number>,
+        ]
+      >,
+      Composable<(a?: unknown, b?: unknown) => [{ id: number }, number]>
+    >
+  >
+}
+
+namespace PipeReturnWithEnvironment {
+  type test = Expect<
+    Equal<
+      Subject.PipeReturnWithEnvironment<
+        [
+          Composable<(a: number, e?: unknown) => number>,
+          Composable<(a: number, e: number) => number>,
+          Composable<(a: number) => void>,
+        ]
+      >,
+      Composable<(a: number, b: number) => void>
+    >
+  >
+
+  type test2 = Expect<
+    Equal<
+      Subject.PipeReturnWithEnvironment<
+        [
+          Composable<(a?: unknown, e?: unknown) => { id: number }>,
+          Composable<(a?: unknown, e?: unknown) => number>,
+        ]
+      >,
+      Composable<(a?: unknown, b?: unknown) => number>
+    >
+  >
+}
+
+namespace GetEnv {
+  type test1 = Expect<
+    Equal<
+      Subject.GetEnv<Parameters<Composable<(a: number, e: number) => void>>>,
+      [number]
+    >
+  >
+  type test2 = Expect<
+    Equal<Subject.GetEnv<Parameters<Composable<() => void>>>, [unknown?]>
+  >
+  type test3 = Expect<
+    Equal<
+      Subject.GetEnv<Parameters<Composable<(a: number, e?: number) => void>>>,
+      [number?]
+    >
+  >
+  type test4 = Expect<
+    Equal<
+      Subject.GetEnv<Parameters<Composable<(a?: number, e?: number) => void>>>,
+      [number?]
+    >
+  >
+  type test5 = Expect<Equal<Subject.GetEnv<Parameters<Composable>>, [any]>>
+  type test6 = Expect<
+    Equal<
+      Subject.GetEnv<
+        Parameters<Composable<(a?: unknown, b?: unknown) => void>>
+      >,
+      [unknown?]
+    >
+  >
+}
+
+namespace SetEnv {
+  type test1 = Expect<
+    Equal<
+      Subject.SetEnv<Parameters<Composable<(a: number) => void>>>,
+      [number, unknown?]
+    >
+  >
+  type test2 = Expect<
+    Equal<
+      Subject.SetEnv<Parameters<Composable<(a: number) => void>>, [number]>,
+      [number, number]
+    >
+  >
+  type test3 = Expect<
+    Equal<
+      Subject.SetEnv<Parameters<Composable<(a?: number) => void>>, [number]>,
+      [number | undefined, number]
+    >
+  >
+  type test4 = Expect<
+    Equal<
+      Subject.SetEnv<Parameters<Composable<() => void>>>,
+      [unknown?, unknown?]
+    >
+  >
+  type test5 = Expect<
+    Equal<
+      Subject.SetEnv<
+        Parameters<Composable<(a?: unknown, e?: unknown) => void>>,
+        [unknown?]
+      >,
+      [unknown?, unknown?]
+    >
+  >
 }

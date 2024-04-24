@@ -205,6 +205,10 @@ describe('sequence', () => {
     const a = composable((a: number, b: number) => a + b)
     const b = composable((a: number, b: number) => `${a} + ${b}`)
     const c = environment.sequence(a, b)
-    const result = await c(1, 2)
+    type _R = Expect<
+      Equal<typeof c, Composable<(a: number, b: number) => [number, string]>>
+    >
+
+    assertEquals(await c(1, 2), success<[number, string]>([3, '3 + 2']))
   })
 })

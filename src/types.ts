@@ -97,16 +97,8 @@ type AllArguments<
           OriginalFns
         >
       : Internal.FailToCompose<PA, PB>
-    : ApplyArgumentsToFns<OriginalFns, PA>
+    : Internal.ApplyArgumentsToFns<OriginalFns, PA>
   : never
-
-type ApplyArgumentsToFns<
-  Fns extends any[],
-  Args extends any[],
-  Output extends any[] = [],
-> = Fns extends [(...a: any[]) => infer OA, ...infer restA]
-  ? ApplyArgumentsToFns<restA, Args, [...Output, (...a: Args) => OA]>
-  : Output
 
 type RecordToTuple<T extends Record<string, Composable>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
