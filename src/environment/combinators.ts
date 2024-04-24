@@ -1,31 +1,15 @@
 import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import { PipeReturnWithEnvironment } from './types.ts'
-import { SequenceReturnWithEnvironment } from './types.ts'
-
-/**
- * Takes a function with 2 parameters and partially applies the second one.
- * This is useful when one wants to use a domain function having a fixed environment.
- * @example
- * import { mdf, applyEnvironment } from 'domain-functions'
- *
- * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
- * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
- * //    ^? (input: unknown) => Promise<Result<Date>>
- */
-function applyEnvironment<
-  I extends any,
-  E extends any,
-  Fn extends (input: I, environment: E) => any,
->(df: Fn, environment: E) {
-  return (input: I) => df(input, environment) as ReturnType<Fn>
-}
+import {
+  PipeReturnWithEnvironment,
+  SequenceReturnWithEnvironment,
+} from './types.ts'
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
 >(fns: Fns, environment: unknown) {
-  return fns.map((fn) => applyEnvironment(fn, environment)) as [Composable]
+  return fns.map((fn) => (input) => fn(input, environment)) as [Composable]
 }
 
 /**
@@ -116,4 +100,4 @@ function branch<O, E extends any, MaybeFn extends Composable | null>(
   >
 }
 
-export { applyEnvironment, branch, pipe, sequence }
+export { branch, pipe, sequence }

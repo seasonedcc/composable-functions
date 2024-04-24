@@ -1,1 +1,1 @@
-export { applyEnvironment, branch, pipe, sequence } from './combinators.ts'
+export { branch, pipe, sequence } from './combinators.ts'
