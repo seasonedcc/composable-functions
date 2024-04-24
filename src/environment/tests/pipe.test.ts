@@ -144,4 +144,16 @@ describe('pipe', () => {
 
     assertEquals(await d({ aNumber: 1 }), success(false))
   })
+
+  it('compose using environment when piped functions requires a second parameter', async () => {
+    const add = composable((a: number, env: number) => a + env)
+    const fn = environment.pipe(add, add)
+
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, env: number) => number>>
+    >
+    assertEquals(res, success(5))
+  })
 })
