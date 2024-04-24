@@ -6,8 +6,8 @@ import type {
   PipeReturn,
   RecordToTuple,
   Result,
+  SequenceReturn,
   Success,
-  UnpackAll,
   UnpackData,
 } from './types.ts'
 import { composable, failure, success } from './constructors.ts'
@@ -44,8 +44,8 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
 function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
-  return (async (...args) => {
-    const res = await sequence(...(fns as never))(...(args as never))
+  return (async (...args: any[]) => {
+    const res = await sequence(...fns)(...args)
     return !res.success
       ? failure(res.errors)
       : success(res.data[res.data.length - 1])
@@ -128,7 +128,7 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
       result.push(res.data)
     }
     return success(result)
-  }) as Composable<(...args: Parameters<Fns[0]>) => UnpackAll<Fns>>
+  }) as SequenceReturn<PipeArguments<Fns>>
 }
 
 /**

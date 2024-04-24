@@ -1,7 +1,8 @@
 import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import { CommonEnvironment } from './types.ts'
+import { PipeReturnWithEnvironment } from './types.ts'
+import { SequenceReturnWithEnvironment } from './types.ts'
 
 /**
  * Takes a function with 2 parameters and partially applies the second one.
@@ -42,10 +43,10 @@ function applyEnvironmentToList<
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
 function pipe<Fns extends Composable[]>(...fns: Fns) {
-  return ((input, environment) =>
+  return ((input: any, environment: any) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as CommonEnvironment<Fns>
+    )) as unknown as PipeReturnWithEnvironment<Fns>
 }
 
 /**
@@ -60,10 +61,10 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
  */
 
 function sequence<Fns extends Composable[]>(...fns: Fns) {
-  return ((input, environment) =>
+  return ((input: any, environment: any) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as CommonEnvironment<Fns>
+    )) as unknown as SequenceReturnWithEnvironment<Fns>
 }
 
 /**

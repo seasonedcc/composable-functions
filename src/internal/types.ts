@@ -7,11 +7,12 @@ namespace Internal {
     argument2: B
   }
 
-  export type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends {
-    'Incompatible arguments ': true
-  }
-    ? true
-    : false
+  export type IsIncompatible<A, B> =
+    Internal.CommonSubType<A, B> extends {
+      'Incompatible arguments ': true
+    }
+      ? true
+      : false
 
   export type FailToCompose<A, B> = ['Fail to compose', A, 'does not fit in', B]
 
@@ -85,66 +86,79 @@ namespace Internal {
   > = TupleA extends []
     ? [...Output, ...TupleB]
     : TupleB extends []
-    ? [...Output, ...TupleA]
-    : TupleA extends [infer headA, ...infer restA]
-    ? TupleB extends [infer headB, ...infer restB]
-      ? IsIncompatible<headA, headB> extends true
-        ? IncompatibleArguments<headA, headB>
-        : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
-      : // TupleB is partial
-      // We should handle partial case before recursion
-      TupleB extends Partial<[infer headPartial, ...infer restPartial]>
-      ? IsIncompatible<headA, headPartial> extends true
-        ? IncompatibleArguments<headA, headPartial>
-        : SubtypesTuple<
-            restA,
-            Partial<restPartial>,
-            [...Output, CommonSubType<headA, Partial<headPartial>>]
-          >
-      : never
-    : TupleB extends [infer headBNoA, ...infer restB]
-    ? // TupleA is partial
-      // We should handle partial case before recursion
-      TupleA extends Partial<[infer headPartial, ...infer restPartial]>
-      ? IsIncompatible<headBNoA, headPartial> extends true
-        ? IncompatibleArguments<headBNoA, headPartial>
-        : SubtypesTuple<
-            restB,
-            Partial<restPartial>,
-            [...Output, CommonSubType<headBNoA, Partial<headPartial>>]
-          >
-      : never
-    : /*
-     * We should continue the recursion checking optional parameters
-     * We can pattern match optionals using Partial
-     * We should start handling partials as soon one side of mandatory ends
-     * Remove ...TupleA, ...TupleB bellow
-     */
-    TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
-    ? TupleB extends Partial<[infer headBPartial, ...infer restBPartial]>
-      ? IsIncompatible<headAPartial, headBPartial> extends true
-        ? SubtypesTuple<
-            Partial<restAPartial>,
-            Partial<restBPartial>,
-            [...Output, ...Partial<[undefined]>]
-          >
-        : SubtypesTuple<
-            Partial<restAPartial>,
-            Partial<restBPartial>,
-            [...Output, ...Partial<[CommonSubType<headAPartial, headBPartial>]>]
-          >
-      : never
-    : never
+      ? [...Output, ...TupleA]
+      : TupleA extends [infer headA, ...infer restA]
+        ? TupleB extends [infer headB, ...infer restB]
+          ? IsIncompatible<headA, headB> extends true
+            ? IncompatibleArguments<headA, headB>
+            : SubtypesTuple<
+                restA,
+                restB,
+                [...Output, CommonSubType<headA, headB>]
+              >
+          : // TupleB is partial
+            // We should handle partial case before recursion
+            TupleB extends Partial<[infer headPartial, ...infer restPartial]>
+            ? IsIncompatible<headA, headPartial> extends true
+              ? IncompatibleArguments<headA, headPartial>
+              : SubtypesTuple<
+                  restA,
+                  Partial<restPartial>,
+                  [...Output, CommonSubType<headA, Partial<headPartial>>]
+                >
+            : never
+        : TupleB extends [infer headBNoA, ...infer restB]
+          ? // TupleA is partial
+            // We should handle partial case before recursion
+            TupleA extends Partial<[infer headPartial, ...infer restPartial]>
+            ? IsIncompatible<headBNoA, headPartial> extends true
+              ? IncompatibleArguments<headBNoA, headPartial>
+              : SubtypesTuple<
+                  restB,
+                  Partial<restPartial>,
+                  [...Output, CommonSubType<headBNoA, Partial<headPartial>>]
+                >
+            : never
+          : /*
+             * We should continue the recursion checking optional parameters
+             * We can pattern match optionals using Partial
+             * We should start handling partials as soon one side of mandatory ends
+             * Remove ...TupleA, ...TupleB bellow
+             */
+            TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
+            ? TupleB extends Partial<
+                [infer headBPartial, ...infer restBPartial]
+              >
+              ? IsIncompatible<headAPartial, headBPartial> extends true
+                ? SubtypesTuple<
+                    Partial<restAPartial>,
+                    Partial<restBPartial>,
+                    [...Output, ...Partial<[undefined]>]
+                  >
+                : SubtypesTuple<
+                    Partial<restAPartial>,
+                    Partial<restBPartial>,
+                    [
+                      ...Output,
+                      ...Partial<[CommonSubType<headAPartial, headBPartial>]>,
+                    ]
+                  >
+              : never
+            : never
 
   export type CommonSubType<A, B> = [A] extends [B]
     ? A
     : [B] extends [A]
-    ? B
-    : A extends Record<PropertyKey, any>
-    ? B extends Record<PropertyKey, any>
-      ? Prettify<A & B>
-      : IncompatibleArguments<A, B>
-    : IncompatibleArguments<A, B>
+      ? B
+      : A extends { 'Incompatible arguments ': true }
+        ? A
+        : B extends { 'Incompatible arguments ': true }
+          ? B
+          : A extends Record<PropertyKey, unknown>
+            ? B extends Record<PropertyKey, unknown>
+              ? Prettify<A & B>
+              : IncompatibleArguments<A, B>
+            : IncompatibleArguments<A, B>
 }
 
 export type { Internal }

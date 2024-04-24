@@ -8,6 +8,7 @@ import {
   withSchema,
 } from '../../index.ts'
 import type { Composable } from '../../index.ts'
+import { PipeReturnWithEnvironment } from '../types.ts'
 
 describe('pipe', () => {
   it('should compose domain functions from left-to-right', async () => {
