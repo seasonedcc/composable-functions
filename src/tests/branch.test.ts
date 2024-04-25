@@ -47,7 +47,7 @@ describe('branch', () => {
       id: id + 2,
       next: 'multiply',
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
+    const b = composable(({ id }: { id: number }) => String(id))
     const d = branch(a, (output) => (output.next === 'multiply' ? null : b))
     type _R = Expect<
       Equal<

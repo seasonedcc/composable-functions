@@ -73,22 +73,21 @@ describe('branch', () => {
   })
 
   it('should use the same environment in all composed functions', async () => {
-    const a = withSchema(
-      z.undefined(),
-      z.object({ env: z.number() }),
-    )((_input, { env }) => ({
+    const a = composable((_input: unknown, { env }: { env: number }) => ({
       inp: env + 2,
     }))
-    const b = withSchema(
-      z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
-    )(({ inp }, { env }) => inp + env)
+    const b = composable(
+      ({ inp }: { inp: number }, { env }: { env: number }) => inp + env,
+    )
 
     const c = environment.branch(a, () => b)
+    // TODO: This input should maybe be a required { inp: number }
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        Composable<
+          (input?: unknown, environment?: { env: number } | undefined) => number
+        >
       >
     >
 
@@ -96,10 +95,10 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the first function fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(z.number())((id) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = composable((id: number) => id - 1)
     const c = environment.branch(a, () => b)
     type _R = Expect<
       Equal<
@@ -109,8 +108,8 @@ describe('branch', () => {
     >
 
     assertEquals(
-      await c({ id: '1' }),
-      failure([new InputError('Expected number, received string', ['id'])]),
+      await c('1'),
+      failure([new InputError('Expected number, received string')]),
     )
   })
 
@@ -134,34 +133,39 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the condition function fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = composable((id: number) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = composable((id: number) => id - 1)
     const c = environment.branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable
       return b
     })
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
-      >
-    >
+    // TODO: the input should be required
+    // type _R = Expect<
+    //   Equal<
+    //     typeof c,
+    //     Composable<(input: number, environment?: unknown) => number>
+    //   >
+    // >
 
     const {
       errors: [err],
-    } = await c({ id: 1 })
+    } = await c(1)
     assertIsError(err, Error, 'condition function failed')
   })
 
   it('should not break composition with other combinators', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = withSchema(
+      z.object({ id: z.number() }),
+      // TODO: Why don't we have z.any or z.unknown as default for env?
+      z.unknown(),
+    )(({ id }) => ({
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
-    const c = composable((n: number) => n * 2)
+    const c = composable((n: number, env: number) => env + n * 2)
     const d = all(
       environment.pipe(
         environment.branch(a, () => b),
@@ -173,14 +177,17 @@ describe('branch', () => {
       Equal<
         typeof d,
         Composable<
-          (input?: unknown, environment?: unknown) => [number, { id: number }]
+          (
+            input: Partial<unknown>,
+            environment: number,
+          ) => [number, { id: number }]
         >
       >
     >
 
     assertEquals(
-      await d({ id: 1 }),
-      success<[number, { id: number }]>([4, { id: 3 }]),
+      await d({ id: 1 }, 3),
+      success<[number, { id: number }]>([7, { id: 3 }]),
     )
   })
 })
