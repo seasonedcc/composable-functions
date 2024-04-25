@@ -254,5 +254,18 @@ namespace Prettify {
   >
 }
 
+namespace ApplyArgumentsToFns {
+  type WithEmpty = Expect<Equal<Internal.ApplyArgumentsToFns<[], [string]>, []>>
+  type WithSingle = Expect<
+    Equal<Internal.ApplyArgumentsToFns<[() => 1], [string]>, [(a: string) => 1]>
+  >
+  type WithMultiple = Expect<
+    Equal<
+      Internal.ApplyArgumentsToFns<[() => 1, (a: 1) => 'a'], [string]>,
+      [(a: string) => 1, (a: string) => 'a']
+    >
+  >
+}
+
 describe('type tests', () =>
   it('should have no ts errors', () => assertEquals(true, true)))

@@ -37,6 +37,20 @@ namespace Last {
   type test3 = Expect<Equal<Subject.Last<[]>, never>>
 }
 
+namespace PipeReturn {
+  type test = Expect<
+    Equal<
+      Subject.PipeReturn<
+        [
+          Subject.Composable<(a?: unknown, e?: unknown) => { id: number }>,
+          Subject.Composable<(a?: unknown, e?: unknown) => number>,
+        ]
+      >,
+      Subject.Composable<(a?: unknown, b?: unknown) => number>
+    >
+  >
+}
+
 namespace PipeArguments {
   type testNoEmptyArgumentList = Expect<Equal<Subject.PipeArguments<[]>, never>>
   type testOneComposable = Expect<

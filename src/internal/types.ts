@@ -26,6 +26,14 @@ namespace Internal {
     ? true
     : false
 
+  export type ApplyArgumentsToFns<
+    Fns extends any[],
+    Args extends any[],
+    Output extends any[] = [],
+  > = Fns extends [(...a: any[]) => infer OA, ...infer restA]
+    ? ApplyArgumentsToFns<restA, Args, [...Output, (...a: Args) => OA]>
+    : Output
+
   // Thanks to https://github.com/tjjfvi
   // UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
   // This will not preserve union order but we don't care since this is for Composable paralel application
@@ -140,8 +148,12 @@ namespace Internal {
     ? A
     : [B] extends [A]
     ? B
-    : A extends Record<PropertyKey, any>
-    ? B extends Record<PropertyKey, any>
+    : A extends { 'Incompatible arguments ': true }
+    ? A
+    : B extends { 'Incompatible arguments ': true }
+    ? B
+    : A extends Record<PropertyKey, unknown>
+    ? B extends Record<PropertyKey, unknown>
       ? Prettify<A & B>
       : IncompatibleArguments<A, B>
     : IncompatibleArguments<A, B>

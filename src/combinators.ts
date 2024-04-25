@@ -6,11 +6,11 @@ import type {
   PipeReturn,
   RecordToTuple,
   Result,
+  SequenceReturn,
   Success,
-  UnpackAll,
   UnpackData,
 } from './types.ts'
-import { composable, failure, success } from './constructors.ts'
+import { composable, failure, fromSuccess, success } from './constructors.ts'
 import { ErrorList } from './errors.ts'
 
 /**
@@ -44,8 +44,8 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
 function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
-  return (async (...args) => {
-    const res = await sequence(...(fns as never))(...(args as never))
+  return (async (...args: any[]) => {
+    const res = await sequence(...fns)(...args)
     return !res.success
       ? failure(res.errors)
       : success(res.data[res.data.length - 1])
@@ -128,7 +128,7 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
       result.push(res.data)
     }
     return success(result)
-  }) as Composable<(...args: Parameters<Fns[0]>) => UnpackAll<Fns>>
+  }) as SequenceReturn<PipeArguments<Fns>>
 }
 
 /**
@@ -284,8 +284,31 @@ function trace(
     }) as Fn
 }
 
+function branch<O, P extends any[], MaybeFn extends Composable | null>(
+  cf: Composable<(...args: P) => O>,
+  resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
+) {
+  return (async (...args: P) => {
+    const result = await cf(...args)
+    if (!result.success) return result
+
+    return composable(async () => {
+      const nextComposable = await resolver(result.data)
+      if (typeof nextComposable !== 'function') return result.data
+      return fromSuccess(nextComposable)(result.data)
+    })()
+  }) as Composable<
+    (
+      ...args: P
+    ) => MaybeFn extends Composable<(...args: P) => infer BranchOutput>
+      ? BranchOutput
+      : UnpackData<NonNullable<MaybeFn>> | O
+  >
+}
+
 export {
   all,
+  branch,
   catchError,
   collect,
   first,

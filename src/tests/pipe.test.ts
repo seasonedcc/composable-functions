@@ -54,6 +54,16 @@ describe('pipe', () => {
     assertEquals(res.errors[0].message, 'a is 1')
   })
 
+  it('fails to compose when piped functions requires a second parameter', async () => {
+    const fn = pipe(add, add)
+    // @ts-expect-error composition will fail
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, ['Fail to compose', undefined, 'does not fit in', number]>
+    >
+  })
+
   it('catches the errors from function B', async () => {
     const fn = pipe(add, alwaysThrow, toString)
     // @ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter

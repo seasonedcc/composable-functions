@@ -1,27 +1,15 @@
-import type { Composable, Last, UnpackAll, UnpackData } from '../types.ts'
+import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-
-/**
- * Takes a function with 2 parameters and partially applies the second one.
- * This is useful when one wants to use a domain function having a fixed environment.
- * @example
- * import { mdf, applyEnvironment } from 'domain-functions'
- *
- * const endOfDay = mdf(z.date(), z.object({ timezone: z.string() }))((date, { timezone }) => ...)
- * const endOfDayUTC = applyEnvironment(endOfDay, { timezone: 'UTC' })
- * //    ^? (input: unknown) => Promise<Result<Date>>
- */
-function applyEnvironment<
-  Fn extends (input: unknown, environment: unknown) => unknown,
->(df: Fn, environment: unknown) {
-  return (input: unknown) => df(input, environment) as ReturnType<Fn>
-}
+import {
+  PipeReturnWithEnvironment,
+  SequenceReturnWithEnvironment,
+} from './types.ts'
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
 >(fns: Fns, environment: unknown) {
-  return fns.map((fn) => applyEnvironment(fn, environment)) as [Composable]
+  return fns.map((fn) => (input) => fn(input, environment)) as [Composable]
 }
 
 /**
@@ -38,46 +26,11 @@ function applyEnvironmentToList<
  * const d = pipe(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
-function pipe<Fns extends Composable[]>(
-  ...fns: Fns
-): Composable<
-  (input?: unknown, environment?: unknown) => Last<UnpackAll<Fns>>
-> {
-  return (input, environment) =>
-    A.pipe(...applyEnvironmentToList(fns, environment))(input)
-}
-
-/**
- * Receives a Record of domain functions, runs them all in sequence like `pipe` but preserves the shape of that record for the data property in successful results.
- * It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in the given order.
- *
- * **NOTE :** After ECMAScript2015 JS is able to keep the order of keys in an object, we are relying on that. However, number-like keys such as { 1: 'foo' } will be ordered and may break the given order.
- * @example
- * import { mdf, collectSequence } from 'domain-functions'
- *
- * const a = mdf(z.object({}))(() => '1')
-const b = mdf(z.number())((n) => n + 2)
-const df = collectSequence({ a, b })
-//    ^? Composable<(input?: unknown, environment?: unknown) => { a: string, b: number }>
- */
-function collectSequence<Fns extends Record<string, Composable>>(
-  fns: Fns,
-): Composable<
-  (
-    input?: unknown,
-    environment?: unknown,
-  ) => { [K in keyof Fns]: UnpackData<Fns[K]> }
-> {
-  const keys = Object.keys(fns)
-
-  return A.map(
-    A.map(sequence(...Object.values(fns)), (outputs) =>
-      outputs.map((o, i) => ({
-        [keys[i]]: o,
-      })),
-    ),
-    A.mergeObjects,
-  )
+function pipe<Fns extends Composable[]>(...fns: Fns) {
+  return ((input: any, environment: any) =>
+    A.pipe(...applyEnvironmentToList(fns, environment))(
+      input,
+    )) as PipeReturnWithEnvironment<Fns>
 }
 
 /**
@@ -90,11 +43,12 @@ function collectSequence<Fns extends Record<string, Composable>>(
  * const df = sequence(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
  */
+
 function sequence<Fns extends Composable[]>(...fns: Fns) {
-  return ((input, environment) =>
+  return ((input: any, environment: any) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as Composable<(input?: unknown, environment?: unknown) => UnpackAll<Fns>>
+    )) as SequenceReturnWithEnvironment<Fns>
 }
 
 /**
@@ -121,11 +75,16 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
  * )
  * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
  */
-function branch<O, MaybeFn extends Composable | null>(
-  dfn: Composable<(input?: unknown, environment?: unknown) => O>,
+function branch<
+  O,
+  I extends any,
+  E extends any,
+  MaybeFn extends Composable | null,
+>(
+  dfn: Composable<(input?: I, environment?: E) => O>,
   resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
 ) {
-  return (async (input, environment) => {
+  return (async (input: I, environment: E) => {
     const result = await dfn(input, environment)
     if (!result.success) return result
 
@@ -136,14 +95,14 @@ function branch<O, MaybeFn extends Composable | null>(
     })()
   }) as Composable<
     (
-      input?: unknown,
-      environment?: unknown,
+      input?: I,
+      environment?: E,
     ) => MaybeFn extends Composable<
-      (input?: unknown, environment?: unknown) => infer BranchOutput
+      (input?: I, environment?: E) => infer BranchOutput
     >
       ? BranchOutput
       : UnpackData<NonNullable<MaybeFn>> | O
   >
 }
 
-export { applyEnvironment, branch, collectSequence, pipe, sequence }
+export { branch, pipe, sequence }

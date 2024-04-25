@@ -43,18 +43,18 @@ type UnpackAll<List extends Composable[]> = {
   [K in keyof List]: UnpackData<List[K]>
 }
 
-type PipeReturn<Fns extends any[]> = Fns extends [
-  Composable<(...a: infer PA) => infer OA>,
-  Composable<(b: infer PB) => infer OB>,
-  ...infer rest,
+type SequenceReturn<Fns extends Composable[]> = Fns extends [
+  Composable<(...args: infer P) => any>,
+  ...any,
 ]
-  ? Internal.IsNever<OA> extends true
-    ? Internal.FailToCompose<never, PB>
-    : Awaited<OA> extends PB
-    ? PipeReturn<[Composable<(...args: PA) => OB>, ...rest]>
-    : Internal.FailToCompose<Awaited<OA>, PB>
-  : Fns extends [Composable<(...args: infer P) => infer O>]
-  ? Composable<(...args: P) => O>
+  ? Composable<(...args: P) => UnpackAll<Fns>>
+  : Fns
+
+type PipeReturn<Fns extends Composable[]> = Fns extends [
+  Composable<(...args: infer P) => any>,
+  ...any,
+]
+  ? Composable<(...args: P) => UnpackData<Extract<Last<Fns>, Composable>>>
   : Fns
 
 type PipeArguments<
@@ -88,16 +88,8 @@ type AllArguments<
           OriginalFns
         >
       : Internal.FailToCompose<PA, PB>
-    : ApplyArgumentsToFns<OriginalFns, PA>
+    : Internal.ApplyArgumentsToFns<OriginalFns, PA>
   : never
-
-type ApplyArgumentsToFns<
-  Fns extends any[],
-  Args extends any[],
-  Output extends any[] = [],
-> = Fns extends [(...a: any[]) => infer OA, ...infer restA]
-  ? ApplyArgumentsToFns<restA, Args, [...Output, (...a: Args) => OA]>
-  : Output
 
 type RecordToTuple<T extends Record<string, Composable>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
@@ -144,6 +136,7 @@ export type {
   PipeReturn,
   RecordToTuple,
   Result,
+  SequenceReturn,
   SerializableError,
   SerializedResult,
   Success,
