@@ -8,6 +8,7 @@ export {
 } from './constructors.ts'
 export {
   all,
+  branch,
   catchError,
   collect,
   first,

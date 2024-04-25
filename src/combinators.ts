@@ -10,7 +10,7 @@ import type {
   Success,
   UnpackData,
 } from './types.ts'
-import { composable, failure, success } from './constructors.ts'
+import { composable, failure, fromSuccess, success } from './constructors.ts'
 import { ErrorList } from './errors.ts'
 
 /**
@@ -284,8 +284,31 @@ function trace(
     }) as Fn
 }
 
+function branch<O, P extends any[], MaybeFn extends Composable | null>(
+  cf: Composable<(...args: P) => O>,
+  resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
+) {
+  return (async (...args: P) => {
+    const result = await cf(...args)
+    if (!result.success) return result
+
+    return composable(async () => {
+      const nextComposable = await resolver(result.data)
+      if (typeof nextComposable !== 'function') return result.data
+      return fromSuccess(nextComposable)(result.data)
+    })()
+  }) as Composable<
+    (
+      ...args: P
+    ) => MaybeFn extends Composable<(...args: P) => infer BranchOutput>
+      ? BranchOutput
+      : UnpackData<NonNullable<MaybeFn>> | O
+  >
+}
+
 export {
   all,
+  branch,
   catchError,
   collect,
   first,

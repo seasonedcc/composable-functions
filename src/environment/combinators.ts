@@ -75,11 +75,16 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
  * )
  * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
  */
-function branch<O, E extends any, MaybeFn extends Composable | null>(
-  dfn: Composable<(input?: unknown, environment?: E) => O>,
+function branch<
+  O,
+  I extends any,
+  E extends any,
+  MaybeFn extends Composable | null,
+>(
+  dfn: Composable<(input?: I, environment?: E) => O>,
   resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
 ) {
-  return (async (input, environment: E) => {
+  return (async (input: I, environment: E) => {
     const result = await dfn(input, environment)
     if (!result.success) return result
 
@@ -90,10 +95,10 @@ function branch<O, E extends any, MaybeFn extends Composable | null>(
     })()
   }) as Composable<
     (
-      input?: unknown,
-      environment?: unknown,
+      input?: I,
+      environment?: E,
     ) => MaybeFn extends Composable<
-      (input?: unknown, environment?: unknown) => infer BranchOutput
+      (input?: I, environment?: E) => infer BranchOutput
     >
       ? BranchOutput
       : UnpackData<NonNullable<MaybeFn>> | O
