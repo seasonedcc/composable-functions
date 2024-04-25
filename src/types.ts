@@ -43,28 +43,19 @@ type UnpackAll<List extends Composable[]> = {
   [K in keyof List]: UnpackData<List[K]>
 }
 
-type SequenceReturn<
-  Fns extends any[],
-  OriginalFns extends Composable[] = Fns,
-> = Fns extends [
-  Composable<(...a: infer PA) => infer OA>,
-  Composable<(b: infer PB) => infer OB>,
-  ...infer rest,
+type SequenceReturn<Fns extends Composable[]> = Fns extends [
+  Composable<(...args: infer P) => any>,
+  ...any,
 ]
-  ? Internal.IsNever<OA> extends true
-    ? Internal.FailToCompose<never, PB>
-    : Awaited<OA> extends PB
-    ? SequenceReturn<[Composable<(...args: PA) => OB>, ...rest], OriginalFns>
-    : Internal.FailToCompose<Awaited<OA>, PB>
-  : Fns extends [Composable<(...args: infer P) => any>]
-  ? Composable<(...args: P) => UnpackAll<OriginalFns>>
+  ? Composable<(...args: P) => UnpackAll<Fns>>
   : Fns
 
-type PipeReturn<Fns extends any[]> = SequenceReturn<Fns> extends Composable<
-  (...args: infer P) => any
->
-  ? Composable<(...args: P) => UnpackData<Last<Fns>>>
-  : SequenceReturn<Fns>
+type PipeReturn<Fns extends Composable[]> = Fns extends [
+  Composable<(...args: infer P) => any>,
+  ...any,
+]
+  ? Composable<(...args: P) => UnpackData<Extract<Last<Fns>, Composable>>>
+  : Fns
 
 type PipeArguments<
   Fns extends any[],

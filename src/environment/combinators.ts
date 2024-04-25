@@ -30,7 +30,7 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
   return ((input: any, environment: any) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as unknown as PipeReturnWithEnvironment<Fns>
+    )) as PipeReturnWithEnvironment<Fns>
 }
 
 /**
@@ -48,7 +48,7 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
   return ((input: any, environment: any) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as unknown as SequenceReturnWithEnvironment<Fns>
+    )) as SequenceReturnWithEnvironment<Fns>
 }
 
 /**

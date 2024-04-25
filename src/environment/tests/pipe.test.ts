@@ -145,6 +145,39 @@ describe('pipe', () => {
     assertEquals(await d({ aNumber: 1 }), success(false))
   })
 
+  it('fails to compose functions with third mandatory parameter', async () => {
+    const add = composable((a: number, env: number) => a + env)
+    const fn = environment.pipe(
+      add,
+      composable((x: number, env: number, makeItFail: boolean) => x),
+    )
+
+    // @ts-expect-error composition will fail
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<
+        typeof fn,
+        ['Fail to compose', undefined, 'does not fit in', boolean]
+      >
+    >
+  })
+
+  it('fails to compose incompatible functions', async () => {
+    const add = composable((a: number, env: number) => a + env)
+    const fn = environment.pipe(
+      add,
+      composable((x: string) => x),
+    )
+
+    // @ts-expect-error composition will fail
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, ['Fail to compose', number, 'does not fit in', string]>
+    >
+  })
+
   it('compose using environment when piped functions requires a second parameter', async () => {
     const add = composable((a: number, env: number) => a + env)
     const fn = environment.pipe(add, add)
