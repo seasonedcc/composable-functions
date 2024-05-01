@@ -120,6 +120,10 @@ type ParserSchema<T extends unknown = unknown> = {
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L] ? L
   : never
 
+type PrettifyComposableUnion<C extends Composable> = Composable<
+  (...args: Parameters<C>) => UnpackData<C>
+>
+
 type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
@@ -128,7 +132,7 @@ type BranchReturn<
 > = PipeArguments<[SourceComposable, Composable<Resolver>]> extends Composable[]
   ? ReturnType<Resolver> extends null | Promise<null>
     ? SourceComposable
-    :
+    : PrettifyComposableUnion<
         | PipeReturn<
             PipeArguments<
               [
@@ -140,6 +144,7 @@ type BranchReturn<
         | (null extends Awaited<ReturnType<Resolver>>
             ? SourceComposable
             : never)
+      >
   : PipeArguments<[SourceComposable, Composable<Resolver>]>
 
 // Testing resolver compatibility

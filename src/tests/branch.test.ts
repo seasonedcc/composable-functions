@@ -52,13 +52,12 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        | Composable<
-            (
-              input?: unknown,
-              environment?: unknown,
-            ) => { id: number; next: string }
-          >
-        | Composable<(input?: unknown, environment?: unknown) => string>
+        Composable<
+          (
+            input?: unknown,
+            environment?: unknown,
+          ) => string | { id: number; next: string }
+        >
       >
     >
 
