@@ -129,30 +129,20 @@ type BranchReturn<
   ? ReturnType<Resolver> extends null | Promise<null>
     ? SourceComposable
     : ReturnType<Resolver> extends Promise<infer CorNULL>
-    ? null extends CorNULL
-      ?
-          | PipeReturn<
-              PipeArguments<[SourceComposable, Extract<CorNULL, Composable>]>
-            >
-          | SourceComposable
-      : PipeReturn<
-          PipeArguments<[SourceComposable, Extract<CorNULL, Composable>]>
-        >
-    : null extends ReturnType<Resolver>
     ?
+        | PipeReturn<
+            PipeArguments<[SourceComposable, Extract<CorNULL, Composable>]>
+          >
+        | (null extends CorNULL ? SourceComposable : never)
+    :
         | PipeReturn<
             PipeArguments<
               [SourceComposable, Extract<ReturnType<Resolver>, Composable>]
             >
           >
-        | SourceComposable
-    : PipeReturn<
-        PipeArguments<
-          [SourceComposable, Extract<ReturnType<Resolver>, Composable>]
-        >
-      >
+        | (null extends ReturnType<Resolver> ? SourceComposable : never)
   : PipeArguments<[SourceComposable, Composable<Resolver>]>
-//
+
 // Testing resolver compatibility
 type X1 = BranchReturn<Composable<() => number>, () => null>
 type X2 = BranchReturn<Composable<() => number>, (i: string) => null>
