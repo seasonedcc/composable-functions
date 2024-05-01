@@ -70,7 +70,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = branch(a, (i: { id: number }) => b)
+    const c = branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -89,7 +89,7 @@ describe('branch', () => {
       id: String(id),
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = branch(a, (i: { id: string }) => b)
+    const c = branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
