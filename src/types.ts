@@ -128,19 +128,18 @@ type BranchReturn<
 > = PipeArguments<[SourceComposable, Composable<Resolver>]> extends Composable[]
   ? ReturnType<Resolver> extends null | Promise<null>
     ? SourceComposable
-    : ReturnType<Resolver> extends Promise<infer CorNULL>
-    ?
-        | PipeReturn<
-            PipeArguments<[SourceComposable, Extract<CorNULL, Composable>]>
-          >
-        | (null extends CorNULL ? SourceComposable : never)
     :
         | PipeReturn<
             PipeArguments<
-              [SourceComposable, Extract<ReturnType<Resolver>, Composable>]
+              [
+                SourceComposable,
+                Extract<Awaited<ReturnType<Resolver>>, Composable>,
+              ]
             >
           >
-        | (null extends ReturnType<Resolver> ? SourceComposable : never)
+        | (null extends Awaited<ReturnType<Resolver>>
+            ? SourceComposable
+            : never)
   : PipeArguments<[SourceComposable, Composable<Resolver>]>
 
 // Testing resolver compatibility
