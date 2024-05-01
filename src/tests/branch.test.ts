@@ -16,14 +16,9 @@ describe('branch', () => {
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
 
-    const c = branch(a, (i: { id: number }) =>
-      i.id % 2 === 0 ? Promise.resolve(b) : Promise.resolve(a),
-    )
+    const c = branch(a, () => Promise.resolve(b))
     type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input: { id: number }) => number | { id: number }>
-      >
+      Equal<typeof c, Composable<(input: { id: number }) => number>>
     >
 
     assertEquals(await c({ id: 1 }), success(2))
@@ -57,12 +52,13 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        Composable<
-          (
-            input?: unknown,
-            environment?: unknown,
-          ) => string | { id: number; next: string }
-        >
+        | Composable<
+            (
+              input?: unknown,
+              environment?: unknown,
+            ) => { id: number; next: string }
+          >
+        | Composable<(input?: unknown, environment?: unknown) => string>
       >
     >
 

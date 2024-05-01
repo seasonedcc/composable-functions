@@ -125,54 +125,34 @@ type BranchReturn<
   Resolver extends (
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
-> = UnpackData<SourceComposable> extends Parameters<Resolver>[0]
+> = PipeArguments<[SourceComposable, Composable<Resolver>]> extends Composable[]
   ? ReturnType<Resolver> extends null | Promise<null>
     ? SourceComposable
-    : ReturnType<Resolver> extends Composable<
-        (i: infer FirstParameter) => infer COutput
-      >
-    ? UnpackData<SourceComposable> extends FirstParameter
-      ? Composable<(...args: Parameters<SourceComposable>) => COutput>
-      : {
-          'Incompatible types ': true
-          sourceOutput: UnpackData<SourceComposable>
-          composableFirstParameter: FirstParameter
-        }
-    : ReturnType<Resolver> extends Promise<
-        Composable<(i: infer FirstParameter) => infer COutput>
-      >
-    ? UnpackData<SourceComposable> extends FirstParameter
-      ? Composable<(...args: Parameters<SourceComposable>) => COutput>
-      : {
-          'Incompatible types ': true
-          sourceOutput: UnpackData<SourceComposable>
-          composableFirstParameter: FirstParameter
-        }
-    : ReturnType<Resolver> extends Composable<
-        (i: infer FirstParameter) => infer COutput
-      > | null
+    : ReturnType<Resolver> extends Promise<infer CorNULL>
+    ? null extends CorNULL
+      ?
+          | PipeReturn<
+              PipeArguments<[SourceComposable, Extract<CorNULL, Composable>]>
+            >
+          | SourceComposable
+      : PipeReturn<
+          PipeArguments<[SourceComposable, Extract<CorNULL, Composable>]>
+        >
+    : null extends ReturnType<Resolver>
     ?
-        | BranchReturn<
-            SourceComposable,
-            (...args: any[]) => Composable<(i: FirstParameter) => COutput>
+        | PipeReturn<
+            PipeArguments<
+              [SourceComposable, Extract<ReturnType<Resolver>, Composable>]
+            >
           >
-        | BranchReturn<SourceComposable, (...args: any[]) => null>
-    : ReturnType<Resolver> extends Promise<Composable<
-        (i: infer FirstParameter) => infer COutput
-      > | null>
-    ?
-        | BranchReturn<
-            SourceComposable,
-            (...args: any[]) => Composable<(i: FirstParameter) => COutput>
-          >
-        | BranchReturn<SourceComposable, (...args: any[]) => null>
-    : never
-  : {
-      'Incompatible types ': true
-      sourceOutput: UnpackData<SourceComposable>
-      resolverFirstParameter: Parameters<Resolver>[0]
-    }
-
+        | SourceComposable
+    : PipeReturn<
+        PipeArguments<
+          [SourceComposable, Extract<ReturnType<Resolver>, Composable>]
+        >
+      >
+  : PipeArguments<[SourceComposable, Composable<Resolver>]>
+//
 // Testing resolver compatibility
 type X1 = BranchReturn<Composable<() => number>, () => null>
 type X2 = BranchReturn<Composable<() => number>, (i: string) => null>
@@ -185,13 +165,14 @@ type X4 = BranchReturn<
   (i: number) => Composable<(i: string) => number>
 >
 //
-// Testing second composable compatibility when we have more than one possible type
+// Testing second composable compatibility when we have more than one possible type with one incompatible
 type X5 = BranchReturn<
   Composable<() => number>,
   (
     i: number,
   ) => Composable<(i: string) => number> | Composable<(i: number) => boolean>
 >
+// Testing second composable compatibility when we have more than one possible compatible type
 type X6 = BranchReturn<
   Composable<() => { s: string; n: number }>,
   (i: {
