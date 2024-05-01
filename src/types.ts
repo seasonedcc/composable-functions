@@ -126,7 +126,7 @@ type BranchReturn<
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
 > = UnpackData<SourceComposable> extends Parameters<Resolver>[0]
-  ? ReturnType<Resolver> extends null
+  ? ReturnType<Resolver> extends null | Promise<null>
     ? SourceComposable
     : ReturnType<Resolver> extends Composable<
         (i: infer FirstParameter) => infer COutput
@@ -148,6 +148,24 @@ type BranchReturn<
           sourceOutput: UnpackData<SourceComposable>
           composableFirstParameter: FirstParameter
         }
+    : ReturnType<Resolver> extends Composable<
+        (i: infer FirstParameter) => infer COutput
+      > | null
+    ?
+        | BranchReturn<
+            SourceComposable,
+            (...args: any[]) => Composable<(i: FirstParameter) => COutput>
+          >
+        | BranchReturn<SourceComposable, (...args: any[]) => null>
+    : ReturnType<Resolver> extends Promise<Composable<
+        (i: infer FirstParameter) => infer COutput
+      > | null>
+    ?
+        | BranchReturn<
+            SourceComposable,
+            (...args: any[]) => Composable<(i: FirstParameter) => COutput>
+          >
+        | BranchReturn<SourceComposable, (...args: any[]) => null>
     : never
   : {
       'Incompatible types ': true
@@ -159,6 +177,7 @@ type BranchReturn<
 type X1 = BranchReturn<Composable<() => number>, () => null>
 type X2 = BranchReturn<Composable<() => number>, (i: string) => null>
 type X3 = BranchReturn<Composable<() => number>, (i: number) => null>
+type X31 = BranchReturn<Composable<() => number>, (i: number) => Promise<null>>
 
 // Testing second composable compatibility
 type X4 = BranchReturn<
@@ -196,6 +215,17 @@ type X8 = BranchReturn<
   ) => Promise<
     Composable<(i: number) => number> | Composable<(i: number) => boolean>
   >
+>
+//
+// Resolver might return null
+type X9 = BranchReturn<
+  Composable<() => number>,
+  (i: number) => Composable<(i: number) => boolean> | null
+>
+// Resolver might return null in promise
+type X10 = BranchReturn<
+  Composable<() => number>,
+  (i: number) => Promise<Composable<(i: number) => boolean> | null>
 >
 
 export type {
