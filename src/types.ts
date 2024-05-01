@@ -124,6 +124,10 @@ type PrettifyComposableUnion<C extends Composable> = Composable<
   (...args: Parameters<C>) => UnpackData<C>
 >
 
+type G = PrettifyComposableUnion<
+  Composable<() => boolean> | Composable<() => number>
+>
+
 type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
@@ -132,7 +136,10 @@ type BranchReturn<
 > = PipeArguments<[SourceComposable, Composable<Resolver>]> extends Composable[]
   ? ReturnType<Resolver> extends null | Promise<null>
     ? SourceComposable
-    : PrettifyComposableUnion<
+    : PipeArguments<
+        [SourceComposable, Extract<Awaited<ReturnType<Resolver>>, Composable>]
+      > extends [Composable<(...args: infer P) => any>, ...any]
+    ? PrettifyComposableUnion<
         | PipeReturn<
             PipeArguments<
               [
@@ -144,6 +151,9 @@ type BranchReturn<
         | (null extends Awaited<ReturnType<Resolver>>
             ? SourceComposable
             : never)
+      >
+    : PipeArguments<
+        [SourceComposable, Extract<Awaited<ReturnType<Resolver>>, Composable>]
       >
   : PipeArguments<[SourceComposable, Composable<Resolver>]>
 
