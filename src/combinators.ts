@@ -1,5 +1,6 @@
 import type {
   AllArguments,
+  BranchReturn,
   Composable,
   MergeObjs,
   PipeArguments,
@@ -285,11 +286,13 @@ function trace(
     }) as Fn
 }
 
-function branch<O, P extends any[], MaybeFn extends Composable | null>(
-  cf: Composable<(...args: P) => O>,
-  resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
-) {
-  return (async (...args: P) => {
+function branch<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+>(cf: SourceComposable, resolver: Resolver) {
+  return (async (...args: Parameters<SourceComposable>) => {
     const result = await cf(...args)
     if (!result.success) return result
 
@@ -298,13 +301,7 @@ function branch<O, P extends any[], MaybeFn extends Composable | null>(
       if (typeof nextComposable !== 'function') return result.data
       return fromSuccess(nextComposable)(result.data)
     })()
-  }) as Composable<
-    (
-      ...args: P
-    ) => MaybeFn extends Composable<(...args: P) => infer BranchOutput>
-      ? BranchOutput
-      : UnpackData<NonNullable<MaybeFn>> | O
-  >
+  }) as BranchReturn<SourceComposable, Resolver>
 }
 
 export {

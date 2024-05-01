@@ -120,8 +120,87 @@ type ParserSchema<T extends unknown = unknown> = {
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L] ? L
   : never
 
+type BranchReturn<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+> = UnpackData<SourceComposable> extends Parameters<Resolver>[0]
+  ? ReturnType<Resolver> extends null
+    ? SourceComposable
+    : ReturnType<Resolver> extends Composable<
+        (i: infer FirstParameter) => infer COutput
+      >
+    ? UnpackData<SourceComposable> extends FirstParameter
+      ? Composable<(...args: Parameters<SourceComposable>) => COutput>
+      : {
+          'Incompatible types ': true
+          sourceOutput: UnpackData<SourceComposable>
+          composableFirstParameter: FirstParameter
+        }
+    : ReturnType<Resolver> extends Promise<
+        Composable<(i: infer FirstParameter) => infer COutput>
+      >
+    ? UnpackData<SourceComposable> extends FirstParameter
+      ? Composable<(...args: Parameters<SourceComposable>) => COutput>
+      : {
+          'Incompatible types ': true
+          sourceOutput: UnpackData<SourceComposable>
+          composableFirstParameter: FirstParameter
+        }
+    : never
+  : {
+      'Incompatible types ': true
+      sourceOutput: UnpackData<SourceComposable>
+      resolverFirstParameter: Parameters<Resolver>[0]
+    }
+
+// Testing resolver compatibility
+type X1 = BranchReturn<Composable<() => number>, () => null>
+type X2 = BranchReturn<Composable<() => number>, (i: string) => null>
+type X3 = BranchReturn<Composable<() => number>, (i: number) => null>
+
+// Testing second composable compatibility
+type X4 = BranchReturn<
+  Composable<() => number>,
+  (i: number) => Composable<(i: string) => number>
+>
+//
+// Testing second composable compatibility when we have more than one possible type
+type X5 = BranchReturn<
+  Composable<() => number>,
+  (
+    i: number,
+  ) => Composable<(i: string) => number> | Composable<(i: number) => boolean>
+>
+type X6 = BranchReturn<
+  Composable<() => { s: string; n: number }>,
+  (i: {
+    n: number
+  }) =>
+    | Composable<(i: { s: string }) => number>
+    | Composable<(i: { n: number }) => boolean>
+>
+type X7 = BranchReturn<
+  Composable<() => number>,
+  (
+    i: number,
+  ) => Composable<(i: number) => number> | Composable<(i: number) => boolean>
+>
+
+// Resolver is async
+type X8 = BranchReturn<
+  Composable<() => number>,
+  (
+    i: number,
+  ) => Promise<
+    Composable<(i: number) => number> | Composable<(i: number) => boolean>
+  >
+>
+
 export type {
   AllArguments,
+  BranchReturn,
   Composable,
   Failure,
   Last,

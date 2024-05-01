@@ -10,15 +10,20 @@ import { Composable } from '../types.ts'
 import { branch } from '../combinators.ts'
 
 describe('branch', () => {
-  it('should pipe a composable with arbitrary pipes', async () => {
+  it('should pipe a composable with arbitrary types', async () => {
     const a = composable(({ id }: { id: number }) => ({
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
 
-    const c = branch(a, () => Promise.resolve(b))
+    const c = branch(a, (i: { id: number }) =>
+      i.id % 2 === 0 ? Promise.resolve(b) : Promise.resolve(a),
+    )
     type _R = Expect<
-      Equal<typeof c, Composable<(input: { id: number }) => number>>
+      Equal<
+        typeof c,
+        Composable<(input: { id: number }) => number | { id: number }>
+      >
     >
 
     assertEquals(await c({ id: 1 }), success(2))
@@ -69,7 +74,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = branch(a, () => b)
+    const c = branch(a, (i: { id: number }) => b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -88,7 +93,7 @@ describe('branch', () => {
       id: String(id),
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = branch(a, () => b)
+    const c = branch(a, (i: { id: string }) => b)
     type _R = Expect<
       Equal<
         typeof c,
