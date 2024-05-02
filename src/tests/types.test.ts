@@ -243,6 +243,130 @@ namespace AllArguments {
   >
 }
 
+namespace BranchReturn {
+  type resolverNotReturningComposable = Expect<
+    Equal<
+      Subject.BranchReturn<Subject.Composable<() => number>, () => null>,
+      Subject.Composable<() => number>
+    >
+  >
+  type resolverWithParamsThatDontCompose = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (i: string) => null
+      >,
+      ['Fail to compose', number, 'does not fit in', string]
+    >
+  >
+  type resolverWithParamsThatCompose = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (i: number) => null
+      >,
+      Subject.Composable<() => number>
+    >
+  >
+  type resolverWithPromise = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (i: number) => Promise<null>
+      >,
+      Subject.Composable<() => number>
+    >
+  >
+
+  type returningComposableDoesntMatch = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (i: number) => Subject.Composable<(i: string) => number>
+      >,
+      ['Fail to compose', number, 'does not fit in', string]
+    >
+  >
+
+  type returningComposableUnionDoesntMatch = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (
+          i: number,
+        ) =>
+          | Subject.Composable<(i: string) => number>
+          | Subject.Composable<(i: number) => boolean>
+      >,
+      ['Fail to compose', number, 'does not fit in', never]
+    >
+  >
+
+  type resolverUnionMatches = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => { s: string; n: number }>,
+        (i: {
+          n: number
+        }) =>
+          | Subject.Composable<(i: { s: string }) => number>
+          | Subject.Composable<(i: { n: number }) => boolean>
+      >,
+      Subject.Composable<() => number | boolean>
+    >
+  >
+  type resolverMatches = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (
+          i: number,
+        ) =>
+          | Subject.Composable<(i: number) => number>
+          | Subject.Composable<(i: number) => boolean>
+      >,
+      Subject.Composable<() => number | boolean>
+    >
+  >
+
+  // Resolver is async
+  type asyncResolver = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<(i: string) => number>,
+        (
+          i: number,
+        ) => Promise<
+          | Subject.Composable<(i: number) => number>
+          | Subject.Composable<(i: number) => boolean>
+        >
+      >,
+      Subject.Composable<(i: string) => number | boolean>
+    >
+  >
+
+  type resolverMayBeNull = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (i: number) => Subject.Composable<(i: number) => boolean> | null
+      >,
+      Subject.Composable<() => number | boolean>
+    >
+  >
+  type asyncResolverMayBeNull = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Subject.Composable<() => number>,
+        (
+          i: number,
+        ) => Promise<Subject.Composable<(i: number) => boolean> | null>
+      >,
+      Subject.Composable<() => number | boolean>
+    >
+  >
+}
+
 namespace UnpackData {
   type testExtractsDataFromPromisedResult = Expect<
     Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>

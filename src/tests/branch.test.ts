@@ -4,6 +4,7 @@ import {
   failure,
   InputError,
   success,
+  UnpackData,
   withSchema,
 } from '../index.ts'
 import { Composable } from '../types.ts'
@@ -25,21 +26,18 @@ describe('branch', () => {
   })
 
   it('should enable conditionally choosing the next Composable with the output of first one', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = composable((id: number) => ({
       id: id + 2,
       next: 'multiply',
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
+    const b = composable(({ id }: { id: number }) => String(id))
+    const c = composable(({ id }: { id: number }) => id * 2)
     const d = branch(a, (output) => (output.next === 'multiply' ? c : b))
     type _R = Expect<
-      Equal<
-        typeof d,
-        Composable<(input?: unknown, environment?: unknown) => number | string>
-      >
+      Equal<typeof d, Composable<(a: number) => number | string>>
     >
 
-    assertEquals(await d({ id: 1 }), success(6))
+    assertEquals(await d(1), success(6))
   })
 
   it('should not pipe if the predicate returns null', async () => {
@@ -48,7 +46,9 @@ describe('branch', () => {
       next: 'multiply',
     }))
     const b = composable(({ id }: { id: number }) => String(id))
-    const d = branch(a, (output) => (output.next === 'multiply' ? null : b))
+    const resolver = (output: UnpackData<typeof a>) =>
+      output.next === 'multiply' ? null : b
+    const d = branch(a, resolver)
     type _R = Expect<
       Equal<
         typeof d,
@@ -68,7 +68,7 @@ describe('branch', () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = composable(({ id }: { id: number }) => id - 1)
     const c = branch(a, () => b)
     type _R = Expect<
       Equal<
@@ -84,17 +84,12 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the second function fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = composable(({ id }: { id: number }) => ({
       id: String(id),
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = branch(a, () => b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, Composable<(a: { id: number }) => number>>>
 
     assertEquals(
       await c({ id: 1 }),

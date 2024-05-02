@@ -120,98 +120,31 @@ type ParserSchema<T extends unknown = unknown> = {
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L] ? L
   : never
 
-type PrettifyComposableUnion<C extends Composable> = Composable<
-  (...args: Parameters<C>) => UnpackData<C>
->
-
-type G = PrettifyComposableUnion<
-  Composable<() => boolean> | Composable<() => number>
->
-
 type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
 > = PipeArguments<[SourceComposable, Composable<Resolver>]> extends Composable[]
-  ? ReturnType<Resolver> extends null | Promise<null>
+  ? Awaited<ReturnType<Resolver>> extends null
     ? SourceComposable
-    : PipeArguments<
-        [SourceComposable, Extract<Awaited<ReturnType<Resolver>>, Composable>]
-      > extends [Composable<(...args: infer P) => any>, ...any]
-    ? PrettifyComposableUnion<
-        | PipeReturn<
-            PipeArguments<
-              [
-                SourceComposable,
-                Extract<Awaited<ReturnType<Resolver>>, Composable>,
-              ]
-            >
+    : PipeArguments<[SourceComposable, Awaited<ReturnType<Resolver>>]> extends [
+        Composable,
+        ...any,
+      ]
+    ? Composable<
+        (
+          ...args: Parameters<
+            PipeArguments<[SourceComposable, Awaited<ReturnType<Resolver>>]>[0]
           >
-        | (null extends Awaited<ReturnType<Resolver>>
-            ? SourceComposable
-            : never)
+        ) => null extends Awaited<ReturnType<Resolver>>
+          ?
+              | UnpackData<SourceComposable>
+              | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+          : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
       >
-    : PipeArguments<
-        [SourceComposable, Extract<Awaited<ReturnType<Resolver>>, Composable>]
-      >
+    : PipeArguments<[SourceComposable, Awaited<ReturnType<Resolver>>]>
   : PipeArguments<[SourceComposable, Composable<Resolver>]>
-
-// Testing resolver compatibility
-type X1 = BranchReturn<Composable<() => number>, () => null>
-type X2 = BranchReturn<Composable<() => number>, (i: string) => null>
-type X3 = BranchReturn<Composable<() => number>, (i: number) => null>
-type X31 = BranchReturn<Composable<() => number>, (i: number) => Promise<null>>
-
-// Testing second composable compatibility
-type X4 = BranchReturn<
-  Composable<() => number>,
-  (i: number) => Composable<(i: string) => number>
->
-//
-// Testing second composable compatibility when we have more than one possible type with one incompatible
-type X5 = BranchReturn<
-  Composable<() => number>,
-  (
-    i: number,
-  ) => Composable<(i: string) => number> | Composable<(i: number) => boolean>
->
-// Testing second composable compatibility when we have more than one possible compatible type
-type X6 = BranchReturn<
-  Composable<() => { s: string; n: number }>,
-  (i: {
-    n: number
-  }) =>
-    | Composable<(i: { s: string }) => number>
-    | Composable<(i: { n: number }) => boolean>
->
-type X7 = BranchReturn<
-  Composable<() => number>,
-  (
-    i: number,
-  ) => Composable<(i: number) => number> | Composable<(i: number) => boolean>
->
-
-// Resolver is async
-type X8 = BranchReturn<
-  Composable<() => number>,
-  (
-    i: number,
-  ) => Promise<
-    Composable<(i: number) => number> | Composable<(i: number) => boolean>
-  >
->
-//
-// Resolver might return null
-type X9 = BranchReturn<
-  Composable<() => number>,
-  (i: number) => Composable<(i: number) => boolean> | null
->
-// Resolver might return null in promise
-type X10 = BranchReturn<
-  Composable<() => number>,
-  (i: number) => Promise<Composable<(i: number) => boolean> | null>
->
 
 export type {
   AllArguments,
