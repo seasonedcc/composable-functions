@@ -108,8 +108,6 @@ import { map } from 'composable-functions'
 const addAndReturnString = map(add, String)
 ```
 
-Note that if your mapper function has to be `async` you should wrap it in `composable` and use `pipe` instead.
-
 ## Parallel composition
 
 There are also functions compositions where all its parameters are excuted in parallel, like `Promise.all` will execute several promises and wait for all of them.
