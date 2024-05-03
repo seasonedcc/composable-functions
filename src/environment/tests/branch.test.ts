@@ -11,6 +11,25 @@ import {
 import { Composable } from '../../types.ts'
 
 describe('branch', () => {
+  it('should pipe a composable with arbitrary types', async () => {
+    const a = composable(({ id }: { id: number }, environment: number) => ({
+      id: id + 2 + environment,
+    }))
+    const b = composable(
+      ({ id }: { id: number }, environment: number) => id - 1 + environment,
+    )
+
+    const c = environment.branch(a, () => Promise.resolve(b))
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input: { id: number }, environment: number) => number>
+      >
+    >
+
+    assertEquals(await c({ id: 1 }, 0), success(2))
+  })
+
   it('should pipe a domain function with a function that returns a DF', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
@@ -83,13 +102,10 @@ describe('branch', () => {
     )
 
     const c = environment.branch(a, () => b)
-    // TODO: This input should maybe be a required { inp: number }
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<
-          (input?: unknown, environment?: { env: number } | undefined) => number
-        >
+        Composable<(input: unknown, environment: { env: number }) => number>
       >
     >
 
@@ -100,7 +116,7 @@ describe('branch', () => {
     const a = withSchema(z.number())((id) => ({
       id: id + 2,
     }))
-    const b = composable((id: number) => id - 1)
+    const b = composable(({ id }: { id: number }) => id - 1)
     const c = environment.branch(a, () => b)
     type _R = Expect<
       Equal<
@@ -138,20 +154,12 @@ describe('branch', () => {
     const a = composable((id: number) => ({
       id: id + 2,
     }))
-    const b = composable((id: number) => id - 1)
+    const b = composable(({ id }: { id: number }) => id - 1)
     const c = environment.branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable
       return b
     })
-    // TODO: the input should be required
-    // type _R = Expect<
-    //   Equal<
-    //     typeof c,
-    //     Composable<(input: number, environment?: unknown) => number>
-    //   >
-    // >
-
     const {
       errors: [err],
     } = await c(1)

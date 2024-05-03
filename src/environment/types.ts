@@ -1,5 +1,5 @@
 import { Internal } from '../internal/types.ts'
-import { Composable, PipeReturn, SequenceReturn } from '../types.ts'
+import { Composable, PipeReturn, SequenceReturn, UnpackData } from '../types.ts'
 
 type CommonEnvironment<
   Fns extends Composable[],
@@ -83,7 +83,39 @@ type SetEnv<
     ? [firstOptional?, ...Env]
   : never
 
+type BranchReturnWithEnvironment<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+> = PipeArgumentsWithEnvironment<
+  [SourceComposable, Composable<Resolver>]
+> extends Composable[]
+  ? Awaited<ReturnType<Resolver>> extends null
+    ? SourceComposable
+    : PipeArgumentsWithEnvironment<
+        [SourceComposable, Awaited<ReturnType<Resolver>>]
+      > extends [Composable, ...any]
+    ? Composable<
+        (
+          ...args: Parameters<
+            PipeArgumentsWithEnvironment<
+              [SourceComposable, Awaited<ReturnType<Resolver>>]
+            >[0]
+          >
+        ) => null extends Awaited<ReturnType<Resolver>>
+          ?
+              | UnpackData<SourceComposable>
+              | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+          : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+      >
+    : PipeArgumentsWithEnvironment<
+        [SourceComposable, Awaited<ReturnType<Resolver>>]
+      >
+  : PipeArgumentsWithEnvironment<[SourceComposable, Composable<Resolver>]>
+
 export type {
+  BranchReturnWithEnvironment,
   CommonEnvironment,
   GetEnv,
   PipeReturnWithEnvironment,

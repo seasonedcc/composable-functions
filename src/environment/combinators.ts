@@ -1,10 +1,11 @@
-import type { Composable, UnpackData } from '../types.ts'
+import type { Composable } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import {
   PipeReturnWithEnvironment,
   SequenceReturnWithEnvironment,
 } from './types.ts'
+import { BranchReturnWithEnvironment } from './types.ts'
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
@@ -76,16 +77,14 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
  * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
  */
 function branch<
-  O,
-  I extends any,
-  E extends any,
-  MaybeFn extends Composable | null,
->(
-  dfn: Composable<(input?: I, environment?: E) => O>,
-  resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
-) {
-  return (async (input: I, environment: E) => {
-    const result = await dfn(input, environment)
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+>(cf: SourceComposable, resolver: Resolver) {
+  return (async (...args: Parameters<SourceComposable>) => {
+    const [input, environment] = args
+    const result = await cf(input, environment)
     if (!result.success) return result
 
     return composable(async () => {
@@ -93,15 +92,7 @@ function branch<
       if (typeof nextDf !== 'function') return result.data
       return fromSuccess(nextDf)(result.data, environment)
     })()
-  }) as Composable<
-    (
-      input?: I,
-      environment?: E,
-    ) => MaybeFn extends Composable<
-      (input?: I, environment?: E) => infer BranchOutput
-    > ? BranchOutput
-      : UnpackData<NonNullable<MaybeFn>> | O
-  >
+  }) as BranchReturnWithEnvironment<SourceComposable, Resolver>
 }
 
 export { branch, pipe, sequence }
