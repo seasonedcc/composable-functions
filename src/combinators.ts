@@ -1,9 +1,9 @@
 import type {
-  AllArguments,
   BranchReturn,
+  CanComposeInParallel,
+  CanComposeInSequence,
   Composable,
   MergeObjs,
-  PipeArguments,
   PipeReturn,
   RecordToTuple,
   Result,
@@ -50,7 +50,7 @@ function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
     return !res.success
       ? failure(res.errors)
       : success(res.data[res.data.length - 1])
-  }) as PipeReturn<PipeArguments<Fns>>
+  }) as PipeReturn<CanComposeInSequence<Fns>>
 }
 
 /**
@@ -74,7 +74,7 @@ function all<Fns extends Composable[]>(...fns: Fns) {
 
     return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
-    (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => {
+    (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
       [k in keyof Fns]: UnpackData<Fns[k]>
     }
   >
@@ -97,7 +97,7 @@ function collect<Fns extends Record<string, Composable>>(fns: Fns) {
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (
       ...args: Parameters<
-        Exclude<AllArguments<RecordToTuple<Fns>>[0], undefined>
+        Exclude<CanComposeInParallel<RecordToTuple<Fns>>[0], undefined>
       >
     ) => {
       [key in keyof Fns]: UnpackData<Fns[key]>
@@ -129,7 +129,7 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
       result.push(res.data)
     }
     return success(result)
-  }) as SequenceReturn<PipeArguments<Fns>>
+  }) as SequenceReturn<CanComposeInSequence<Fns>>
 }
 
 /**
@@ -161,7 +161,9 @@ function map<Fn extends Composable, O>(
 function merge<Fns extends Composable[]>(
   ...fns: Fns
 ): Composable<
-  (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => MergeObjs<
+  (
+    ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
+  ) => MergeObjs<
     {
       [key in keyof Fns]: UnpackData<Fns[key]>
     }
@@ -194,7 +196,7 @@ function first<Fns extends Composable[]>(...fns: Fns) {
     })()
   }) as Composable<
     (
-      ...args: Parameters<NonNullable<AllArguments<Fns>[0]>>
+      ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
     ) => UnpackData<Fns[number]>
   >
 }

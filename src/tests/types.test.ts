@@ -51,14 +51,19 @@ namespace PipeReturn {
   >
 }
 
-namespace PipeArguments {
-  type testNoEmptyArgumentList = Expect<Equal<Subject.PipeArguments<[]>, never>>
+namespace CanComposeInSequence {
+  type testNoEmptyArgumentList = Expect<
+    Equal<Subject.CanComposeInSequence<[]>, never>
+  >
   type testOneComposable = Expect<
-    Equal<Subject.PipeArguments<[Subject.Composable]>, [Subject.Composable]>
+    Equal<
+      Subject.CanComposeInSequence<[Subject.Composable]>,
+      [Subject.Composable]
+    >
   >
   type testForTwoComposables = Expect<
     Equal<
-      Subject.PipeArguments<
+      Subject.CanComposeInSequence<
         [
           Subject.Composable<(x: string) => number>,
           Subject.Composable<(y: number) => boolean>,
@@ -72,7 +77,7 @@ namespace PipeArguments {
   >
   type testForComponentsWithArityGreaterThan1WithOptionalParameters = Expect<
     Equal<
-      Subject.PipeArguments<
+      Subject.CanComposeInSequence<
         [
           Subject.Composable<(x: string) => number>,
           Subject.Composable<(y: number, optionalArgument?: string) => boolean>,
@@ -86,7 +91,7 @@ namespace PipeArguments {
   >
   type testForComponentsWithArityGreaterThan1 = Expect<
     Equal<
-      Subject.PipeArguments<
+      Subject.CanComposeInSequence<
         [
           Subject.Composable<(x: string) => number>,
           Subject.Composable<(y: number, willBeUndefined: string) => boolean>,
@@ -97,7 +102,7 @@ namespace PipeArguments {
   >
   type testFailureToCompose = Expect<
     Equal<
-      Subject.PipeArguments<
+      Subject.CanComposeInSequence<
         [
           Subject.Composable<(x: string) => void>,
           Subject.Composable<(y: number) => boolean>,
@@ -108,7 +113,7 @@ namespace PipeArguments {
   >
   type testFailureToComposeOnThirdElement = Expect<
     Equal<
-      Subject.PipeArguments<
+      Subject.CanComposeInSequence<
         [
           Subject.Composable<(x: string) => number>,
           Subject.Composable<(y: number) => string>,
@@ -120,14 +125,19 @@ namespace PipeArguments {
   >
 }
 
-namespace AllArguments {
-  type testNoEmptyArgumentList = Expect<Equal<Subject.AllArguments<[]>, never>>
+namespace CanComposeInParallel {
+  type testNoEmptyArgumentList = Expect<
+    Equal<Subject.CanComposeInParallel<[]>, never>
+  >
   type testOneComposable = Expect<
-    Equal<Subject.AllArguments<[Subject.Composable]>, [Subject.Composable]>
+    Equal<
+      Subject.CanComposeInParallel<[Subject.Composable]>,
+      [Subject.Composable]
+    >
   >
   type testSubtypesForTwoComposables = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string, y: 1) => void>,
           Subject.Composable<(x: 'foo', y: number) => void>,
@@ -141,7 +151,7 @@ namespace AllArguments {
   >
   type testSubtypesForThreeComposables = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: unknown) => void>,
           Subject.Composable<(x: string) => void>,
@@ -157,7 +167,7 @@ namespace AllArguments {
   >
   type testSubtypesForStricterOptional = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string, y?: 1) => void>,
           Subject.Composable<(x: 'foo', y: number) => void>,
@@ -171,7 +181,7 @@ namespace AllArguments {
   >
   type testSubtypesForOptionalsOnBoth = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string, y?: number) => void>,
           Subject.Composable<(x: 'foo', y?: number) => void>,
@@ -185,7 +195,7 @@ namespace AllArguments {
   >
   type testSubtypesForConflictingOptionals = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string, y?: number) => void>,
           Subject.Composable<(x: 'foo', y?: string) => void>,
@@ -199,7 +209,7 @@ namespace AllArguments {
   >
   type testMaxArityForTwoComposables = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string, y: number) => void>,
           Subject.Composable<(x: 'foo') => void>,
@@ -213,7 +223,7 @@ namespace AllArguments {
   >
   type testMaxArityForTwoComposablesInverse = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string) => void>,
           Subject.Composable<(x: 'foo', y: number) => void>,
@@ -227,7 +237,7 @@ namespace AllArguments {
   >
   type testCompositionFailure = Expect<
     Equal<
-      Subject.AllArguments<
+      Subject.CanComposeInParallel<
         [
           Subject.Composable<(x: string, y: string) => void>,
           Subject.Composable<(x: 'foo', y: number) => void>,

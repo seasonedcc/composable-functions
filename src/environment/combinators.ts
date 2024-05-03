@@ -1,11 +1,7 @@
 import type { Composable } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import {
-  PipeReturnWithEnvironment,
-  SequenceReturnWithEnvironment,
-} from './types.ts'
-import { BranchReturnWithEnvironment } from './types.ts'
+import { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,
@@ -31,7 +27,7 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
   return ((input: any, environment: any) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as PipeReturnWithEnvironment<Fns>
+    )) as PipeReturn<Fns>
 }
 
 /**
@@ -49,7 +45,7 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
   return ((input: any, environment: any) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
-    )) as SequenceReturnWithEnvironment<Fns>
+    )) as SequenceReturn<Fns>
 }
 
 /**
@@ -92,7 +88,7 @@ function branch<
       if (typeof nextDf !== 'function') return result.data
       return fromSuccess(nextDf)(result.data, environment)
     })()
-  }) as BranchReturnWithEnvironment<SourceComposable, Resolver>
+  }) as BranchReturn<SourceComposable, Resolver>
 }
 
 export { branch, pipe, sequence }
