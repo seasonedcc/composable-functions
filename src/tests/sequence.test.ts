@@ -1,5 +1,5 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
-import type { Result, Composable } from '../index.ts'
+import type { Composable, Result } from '../index.ts'
 import { composable, sequence, success } from '../index.ts'
 import { withSchema } from '../index.ts'
 
@@ -28,10 +28,10 @@ describe('sequence', () => {
 
   it('type checks and composes async functions', async () => {
     const asyncProduceToIncrement = composable(() =>
-      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' }),
+      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' })
     )
     const asyncIncrementProperty = composable((a: { toIncrement: number }) =>
-      Promise.resolve(a.toIncrement + 1),
+      Promise.resolve(a.toIncrement + 1)
     )
     const fn = sequence(asyncProduceToIncrement, asyncIncrementProperty)
     const res = await fn()

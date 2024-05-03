@@ -1,10 +1,10 @@
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
   composable,
-  withSchema,
-  trace,
   fromSuccess,
   success,
+  trace,
+  withSchema,
 } from '../index.ts'
 import type { Composable } from '../index.ts'
 

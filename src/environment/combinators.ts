@@ -99,8 +99,7 @@ function branch<
       environment?: E,
     ) => MaybeFn extends Composable<
       (input?: I, environment?: E) => infer BranchOutput
-    >
-      ? BranchOutput
+    > ? BranchOutput
       : UnpackData<NonNullable<MaybeFn>> | O
   >
 }

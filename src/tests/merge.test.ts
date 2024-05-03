@@ -1,5 +1,5 @@
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
-import { merge, withSchema, failure, InputError, success } from '../index.ts'
+import { failure, InputError, merge, success, withSchema } from '../index.ts'
 import type { Composable } from '../index.ts'
 import { composable } from '../index.ts'
 

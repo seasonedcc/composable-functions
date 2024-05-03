@@ -1,12 +1,12 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
-import type { Result, Composable } from '../index.ts'
+import type { Composable, Result } from '../index.ts'
 import {
   collect,
-  withSchema,
+  composable,
   failure,
   InputError,
-  composable,
   success,
+  withSchema,
 } from '../index.ts'
 
 const voidFn = composable(() => {})

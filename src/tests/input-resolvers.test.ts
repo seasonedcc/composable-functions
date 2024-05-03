@@ -1,4 +1,4 @@
-import { describe, it, assertEquals } from './prelude.ts'
+import { assertEquals, describe, it } from './prelude.ts'
 import * as subject from '../input-resolvers.ts'
 
 const makePost: (entries: Array<[string, string]>, url?: string) => Request = (

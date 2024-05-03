@@ -1,5 +1,5 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
-import type { Result, Composable } from '../index.ts'
+import type { Composable, Result } from '../index.ts'
 import { catchError, composable, success, withSchema } from '../index.ts'
 
 const schemaFaultyAdd = withSchema(
@@ -51,8 +51,9 @@ describe('catchError', () => {
   })
 
   it('receives the list of errors as input to another function and returns a new composable', async () => {
-    const fn = catchError(faultyAdd, (errors, a, b) =>
-      errors.length > 1 ? NaN : a + b,
+    const fn = catchError(
+      faultyAdd,
+      (errors, a, b) => errors.length > 1 ? NaN : a + b,
     )
     const res = await fn(1, 2)
 

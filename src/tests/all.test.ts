@@ -1,12 +1,12 @@
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
   all,
+  Composable,
   composable,
+  failure,
+  InputError,
   success,
   withSchema,
-  Composable,
-  InputError,
-  failure,
 } from '../index.ts'
 
 const voidFn = composable(() => {})

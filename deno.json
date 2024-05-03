@@ -19,5 +19,14 @@
   },
   "compilerOptions": {
     "types": ["./src/test.d.ts"]
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": false,
+    "singleQuote": true,
+    "proseWrap": "preserve",
+    "include": ["src/"],
   }
 }

@@ -6,15 +6,15 @@ import {
   it,
   z,
 } from './prelude.ts'
-import type { Result, Composable, Success } from '../index.ts'
+import type { Composable, Result, Success } from '../index.ts'
 import {
   composable,
-  success,
-  fromSuccess,
-  ErrorList,
   EnvironmentError,
+  ErrorList,
   failure,
+  fromSuccess,
   InputError,
+  success,
   withSchema,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
