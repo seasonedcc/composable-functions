@@ -88,6 +88,15 @@ type SetEnv<
     ? [firstOptional?, ...Env]
   : never
 
+type BranchEnvironment<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+> = Awaited<ReturnType<Resolver>> extends Composable<any>
+  ? CommonEnvironment<[SourceComposable, Awaited<ReturnType<Resolver>>]>
+  : GetEnv<Parameters<SourceComposable>>
+
 type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
@@ -101,10 +110,13 @@ type BranchReturn<
     [SourceComposable, Awaited<ReturnType<Resolver>>]
   > extends [Composable, ...any] ? Composable<
       (
-        ...args: Parameters<
-          CanComposeInSequence<
-            [SourceComposable, Awaited<ReturnType<Resolver>>]
-          >[0]
+        ...args: SetEnv<
+          Parameters<
+            CanComposeInSequence<
+              [SourceComposable, Awaited<ReturnType<Resolver>>]
+            >[0]
+          >,
+          BranchEnvironment<SourceComposable, Resolver>
         >
       ) => null extends Awaited<ReturnType<Resolver>> ?
           | UnpackData<SourceComposable>

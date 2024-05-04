@@ -139,17 +139,26 @@ namespace PipeReturn {
   >
 }
 
-// namespace BranchReturn {
-//   type test = Expect<
-//     Equal<
-//       Subject.BranchReturn<
-//         Composable<(a: number, e?: unknown) => number>,
-//         (a: number) => Composable<(a: number, e: number) => string>
-//       >,
-//       Composable<(a: number, e: number) => string>
-//     >
-//   >
-// }
+namespace BranchReturn {
+  type testCommonEnv = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Composable<(a: number, e?: unknown) => number>,
+        (a: number) => Composable<(a: number, e: number) => string>
+      >,
+      Composable<(a: number, e: number) => string>
+    >
+  >
+  type test = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Composable<(a?: unknown, e?: unknown) => number>,
+        (a: number) => null | Composable<(a?: unknown, e?: unknown) => string>
+      >,
+      Composable<(a?: unknown, e?: unknown) => string | number>
+    >
+  >
+}
 
 namespace GetEnv {
   type test1 = Expect<
