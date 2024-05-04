@@ -42,13 +42,13 @@ type UnpackAll<List extends Composable[]> = {
   [K in keyof List]: UnpackData<List[K]>
 }
 
-type SequenceReturn<Fns extends Composable[]> = Fns extends [
+type SequenceReturn<Fns extends unknown[]> = Fns extends [
   Composable<(...args: infer P) => any>,
   ...any,
 ] ? Composable<(...args: P) => UnpackAll<Fns>>
   : Fns
 
-type PipeReturn<Fns extends Composable[]> = Fns extends [
+type PipeReturn<Fns extends unknown[]> = Fns extends [
   Composable<(...args: infer P) => any>,
   ...any,
 ] ? Composable<(...args: P) => UnpackData<Extract<Last<Fns>, Composable>>>
