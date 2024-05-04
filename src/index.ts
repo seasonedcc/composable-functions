@@ -26,7 +26,7 @@ export {
   inputFromSearch,
   inputFromUrl,
 } from './input-resolvers.ts'
-export { toErrorPayload, serialize } from './serializer.ts'
+export { serialize, toErrorPayload } from './serializer.ts'
 export { EnvironmentError, ErrorList, InputError } from './errors.ts'
 export type {
   Composable,

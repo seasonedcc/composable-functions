@@ -1,5 +1,5 @@
 import { assertEquals, describe, it } from './prelude.ts'
-import type { Result, Composable } from '../index.ts'
+import type { Composable, Result } from '../index.ts'
 import { composable, pipe, success } from '../index.ts'
 
 const toString = composable((a: unknown) => `${a}`)
@@ -27,10 +27,10 @@ describe('pipe', () => {
 
   it('type checks and composes async functions', async () => {
     const asyncProduceToIncrement = composable(() =>
-      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' }),
+      Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' })
     )
     const asyncIncrementProperty = composable((a: { toIncrement: number }) =>
-      Promise.resolve(a.toIncrement + 1),
+      Promise.resolve(a.toIncrement + 1)
     )
     const fn = pipe(asyncProduceToIncrement, asyncIncrementProperty)
     const res = await fn()
@@ -60,7 +60,10 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, ['Fail to compose', undefined, 'does not fit in', number]>
+      Equal<
+        typeof fn,
+        ['Fail to compose', undefined, 'does not fit in', number]
+      >
     >
   })
 

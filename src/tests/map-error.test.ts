@@ -1,5 +1,5 @@
 import { assertEquals, describe, it } from './prelude.ts'
-import type { Result, Composable } from '../index.ts'
+import type { Composable, Result } from '../index.ts'
 import { composable, mapError } from '../index.ts'
 import { success } from '../constructors.ts'
 
@@ -39,8 +39,9 @@ describe('mapError', () => {
   })
 
   it('accepts an async mapper', async () => {
-    const fn = mapError(faultyAdd, (errors) =>
-      Promise.resolve(errors.map(cleanError)),
+    const fn = mapError(
+      faultyAdd,
+      (errors) => Promise.resolve(errors.map(cleanError)),
     )
     const res = await fn(1, 2)
 

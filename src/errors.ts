@@ -42,4 +42,4 @@ class ErrorList extends Error {
   }
 }
 
-export { EnvironmentError, InputError, ErrorList }
+export { EnvironmentError, ErrorList, InputError }

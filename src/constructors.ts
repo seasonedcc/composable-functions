@@ -107,17 +107,12 @@ function applySchema<I, E, A extends Composable>(
     )
 
     if (!result.success || !envResult.success) {
-      const inputErrors = result.success
-        ? []
-        : result.error.issues.map(
-            (error) => new InputError(error.message, error.path as string[]),
-          )
-      const envErrors = envResult.success
-        ? []
-        : envResult.error.issues.map(
-            (error) =>
-              new EnvironmentError(error.message, error.path as string[]),
-          )
+      const inputErrors = result.success ? [] : result.error.issues.map(
+        (error) => new InputError(error.message, error.path as string[]),
+      )
+      const envErrors = envResult.success ? [] : envResult.error.issues.map(
+        (error) => new EnvironmentError(error.message, error.path as string[]),
+      )
       return failure([...inputErrors, ...envErrors])
     }
     return fn(result.data, envResult.data)
@@ -143,4 +138,4 @@ const alwaysUndefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { composable, failure, fromSuccess, success, withSchema, applySchema }
+export { applySchema, composable, failure, fromSuccess, success, withSchema }
