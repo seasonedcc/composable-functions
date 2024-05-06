@@ -1,5 +1,10 @@
 import { Internal } from '../internal/types.ts'
-import { Composable, PipeReturn, SequenceReturn } from '../types.ts'
+import {
+  Composable,
+  PipeReturn as BasePipeReturn,
+  SequenceReturn as BaseSequenceReturn,
+  UnpackData,
+} from '../types.ts'
 
 type CommonEnvironment<
   Fns extends Composable[],
@@ -19,27 +24,27 @@ type CommonEnvironment<
     : never
   : never
 
-type SequenceReturnWithEnvironment<Fns extends Composable[]> = SequenceReturn<
-  PipeArgumentsWithEnvironment<Fns>
+type SequenceReturn<Fns extends Composable[]> = BaseSequenceReturn<
+  CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
   ? CommonEnvironment<Fns> extends { 'Incompatible arguments ': true }
     ? CommonEnvironment<Fns>
   : Composable<
     (...args: SetEnv<Parameters<Fns[0]>, CommonEnvironment<Fns>>) => CReturn
   >
-  : PipeArgumentsWithEnvironment<Fns>
+  : CanComposeInSequence<Fns>
 
-type PipeReturnWithEnvironment<Fns extends Composable[]> = PipeReturn<
-  PipeArgumentsWithEnvironment<Fns>
+type PipeReturn<Fns extends Composable[]> = BasePipeReturn<
+  CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
   ? CommonEnvironment<Fns> extends { 'Incompatible arguments ': true }
     ? CommonEnvironment<Fns>
   : Composable<
     (...args: SetEnv<Parameters<Fns[0]>, CommonEnvironment<Fns>>) => CReturn
   >
-  : PipeArgumentsWithEnvironment<Fns>
+  : CanComposeInSequence<Fns>
 
-type PipeArgumentsWithEnvironment<
+type CanComposeInSequence<
   Fns extends any[],
   Arguments extends any[] = [],
 > = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
@@ -57,7 +62,7 @@ type PipeArgumentsWithEnvironment<
       ? Internal.FailToCompose<never, FirstBParameter>
     : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
-        ? PipeArgumentsWithEnvironment<
+        ? CanComposeInSequence<
           restA,
           [...Arguments, Composable<(...a: PA) => OA>]
         >
@@ -83,10 +88,49 @@ type SetEnv<
     ? [firstOptional?, ...Env]
   : never
 
+type BranchEnvironment<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+> = Awaited<ReturnType<Resolver>> extends Composable<any>
+  ? CommonEnvironment<[SourceComposable, Awaited<ReturnType<Resolver>>]>
+  : GetEnv<Parameters<SourceComposable>>
+
+type BranchReturn<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+> = CanComposeInSequence<
+  [SourceComposable, Composable<Resolver>]
+> extends Composable[]
+  ? Awaited<ReturnType<Resolver>> extends null ? SourceComposable
+  : CanComposeInSequence<
+    [SourceComposable, Awaited<ReturnType<Resolver>>]
+  > extends [Composable, ...any] ? Composable<
+      (
+        ...args: SetEnv<
+          Parameters<
+            CanComposeInSequence<
+              [SourceComposable, Awaited<ReturnType<Resolver>>]
+            >[0]
+          >,
+          BranchEnvironment<SourceComposable, Resolver>
+        >
+      ) => null extends Awaited<ReturnType<Resolver>> ?
+          | UnpackData<SourceComposable>
+          | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+        : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+    >
+  : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
+  : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>
+
 export type {
+  BranchReturn,
   CommonEnvironment,
   GetEnv,
-  PipeReturnWithEnvironment,
-  SequenceReturnWithEnvironment,
+  PipeReturn,
+  SequenceReturn,
   SetEnv,
 }

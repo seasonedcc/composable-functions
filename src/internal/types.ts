@@ -70,10 +70,10 @@ namespace Internal {
         ? restK extends string[]
           ? restV extends unknown[]
             ? Prettify<Zip<restK, restV, O & { [key in HeadK]: HeadV }>>
-          : V // in this case V has the AllArguments failure type
+          : V // in this case V has the CanComposeInParallel failure type
         : never
       : never
-    : O
+    : never
     : O
 
   export type EveryElementTakes<T extends any[], U> = T extends [

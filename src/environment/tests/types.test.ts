@@ -85,10 +85,10 @@ namespace CommonEnvironment {
   >
 }
 
-namespace SequenceReturnWithEnvironment {
+namespace SequenceReturn {
   type test = Expect<
     Equal<
-      Subject.SequenceReturnWithEnvironment<
+      Subject.SequenceReturn<
         [
           Composable<(a: number, e?: unknown) => number>,
           Composable<(a: number, e: number) => number>,
@@ -101,7 +101,7 @@ namespace SequenceReturnWithEnvironment {
 
   type test2 = Expect<
     Equal<
-      Subject.SequenceReturnWithEnvironment<
+      Subject.SequenceReturn<
         [
           Composable<(a?: unknown, e?: unknown) => { id: number }>,
           Composable<(a?: unknown, e?: unknown) => number>,
@@ -112,10 +112,10 @@ namespace SequenceReturnWithEnvironment {
   >
 }
 
-namespace PipeReturnWithEnvironment {
+namespace PipeReturn {
   type test = Expect<
     Equal<
-      Subject.PipeReturnWithEnvironment<
+      Subject.PipeReturn<
         [
           Composable<(a: number, e?: unknown) => number>,
           Composable<(a: number, e: number) => number>,
@@ -128,13 +128,34 @@ namespace PipeReturnWithEnvironment {
 
   type test2 = Expect<
     Equal<
-      Subject.PipeReturnWithEnvironment<
+      Subject.PipeReturn<
         [
           Composable<(a?: unknown, e?: unknown) => { id: number }>,
           Composable<(a?: unknown, e?: unknown) => number>,
         ]
       >,
       Composable<(a?: unknown, b?: unknown) => number>
+    >
+  >
+}
+
+namespace BranchReturn {
+  type testCommonEnv = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Composable<(a: number, e?: unknown) => number>,
+        (a: number) => Composable<(a: number, e: number) => string>
+      >,
+      Composable<(a: number, e: number) => string>
+    >
+  >
+  type test = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Composable<(a?: unknown, e?: unknown) => number>,
+        (a: number) => null | Composable<(a?: unknown, e?: unknown) => string>
+      >,
+      Composable<(a?: unknown, e?: unknown) => string | number>
     >
   >
 }

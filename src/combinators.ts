@@ -1,8 +1,9 @@
 import type {
-  AllArguments,
+  BranchReturn,
+  CanComposeInParallel,
+  CanComposeInSequence,
   Composable,
   MergeObjs,
-  PipeArguments,
   PipeReturn,
   RecordToTuple,
   Result,
@@ -49,7 +50,7 @@ function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
     return !res.success
       ? failure(res.errors)
       : success(res.data[res.data.length - 1])
-  }) as PipeReturn<PipeArguments<Fns>>
+  }) as PipeReturn<CanComposeInSequence<Fns>>
 }
 
 /**
@@ -73,7 +74,7 @@ function all<Fns extends Composable[]>(...fns: Fns) {
 
     return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
-    (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => {
+    (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
       [k in keyof Fns]: UnpackData<Fns[k]>
     }
   >
@@ -96,7 +97,7 @@ function collect<Fns extends Record<string, Composable>>(fns: Fns) {
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (
       ...args: Parameters<
-        Exclude<AllArguments<RecordToTuple<Fns>>[0], undefined>
+        Exclude<CanComposeInParallel<RecordToTuple<Fns>>[0], undefined>
       >
     ) => {
       [key in keyof Fns]: UnpackData<Fns[key]>
@@ -128,7 +129,7 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
       result.push(res.data)
     }
     return success(result)
-  }) as SequenceReturn<PipeArguments<Fns>>
+  }) as SequenceReturn<CanComposeInSequence<Fns>>
 }
 
 /**
@@ -160,7 +161,9 @@ function map<Fn extends Composable, O>(
 function merge<Fns extends Composable[]>(
   ...fns: Fns
 ): Composable<
-  (...args: Parameters<NonNullable<AllArguments<Fns>[0]>>) => MergeObjs<
+  (
+    ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
+  ) => MergeObjs<
     {
       [key in keyof Fns]: UnpackData<Fns[key]>
     }
@@ -193,7 +196,7 @@ function first<Fns extends Composable[]>(...fns: Fns) {
     })()
   }) as Composable<
     (
-      ...args: Parameters<NonNullable<AllArguments<Fns>[0]>>
+      ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
     ) => UnpackData<Fns[number]>
   >
 }
@@ -285,11 +288,13 @@ function trace(
     }) as Fn
 }
 
-function branch<O, P extends any[], MaybeFn extends Composable | null>(
-  cf: Composable<(...args: P) => O>,
-  resolver: (o: O) => Promise<MaybeFn> | MaybeFn,
-) {
-  return (async (...args: P) => {
+function branch<
+  SourceComposable extends Composable,
+  Resolver extends (
+    ...args: any[]
+  ) => Composable | null | Promise<Composable | null>,
+>(cf: SourceComposable, resolver: Resolver) {
+  return (async (...args: Parameters<SourceComposable>) => {
     const result = await cf(...args)
     if (!result.success) return result
 
@@ -298,13 +303,7 @@ function branch<O, P extends any[], MaybeFn extends Composable | null>(
       if (typeof nextComposable !== 'function') return result.data
       return fromSuccess(nextComposable)(result.data)
     })()
-  }) as Composable<
-    (
-      ...args: P
-    ) => MaybeFn extends Composable<(...args: P) => infer BranchOutput>
-      ? BranchOutput
-      : UnpackData<NonNullable<MaybeFn>> | O
-  >
+  }) as BranchReturn<SourceComposable, Resolver>
 }
 
 export {
