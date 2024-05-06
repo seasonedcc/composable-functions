@@ -41,12 +41,12 @@ function composable<T extends (...args: any[]) => any>(fn: T): Composable<T> {
 }
 
 /**
- * It can be used to call a domain function from another domain function. It will return the output of the given domain function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
+ * It can be used to call a composable from another composable. It will return the output of the given function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
- * import { mdf, fromSuccess } from 'domain-functions'
+ * import { withSchema, fromSuccess } from 'composable-functions'
  *
- * const add1 = mdf(z.number())((n) => n + 1)
+ * const add1 = withSchema(z.number())((n) => n + 1)
  * const result = await add1(1)
  * //    ^? Result<number>
  * const data = await fromSuccess(add1)(n)
@@ -68,7 +68,9 @@ function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
 }
 
 /**
- * Creates a domain function.
+ * Creates a composable with unknown input and environment that uses schemas to parse them into known types.
+ * This allows you to code the function with arbitrary types knowinng that they will be enforced in runtime.
+ * Very useful when piping data coming from any external source into your composables.
  * After giving the input and environment schemas, you can pass a handler function that takes type safe input and environment. That function is gonna catch any errors and always return a Result.
  * @param inputSchema the schema for the input
  * @param environmentSchema the schema for the environment

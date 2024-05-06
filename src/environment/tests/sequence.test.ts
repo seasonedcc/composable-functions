@@ -11,7 +11,7 @@ import {
 import type { Composable } from '../../index.ts'
 
 describe('sequence', () => {
-  it('should compose domain functions from left-to-right saving the results sequentially', async () => {
+  it('should compose functions from left-to-right saving the results sequentially', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))

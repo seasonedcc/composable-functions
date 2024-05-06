@@ -11,7 +11,7 @@ npm i composable-functions
 ```
 
 ```tsx
-import { composable, pipe } from 'domain-functions'
+import { composable, pipe } from 'composable-functions'
 
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
@@ -172,5 +172,5 @@ If you are using [Deno](https://deno.land/), just directly import the functions 
 import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts";
 ```
 
-This documentation will use Node.JS imports by convention, just replace `domain-functions` with `https://deno.land/x/domain_functions/mod.ts` when using [Deno](https://deno.land/).
+This documentation will use Node.JS imports by convention, just replace `composable-functions` with `https://deno.land/x/composable_functions/mod.ts` when using [Deno](https://deno.land/).
 

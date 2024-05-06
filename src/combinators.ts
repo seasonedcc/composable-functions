@@ -33,15 +33,15 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
 /**
  * Creates a single function out of a chain of multiple Composables. It will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, pipe } from 'composable-functions'
  *
- * const a = C.composable(
+ * const a = composable(
  *   ({ aNumber }: { aNumber: number }) => ({ aString: String(aNumber) }),
  * )
- * const b = C.composable(
+ * const b = composable(
  *   ({ aString }: { aString: string }) => ({ aBoolean: aString == '1' }),
  * )
- * const d = C.pipe(a, b)
+ * const d = pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  */
 function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
@@ -56,12 +56,12 @@ function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 /**
  * Creates a single function out of multiple Composables. It will pass the same input to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, all } from 'composable-functions'
  *
- * const a = C.composable((id: number) => id + 1)
- * const b = C.composable(String)
- * const c = C.composable(Boolean)
- * const cf = C.all(a, b, c)
+ * const a = composable((id: number) => id + 1)
+ * const b = composable(String)
+ * const c = composable(Boolean)
+ * const cf = all(a, b, c)
 //       ^? Composable<(id: number) => [string, number, boolean]>
  */
 function all<Fns extends Composable[]>(...fns: Fns) {
@@ -83,11 +83,11 @@ function all<Fns extends Composable[]>(...fns: Fns) {
 /**
  * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, collect } from 'composable-functions'
  *
- * const a = C.composable(() => '1')
- * const b = C.composable(() => 2)
- * const df = collect({ a, b })
+ * const a = composable(() => '1')
+ * const b = composable(() => 2)
+ * const aComposable = collect({ a, b })
 //       ^? Composable<() => { a: string, b: number }>
  */
 function collect<Fns extends Record<string, Composable>>(fns: Fns) {
@@ -108,11 +108,11 @@ function collect<Fns extends Record<string, Composable>>(fns: Fns) {
 /**
  * Works like `pipe` but it will collect the output of every function in a tuple.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, sequence } from 'composable-functions'
  *
- * const a = C.compose((aNumber: number) => String(aNumber))
- * const b = C.compose((aString: string) => aString === '1')
- * const cf = C.sequence(a, b)
+ * const a = composable((aNumber: number) => String(aNumber))
+ * const b = composable((aString: string) => aString === '1')
+ * const cf = sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  */
 function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
@@ -135,10 +135,10 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 /**
  * It takes a Composable and a predicate to apply a transformation over the resulting `data`. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, map } from 'composable-functions'
  *
- * const increment = C.composable(({ id }: { id: number }) => id + 1)
- * const incrementToString = C.map(increment, String)
+ * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const incrementToString = map(increment, String)
  * //    ^? Composable<string>
  */
 function map<Fn extends Composable, O>(
@@ -149,14 +149,14 @@ function map<Fn extends Composable, O>(
 }
 
 /**
- * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+ * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create composables that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
  * @example
- * import { mdf, merge } from 'domain-functions'
+ * import { withSchema, merge } from 'composable-functions'
  *
- * const a = mdf(z.object({}))(() => ({ a: 'a' }))
- * const b = mdf(z.object({}))(() => ({ b: 2 }))
- * const df = merge(a, b)
- * //    ^? DomainFunction<{ a: string, b: number }>
+ * const a = withSchema(z.object({}))(() => ({ a: 'a' }))
+ * const b = withSchema(z.object({}))(() => ({ b: 2 }))
+ * const aComposable = merge(a, b)
+ * //    ^? Composable<(input?: unknown, environment?: unknown) => { a: string, b: number }>
  */
 function merge<Fns extends Composable[]>(
   ...fns: Fns
@@ -173,14 +173,14 @@ function merge<Fns extends Composable[]>(
 }
 
 /**
- * Creates a composite domain function that will return the result of the first successful constituent domain function. **It is important to notice** that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
+ * Creates a composable that will return the result of the first successful constituent. **It is important to notice** that all constituent functions will be executed in parallel, so be mindful of the side effects.
  * @example
- * import { mdf, first } from 'domain-functions'
+ * import { withSchema, first } from 'composable-functions'
  *
- * const a = mdf(z.object({ n: z.number() }))(({ n }) => n + 1)
-const b = mdf(z.object({ n: z.number() }))(({ n }) => String(n))
-const df = first(a, b)
-//    ^? DomainFunction<string | number>
+ * const a = withSchema(z.object({ n: z.number() }))(({ n }) => n + 1)
+const b = withSchema(z.object({ n: z.number() }))(({ n }) => String(n))
+const aComposable = first(a, b)
+//    ^? Composable<(input?: unknown, environment?: unknown) => string | number>
  */
 function first<Fns extends Composable[]>(...fns: Fns) {
   return ((...args) => {
@@ -204,10 +204,10 @@ function first<Fns extends Composable[]>(...fns: Fns) {
 /**
  * Creates a new function that will try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, catchError } from 'composable-functions'
  *
- * const increment = C.composable(({ id }: { id: number }) => id + 1)
- * const negativeOnError = C.catchError(increment, (result, originalInput) => (
+ * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const negativeOnError = catchError(increment, (result, originalInput) => (
  *  originalInput.id * -1
  * ))
  */
@@ -235,10 +235,10 @@ function catchError<
 /**
  * Creates a new function that will apply a transformation over a resulting Failure from the given function. When the given function succeeds, its result is returned without changes.
  * @example
- * import { cf as C } from 'domain-functions'
+ * import { composable, mapError } from 'composable-functions'
  *
- * const increment = C.composable(({ id }: { id: number }) => id + 1)
- * const incrementWithErrorSummary = C.mapError(increment, (result) => ({
+ * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const incrementWithErrorSummary = mapError(increment, (result) => ({
  *   errors: [{ message: 'Errors count: ' + result.errors.length }],
  * }))
  */
@@ -259,18 +259,18 @@ function mapError<Fn extends Composable>(
 }
 
 /**
- * Whenever you need to intercept inputs and a domain function result without changing them you can use this function.
+ * Whenever you need to intercept inputs and a composable result without changing them you can use this function.
  * The most common use case is to log failures to the console or to an external service.
- * @param traceFn A function that receives the input, environment and result of a domain function.
+ * @param traceFn A function that receives the input and result of a composable.
  * @example
- * import { mdf, trace } from 'domain-functions'
+ * import { withSchema, trace } from 'composable-functions'
  *
  * const trackErrors = trace(({ input, output, result }) => {
  *   if(!result.success) sendToExternalService({ input, output, result })
  * })
- * const increment = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
+ * const increment = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
  * const incrementAndTrackErrors = trackErrors(increment)
- * //    ^? DomainFunction<number>
+ * //    ^? Composable<(input?: unknown, environment?: unknown) => number>
  */
 function trace(
   traceFn: (

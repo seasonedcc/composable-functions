@@ -30,7 +30,7 @@ describe('branch', () => {
     assertEquals(await c({ id: 1 }, 0), success(2))
   })
 
-  it('should pipe a domain function with a function that returns a DF', async () => {
+  it('should pipe a composable with a function that returns a composable with schema', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))

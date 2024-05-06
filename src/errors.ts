@@ -1,7 +1,7 @@
 /**
  * A custom error class for input errors.
  * @example
- * const df = mdf()(() => {
+ * const aComposable = withSchema()(() => {
  *   throw new InputError('Invalid input', 'user.name')
  * })
  */
@@ -18,7 +18,7 @@ class InputError extends Error {
 /**
  * A custom error class for environment errors.
  * @example
- * const df = mdf()(() => {
+ * const aComposable = withSchema()(() => {
  *  throw new EnvironmentError('Invalid environment', 'user.name')
  * })
  */

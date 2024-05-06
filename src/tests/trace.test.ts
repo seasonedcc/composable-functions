@@ -42,7 +42,7 @@ describe('trace', () => {
     assertIsError(result.errors[0], Error, 'Problem in tracing')
   })
 
-  it('intercepts inputs and outputs of a given domain function', async () => {
+  it('intercepts inputs and outputs of a given composable', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     let contextFromFunctionA: unknown[] = []

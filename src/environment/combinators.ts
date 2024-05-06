@@ -10,17 +10,17 @@ function applyEnvironmentToList<
 }
 
 /**
- * Creates a single domain function out of a chain of multiple domain functions. It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
+ * Creates a single composable out of a chain of multiple functions. It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
  * @example
- * import { mdf, pipe } from 'domain-functions'
+ * import { withSchema, environment } from 'composable-functions'
  *
- * const a = mdf(z.object({ aNumber: z.number() }))(
+ * const a = withSchema(z.object({ aNumber: z.number() }))(
  *   ({ aNumber }) => ({ aString: String(aNumber) }),
  * )
- * const b = mdf(z.object({ aString: z.string() }))(
+ * const b = withSchema(z.object({ aString: z.string() }))(
  *   ({ aString }) => ({ aBoolean: aString == '1' }),
  * )
- * const d = pipe(a, b)
+ * const d = environment.pipe(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
  */
 function pipe<Fns extends Composable[]>(...fns: Fns) {
@@ -31,13 +31,13 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
 }
 
 /**
- * Works like `pipe` but it will collect the output of every function in a tuple.
+ * Works like `environment.pipe` but it will collect the output of every function in a tuple.
  * @example
- * import { mdf, sequence } from 'domain-functions'
+ * import { withSchema, environment } from 'composable-functions'
  *
- * const a = mdf(z.number())((aNumber) => String(aNumber))
- * const b = mdf(z.string())((aString) => aString === '1')
- * const df = sequence(a, b)
+ * const a = withSchema(z.number())((aNumber) => String(aNumber))
+ * const b = withSchema(z.string())((aString) => aString === '1')
+ * const aComposable = environment.sequence(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
  */
 
@@ -49,28 +49,7 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
 }
 
 /**
- * Use it to add conditional logic to your domain functions' compositions.
- * It receives a domain function and a predicate function that should return the next domain function to be executed based on the previous domain function's output, like `pipe`. If the predicate returns `null` the result of the previous domain function will be returned and it won't be piped.
- * @example
- * import { mdf, branch } from 'domain-functions'
- *
- * const getIdOrEmail = mdf(z.object({ id: z.number().optional(), email: z.string().optional() }))((data) => data.id ?? data.email)
- * const findUserById = mdf(z.number())((id) => db.users.find({ id }))
- * const findUserByEmail = mdf(z.string().email())((email) => db.users.find({ email }))
- * const findUserByIdOrEmail = branch(
- *   getIdOrEmail,
- *   (output) => (typeof output === "number" ? findUserById : findUserByEmail)
- * )
- * //    ^? Composable<(input?: unknown, environment?: unknown) => User>
- *
- * const getStock = mdf(z.any(), z.object({ id: z.number() }))(_, ({ id }) => db.stocks.find({ id }))
- * const getExtraStock = mdf(z.any(), z.object({ id: z.number() }))(_, ({ id }) => db.stockes.find({ id, extra: true }))
- *
- * const getStockOrExtraStock = branch(
- *  getStock,
- *  ({ items }) => (items.length >= 0 ? null : getExtraStock)
- * )
- * //   ^? Composable<(input?: unknown, environment?: unknown) => { items: Item[] }>
+ * Like branch but preserving the environment parameter.
  */
 function branch<
   SourceComposable extends Composable,

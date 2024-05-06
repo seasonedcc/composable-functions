@@ -1,16 +1,28 @@
 import { Internal } from './internal/types.ts'
 
+/**
+ * The failure case of a Result.
+ * It has a list of Errors.
+ */
 type Failure = {
   success: false
   errors: Array<Error>
 }
 
+/**
+ * The success case of a Result.
+ * It has a generic T as the data.
+ * It also has an empty list of errors for convenience.
+ */
 type Success<T = void> = {
   success: true
   data: T
   errors: []
 }
 
+/**
+ * The output of a computation that might fail.
+ */
 type Result<T = void> = Success<T> | Failure
 
 /**
@@ -29,31 +41,53 @@ type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
 ] ? MergeObjs<rest, Internal.Prettify<Omit<output, keyof first> & first>>
   : output
 
+/**
+ * An async function that might fail.
+ */
 type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> = (
   ...args: Parameters<T>
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
+/**
+ * Extract the type of the returned data when a Composable is successful.
+ */
 type UnpackData<T extends Composable> = Extract<
   Awaited<ReturnType<T>>,
   { success: true }
 >['data']
 
+/**
+ * Extracts the types of successful data returned by multiple Composables.
+ */
 type UnpackAll<List extends Composable[]> = {
   [K in keyof List]: UnpackData<List[K]>
 }
 
+/**
+ * A Composable that represents the sequential execution of multiple Composables.
+ * The return type is a tuple with all results on the success data.
+ * This type can resolve to a FailToCompose when the composition won't type-check.
+ */
 type SequenceReturn<Fns extends unknown[]> = Fns extends [
   Composable<(...args: infer P) => any>,
   ...any,
 ] ? Composable<(...args: P) => UnpackAll<Fns>>
   : Fns
 
+/**
+ * A Composable that represents the sequential execution of multiple Composables.
+ * The return type is the success data of the last function in the chain.
+ * This type can resolve to a FailToCompose when the composition won't type-check.
+ */
 type PipeReturn<Fns extends unknown[]> = Fns extends [
   Composable<(...args: infer P) => any>,
   ...any,
 ] ? Composable<(...args: P) => UnpackData<Extract<Last<Fns>, Composable>>>
   : Fns
 
+/**
+ * Determines whether a sequence of Composables can be composed sequentially.
+ */
 type CanComposeInSequence<
   Fns extends any[],
   Arguments extends any[] = [],
@@ -77,6 +111,9 @@ type CanComposeInSequence<
   : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
+/**
+ * Determines whether a sequence of Composables can be composed in parallel.
+ */
 type CanComposeInParallel<
   Fns extends any[],
   OriginalFns extends any[] = Fns,
@@ -91,9 +128,15 @@ type CanComposeInParallel<
   : Internal.ApplyArgumentsToFns<OriginalFns, PA>
   : never
 
+/**
+ * Transforms a record of Composables into a tuple of their return types.
+ */
 type RecordToTuple<T extends Record<string, Composable>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
 
+/**
+ * A serializable error object.
+ */
 type SerializableError<T extends Error = Error> = {
   exception: T
   message: string
@@ -101,12 +144,15 @@ type SerializableError<T extends Error = Error> = {
   path: string[]
 }
 
+/**
+ * The serialized output of a Result.
+ */
 type SerializedResult<T> =
   | Success<T>
   | { success: false; errors: SerializableError[] }
 
 /**
- * The object used to validate either input or environment when creating domain functions.
+ * The object used to validate either input or environment when creating composables with a schema.
  */
 type ParserSchema<T extends unknown = unknown> = {
   safeParseAsync: (a: unknown) => Promise<
@@ -121,9 +167,15 @@ type ParserSchema<T extends unknown = unknown> = {
   >
 }
 
+/**
+ * Returns the last element of a tuple type.
+ */
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L] ? L
   : never
 
+/**
+ * A Composable that branches based on the output of another Composable.
+ */
 type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
