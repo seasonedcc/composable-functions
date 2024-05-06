@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0-experimental-20240426-1",
+  "version": "1.0.0-beta-20240506-1",
   "tasks": {
     "test": "deno test --allow-env --allow-net src",
     "publish": "deno task build-npm && cd npm/ && npm publish",
@@ -27,6 +27,6 @@
     "semiColons": false,
     "singleQuote": true,
     "proseWrap": "preserve",
-    "include": ["src/"],
+    "include": ["src/"]
   }
 }
