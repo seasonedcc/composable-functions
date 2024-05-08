@@ -148,6 +148,17 @@ function map<Fn extends Composable, O>(
   return pipe(fn as Composable, composable(mapper) as Composable)
 }
 
+function mapParameters<
+  Fn extends Composable,
+  NewParameters extends unknown[],
+  const O extends Parameters<Fn>,
+>(
+  fn: Fn,
+  mapper: (...args: NewParameters) => O,
+): Composable<(...args: NewParameters) => ReturnType<Fn>> {
+  return pipe(composable(mapper) as Composable, fn as Composable)
+}
+
 /**
  * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create composables that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
  * @example
