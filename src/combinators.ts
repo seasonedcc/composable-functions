@@ -13,6 +13,7 @@ import type {
 } from './types.ts'
 import { composable, failure, fromSuccess, success } from './constructors.ts'
 import { ErrorList } from './errors.ts'
+import { Internal } from './internal/types.ts'
 
 /**
  * Merges a list of objects into a single object.
@@ -165,7 +166,11 @@ function mapParameters<
 >(
   fn: Fn,
   mapper: (...args: NewParameters) => Promise<O> | O,
-): Composable<(...args: NewParameters) => UnpackData<Fn>> {
+): Composable<
+  (
+    ...args: NewParameters
+  ) => Internal.IsNever<Awaited<O>> extends true ? never : UnpackData<Fn>
+> {
   return async (...args) => {
     const output = await composable(mapper)(...args)
     if (!output.success) return failure(output.errors)
