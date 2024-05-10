@@ -149,7 +149,7 @@ function map<Fn extends Composable, O>(
 }
 
 /**
- * It takes a Composable and a function that will map the input parameters to the expected input of the given Composable. The function must return an array of parameters that will be passed to the Composable.
+ * It takes a Composable and a function that will map the input parameters to the expected input of the given Composable. Good to adequate the output of a composable into the input of the next composable in a composition. The function must return an array of parameters that will be passed to the Composable.
  * @returns a new Composable that will run the given Composable with the mapped parameters.
  * @example
  * import { composable, mapParameters } from 'composable-functions'
@@ -164,9 +164,13 @@ function mapParameters<
   const O extends Parameters<Fn>,
 >(
   fn: Fn,
-  mapper: (...args: NewParameters) => O,
+  mapper: (...args: NewParameters) => Promise<O> | O,
 ): Composable<(...args: NewParameters) => UnpackData<Fn>> {
-  return pipe(composable(mapper) as Composable, fn as Composable)
+  return async (...args) => {
+    const output = await composable(mapper)(...args)
+    if (!output.success) return failure(output.errors)
+    return fn(...output.data)
+  }
 }
 
 /**

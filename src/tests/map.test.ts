@@ -59,7 +59,7 @@ describe('map', () => {
     assertEquals(res.errors[0].message, 'a is 1')
   })
 
-  it('fails when mapper fail', async () => {
+  it('fails when the mapper fails', async () => {
     const fn = map(add, () => {
       throw new Error('Mapper also has problems')
     })
