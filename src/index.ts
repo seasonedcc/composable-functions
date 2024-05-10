@@ -14,6 +14,7 @@ export {
   first,
   map,
   mapError,
+  mapParameters,
   merge,
   mergeObjects,
   pipe,
