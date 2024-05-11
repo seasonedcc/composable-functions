@@ -16,7 +16,7 @@ type CommonEnvironment<
   ]
     ? GetEnv<CParameters> extends [unknown?]
       ? Internal.IsIncompatible<Env, GetEnv<CParameters>> extends true
-        ? Internal.IncompatibleArguments<Env, GetEnv<CParameters>>
+        ? Internal.FailToCompose<Env, GetEnv<CParameters>>
       : CommonEnvironment<
         Extract<RestFns, Composable[]>,
         Extract<Internal.CommonSubType<Env, GetEnv<CParameters>>, [unknown?]>
