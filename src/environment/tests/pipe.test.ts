@@ -9,6 +9,7 @@ import {
   withSchema,
 } from '../../index.ts'
 import type { Composable } from '../../index.ts'
+import { Internal } from '../../internal/types.ts'
 
 describe('pipe', () => {
   it('should compose functions from left-to-right', async () => {
@@ -158,7 +159,7 @@ describe('pipe', () => {
     type _FN = Expect<
       Equal<
         typeof fn,
-        ['Fail to compose', undefined, 'does not fit in', boolean]
+        Internal.FailToCompose<undefined, boolean>
       >
     >
   })
@@ -174,7 +175,7 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, ['Fail to compose', number, 'does not fit in', string]>
+      Equal<typeof fn, Internal.FailToCompose<number, string>>
     >
   })
 

@@ -12,7 +12,11 @@ namespace Internal {
   } ? true
     : false
 
-  export type FailToCompose<A, B> = ['Fail to compose', A, 'does not fit in', B]
+  export type FailToCompose<A, B> = {
+    'Incompatible arguments ': true
+    argument1: A
+    argument2: B
+  }
 
   export type Prettify<T> =
     & {

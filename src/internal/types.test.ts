@@ -202,7 +202,7 @@ namespace EveryElementTakes {
   type WithSomeDefined = Expect<
     Equal<
       Internal.EveryElementTakes<[undefined, 'foo', undefined], undefined>,
-      ['Fail to compose', undefined, 'does not fit in', 'foo']
+      Internal.FailToCompose<undefined, 'foo'>
     >
   >
 }

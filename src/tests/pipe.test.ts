@@ -1,6 +1,7 @@
 import { assertEquals, describe, it } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
 import { composable, pipe, success } from '../index.ts'
+import { Internal } from '../internal/types.ts'
 
 const toString = composable((a: unknown) => `${a}`)
 const add = composable((a: number, b: number) => a + b)
@@ -62,7 +63,7 @@ describe('pipe', () => {
     type _FN = Expect<
       Equal<
         typeof fn,
-        ['Fail to compose', undefined, 'does not fit in', number]
+        Internal.FailToCompose<undefined, number>
       >
     >
   })
@@ -73,7 +74,7 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, ['Fail to compose', never, 'does not fit in', unknown]>
+      Equal<typeof fn, Internal.FailToCompose<never, unknown>>
     >
     type _R = Expect<Equal<typeof res, Result<string>>>
 
