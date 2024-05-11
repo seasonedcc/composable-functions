@@ -92,7 +92,7 @@ function all<Fns extends Composable[]>(...fns: Fns) {
  */
 function collect<Fns extends Record<string, Composable>>(fns: Fns) {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
-    map(cf, (result) => ({ [key]: result })),
+    map(cf, (result) => ({ [key]: result }))
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (
@@ -188,9 +188,11 @@ function merge<Fns extends Composable[]>(
 ): Composable<
   (
     ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
-  ) => MergeObjs<{
-    [key in keyof Fns]: UnpackData<Fns[key]>
-  }>
+  ) => MergeObjs<
+    {
+      [key in keyof Fns]: UnpackData<Fns[key]>
+    }
+  >
 > {
   return map(all(...(fns as never)), mergeObjects)
 }
@@ -244,9 +246,8 @@ function catchError<
   (
     ...args: Parameters<Fn>
   ) => Awaited<ReturnType<C>> extends never[]
-    ? UnpackData<Fn> extends any[]
-      ? UnpackData<Fn>
-      : Awaited<ReturnType<C>> | UnpackData<Fn>
+    ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
+    : Awaited<ReturnType<C>> | UnpackData<Fn>
     : Awaited<ReturnType<C>> | UnpackData<Fn>
 > {
   return async (...args: Parameters<Fn>) => {

@@ -27,7 +27,7 @@ type CommonEnvironment<
 type SequenceReturn<Fns extends Composable[]> = BaseSequenceReturn<
   CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
-  ? CommonEnvironment<Fns> extends { 'Incompatible arguments ': true }
+  ? CommonEnvironment<Fns> extends Internal.IncompatibleArguments
     ? CommonEnvironment<Fns>
   : Composable<
     (...args: SetEnv<Parameters<Fns[0]>, CommonEnvironment<Fns>>) => CReturn
@@ -37,7 +37,7 @@ type SequenceReturn<Fns extends Composable[]> = BaseSequenceReturn<
 type PipeReturn<Fns extends Composable[]> = BasePipeReturn<
   CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
-  ? CommonEnvironment<Fns> extends { 'Incompatible arguments ': true }
+  ? CommonEnvironment<Fns> extends Internal.IncompatibleArguments
     ? CommonEnvironment<Fns>
   : Composable<
     (...args: SetEnv<Parameters<Fns[0]>, CommonEnvironment<Fns>>) => CReturn

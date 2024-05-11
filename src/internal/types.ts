@@ -1,15 +1,12 @@
 // deno-lint-ignore-file no-namespace
 
 namespace Internal {
-  export type IncompatibleArguments<A, B> = {
+  export type IncompatibleArguments = {
     'Incompatible arguments ': true
-    argument1: A
-    argument2: B
   }
 
-  export type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends {
-    'Incompatible arguments ': true
-  } ? true
+  export type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends
+    IncompatibleArguments ? true
     : false
 
   export type FailToCompose<A, B> = {

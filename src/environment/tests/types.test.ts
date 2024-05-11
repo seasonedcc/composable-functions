@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-namespace
 
+import { Internal } from '../../internal/types.ts'
 import { Composable } from '../../types.ts'
 import * as Subject from '../types.ts'
 
@@ -64,11 +65,7 @@ namespace CommonEnvironment {
           Composable<(y: number, env: string) => boolean>,
         ]
       >,
-      {
-        'Incompatible arguments ': true
-        argument1: [number]
-        argument2: [string]
-      }
+      Internal.FailToCompose<[number], [string]>
     >
   >
 
