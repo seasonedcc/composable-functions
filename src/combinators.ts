@@ -17,23 +17,37 @@ import { Internal } from './internal/types.ts'
 
 /**
  * Merges a list of objects into a single object.
+ *
  * It is a type-safe version of Object.assign.
+ *
  * @param objs the list of objects to merge
  * @returns the merged object
+ *
  * @example
+ *
+ * ```ts
  * const obj1 = { a: 1, b: 2 }
  * const obj2 = { c: 3 }
  * const obj3 = { d: 4 }
  * const merged = mergeObjects([obj1, obj2, obj3])
  * //   ^? { a: number, b: number, c: number, d: number }
+ * ```
  */
 function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
   return Object.assign({}, ...objs)
 }
 
 /**
- * Creates a single function out of a chain of multiple Composables. It will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
+ * Composes functions to run in sequence returning the result of the rightmost function when all are successful. 
+ * 
+ * It will pass the output of a function as the next function's input in left-to-right order. 
+ *
+ * @param {Fns} fns the list of composables to run in sequence
+ * @returns a composable that runs the pipe
+ *
  * @example
+ *
+ * ```ts
  * import { composable, pipe } from 'composable-functions'
  *
  * const a = composable(
@@ -44,6 +58,7 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
  * )
  * const d = pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
+ * ```
  */
 function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
   return (async (...args: any[]) => {
@@ -55,15 +70,24 @@ function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 }
 
 /**
- * Creates a single function out of multiple Composables. It will pass the same input to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
+ * Composes functions to run in parallel returning a tuple of all results when all are successful. 
+ *
+ * It will pass the same input to each provided function. The functions will run in parallel. 
+ *
+ * @param {Fns} fns the list of composables to run in parallel
+ * @returns a new composable that runs all inputs
+ *
  * @example
+ *
+ * ```ts
  * import { composable, all } from 'composable-functions'
  *
  * const a = composable((id: number) => id + 1)
  * const b = composable(String)
  * const c = composable(Boolean)
  * const cf = all(a, b, c)
-//       ^? Composable<(id: number) => [string, number, boolean]>
+ * //     ^? Composable<(id: number) => [string, number, boolean]>
+ * ```
  */
 function all<Fns extends Composable[]>(...fns: Fns) {
   return (async (...args) => {
@@ -82,14 +106,18 @@ function all<Fns extends Composable[]>(...fns: Fns) {
 }
 
 /**
- * Receives a Record of Composables, runs them all in parallel and preserves the shape of this record for the data property in successful results.
+ * Composes functions to run in parallel returning a record with same keys as inputs with respective results when all are successful. 
+ *
  * @example
+ *
+ * ```ts
  * import { composable, collect } from 'composable-functions'
  *
  * const a = composable(() => '1')
  * const b = composable(() => 2)
  * const aComposable = collect({ a, b })
-//       ^? Composable<() => { a: string, b: number }>
+ * //       ^? Composable<() => { a: string, b: number }>
+ * ```
  */
 function collect<Fns extends Record<string, Composable>>(fns: Fns) {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
@@ -108,13 +136,17 @@ function collect<Fns extends Record<string, Composable>>(fns: Fns) {
 
 /**
  * Works like `pipe` but it will collect the output of every function in a tuple.
+ *
  * @example
+ *
+ * ```ts
  * import { composable, sequence } from 'composable-functions'
  *
  * const a = composable((aNumber: number) => String(aNumber))
  * const b = composable((aString: string) => aString === '1')
  * const cf = sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
+ * ```
  */
 function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
   return (async (...args) => {
