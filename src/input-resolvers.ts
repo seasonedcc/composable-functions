@@ -16,11 +16,16 @@ type RequestLike = {
 
 /**
  * Parses the given URLSearchParams into an object.
+ *
  * @param queryString the URLSearchParams to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const parsed = inputFromSearch(new URLSearchParams('a=1&b=2'))
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
 function inputFromSearch(queryString: URLSearchParams) {
   const pairs: [string, string][] = []
@@ -99,14 +104,19 @@ function inputFromSearch(queryString: URLSearchParams) {
 
 /**
  * Parses the given FormData into an object.
+ *
  * @param formData the FormData to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const formData = new FormData()
  * formData.append('a', '1')
  * formData.append('b', '2')
  * const parsed = inputFromFormData(formData)
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
 function inputFromFormData(formData: FormDataLike) {
   return inputFromSearch(new URLSearchParams(formData as URLSearchParams))
@@ -114,9 +124,13 @@ function inputFromFormData(formData: FormDataLike) {
 
 /**
  * Parses the given Request's formData into an object.
+ *
  * @param request the Request to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const formData = new FormData()
  * formData.append('a', '1')
  * formData.append('b', '2')
@@ -126,6 +140,7 @@ function inputFromFormData(formData: FormDataLike) {
  * })
  * const parsed = await inputFromForm(request)
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
 async function inputFromForm(request: RequestLike) {
   return inputFromFormData(await request.clone().formData())
@@ -133,12 +148,17 @@ async function inputFromForm(request: RequestLike) {
 
 /**
  * Parses the given Request URL's queryString into an object.
+ *
  * @param request the Request to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const request = new Request('https://example.com?a=1&b=2')
  * const parsed = inputFromUrl(request)
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
 function inputFromUrl(request: RequestLike) {
   return inputFromSearch(new URL(request.url).searchParams)
