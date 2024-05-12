@@ -1,11 +1,15 @@
 /**
  * A custom error class for input errors.
+ *
  * @example
  * const aComposable = withSchema()(() => {
  *   throw new InputError('Invalid input', 'user.name')
  * })
  */
 class InputError extends Error {
+  /**
+   * Path of input attribute that originated the error.
+   */
   path: string[]
 
   constructor(message: string, path: string[] = []) {
@@ -17,12 +21,16 @@ class InputError extends Error {
 
 /**
  * A custom error class for environment errors.
+ *
  * @example
  * const aComposable = withSchema()(() => {
  *  throw new EnvironmentError('Invalid environment', 'user.name')
  * })
  */
 class EnvironmentError extends Error {
+  /**
+   * Path of environment attribute that originated the error.
+   */
   path: string[]
 
   constructor(message: string, path: string[] = []) {
@@ -32,7 +40,15 @@ class EnvironmentError extends Error {
   }
 }
 
+/**
+ * A list of errors
+ *
+ * Useful to propagate error from mutiple composables in parallel execution
+ */
 class ErrorList extends Error {
+  /**
+   * The list of errors
+   */
   list: Error[]
 
   constructor(errors: Error[]) {
