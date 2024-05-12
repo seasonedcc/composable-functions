@@ -376,7 +376,7 @@ function branch<
   Resolver extends (
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
->(cf: SourceComposable, resolver: Resolver) {
+>(cf: SourceComposable, resolver: Resolver): BranchReturn<SourceComposable, Resolver> {
   return (async (...args: Parameters<SourceComposable>) => {
     const result = await cf(...args)
     if (!result.success) return result
