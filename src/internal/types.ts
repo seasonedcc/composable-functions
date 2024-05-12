@@ -9,8 +9,7 @@ namespace Internal {
     IncompatibleArguments ? true
     : false
 
-  export type FailToCompose<A, B> = {
-    'Incompatible arguments ': true
+  export type FailToCompose<A, B> = IncompatibleArguments & {
     argument1: A
     argument2: B
   }
