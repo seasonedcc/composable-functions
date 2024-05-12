@@ -350,6 +350,27 @@ function trace(
     }) as Fn
 }
 
+/**
+ * Compose 2 functions conditionally.
+ *
+ * Uses a resolver to decide whether it should just call the first function or pipe its result into a second function returned by the resolver.
+ * 
+ * @param cf first composable to be called
+ * @param resolver when it returns null aborts the composition or else returns the next composable in the chain.
+ * @returns a new composable with the conditional pipe.
+ *
+ * @example
+ *
+ * ```ts
+ * import { composable, branch } from 'composable-functions'
+ *
+ * const increment = composable(
+ *   (a: number) => a + 1
+ * )
+ * const makeItEven = (sum: number) => sum % 2 != 0 ? increment : null
+ * const incrementUntilEven = branch(increment, makeItEven)
+ * ```
+ */
 function branch<
   SourceComposable extends Composable,
   Resolver extends (
