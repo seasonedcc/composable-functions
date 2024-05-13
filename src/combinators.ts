@@ -167,12 +167,16 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 
 /**
  * It takes a Composable and a predicate to apply a transformation over the resulting `data`. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
+ *
  * @example
+ *
+ * ```ts
  * import { composable, map } from 'composable-functions'
  *
  * const increment = composable(({ id }: { id: number }) => id + 1)
  * const incrementToString = map(increment, String)
  * //    ^? Composable<({ id }: { id: number }) => string>
+ * ```
  */
 function map<Fn extends Composable, O>(
   fn: Fn,
@@ -184,12 +188,16 @@ function map<Fn extends Composable, O>(
 /**
  * It takes a Composable and a function that will map the input parameters to the expected input of the given Composable. Good to adequate the output of a composable into the input of the next composable in a composition. The function must return an array of parameters that will be passed to the Composable.
  * @returns a new Composable that will run the given Composable with the mapped parameters.
+ *
  * @example
+ *
+ * ```ts
  * import { composable, mapParameters } from 'composable-functions'
  *
  * const incrementId = composable(({ id }: { id: number }) => id + 1)
  * const increment = mapParameters(incrementId, (id: number) => [{ id }])
  * //    ^? Composable<(id: number) => number>
+ * ```
  */
 function mapParameters<
   Fn extends Composable,
@@ -212,13 +220,17 @@ function mapParameters<
 
 /**
  * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create composables that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
+ *
  * @example
+ *
+ * ```ts
  * import { withSchema, merge } from 'composable-functions'
  *
  * const a = withSchema(z.object({}))(() => ({ a: 'a' }))
  * const b = withSchema(z.object({}))(() => ({ b: 2 }))
  * const aComposable = merge(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { a: string, b: number }>
+ * ```
  */
 function merge<Fns extends Composable[]>(
   ...fns: Fns
@@ -236,13 +248,17 @@ function merge<Fns extends Composable[]>(
 
 /**
  * Creates a composable that will return the result of the first successful constituent. **It is important to notice** that all constituent functions will be executed in parallel, so be mindful of the side effects.
+ *
  * @example
+ *
+ * ```ts
  * import { withSchema, first } from 'composable-functions'
  *
  * const a = withSchema(z.object({ n: z.number() }))(({ n }) => n + 1)
-const b = withSchema(z.object({ n: z.number() }))(({ n }) => String(n))
-const aComposable = first(a, b)
-//    ^? Composable<(input?: unknown, environment?: unknown) => string | number>
+ * const b = withSchema(z.object({ n: z.number() }))(({ n }) => String(n))
+ * const aComposable = first(a, b)
+ * //    ^? Composable<(input?: unknown, environment?: unknown) => string | number>
+ * ```
  */
 function first<Fns extends Composable[]>(...fns: Fns) {
   return ((...args) => {
@@ -264,14 +280,18 @@ function first<Fns extends Composable[]>(...fns: Fns) {
 }
 
 /**
- * Creates a new function that will try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
+ * Try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
+ *
  * @example
+ *
+ * ```ts
  * import { composable, catchError } from 'composable-functions'
  *
  * const increment = composable(({ id }: { id: number }) => id + 1)
  * const negativeOnError = catchError(increment, (result, originalInput) => (
  *  originalInput.id * -1
  * ))
+ * ```
  */
 function catchError<
   Fn extends Composable,
@@ -296,13 +316,17 @@ function catchError<
 
 /**
  * Creates a new function that will apply a transformation over a resulting Failure from the given function. When the given function succeeds, its result is returned without changes.
+ *
  * @example
+ *
+ * ```ts
  * import { composable, mapError } from 'composable-functions'
  *
  * const increment = composable(({ id }: { id: number }) => id + 1)
  * const incrementWithErrorSummary = mapError(increment, (result) => ({
  *   errors: [{ message: 'Errors count: ' + result.errors.length }],
  * }))
+ * ```
  */
 function mapError<Fn extends Composable>(
   fn: Fn,
@@ -324,7 +348,10 @@ function mapError<Fn extends Composable>(
  * Whenever you need to intercept inputs and a composable result without changing them you can use this function.
  * The most common use case is to log failures to the console or to an external service.
  * @param traceFn A function that receives the input and result of a composable.
+ *
  * @example
+ *
+ * ```ts
  * import { withSchema, trace } from 'composable-functions'
  *
  * const trackErrors = trace(({ input, output, result }) => {
@@ -333,6 +360,7 @@ function mapError<Fn extends Composable>(
  * const increment = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
  * const incrementAndTrackErrors = trackErrors(increment)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => number>
+ * ```
  */
 function trace(
   traceFn: (
