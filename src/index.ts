@@ -15,7 +15,6 @@ export {
   map,
   mapError,
   mapParameters,
-  merge,
   mergeObjects,
   pipe,
   sequence,
@@ -32,7 +31,7 @@ export { EnvironmentError, ErrorList, InputError } from './errors.ts'
 export type {
   Composable,
   Failure,
-  MergeObjs,
+  MergeObjects,
   ParserSchema,
   Result,
   SerializableError,
