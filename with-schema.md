@@ -6,26 +6,44 @@ It does this by enforcing the parameters' types at runtime (through [Zod](https:
 ![](example.gif)
 
 ## Table of contents
-- [Keep your business logic clean with Domain Functions](#keep-your-business-logic-clean-with-domain-functions)
-  - [Table of contents](#table-of-contents)
-  - [Benefits](#benefits)
-  - [Quickstart](#quickstart)
-  - [Using Deno](#using-deno)
-  - [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
-  - [Dealing with errors](#dealing-with-errors)
-    - [Changing the ErrorResult with Custom Errors](#changing-the-errorresult-with-custom-errors)
-    - [ResultError constructor](#resulterror-constructor)
-    - [Other error constructors](#other-error-constructors)
-    - [Tracing](#tracing)
-  - [Combining domain functions](#combining-domain-functions)
-    - [all](#all)
-    - [collect](#collect)
-    - [merge](#merge)
-    - [pipe](#pipe)
-    - [sequence](#sequence)
-    - [branch](#branch)
-    - [map](#map)
-    - [mapError](#maperror)
+
+- [Benefits](#benefits)
+- [Quickstart](#quickstart)
+- [Using Deno](#using-deno)
+- [Taking parameters that are not user input](#taking-parameters-that-are-not-user-input)
+- [Dealing with errors](#dealing-with-errors)
+  - [Changing the ErrorResult with Custom Errors](#changing-the-errorresult-with-custom-errors)
+  - [ResultError constructor](#resulterror-constructor)
+  - [Other error constructors](#other-error-constructors)
+  - [Using error messages in the UI](#using-error-messages-in-the-ui)
+    - [errorMessagesFor](#errormessagesfor)
+  - [Tracing](#tracing)
+- [Combining domain functions](#combining-composable-functions)
+  - [all](#all)
+  - [collect](#collect)
+  - [merge](#merge)
+  - [first](#first)
+  - [pipe](#pipe)
+  - [branch](#branch)
+  - [sequence](#sequence)
+  - [collectSequence](#collectsequence)
+  - [map](#map)
+  - [mapError](#maperror)
+- [Runtime utilities](#runtime-utilities)
+  - [fromSuccess](#fromsuccess)
+  - [mergeObjects](#mergeobjects)
+- [Improve type inference with Utility Types](#improve-type-inference-with-utility-types)
+  - [UnpackData](#unpackdata)
+  - [UnpackSuccess](#unpacksuccess)
+  - [UnpackResult](#unpackresult)
+- [Extracting input values for domain functions](#extracting-input-values-for-composable-functions)
+  - [inputFromForm](#inputfromform)
+  - [inputFromFormData](#inputfromformdata)
+  - [inputFromUrl](#inputfromurl)
+  - [inputFromSearch](#inputfromsearch)
+- [Resources](#resources)
+- [FAQ](#faq)
+- [Acknowlegements](#acknowlegements)
 
 ## Benefits
 
@@ -194,6 +212,26 @@ failedResult = {
 
 You can also return a custom environment error by throwing an `EnvironmentError`.
 
+### Using error messages in the UI
+
+To improve DX when dealing with errors, we export a couple of utilities.
+
+#### errorMessagesFor
+
+Given an array of `SchemaError` -- be it from `inputErrors` or `environmentErrors` -- and a name, `errorMessagesFor` returns an array of error messages with that name in their path.
+
+```tsx
+const result = {
+  success: false,
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [{ message: 'Must not be empty', path: ['host'] }, { message: 'Must be a fully qualified domain', path: ['host'] }]
+}
+
+errorMessagesFor(result.inputErrors, 'email') // will be an empty array: []
+errorMessagesFor(result.environmentErrors, 'host')[0] === 'Must not be empty'
+```
+
 ### Tracing
 
 Whenever you need to intercept inputs and a domain function result without changing them, there is a function called `trace` that can help you.
@@ -342,6 +380,77 @@ For the example above, the result will be:
   inputErrors: [],
   environmentErrors: [],
 }
+```
+
+### first
+
+`first` will create a composite domain function that will return the result of the first successful constituent domain function. It handles inputs and environments like the `all` function.
+__It is important to notice__ that all constituent domain functions will be executed in parallel, so be mindful of the side effects.
+
+```ts
+const a = withSchema(
+  z.object({ n: z.number(), operation: z.literal('increment') }),
+)(({ n }) => n + 1)
+const b = withSchema(
+  z.object({ n: z.number(), operation: z.literal('decrement') }),
+)(({ n }) => n - 1)
+
+const result = await first(a, b)({ n: 1, operation: 'increment' })
+//    ^? Result<number>
+```
+
+For the example above, the result will be:
+
+```ts
+{
+  success: true,
+  data: 2,
+  errors: [],
+  inputErrors: [],
+  environmentErrors: [],
+}
+```
+
+The composite domain function's result type will be a union of each constituent domain function's result type.
+
+```ts
+const a = withSchema(z.object({ operation: z.literal('A') }))(() => ({
+  resultA: 'A',
+}))
+const b = withSchema(z.object({ operation: z.literal('B') }))(() => ({
+  resultB: 'B',
+}))
+
+const result = await first(a, b)({ operation: 'A' })
+//    ^? Result<{ resultA: string } | { resultB: string }>
+
+if (!result.success) return console.log('No function was successful')
+if ('resultA' in result.data) return console.log('function A succeeded')
+return console.log('function B succeeded')
+```
+
+If every constituent domain function fails, the `errors` field will contain the concatenated errors from each failing function's result:
+
+```ts
+const a = withSchema(z.object({ id: z.number() }))(() => {
+  throw new Error('Error A')
+})
+const b = withSchema(z.object({ id: z.number() }))(() => {
+  throw new Error('Error B')
+})
+
+const result = await first(a, b)({ id: 1 })
+//    ^? Result<never>
+
+/*{
+  success: false,
+  errors: [
+    { message: 'Error A', exception: instanceOfErrorA },
+    { message: 'Error B', exception: instanceOfErrorB }
+  ],
+  inputErrors: [],
+  environmentErrors: [],
+}*/
 ```
 
 ### pipe
@@ -574,3 +683,116 @@ For the example above, the `result` will be:
   environmentErrors: [{ message: 'Number of environment errors: 0' }],
 }
 ```
+
+## Extracting input values for composables with schema
+
+We export some functions to help you extract values out of your requests before sending them as user input.
+
+These functions are better suited for use with `withSchema` rather than `composable` since they deal with external data and `withSchema` will ensure type-safety in runtime.
+
+### inputFromForm
+
+`inputFromForm` will read a request's `FormData` and extract its values into a structured object:
+
+```tsx
+// Given the following form:
+function Form() {
+  return (
+    <form method="post">
+      <input name="email" value="john@doe.com" />
+      <input name="password" value="1234" />
+      <button type="submit">
+        Submit
+      </button>
+    </form>
+  )
+}
+
+async (request: Request) => {
+  const values = await inputFromForm(request)
+  // values = { email: 'john@doe.com', password: '1234' }
+}
+```
+
+### inputFromFormData
+
+`inputFromFormData` extracts values from a `FormData` object into a structured object:
+
+```tsx
+const formData = new FormData()
+formData.append('email', 'john@doe.com')
+formData.append('tasks[]', 'one')
+formData.append('tasks[]', 'two')
+const values = inputFromFormData(formData)
+// values = { email: 'john@doe.com', tasks: ['one', 'two'] }
+```
+
+### inputFromUrl
+
+`inputFromUrl` will read a request's query params and extract its values into a structured object:
+
+```tsx
+// Given the following form:
+function Form() {
+  return (
+    <form method="get">
+      <button name="page" value="2">
+        Change URL
+      </button>
+    </form>
+  )
+}
+
+async (request: Request) => {
+  const values = inputFromUrl(request)
+  // values = { page: '2' }
+}
+```
+### inputFromSearch
+
+`inputFromSearch` extracts values from a `URLSearchParams` object into a structured object:
+
+```tsx
+const qs = new URLSearchParams()
+qs.append('colors[]', 'red')
+qs.append('colors[]', 'green')
+qs.append('colors[]', 'blue')
+const values = inputFromSearch(qs)
+// values = { colors: ['red', 'green', 'blue'] }
+```
+
+All of the functions above will allow structured data as follows:
+
+```tsx
+// Given the following form:
+function Form() {
+  return (
+    <form method="post">
+      <input name="numbers[]" value="1" />
+      <input name="numbers[]" value="2" />
+      <input name="person[0][email]" value="john@doe.com" />
+      <input name="person[0][password]" value="1234" />
+      <button type="submit">
+        Submit
+      </button>
+    </form>
+  )
+}
+
+async (request: Request) => {
+  const values = await inputFromForm(request)
+  /*
+  values = {
+    numbers: ['1', '2'],
+    person: [{ email: 'john@doe.com', password: '1234' }]
+  }
+  */
+}
+```
+
+To better understand how to structure your data, refer to [this test file](./src/input-resolvers.test.ts)
+
+## FAQ
+
+- I want to use composable-functions in a project that does not have Zod, how can I use other schema validation libraries?
+  - We created an example in the example folder showing how to construct your own `withSchema` functions based on other parsers.
