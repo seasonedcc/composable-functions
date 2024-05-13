@@ -1,18 +1,18 @@
 // deno-lint-ignore-file no-namespace
 
 namespace Internal {
-  export type IncompatibleArguments<A, B> = {
+  export type IncompatibleArguments = {
     'Incompatible arguments ': true
+  }
+
+  export type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends
+    IncompatibleArguments ? true
+    : false
+
+  export type FailToCompose<A, B> = IncompatibleArguments & {
     argument1: A
     argument2: B
   }
-
-  export type IsIncompatible<A, B> = Internal.CommonSubType<A, B> extends {
-    'Incompatible arguments ': true
-  } ? true
-    : false
-
-  export type FailToCompose<A, B> = ['Fail to compose', A, 'does not fit in', B]
 
   export type Prettify<T> =
     & {
@@ -92,13 +92,13 @@ namespace Internal {
     : TupleA extends [infer headA, ...infer restA]
       ? TupleB extends [infer headB, ...infer restB]
         ? IsIncompatible<headA, headB> extends true
-          ? IncompatibleArguments<headA, headB>
+          ? FailToCompose<headA, headB>
         : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
         // TupleB is partial
         // We should handle partial case before recursion
       : TupleB extends Partial<[infer headPartial, ...infer restPartial]>
         ? IsIncompatible<headA, headPartial> extends true
-          ? IncompatibleArguments<headA, headPartial>
+          ? FailToCompose<headA, headPartial>
         : SubtypesTuple<
           restA,
           Partial<restPartial>,
@@ -110,7 +110,7 @@ namespace Internal {
     // We should handle partial case before recursion
       ? TupleA extends Partial<[infer headPartial, ...infer restPartial]>
         ? IsIncompatible<headBNoA, headPartial> extends true
-          ? IncompatibleArguments<headBNoA, headPartial>
+          ? FailToCompose<headBNoA, headPartial>
         : SubtypesTuple<
           restB,
           Partial<restPartial>,
@@ -145,8 +145,8 @@ namespace Internal {
     : B extends { 'Incompatible arguments ': true } ? B
     : A extends Record<PropertyKey, unknown>
       ? B extends Record<PropertyKey, unknown> ? Prettify<A & B>
-      : IncompatibleArguments<A, B>
-    : IncompatibleArguments<A, B>
+      : FailToCompose<A, B>
+    : FailToCompose<A, B>
 }
 
 export type { Internal }

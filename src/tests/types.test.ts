@@ -2,6 +2,7 @@
 import { withSchema } from '../index.ts'
 import { assertEquals, describe, it } from './prelude.ts'
 import * as Subject from '../types.ts'
+import { Internal } from '../internal/types.ts'
 
 namespace MergeObjs {
   const obj1 = { a: 1, b: 2 } as const
@@ -97,7 +98,7 @@ namespace CanComposeInSequence {
           Subject.Composable<(y: number, willBeUndefined: string) => boolean>,
         ]
       >,
-      ['Fail to compose', undefined, 'does not fit in', string]
+      Internal.FailToCompose<undefined, string>
     >
   >
   type testFailureToCompose = Expect<
@@ -108,7 +109,7 @@ namespace CanComposeInSequence {
           Subject.Composable<(y: number) => boolean>,
         ]
       >,
-      ['Fail to compose', void, 'does not fit in', number]
+      Internal.FailToCompose<void, number>
     >
   >
   type testFailureToComposeOnThirdElement = Expect<
@@ -120,7 +121,7 @@ namespace CanComposeInSequence {
           Subject.Composable<(z: boolean) => void>,
         ]
       >,
-      ['Fail to compose', string, 'does not fit in', boolean]
+      Internal.FailToCompose<string, boolean>
     >
   >
 }
@@ -243,12 +244,7 @@ namespace CanComposeInParallel {
           Subject.Composable<(x: 'foo', y: number) => void>,
         ]
       >,
-      [
-        'Fail to compose',
-        [x: string, y: string],
-        'does not fit in',
-        [x: 'foo', y: number],
-      ]
+      Internal.FailToCompose<[x: string, y: string], [x: 'foo', y: number]>
     >
   >
 }
@@ -266,7 +262,7 @@ namespace BranchReturn {
         Subject.Composable<() => number>,
         (i: string) => null
       >,
-      ['Fail to compose', number, 'does not fit in', string]
+      Internal.FailToCompose<number, string>
     >
   >
   type resolverWithParamsThatCompose = Expect<
@@ -294,7 +290,7 @@ namespace BranchReturn {
         Subject.Composable<() => number>,
         (i: number) => Subject.Composable<(i: string) => number>
       >,
-      ['Fail to compose', number, 'does not fit in', string]
+      Internal.FailToCompose<number, string>
     >
   >
 
@@ -308,7 +304,7 @@ namespace BranchReturn {
           | Subject.Composable<(i: string) => number>
           | Subject.Composable<(i: number) => boolean>
       >,
-      ['Fail to compose', number, 'does not fit in', never]
+      Internal.FailToCompose<number, never>
     >
   >
 
@@ -382,7 +378,7 @@ namespace UnpackData {
     Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>
   >
 
-  const result = withSchema()(() => ({ name: 'foo' } as const))
+  const result = withSchema()(() => ({ name: 'foo' }) as const)
 
   type test = Expect<
     Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>

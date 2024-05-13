@@ -30,7 +30,7 @@ namespace CommonSubType {
   type WithNoCompatibility = Expect<
     Equal<
       Internal.CommonSubType<number, string>,
-      { 'Incompatible arguments ': true; argument1: number; argument2: string }
+      Internal.FailToCompose<number, string>
     >
   >
 
@@ -100,11 +100,7 @@ namespace SubtypesTuple {
         Parameters<(a: number, b: string) => void>,
         []
       >,
-      {
-        'Incompatible arguments ': true
-        argument1: string
-        argument2: number
-      }
+      Internal.FailToCompose<string, number>
     >
   >
 
@@ -202,7 +198,7 @@ namespace EveryElementTakes {
   type WithSomeDefined = Expect<
     Equal<
       Internal.EveryElementTakes<[undefined, 'foo', undefined], undefined>,
-      ['Fail to compose', undefined, 'does not fit in', 'foo']
+      Internal.FailToCompose<undefined, 'foo'>
     >
   >
 }
