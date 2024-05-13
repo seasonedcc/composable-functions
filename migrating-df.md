@@ -20,7 +20,6 @@ It does this by enforcing the parameters' types at runtime (through [Zod](https:
   - [Combining domain functions](#combining-domain-functions)
     - [all](#all)
     - [collect](#collect)
-    - [merge](#merge)
     - [pipe](#pipe)
     - [sequence](#sequence)
     - [branch](#branch)
@@ -308,42 +307,6 @@ For the example above, the result will be:
 
 As with the `all` function, in case any function fails their errors will be concatenated.
 
-### merge
-
-`merge` works exactly like the `all` function, except __the shape of the result__ is different.
-Instead of returning a tuple, it will return a merged object which is equivalent to:
-```ts
-map(all(a, b, c), mergeObjects)
-```
-
-**NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create domain functions that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
-
-The resulting data of every domain function will be merged into one object. __This could potentially lead to values of the leftmost functions being overwritten by the rightmost ones__.
-
-```ts
-const a = withSchema(z.object({}))(() => ({
-  resultA: 'string',
-  resultB: 'string',
-  resultC: 'string',
-}))
-const b = withSchema(z.object({}))(() => ({ resultB: 2 }))
-const c = withSchema(z.object({}))(async () => ({ resultC: true }))
-
-const results = await merge(a, b, c)({})
-//    ^? Result<{ resultA: string, resultB: number, resultC: boolean }>
-```
-
-For the example above, the result will be:
-```ts
-{
-  success: true,
-  data: { resultA: 'string', resultB: 2, resultC: true },
-  errors: [],
-  inputErrors: [],
-  environmentErrors: [],
-}
-```
-
 ### pipe
 
 `pipe` creates a single domain function out of a chain of multiple domain functions.
@@ -414,7 +377,7 @@ For the example above, the result will be:
 }
 ```
 
-If you'd rather have an object instead of a tuple (similar to the `merge` function), you can use the `map` and `mergeObjects` functions like so:
+If you'd rather have an object instead of a tuple, you can use the `map` and `mergeObjects` functions like so:
 
 ```ts
 import { mergeObjects } from 'composable-functions'

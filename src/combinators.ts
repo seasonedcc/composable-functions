@@ -38,9 +38,9 @@ function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
 }
 
 /**
- * Composes functions to run in sequence returning the result of the rightmost function when all are successful. 
- * 
- * It will pass the output of a function as the next function's input in left-to-right order. 
+ * Composes functions to run in sequence returning the result of the rightmost function when all are successful.
+ *
+ * It will pass the output of a function as the next function's input in left-to-right order.
  *
  * @param {Fns} fns the list of composables to run in sequence
  * @returns a composable that runs the pipe
@@ -70,9 +70,9 @@ function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 }
 
 /**
- * Composes functions to run in parallel returning a tuple of all results when all are successful. 
+ * Composes functions to run in parallel returning a tuple of all results when all are successful.
  *
- * It will pass the same input to each provided function. The functions will run in parallel. 
+ * It will pass the same input to each provided function. The functions will run in parallel.
  *
  * @param {Fns} fns the list of composables to run in parallel
  * @returns a new composable that runs all inputs
@@ -106,7 +106,7 @@ function all<Fns extends Composable[]>(...fns: Fns) {
 }
 
 /**
- * Composes functions to run in parallel returning a record with same keys as inputs with respective results when all are successful. 
+ * Composes functions to run in parallel returning a record with same keys as inputs with respective results when all are successful.
  *
  * @example
  *
@@ -121,7 +121,7 @@ function all<Fns extends Composable[]>(...fns: Fns) {
  */
 function collect<Fns extends Record<string, Composable>>(fns: Fns) {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
-    map(cf, (result) => ({ [key]: result }))
+    map(cf, (result) => ({ [key]: result })),
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (
@@ -219,34 +219,6 @@ function mapParameters<
 }
 
 /**
- * **NOTE :** Try to use [collect](collect) instead wherever possible since it is much safer. `merge` can create composables that will always fail in run-time or even overwrite data from successful constituent functions application. The `collect` function does not have these issues and serves a similar purpose.
- *
- * @example
- *
- * ```ts
- * import { withSchema, merge } from 'composable-functions'
- *
- * const a = withSchema(z.object({}))(() => ({ a: 'a' }))
- * const b = withSchema(z.object({}))(() => ({ b: 2 }))
- * const aComposable = merge(a, b)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => { a: string, b: number }>
- * ```
- */
-function merge<Fns extends Composable[]>(
-  ...fns: Fns
-): Composable<
-  (
-    ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
-  ) => MergeObjs<
-    {
-      [key in keyof Fns]: UnpackData<Fns[key]>
-    }
-  >
-> {
-  return map(all(...(fns as never)), mergeObjects)
-}
-
-/**
  * Creates a composable that will return the result of the first successful constituent. **It is important to notice** that all constituent functions will be executed in parallel, so be mindful of the side effects.
  *
  * @example
@@ -303,8 +275,9 @@ function catchError<
   (
     ...args: Parameters<Fn>
   ) => Awaited<ReturnType<C>> extends never[]
-    ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
-    : Awaited<ReturnType<C>> | UnpackData<Fn>
+    ? UnpackData<Fn> extends any[]
+      ? UnpackData<Fn>
+      : Awaited<ReturnType<C>> | UnpackData<Fn>
     : Awaited<ReturnType<C>> | UnpackData<Fn>
 > {
   return async (...args: Parameters<Fn>) => {
@@ -382,7 +355,7 @@ function trace(
  * Compose 2 functions conditionally.
  *
  * Uses a resolver to decide whether it should just call the first function or pipe its result into a second function returned by the resolver.
- * 
+ *
  * @param cf first composable to be called
  * @param resolver when it returns null aborts the composition or else returns the next composable in the chain.
  * @returns a new composable with the conditional pipe.
@@ -404,7 +377,10 @@ function branch<
   Resolver extends (
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
->(cf: SourceComposable, resolver: Resolver): BranchReturn<SourceComposable, Resolver> {
+>(
+  cf: SourceComposable,
+  resolver: Resolver,
+): BranchReturn<SourceComposable, Resolver> {
   return (async (...args: Parameters<SourceComposable>) => {
     const result = await cf(...args)
     if (!result.success) return result
@@ -426,7 +402,6 @@ export {
   map,
   mapError,
   mapParameters,
-  merge,
   mergeObjects,
   pipe,
   sequence,
