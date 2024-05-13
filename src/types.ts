@@ -32,13 +32,14 @@ type Result<T = void> = Success<T> | Failure
  *   { a: string },
  *   { b: number },
  * ]
- * type MyData = MergeObjs<MyObjs>
+ * type MyData = MergeObjects<MyObjs>
  * //   ^? { a: string, b: number }
  */
-type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
+type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
   infer first,
   ...infer rest,
-] ? MergeObjs<rest, Internal.Prettify<Omit<output, keyof first> & first>>
+]
+  ? MergeObjects<rest, Internal.Prettify<Omit<output, keyof first> & first>>
   : output
 
 /**
@@ -71,7 +72,8 @@ type UnpackAll<List extends Composable[]> = {
 type SequenceReturn<Fns extends unknown[]> = Fns extends [
   Composable<(...args: infer P) => any>,
   ...any,
-] ? Composable<(...args: P) => UnpackAll<Fns>>
+]
+  ? Composable<(...args: P) => UnpackAll<Fns>>
   : Fns
 
 /**
@@ -82,7 +84,8 @@ type SequenceReturn<Fns extends unknown[]> = Fns extends [
 type PipeReturn<Fns extends unknown[]> = Fns extends [
   Composable<(...args: infer P) => any>,
   ...any,
-] ? Composable<(...args: P) => UnpackData<Extract<Last<Fns>, Composable>>>
+]
+  ? Composable<(...args: P) => UnpackData<Extract<Last<Fns>, Composable>>>
   : Fns
 
 /**
@@ -93,22 +96,22 @@ type CanComposeInSequence<
   Arguments extends any[] = [],
 > = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
   ? restA extends [
-    Composable<
-      (firstParameter: infer FirstBParameter, ...b: infer PB) => any
-    >,
-    ...unknown[],
-  ]
+      Composable<
+        (firstParameter: infer FirstBParameter, ...b: infer PB) => any
+      >,
+      ...unknown[],
+    ]
     ? Internal.IsNever<Awaited<OA>> extends true
       ? Internal.FailToCompose<never, FirstBParameter>
-    : Awaited<OA> extends FirstBParameter
+      : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
         ? CanComposeInSequence<
-          restA,
-          [...Arguments, Composable<(...a: PA) => OA>]
-        >
-      : Internal.EveryElementTakes<PB, undefined>
-    : Internal.FailToCompose<Awaited<OA>, FirstBParameter>
-  : [...Arguments, Composable<(...a: PA) => OA>]
+            restA,
+            [...Arguments, Composable<(...a: PA) => OA>]
+          >
+        : Internal.EveryElementTakes<PB, undefined>
+      : Internal.FailToCompose<Awaited<OA>, FirstBParameter>
+    : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
 /**
@@ -121,11 +124,11 @@ type CanComposeInParallel<
   ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
     ? Internal.SubtypesTuple<PA, PB> extends [...infer MergedP]
       ? CanComposeInParallel<
-        [Composable<(...args: MergedP) => OB>, ...restB],
-        OriginalFns
-      >
-    : Internal.FailToCompose<PA, PB>
-  : Internal.ApplyArgumentsToFns<OriginalFns, PA>
+          [Composable<(...args: MergedP) => OB>, ...restB],
+          OriginalFns
+        >
+      : Internal.FailToCompose<PA, PB>
+    : Internal.ApplyArgumentsToFns<OriginalFns, PA>
   : never
 
 /**
@@ -157,20 +160,21 @@ type SerializedResult<T> =
 type ParserSchema<T extends unknown = unknown> = {
   safeParseAsync: (a: unknown) => Promise<
     | {
-      success: true
-      data: T
-    }
+        success: true
+        data: T
+      }
     | {
-      success: false
-      error: { issues: { path: PropertyKey[]; message: string }[] }
-    }
+        success: false
+        error: { issues: { path: PropertyKey[]; message: string }[] }
+      }
   >
 }
 
 /**
  * Returns the last element of a tuple type.
  */
-type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L] ? L
+type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L]
+  ? L
   : never
 
 /**
@@ -184,22 +188,25 @@ type BranchReturn<
 > = CanComposeInSequence<
   [SourceComposable, Composable<Resolver>]
 > extends Composable[]
-  ? Awaited<ReturnType<Resolver>> extends null ? SourceComposable
-  : CanComposeInSequence<
-    [SourceComposable, Awaited<ReturnType<Resolver>>]
-  > extends [Composable, ...any] ? Composable<
-      (
-        ...args: Parameters<
-          CanComposeInSequence<
-            [SourceComposable, Awaited<ReturnType<Resolver>>]
-          >[0]
-        >
-      ) => null extends Awaited<ReturnType<Resolver>> ?
-          | UnpackData<SourceComposable>
-          | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
-        : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
-    >
-  : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
+  ? Awaited<ReturnType<Resolver>> extends null
+    ? SourceComposable
+    : CanComposeInSequence<
+        [SourceComposable, Awaited<ReturnType<Resolver>>]
+      > extends [Composable, ...any]
+    ? Composable<
+        (
+          ...args: Parameters<
+            CanComposeInSequence<
+              [SourceComposable, Awaited<ReturnType<Resolver>>]
+            >[0]
+          >
+        ) => null extends Awaited<ReturnType<Resolver>>
+          ?
+              | UnpackData<SourceComposable>
+              | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+          : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+      >
+    : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
   : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>
 
 export type {
@@ -209,7 +216,7 @@ export type {
   Composable,
   Failure,
   Last,
-  MergeObjs,
+  MergeObjects,
   ParserSchema,
   PipeReturn,
   RecordToTuple,

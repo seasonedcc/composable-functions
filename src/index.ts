@@ -31,7 +31,7 @@ export { EnvironmentError, ErrorList, InputError } from './errors.ts'
 export type {
   Composable,
   Failure,
-  MergeObjs,
+  MergeObjects,
   ParserSchema,
   Result,
   SerializableError,

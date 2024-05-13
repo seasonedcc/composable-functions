@@ -3,7 +3,7 @@ import type {
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
-  MergeObjs,
+  MergeObjects,
   PipeReturn,
   RecordToTuple,
   Result,
@@ -33,7 +33,9 @@ import { Internal } from './internal/types.ts'
  * //   ^? { a: number, b: number, c: number, d: number }
  * ```
  */
-function mergeObjects<T extends unknown[] = unknown[]>(objs: T): MergeObjs<T> {
+function mergeObjects<T extends unknown[] = unknown[]>(
+  objs: T,
+): MergeObjects<T> {
   return Object.assign({}, ...objs)
 }
 

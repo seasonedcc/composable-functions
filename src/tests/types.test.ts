@@ -4,12 +4,12 @@ import { assertEquals, describe, it } from './prelude.ts'
 import * as Subject from '../types.ts'
 import { Internal } from '../internal/types.ts'
 
-namespace MergeObjs {
+namespace MergeObjects {
   const obj1 = { a: 1, b: 2 } as const
   const obj2 = {}
   const obj3 = { c: 3, d: 4 } as const
 
-  type Result = Subject.MergeObjs<[typeof obj1, typeof obj2, typeof obj3]>
+  type Result = Subject.MergeObjects<[typeof obj1, typeof obj2, typeof obj3]>
 
   type test1 = Expect<Equal<keyof Result, 'a' | 'b' | 'c' | 'd'>>
   type test2 = Expect<Equal<Result[keyof Result], 1 | 2 | 3 | 4>>
@@ -21,12 +21,12 @@ namespace Last {
   type test3 = Expect<Equal<Subject.Last<[]>, never>>
 }
 
-namespace MergeObjs {
+namespace MergeObjects {
   const obj1 = { a: 1, b: 2 } as const
   const obj2 = {}
   const obj3 = { c: 3, d: 4 } as const
 
-  type Result = Subject.MergeObjs<[typeof obj1, typeof obj2, typeof obj3]>
+  type Result = Subject.MergeObjects<[typeof obj1, typeof obj2, typeof obj3]>
 
   type test1 = Expect<Equal<keyof Result, 'a' | 'b' | 'c' | 'd'>>
   type test2 = Expect<Equal<Result[keyof Result], 1 | 2 | 3 | 4>>
@@ -378,7 +378,7 @@ namespace UnpackData {
     Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>
   >
 
-  const result = withSchema()(() => ({ name: 'foo' }) as const)
+  const result = withSchema()(() => ({ name: 'foo' } as const))
 
   type test = Expect<
     Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>
