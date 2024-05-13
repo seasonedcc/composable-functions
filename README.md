@@ -5,25 +5,24 @@
 </picture>
 
 ## Table of contents
-- [Table of contents](#table-of-contents)
-  - [Quickstart](#quickstart)
-  - [Composing type-safe functions](#composing-type-safe-functions)
-  - [Creating primitive composables](#creating-primitive-composables)
-  - [Sequential composition](#sequential-composition)
-    - [Using non-composables (mapping)](#using-non-composables-mapping)
-  - [Parallel composition](#parallel-composition)
-  - [Handling errors](#handling-errors)
-    - [Throwing](#throwing)
-    - [Catching](#catching)
-    - [Mapping](#mapping)
-  - [Type-safe runtime utilities](#type-safe-runtime-utilities)
-    - [fromSuccess](#fromsuccess)
-    - [mergeObjects](#mergeobjects)
-  - [Utility Types](#utility-types)
-    - [UnpackData](#unpackdata)
-  - [Recipes](#recipes)
-  - [Using Deno](#using-deno)
-  - [Acknowledgements](#acknowledgements)
+- [Quickstart](#quickstart)
+- [Composing type-safe functions](#composing-type-safe-functions)
+- [Creating primitive composables](#creating-primitive-composables)
+- [Sequential composition](#sequential-composition)
+  - [Using non-composables (mapping)](#using-non-composables-mapping)
+- [Parallel composition](#parallel-composition)
+- [Handling errors](#handling-errors)
+  - [Throwing](#throwing)
+  - [Catching](#catching)
+  - [Mapping](#mapping)
+- [Type-safe runtime utilities](#type-safe-runtime-utilities)
+  - [fromSuccess](#fromsuccess)
+  - [mergeObjects](#mergeobjects)
+- [Utility Types](#utility-types)
+  - [UnpackData](#unpackdata)
+- [Recipes](#recipes)
+- [Using Deno](#using-deno)
+- [Acknowledgements](#acknowledgements)
 
 
 ## Quickstart
@@ -184,7 +183,7 @@ const fetchBodyWithCustomError = mapError(fetchBody, (errors) =>
 
 ### fromSuccess
 
-Whenever the composition utilities fall short, and you want to call other domain functions from inside your current one, you can use the `fromSuccess` function to create a composable that is expected to always succeed.
+Whenever the composition utilities fall short, and you want to call other composables from inside your current one, you can use the `fromSuccess` function to create a composable that is expected to always succeed.
 
 ```ts
 const fn = composable(async (id: string) => {
@@ -194,7 +193,7 @@ const fn = composable(async (id: string) => {
 })
 ```
 
-Otherwise, if the domain function passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
+Otherwise, if the composable passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
 
 ### mergeObjects
 
@@ -227,7 +226,7 @@ type Data = UnpackData<typeof fn>
 
 ## Recipes
 
- - Migrating from domain-functions
+ - [Migrating from domain-functions](./migrating-df.md)
  - [Handling external input](./with-schema.md)
  - [Defining constants for multiple functions (environments)](./environment.md)
 
@@ -236,7 +235,7 @@ type Data = UnpackData<typeof fn>
 If you are using [Deno](https://deno.land/), just directly import the functions you need from [deno.land/x](https://deno.land/x):
 
 ```ts
-import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts";
+import { composable } from "https://deno.land/x/composable_functions/mod.ts";
 ```
 
 This documentation will use Node.JS imports by convention, just replace `composable-functions` with `https://deno.land/x/composable_functions/mod.ts` when using [Deno](https://deno.land/).
