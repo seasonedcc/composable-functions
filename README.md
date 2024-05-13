@@ -4,6 +4,28 @@
   <img alt="Composable Functions" src="https://user-images.githubusercontent.com/25423296/163456779-a8556205-d0a5-45e2-ac17-42d089e3c3f8.png](https://github.com/seasonedcc/composable-functions/assets/566971/17048e80-271a-4c8b-9914-7bd10fba5e42">
 </picture>
 
+## Table of contents
+- [Table of contents](#table-of-contents)
+  - [Quickstart](#quickstart)
+  - [Composing type-safe functions](#composing-type-safe-functions)
+  - [Creating primitive composables](#creating-primitive-composables)
+  - [Sequential composition](#sequential-composition)
+    - [Using non-composables (mapping)](#using-non-composables-mapping)
+  - [Parallel composition](#parallel-composition)
+  - [Handling errors](#handling-errors)
+    - [Throwing](#throwing)
+    - [Catching](#catching)
+    - [Mapping](#mapping)
+  - [Type-safe runtime utilities](#type-safe-runtime-utilities)
+    - [fromSuccess](#fromsuccess)
+    - [mergeObjects](#mergeobjects)
+  - [Utility Types](#utility-types)
+    - [UnpackData](#unpackdata)
+  - [Recipes](#recipes)
+  - [Using Deno](#using-deno)
+  - [Acknowledgements](#acknowledgements)
+
+
 ## Quickstart
 
 ```
@@ -158,11 +180,56 @@ const fetchBodyWithCustomError = mapError(fetchBody, (errors) =>
 )
 ```
 
+## Type-safe runtime utilities
+
+### fromSuccess
+
+Whenever the composition utilities fall short, and you want to call other domain functions from inside your current one, you can use the `fromSuccess` function to create a composable that is expected to always succeed.
+
+```ts
+const fn = composable(async (id: string) => {
+  const valueB = await fromSuccess(anotherComposable)({ userId: id })
+  // do something else
+  return { valueA, valueB }
+})
+```
+
+Otherwise, if the domain function passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
+
+### mergeObjects
+
+`mergeObjects` merges an array of objects into one object, preserving type inference completely.
+Object properties from the rightmost object will take precedence over the leftmost ones.
+
+```ts
+const a = { a: 1, b: 2 }
+const b = { b: '3', c: '4' }
+const result = mergeObjects([a, b])
+//    ^? { a: number, b: string, c: string }
+```
+The resulting object will be:
+```ts
+{ a: 1, b: '3', c: '4' }
+```
+
+## Utility Types
+
+### UnpackData
+
+`UnpackData` infers the returned data of a successful composable function:
+
+```ts
+const fn = composable()(async () => '')
+
+type Data = UnpackData<typeof fn>
+//    ^? string
+```
+
 ## Recipes
 
  - Migrating from domain-functions
- - [Handling external input](./DFs.md)
- - [Defining constants for multiple functions (environments)](./DFs.md)
+ - [Handling external input](./with-schema.md)
+ - [Defining constants for multiple functions (environments)](./environment.md)
 
 ## Using Deno
 
@@ -174,3 +241,9 @@ import { makeDomainFunction } from "https://deno.land/x/domain_functions/mod.ts"
 
 This documentation will use Node.JS imports by convention, just replace `composable-functions` with `https://deno.land/x/composable_functions/mod.ts` when using [Deno](https://deno.land/).
 
+
+## Acknowledgements
+
+Composable Functions' logo by [NUMI](https://github.com/numi-hq/open-design):
+
+[<img src="https://raw.githubusercontent.com/numi-hq/open-design/main/assets/numi-lockup.png" alt="NUMI Logo" style="width: 200px;"/>](https://numi.tech/?ref=string-ts)

@@ -16,13 +16,18 @@ type RequestLike = {
 
 /**
  * Parses the given URLSearchParams into an object.
+ *
  * @param queryString the URLSearchParams to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const parsed = inputFromSearch(new URLSearchParams('a=1&b=2'))
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
-const inputFromSearch = (queryString: URLSearchParams) => {
+function inputFromSearch(queryString: URLSearchParams) {
   const pairs: [string, string][] = []
   queryString.forEach((value, key) => pairs.push([key, value]))
 
@@ -99,23 +104,33 @@ const inputFromSearch = (queryString: URLSearchParams) => {
 
 /**
  * Parses the given FormData into an object.
+ *
  * @param formData the FormData to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const formData = new FormData()
  * formData.append('a', '1')
  * formData.append('b', '2')
  * const parsed = inputFromFormData(formData)
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
-const inputFromFormData = (formData: FormDataLike) =>
-  inputFromSearch(new URLSearchParams(formData as URLSearchParams))
+function inputFromFormData(formData: FormDataLike) {
+  return inputFromSearch(new URLSearchParams(formData as URLSearchParams))
+}
 
 /**
  * Parses the given Request's formData into an object.
+ *
  * @param request the Request to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const formData = new FormData()
  * formData.append('a', '1')
  * formData.append('b', '2')
@@ -125,20 +140,28 @@ const inputFromFormData = (formData: FormDataLike) =>
  * })
  * const parsed = await inputFromForm(request)
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
-const inputFromForm = async (request: RequestLike) =>
-  inputFromFormData(await request.clone().formData())
+async function inputFromForm(request: RequestLike) {
+  return inputFromFormData(await request.clone().formData())
+}
 
 /**
  * Parses the given Request URL's queryString into an object.
+ *
  * @param request the Request to parse
  * @returns the parsed object
+ *
  * @example
+ *
+ * ```ts
  * const request = new Request('https://example.com?a=1&b=2')
  * const parsed = inputFromUrl(request)
  * //    ^? { a: '1', b: '2' }
+ * ```
  */
-const inputFromUrl = (request: RequestLike) =>
-  inputFromSearch(new URL(request.url).searchParams)
+function inputFromUrl(request: RequestLike) {
+  return inputFromSearch(new URL(request.url).searchParams)
+}
 
 export { inputFromForm, inputFromFormData, inputFromSearch, inputFromUrl }

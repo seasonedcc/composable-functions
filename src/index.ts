@@ -44,6 +44,3 @@ export type {
 
 // FUNCTIONS WITH ENVIRONMENT
 export * as environment from './environment/index.ts'
-
-// COMPAT MODULE
-export * as compat from './compat/index.ts'

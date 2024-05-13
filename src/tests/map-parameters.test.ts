@@ -31,8 +31,8 @@ describe('mapParameters', () => {
   it('maps with an async function', async () => {
     const fn = mapParameters(
       add,
-      ({ num1, num2 }: { num1: number; num2: number }) =>
-        Promise.resolve([num1, num2] as const),
+      // deno-lint-ignore require-await
+      async ({ num1, num2 }: { num1: number; num2: number }) => [num1, num2],
     )
     const res = await fn({ num1: 1, num2: 2 })
 
@@ -86,8 +86,14 @@ describe('mapParameters', () => {
       throw new Error('Mapper also has problems')
     })
     const res = await fn()
-    type _FN = Expect<Equal<typeof fn, Composable<() => number>>>
+    type _FN = Expect<Equal<typeof fn, Composable<() => never>>>
     assertEquals(res.success, false)
     assertEquals(res.errors[0].message, 'Mapper also has problems')
+  })
+
+  it('requires type-safe return of the mapper according to the fn params', () => {
+    // @ts-expect-error: The return type of the mapper is not compatible with the fn parameters
+    mapParameters(add, () => ['error'])
+    assertEquals(true, true)
   })
 })

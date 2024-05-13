@@ -11,7 +11,10 @@ function applyEnvironmentToList<
 
 /**
  * Creates a single composable out of a chain of multiple functions. It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
+ *
  * @example
+ *
+ * ```ts
  * import { withSchema, environment } from 'composable-functions'
  *
  * const a = withSchema(z.object({ aNumber: z.number() }))(
@@ -22,6 +25,7 @@ function applyEnvironmentToList<
  * )
  * const d = environment.pipe(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
+ * ```
  */
 function pipe<Fns extends Composable[]>(...fns: Fns) {
   return ((input: any, environment: any) =>
@@ -32,13 +36,17 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
 
 /**
  * Works like `environment.pipe` but it will collect the output of every function in a tuple.
+ *
  * @example
+ *
+ * ```ts
  * import { withSchema, environment } from 'composable-functions'
  *
  * const a = withSchema(z.number())((aNumber) => String(aNumber))
  * const b = withSchema(z.string())((aString) => aString === '1')
  * const aComposable = environment.sequence(a, b)
  * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
+ * ```
  */
 
 function sequence<Fns extends Composable[]>(...fns: Fns) {
