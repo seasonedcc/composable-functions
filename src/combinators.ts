@@ -221,39 +221,6 @@ function mapParameters<
 }
 
 /**
- * Creates a composable that will return the result of the first successful constituent. **It is important to notice** that all constituent functions will be executed in parallel, so be mindful of the side effects.
- *
- * @example
- *
- * ```ts
- * import { withSchema, first } from 'composable-functions'
- *
- * const a = withSchema(z.object({ n: z.number() }))(({ n }) => n + 1)
- * const b = withSchema(z.object({ n: z.number() }))(({ n }) => String(n))
- * const aComposable = first(a, b)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => string | number>
- * ```
- */
-function first<Fns extends Composable[]>(...fns: Fns) {
-  return ((...args) => {
-    return composable(async () => {
-      const results = await Promise.all(fns.map((fn) => fn(...args)))
-
-      const result = results.find((r) => r.success) as Success | undefined
-      if (!result) {
-        throw new ErrorList(results.map(({ errors }) => errors).flat())
-      }
-
-      return result.data
-    })()
-  }) as Composable<
-    (
-      ...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>
-    ) => UnpackData<Fns[number]>
-  >
-}
-
-/**
  * Try to recover from a resulting Failure. When the given function succeeds, its result is returned without changes.
  *
  * @example
@@ -400,7 +367,6 @@ export {
   branch,
   catchError,
   collect,
-  first,
   map,
   mapError,
   mapParameters,

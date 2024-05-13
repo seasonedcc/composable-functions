@@ -11,7 +11,6 @@ export {
   branch,
   catchError,
   collect,
-  first,
   map,
   mapError,
   mapParameters,
