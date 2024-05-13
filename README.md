@@ -228,7 +228,7 @@ type Data = UnpackData<typeof fn>
 
  - [Migrating from domain-functions](./migrating-df.md)
  - [Handling external input](./with-schema.md)
- - [Defining constants for multiple functions (environments)](./environment.md)
+ - [Defining constants for multiple functions (environments)](./environments.md)
 
 ## Using Deno
 
