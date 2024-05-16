@@ -3,11 +3,54 @@
 If you are coming from `domain-functions`, you will find that `composable-functions` is a more flexible and powerful library.
 This document will guide you through the migration process.
 
-## Serialization
-TODO
+# Table of contents
+<!-- HERE -->
 
-## The new Result type
-TODO
+## First steps
+The first thing you want to know is that the old `DomainFunction<T>` is equivalent to `Composable<(input?: unknown, environment?: unknwon) => T>`. We brought the arguments to the type signature se we could type check the compositions. A [commonly requested feature](https://github.com/seasonedcc/domain-functions/issues/80).
+
+A composable does not need a schema, but you can still use one for runtime assertion. What we used to call a Domain Function is now a Composable with an environment and a schema.
+
+The new constructor `withSchema` will work almost exactly as `makeDomainFunction`, except for the `Result` type of the resulting function.
+
+### The new `Result` type - `Success<T> | Failure`
+We removed the inputErrors and environmentErrors from the result and represent all of them using instances of `Error`.
+
+This allows us to preserve stack traces and use the familiar exception interface. To differentiate inputErrors and environmentErrors you can use the `instanceof` operator. It also opens up the possibility create any custom error your system needs.
+
+```ts
+// Old ErrorResult:
+{
+  success: false,
+  errors: [{ message: 'Something went wrong' }],
+  inputErrors: [{ message: 'Required', path: ['name'] }],
+  environemntErrors: [{ message: 'Unauthorized', path: ['user'] }],
+}
+
+// New Failure:
+{
+  success: false,
+  errors: [
+    new Error('Something went wrong'),
+    new InputError('Required', ['name']),
+    new EnvironmentError('Unauthorized', ['user']),
+  ],
+}
+```
+
+#### Serialization
+The issue with native JS errors is that they lose most information when serialized to JSON.
+
+To solve that, whenever you send a `Result` over the wire you may use the new `serialize` helper that will turn your errors into a friendly object format:
+```ts
+const serializedResult = JSON.stringify(serialize({
+  success: false,
+  errors: [new InputError('Oops', ['name'])],
+}))
+
+// serializedResult is:
+`"{ success: false, errors: [{ message: 'Oops', name: 'InputError', path: ['name'] }] }"`
+```
 
 ## Incremental migration
 You don't need to migrate the whole project at once.
@@ -40,7 +83,7 @@ function toComposable<T>(df: DomainFunction<T>) {
 }
 ```
 
-### The new simplified Error format
+### Asserting on Failures
 - In the tests, change the `result.inputErrors` and `result.environmentErrors` for `result.errors`. You can test for the name: `InputError` or `EnvironmentError`
 ```ts
 expect(result.inputErrors).containSubset([{ path: ['name'] }])
@@ -96,7 +139,6 @@ const result = await withTrace(1, 2, 3)
 // This will log: [{ success: true, data: 6, errors: [] }, 1, 2, 3]
 ```
 
-
 ## Removed combinators
 ### first
 This function was removed because it had a hazardous behavior. It would return the first successful result, but it would run all functions in parallel which could cause unexpected side effects.
@@ -146,7 +188,7 @@ const fn = map(all(fn1, fn2), mergeObjects)
 | `makeDomainFunction(z.string(), z.number())((input, env) => {})` | `withSchema(z.string, z.number())((input, env) => {})` |
 | -- | `applySchema(composable((input, env) => {}), z.string(), z.number())` |
 | `makeSuccessResult(1)` | `success(1)` |
-| -- | `failure([new Error('Something went wrong')])` |
+| `makeErrorResult({ errors: [{ message: 'Something went wrong' }] })` | `failure([new Error('Something went wrong')])` |
 | `new InputError('required', 'user.name')` | `new InputError('required', ['user', 'name'])` |
 | `new EnvironmentError('oops', 'user.name')` | `new EnvironmentError('oops', ['user', 'name'])` |
 | `new InputErrors([{ message: 'oops', path: 'user.name' }])` | `new ErrorList([new InputError('oops', ['user', 'name'])])` |
@@ -159,16 +201,16 @@ const fn = map(all(fn1, fn2), mergeObjects)
 | `collect(df1, df2)` | `collect(fn1, fn2)` |
 | `merge(df1, df2)` | `map(all(fn1, fn2), mergeObjects)` |
 | `branch(df1, (res) => res ? null : df2)` | `environment.branch(fn1, (res) => res ? null : fn2)` |
-| -- | `branch(fn1, (res) => res ? null : fn2)` |
+| -- | `branch(fn1, (res) => res ? null : fn2)` without environment |
 | `pipe(df1, df2)` | `environment.pipe(fn1, fn2)` |
-| -- | `pipe(fn1, fn2)` |
+| -- | `pipe(fn1, fn2)` without environment |
 | `sequence(df1, df2)` | `environment.sequence(fn1, fn2)` |
-| -- | `sequence(fn1, fn2)` |
+| -- | `sequence(fn1, fn2)` without environment |
 | `collectSequence({ name: nameDf, age: ageDf })` | `map(environment.sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))` |
-| `first(df1, df2)` | -- |
+| `first(df1, df2)` | -- * read docs above |
 | `safeResult(() => { throw new Error('oops') })` | `composable(() => { throw new Error('oops') })` |
 | `mapError(df, (result) => ({ inputErrors: [], environmentErrors: [], errors: [{ message: 'Oops' }] }))` | `mapError(fn, errors => [new Error('Oops')])` |
-| `trace(console.log)(df)` | `trace(console.log)(fn)` * read docs above |
+| `trace(({ result, input, environment }) => console.log({ result, input, environment }))(df)` | `trace((result, ...args) => console.log(result, ...args))(fn)` |
 
 
 #### Type utilities
@@ -177,9 +219,11 @@ const fn = map(all(fn1, fn2), mergeObjects)
 | `DomainFunction<string>` | `Composable<(input?: unknown, environment?: unknown) => string>` |
 | `SuccessResult<T>` | `Success<T>` |
 | `ErrorResult` | `Failure` |
+| `UnpackData<DomainFunction>` | `UnpackData<Composable>` |
 
 #### Runtime code
 | Domain Functions | Composable Functions |
 |---|---|
 | `{ success: true, data: { name: 'John' }, errors: [], inputErrors: [], environmentErrors: [] }` | `{ success: true, data: { name: 'John' }, errors: [] }` |
-| `{ success: false, errors: [{ message: 'Something went wrong' }], inputErrors: [{ message: 'Required', path: ['name'] }], environemntErrors: [{ message: 'Unauthorized', path: ['user'] }] }` | `{ success: false, errors: [ new Error('Something went wrong'), new InputError('Required', ['name']), new EnvironmentError('Unauthorized', ['user'])] }` |
+| `{ success: false, errors: [{ message: 'Something went wrong' }], inputErrors: [{ message: 'Required', path: ['name'] }], environemntErrors: [{ message: 'Unauthorized', path: ['user'] }] }` | `{ success: false, errors: [new Error('Something went wrong'), new InputError('Required', ['name']), new EnvironmentError('Unauthorized', ['user'])] }` |
+| -- | with `serialize`: `{ success: false, errors: [{ message: 'Something went wrong', name: 'Error' }, { message: 'Required', name: 'InputError', path: ['name'] }, { message: 'Unauthorized', name: 'EnvironmentError', path: ['user'] }] }` |
