@@ -112,11 +112,11 @@ Note that trying to compose pipe flipping the arguments will not type-check:
 import { pipe } from 'composable-functions'
 
 const addAndReturnString = pipe(toString, add)
-       ^? ["Fail to compose", string, "does not fit in", number]
+       ^? Internal.FailToCompose<string, number>
 ```
 
-The error message comes in the form of an inferred type (the type checker error is a bit more cryptic).
 Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.
+The error message comes in the form of an inferred `FailToCompose` type, this failure type is not callable therefore it will break any attempts to call `addAndReturnString`.
 
 ### Using non-composables (mapping)
 
