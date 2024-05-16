@@ -12,7 +12,6 @@ import type {
   UnpackData,
 } from './types.ts'
 import { composable, failure, fromSuccess, success } from './constructors.ts'
-import { ErrorList } from './errors.ts'
 import { Internal } from './internal/types.ts'
 
 /**
