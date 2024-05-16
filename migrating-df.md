@@ -7,8 +7,6 @@ This document will guide you through the migration process.
 - [First steps](#first-steps)
   - [The new `Result` type - `Success<T> | Failure`](#the-new-result-type---successt--failure)
     - [Serialization](#serialization)
-- [Incremental migration](#incremental-migration)
-  - [Asserting on Failures](#asserting-on-failures)
 - [Combinators which shouldn't be affected](#combinators-which-shouldnt-be-affected)
 - [Sequential combinators and the concept of environment](#sequential-combinators-and-the-concept-of-environment)
 - [Modified combinators](#modified-combinators)
@@ -18,6 +16,8 @@ This document will guide you through the migration process.
   - [first](#first)
   - [collectSequence](#collectsequence)
   - [merge](#merge)
+- [Incremental migration](#incremental-migration)
+  - [Asserting on Failures](#asserting-on-failures)
 - [Equivalence tables](#equivalence-tables)
     - [Constructors](#constructors)
     - [Combinators](#combinators)
@@ -60,6 +60,7 @@ This allows us to preserve stack traces and use the familiar exception interface
 The issue with native JS errors is that they lose most information when serialized to JSON.
 
 To solve that, whenever you send a `Result` over the wire you may use the new `serialize` helper that will turn your errors into a friendly object format:
+
 ```ts
 const serializedResult = JSON.stringify(serialize({
   success: false,
@@ -70,49 +71,24 @@ const serializedResult = JSON.stringify(serialize({
 `"{ success: false, errors: [{ message: 'Oops', name: 'InputError', path: ['name'] }] }"`
 ```
 
-## Incremental migration
-You don't need to migrate the whole project at once.
-You can have both libraries in the project and migrate one module at a time.
-
-Choose a module that has fewer dependents, swipe all constructors from `makeDomainFunction` to `withSchema`.
-
-If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` function below to avoid having to migrate those modules.
-
-```ts
-function toComposable<T>(df: DomainFunction<T>) {
-  return (async (...args) => {
-    const result = await df(...args)
-    if (result.success) {
-      return { success: true, errors: [], data: result.data }
-    }
-    return {
-      success: false,
-      errors: [
-        ...result.errors.map((e) => e.exception),
-        ...result.inputErrors.map(
-          ({ message, path }) => new InputError(message, path),
-        ),
-        ...result.environmentErrors.map(
-          ({ message, path }) => new EnvironmentError(message, path),
-        ),
-      ],
-    }
-  }) as Composable<(input?: unknown, environment?: unknown) => T>
-}
-```
-
-### Asserting on Failures
-- In the tests, change the `result.inputErrors` and `result.environmentErrors` for `result.errors`. You can test for the name: `InputError` or `EnvironmentError`
-```ts
-expect(result.inputErrors).containSubset([{ path: ['name'] }])
-expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
-```
-
 ## Combinators which shouldn't be affected
 The parallel combinators like `all` and `collect`, along with `map` and `fromSuccess` should work the same way.
 
 ## Sequential combinators and the concept of environment
-TODO
+The environment we used to have in domain-functions is already built-in the composable's parallel combinators since all arguments are forwarded to every function. For a deeper explanation check the [`environment` docs](./environments.md).
+
+When it comes to sequential compositions, however, we need special combinators to preserve the environment so they work as the domain-functions' combinators.
+
+Use the sequential combinators from the namespace `environment` to keep this familiar behavior.
+
+```ts
+import { environment } from 'composable-functions'
+
+const result = environment.pipe(fn1, fn2)(input, env)
+// same for `sequence` and `branch`
+```
+
+**Note**: The `pipe`, `sequence`, and `branch` outside of the `environment` namespace will not keep the environment through the composition.
 
 ## Modified combinators
 ### mapError
@@ -197,6 +173,45 @@ const fn1 = composable(() => ({ firstName: 'John' }))
 const fn2 = composable(() => ({ lastName: 'Doe' }))
 const fn = map(all(fn1, fn2), mergeObjects)
 ```
+
+## Incremental migration
+You don't need to migrate the whole project at once.
+You can have both libraries in the project and migrate one module at a time.
+
+Choose a module that has fewer dependents, swipe all constructors from `makeDomainFunction` to `withSchema`.
+
+If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` function below to avoid having to migrate those modules.
+
+```ts
+function toComposable<T>(df: DomainFunction<T>) {
+  return (async (...args) => {
+    const result = await df(...args)
+    if (result.success) {
+      return { success: true, errors: [], data: result.data }
+    }
+    return {
+      success: false,
+      errors: [
+        ...result.errors.map((e) => e.exception),
+        ...result.inputErrors.map(
+          ({ message, path }) => new InputError(message, path),
+        ),
+        ...result.environmentErrors.map(
+          ({ message, path }) => new EnvironmentError(message, path),
+        ),
+      ],
+    }
+  }) as Composable<(input?: unknown, environment?: unknown) => T>
+}
+```
+
+### Asserting on Failures
+- In the tests, change the `result.inputErrors` and `result.environmentErrors` for `result.errors`. You can test for the name: `InputError` or `EnvironmentError`
+```ts
+expect(result.inputErrors).containSubset([{ path: ['name'] }])
+expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
+```
+- Elsewhere, collect the inputErrors and environmentErrors with functions that look for `error instanceof InputError` or check the `name` of the error if the result was serialized.
 
 # Equivalence tables
 
