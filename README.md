@@ -1,8 +1,5 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/seasonedcc/composable-functions/assets/566971/c6534a6a-fcf1-4e70-93bf-c72a2f661ba5">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/seasonedcc/composable-functions/assets/566971/17048e80-271a-4c8b-9914-7bd10fba5e42">
-  <img alt="Composable Functions" src="https://user-images.githubusercontent.com/25423296/163456779-a8556205-d0a5-45e2-ac17-42d089e3c3f8.png](https://github.com/seasonedcc/composable-functions/assets/566971/17048e80-271a-4c8b-9914-7bd10fba5e42">
-</picture>
+![Composable Functions](https://github.com/seasonedcc/composable-functions/assets/566971/8601431a-4343-4912-97f0-1adbeb6eaaa3)
+
 
 ## Table of contents
 - [Quickstart](#quickstart)
@@ -12,6 +9,7 @@
   - [Using non-composables (mapping)](#using-non-composables-mapping)
 - [Parallel composition](#parallel-composition)
 - [Handling errors](#handling-errors)
+
   - [Throwing](#throwing)
   - [Catching](#catching)
   - [Mapping](#mapping)
