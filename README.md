@@ -1,5 +1,6 @@
-![Composable Functions](https://github.com/seasonedcc/composable-functions/assets/566971/8601431a-4343-4912-97f0-1adbeb6eaaa3)
-
+<p align="center">
+  <img width="300" src="https://github.com/seasonedcc/composable-functions/assets/566971/b786f157-9fb1-4506-9ddb-e438dcde06c8" alt="Composable Functions" />
+</p>
 
 ## Table of contents
 - [Quickstart](#quickstart)
