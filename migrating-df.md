@@ -4,7 +4,25 @@ If you are coming from `domain-functions`, you will find that `composable-functi
 This document will guide you through the migration process.
 
 # Table of contents
-<!-- HERE -->
+- [First steps](#first-steps)
+  - [The new `Result` type - `Success<T> | Failure`](#the-new-result-type---successt--failure)
+    - [Serialization](#serialization)
+- [Incremental migration](#incremental-migration)
+  - [Asserting on Failures](#asserting-on-failures)
+- [Combinators which shouldn't be affected](#combinators-which-shouldnt-be-affected)
+- [Sequential combinators and the concept of environment](#sequential-combinators-and-the-concept-of-environment)
+- [Modified combinators](#modified-combinators)
+  - [mapError](#maperror)
+  - [trace](#trace)
+- [Removed combinators](#removed-combinators)
+  - [first](#first)
+  - [collectSequence](#collectsequence)
+  - [merge](#merge)
+- [Equivalence tables](#equivalence-tables)
+    - [Constructors](#constructors)
+    - [Combinators](#combinators)
+    - [Type utilities](#type-utilities)
+    - [Runtime code](#runtime-code)
 
 ## First steps
 The first thing you want to know is that the old `DomainFunction<T>` is equivalent to `Composable<(input?: unknown, environment?: unknwon) => T>`. We brought the arguments to the type signature se we could type check the compositions. A [commonly requested feature](https://github.com/seasonedcc/domain-functions/issues/80).
