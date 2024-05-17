@@ -44,14 +44,16 @@ function composable<T extends (...args: any[]) => any>(fn: T): Composable<T> {
  * It can be used to call a composable from another composable. It will return the output of the given function if it was successfull, otherwise it will throw a `ErrorList` that will bubble up to the parent function.
  * Also good to use it in successfull test cases.
  * @example
- * import { withSchema, fromSuccess } from 'composable-functions'
+ * ```ts
+ * import { composable, fromSuccess } from 'composable-functions'
  *
- * const add1 = withSchema(z.number())((n) => n + 1)
+ * const add1 = composable((n: number) => n + 1)
  * const result = await add1(1)
  * //    ^? Result<number>
  * const data = await fromSuccess(add1)(n)
  * //    ^? number
  * expect(data).toBe(n + 1)
+ * ```
  */
 function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
   fn: T,
@@ -78,10 +80,12 @@ function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
  * @example
  * const safeFunction = withSchema(
  *  z.object({ greeting: z.string() }),
- *  z.object({ user: z.object({ name: z.string() }) }),
+ *  z.object({
+ *    user: z.object({ name: z.string() })
+ *  }),
  * )
- * const myDf = safeFunction(({ greeting }, { user }) => {
- *   return { message: `${greeting} ${user.name}` }
+ * const safeGreet = safeFunction(({ greeting }, { user }) => ({
+ *   message: `${greeting} ${user.name}`
  * })
  */
 function withSchema<I, E>(

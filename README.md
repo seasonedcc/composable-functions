@@ -58,17 +58,17 @@ failedResult = {
 ```
 
 ## Composing type-safe functions
-Let's say we ant to compose two functions: `add : (a: number, b:number) => number` and `toString : (a: number) => string`. We also want the composition to preserve the types, we can continue living in the happy world of type-safe coding, the result would be a function that adds and converts the result to string, something like `addAndReturnString : (a: number, b: number) => string`.
+Let's say we want to compose two functions: `add: (a: number, b:number) => number` and `toString: (a: number) => string`. We also want the composition to preserve the types, so we can continue living in the happy world of type-safe coding. The result would be a function that adds and converts the result to string, something like `addAndReturnString: (a: number, b: number) => string`.
 
 Performing this operation manually is straightforward
 
 ```typescript
-function addAndReturnString(a: number, b: number) : string {
+function addAndReturnString(a: number, b: number): string {
   return toString(add(a, b))
 }
 ```
 
-It would be neat if typescript could the typing for us and provided a more generic mechanism to compose these functions. Something like what you find in libraries such as [lodash](https://lodash.com/docs/4.17.15#flow)
+It would be neat if typescript could do the typing for us and provided a more generic mechanism to compose these functions. Something like what you find in libraries such as [lodash](https://lodash.com/docs/4.17.15#flow)
 
 Using composables the code could be written as:
 
@@ -76,9 +76,9 @@ Using composables the code could be written as:
 const addAndReturnString = pipe(add, toString)
 ```
 
-We can also extend the same reasoning to functions that return promises in a transparent way. Imagine we have `add : (a: number, b:number) => Promise<number>` and `toString : (a: number) => Promise<string>`, the composition above would work in the same fashion, returning a function `addAndReturnString(a: number, b: number) : Promise<string>` that will wait for each promise in the chain before applying the next function.
+We can also extend the same reasoning to functions that return promises in a transparent way. Imagine we have `add: (a: number, b:number) => Promise<number>` and `toString: (a: number) => Promise<string>`, the composition above would work in the same fashion, returning a function `addAndReturnString(a: number, b: number): Promise<string>` that will wait for each promise in the chain before applying the next function.
 
-This library also defines several operations besides the `pipe` to compose functions in arbitrary ways, giving a powerful tool for the developer to reason about the data flow without worrying about mistakenly connecting the wrong parameters or forgetting to unwrap some promise or handle some error along the way.
+This library also defines several operations besides the `pipe` to compose functions in arbitrary ways, giving a powerful tool for the developer to reason about the data flow **without worrying about mistakenly connecting the wrong parameters** or **forgetting to unwrap some promise** or **handle some error** along the way.
 
 ## Creating primitive composables
 
@@ -90,9 +90,10 @@ So we can define the `add` and the `toString` functions as a `Composable`:
 import { composable } from 'composable-functions'
 
 const add = composable((a: number, b: number) => a + b)
-        ^? Composable<(a: number, b: number) => number>
+//    ^? Composable<(a: number, b: number) => number>
 
 const toString = composable((a: unknown) => `${a}`)
+//    ^? Composable<(a: unknown) => string>
 ```
 
 ## Sequential composition
@@ -102,7 +103,7 @@ Now we can compose them using pipe to create `addAndReturnString`:
 import { pipe } from 'composable-functions'
 
 const addAndReturnString = pipe(add, toString)
-       ^? Composable<(a: number, b: number) => string>
+//    ^? Composable<(a: number, b: number) => string>
 ```
 
 Note that trying to compose pipe flipping the arguments will not type-check:
@@ -111,7 +112,7 @@ Note that trying to compose pipe flipping the arguments will not type-check:
 import { pipe } from 'composable-functions'
 
 const addAndReturnString = pipe(toString, add)
-       ^? Internal.FailToCompose<string, number>
+//    ^? Internal.FailToCompose<string, number>
 ```
 
 Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.
@@ -125,12 +126,12 @@ The function `map` can be used for this, since we are mapping over the result of
 ```typescript
 import { map } from 'composable-functions'
 
-const addAndReturnString = map(add, String)
+const addAndReturnString = map(add, result => `${result}`)
 ```
 
 ## Parallel composition
 
-There are also functions compositions where all its parameters are excuted in parallel, like `Promise.all` will execute several promises and wait for all of them.
+There are also compositions where all functions are excuted in parallel, like `Promise.all` will execute several promises and wait for all of them.
 The `all` function is one way of composing in this fashion. Assuming we want to apply our `add` and multiply the two numbers returning a success only once both operations succeed:
 
 ```typescript
@@ -139,9 +140,8 @@ import { composable, all } from 'composable-functions'
 const add = composable((a: number, b: number) => a + b)
 const mul = composable((a: number, b: number) => a * b)
 const addAndMul = all(add, mul)
-       ^? Composable<(args_0: number, args_1: number) => [number, number]>
+//    ^? Composable<(a: number, b: number) => [number, number]>
 ```
-
 The result of the composition comes in a tuple in the same order as the functions were passed to `all`.
 Note that the input functions will also have to type-check and all the functions have to work from the same input.
 
@@ -153,34 +153,41 @@ Two neat consequences is that we can handle errors using functions (no need for 
 ### Throwing
 
 ### Catching
-To catch an error you need a second `Composable` capable of receiving `{ errors: Error[] }`. This composable is called when the first function fails:
+You can catch an error in a `Composable`, using `catchError` which is similar to `map` but will run whenever the first composable fails:
 
 ```typescript
 import { composable, catchError } from 'composable-functions'
 
-const fetchBody = composable((url: string) => fetch(url).then((r) => r.text()))
-const emptyOnError = composable(({errors}: { errors: Error[] }) => {
-  console.error("Something went wrong, returning empty string", errors)
-  return ""
+const getUser = composable((id: string) => fetchUser(id))
+//    ^? Composable<(id: string) => User>
+const getOptionalUser = catchError(getUser, (errors, id) => {
+  console.log(`Failed to fetch user with id ${id}`, errors)
+  return null
 })
-const fetchThatNeverFails = catchError(fetchBody, emptyOnError)
+//    ^? Composable<(id: string) => User | null>
 ```
 
-### Mapping
-Sometimes we just need to transform one error into something that would make more sense for the caller. Imagine you have our `fetchBody` defined above, but we want a custom error type for when the input URL is invalid. You can map over the failures using `mapError` and a function with the type `({ errors: Error[] }) => { errors: Error[] }`.
+### Mapping the error
+Sometimes we just need to transform one error into something that would make more sense for the caller. Imagine you have our `getUser` defined above, but we want a custom error type for when the ID is invalid. You can map over the failures using `mapError` and a function with the type `(errors: Error[]) => Error[]`.
 
 ```typescript
 import { mapError } from 'composable-functions'
 
-class InvalidUrlError extends Error {}
-const fetchBodyWithCustomError = mapError(fetchBody, (errors) =>
-  errors.map((e) => e.message.includes('Invalid URL') ? new InvalidUrlError() : e)
+class InvalidUserId extends Error {}
+const getUserWithCustomError = mapError(getUser, (errors) =>
+  errors.map((e) => e.message.includes('Invalid ID') ? new InvalidUserId() : e)
 )
 ```
+## Unwrapping the result
+Keep in mind the `Result` type will only have a `data` property when the composable succeeds. If you want to unwrap the result, you must check for the `success` property first.
 
-## Type-safe runtime utilities
+```typescript
+const result = await getUser('123')
+if (!result.success) return notFound()
 
-### fromSuccess
+return result.data
+//            ^? User
+```
 
 Whenever the composition utilities fall short, and you want to call other composables from inside your current one, you can use the `fromSuccess` function to create a composable that is expected to always succeed.
 
@@ -194,34 +201,15 @@ const fn = composable(async (id: string) => {
 
 Otherwise, if the composable passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
 
-### mergeObjects
-
-`mergeObjects` merges an array of objects into one object, preserving type inference completely.
-Object properties from the rightmost object will take precedence over the leftmost ones.
+Another common use case for `fromSuccess` is when you want to test the happy path of a composable:
 
 ```ts
-const a = { a: 1, b: 2 }
-const b = { b: '3', c: '4' }
-const result = mergeObjects([a, b])
-//    ^? { a: number, b: string, c: string }
-```
-The resulting object will be:
-```ts
-{ a: 1, b: '3', c: '4' }
+const fn = map(pipe(add, multiplyBy2), (result) => result * 3)
+const number = await fromSuccess(fn)(1, 1)
+expect(number).toBe(12)
 ```
 
-## Utility Types
-
-### UnpackData
-
-`UnpackData` infers the returned data of a successful composable function:
-
-```ts
-const fn = composable()(async () => '')
-
-type Data = UnpackData<typeof fn>
-//    ^? string
-```
+## Read the [API Reference](./API.md)
 
 ## Recipes
 
