@@ -2,7 +2,7 @@ import { EnvironmentError } from './errors.ts'
 import { InputError } from './errors.ts'
 import type { Result, SerializableError, SerializedResult } from './types.ts'
 
-function serializeError<T extends Error>(error: T): SerializableError<T> {
+function serializeError(error: Error): SerializableError {
   if (error instanceof InputError || error instanceof EnvironmentError) {
     return {
       exception: error,
