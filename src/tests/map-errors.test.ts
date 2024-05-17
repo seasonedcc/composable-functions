@@ -1,6 +1,6 @@
 import { assertEquals, describe, it } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
-import { composable, mapError } from '../index.ts'
+import { composable, mapErrors } from '../index.ts'
 import { success } from '../constructors.ts'
 
 const faultyAdd = composable((a: number, b: number) => {
@@ -12,9 +12,9 @@ const cleanError = (err: Error) => ({
   ...err,
   message: err.message + '!!!',
 })
-describe('mapError', () => {
+describe('mapErrors', () => {
   it('maps over the error results of a Composable function', async () => {
-    const fn = mapError(faultyAdd, (errors) => errors.map(cleanError))
+    const fn = mapErrors(faultyAdd, (errors) => errors.map(cleanError))
     const res = await fn(2, 2)
 
     type _FN = Expect<
@@ -26,7 +26,7 @@ describe('mapError', () => {
   })
 
   it('maps over the error results of a Composable function', async () => {
-    const fn = mapError(faultyAdd, (errors) => errors.map(cleanError))
+    const fn = mapErrors(faultyAdd, (errors) => errors.map(cleanError))
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -39,9 +39,8 @@ describe('mapError', () => {
   })
 
   it('accepts an async mapper', async () => {
-    const fn = mapError(
-      faultyAdd,
-      (errors) => Promise.resolve(errors.map(cleanError)),
+    const fn = mapErrors(faultyAdd, (errors) =>
+      Promise.resolve(errors.map(cleanError)),
     )
     const res = await fn(1, 2)
 
@@ -55,7 +54,7 @@ describe('mapError', () => {
   })
 
   it('fails when mapper fail', async () => {
-    const fn = mapError(faultyAdd, () => {
+    const fn = mapErrors(faultyAdd, () => {
       throw new Error('Mapper also has problems')
     })
     const res = await fn(1, 2)

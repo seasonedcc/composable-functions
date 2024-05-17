@@ -1,4 +1,4 @@
-import { mapError } from './combinators.ts'
+import { mapErrors } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
 import type { Composable, Failure, ParserSchema, Success } from './types.ts'
 import { UnpackData } from './types.ts'
@@ -60,7 +60,7 @@ function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ) {
   return (async (...args: any[]) => {
-    const result = await mapError(fn, onError)(...args)
+    const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
@@ -136,12 +136,17 @@ function applySchema<I, E, A extends Composable>(
     )
 
     if (!result.success || !envResult.success) {
-      const inputErrors = result.success ? [] : result.error.issues.map(
-        (error) => new InputError(error.message, error.path as string[]),
-      )
-      const envErrors = envResult.success ? [] : envResult.error.issues.map(
-        (error) => new EnvironmentError(error.message, error.path as string[]),
-      )
+      const inputErrors = result.success
+        ? []
+        : result.error.issues.map(
+            (error) => new InputError(error.message, error.path as string[]),
+          )
+      const envErrors = envResult.success
+        ? []
+        : envResult.error.issues.map(
+            (error) =>
+              new EnvironmentError(error.message, error.path as string[]),
+          )
       return failure([...inputErrors, ...envErrors])
     }
     return fn(result.data, envResult.data)

@@ -12,7 +12,7 @@
   - [catchError](#catcherror)
   - [collect](#collect)
   - [map](#map)
-  - [mapError](#maperror)
+  - [mapErrors](#maperrors)
   - [mapParameters](#mapparameters)
   - [pipe](#pipe)
   - [sequence](#sequence)
@@ -365,9 +365,9 @@ For the example above, the result will be something like this:
 }
 ```
 
-## mapError
+## mapErrors
 
-`mapError` creates a single composable that will apply a transformation over the `Failure` of a failed `Composable`.
+`mapErrors` creates a single composable that will apply a transformation over the `Failure` of a failed `Composable`.
 When the given composable succeeds, its result is returned without changes.
 
 This could be useful when adding any layer of error handling.
@@ -383,7 +383,7 @@ const increment = composable((n: number) => {
 const summarizeErrors = (errors: Error[]) =>
   [new Error('Number of errors: ' + errors.length)]
 
-const incrementWithErrorSummary = mapError(increment, summarizeErrors)
+const incrementWithErrorSummary = mapErrors(increment, summarizeErrors)
 
 const result = await incrementWithErrorSummary({ invalidInput: '1' })
 ```
