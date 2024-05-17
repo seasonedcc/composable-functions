@@ -195,16 +195,6 @@ const fn = composable(async (id: string) => {
 })
 ```
 
-Otherwise, if the composable passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
-
-Another common use case for `fromSuccess` is when you want to test the happy path of a composable:
-
-```ts
-const fn = map(pipe(add, multiplyBy2), (result) => result * 3)
-const number = await fromSuccess(fn)(1, 1)
-expect(number).toBe(12)
-```
-
 ## Read the [API Reference](./API.md)
 
 ## Recipes
