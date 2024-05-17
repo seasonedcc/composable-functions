@@ -261,15 +261,15 @@ function catchError<
  * @example
  *
  * ```ts
- * import { composable, mapError } from 'composable-functions'
+ * import { composable, mapErrors } from 'composable-functions'
  *
  * const increment = composable(({ id }: { id: number }) => id + 1)
- * const incrementWithErrorSummary = mapError(increment, (result) => ({
+ * const incrementWithErrorSummary = mapErrors(increment, (result) => ({
  *   errors: [{ message: 'Errors count: ' + result.errors.length }],
  * }))
  * ```
  */
-function mapError<Fn extends Composable>(
+function mapErrors<Fn extends Composable>(
   fn: Fn,
   mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ) {
@@ -367,7 +367,7 @@ export {
   catchError,
   collect,
   map,
-  mapError,
+  mapErrors,
   mapParameters,
   mergeObjects,
   pipe,

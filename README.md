@@ -173,14 +173,14 @@ const getOptionalUser = catchError(getUser, (errors, id) => {
 //    ^? Composable<(id: string) => User | null>
 ```
 
-### Mapping the error
-Sometimes we just need to transform one error into something that would make more sense for the caller. Imagine you have our `getUser` defined above, but we want a custom error type for when the ID is invalid. You can map over the failures using `mapError` and a function with the type `(errors: Error[]) => Error[]`.
+### Mapping the errors
+Sometimes we just need to transform the errors into something that would make more sense for the caller. Imagine you have our `getUser` defined above, but we want a custom error type for when the ID is invalid. You can map over the failures using `mapErrors` and a function with the type `(errors: Error[]) => Error[]`.
 
 ```typescript
-import { mapError } from 'composable-functions'
+import { mapErrors } from 'composable-functions'
 
 class InvalidUserId extends Error {}
-const getUserWithCustomError = mapError(getUser, (errors) =>
+const getUserWithCustomError = mapErrors(getUser, (errors) =>
   errors.map((e) => e.message.includes('Invalid ID') ? new InvalidUserId() : e)
 )
 ```

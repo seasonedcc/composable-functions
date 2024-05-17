@@ -12,7 +12,7 @@ export {
   catchError,
   collect,
   map,
-  mapError,
+  mapErrors,
   mapParameters,
   mergeObjects,
   pipe,

@@ -92,11 +92,13 @@ const result = environment.pipe(fn1, fn2)(input, env)
 
 ## Modified combinators
 ### mapError
-The `mapError` function now receives and returns an `Array<Error>` instead of an `ErrorData` - which was removed.
+The `mapError` was renamed to `mapErrors` function and it now receives and returns an `Array<Error>` instead of an `ErrorData` - which was removed.
 Since the new `Failure` is much simpler than `ErrorResult` this change will often lead to simpler code:
 
 ```ts
 // Old DF code:
+import { mapError } from 'domain-functions'
+
 const summarizeErrors = (result: ErrorData) =>
   ({
     errors: [{ message: 'Number of errors: ' + result.errors.length }],
@@ -111,6 +113,8 @@ const summarizeErrors = (result: ErrorData) =>
 const incrementWithErrorSummary = mapError(increment, summarizeErrors)
 
 // New Composable code:
+import { mapErrors } from 'composable-functions'
+
 const isInputError = (e: Error): e is InputError => e instanceof InputError
 const isEnvError = (e: Error): e is EnvironmentError => e instanceof EnvironmentError
 const summarizeErrors = (errors: Error[]) =>
@@ -120,7 +124,7 @@ const summarizeErrors = (errors: Error[]) =>
     new EnvironmentError('Number of environment errors: ' + errors.filter(isEnvError).length),
   ]
 
-const incrementWithErrorSummary = mapError(increment, summarizeErrors)
+const incrementWithErrorSummary = mapErrors(increment, summarizeErrors)
 ```
 
 ### trace
@@ -246,7 +250,7 @@ expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 | `collectSequence({ name: nameDf, age: ageDf })` | `map(environment.sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))` |
 | `first(df1, df2)` | -- * read docs above |
 | `safeResult(() => { throw new Error('oops') })` | `composable(() => { throw new Error('oops') })` |
-| `mapError(df, (result) => ({ inputErrors: [], environmentErrors: [], errors: [{ message: 'Oops' }] }))` | `mapError(fn, errors => [new Error('Oops')])` |
+| `mapError(df, (result) => ({ inputErrors: [], environmentErrors: [], errors: [{ message: 'Oops' }] }))` | `mapErrors(fn, errors => [new Error('Oops')])` |
 | `trace(({ result, input, environment }) => console.log({ result, input, environment }))(df)` | `trace((result, ...args) => console.log(result, ...args))(fn)` |
 
 
