@@ -99,6 +99,29 @@ function withSchema<I, E>(
   }
 }
 
+/**
+ * Takes a composable and creates a composable withSchema that will assert the input and environment types according to the given schemas.
+ * @param fn a composable function
+ * @param inputSchema the schema for the input
+ * @param environmentSchema the schema for the environment
+ * @returns a composable function that will assert the input and environment types at runtime.
+ * @example
+ * ```ts
+ * const fn = composable((
+ *  { greeting }: { greeting: string },
+ *  { user }: { user: { name: string } },
+ * ) => ({
+ *   message: `${greeting} ${user.name}`
+ * }))
+ * const safeFunction = applySchema(
+ *  fn,
+ *  z.object({ greeting: z.string() }),
+ *  z.object({
+ *    user: z.object({ name: z.string() })
+ *  }),
+ * )
+ * ```
+ */
 function applySchema<I, E, A extends Composable>(
   fn: A,
   inputSchema?: ParserSchema<I>,
