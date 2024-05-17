@@ -145,6 +145,7 @@ const result = success(42)
 expect(result).toEqual({
   success: true,
   data: 42
+  errors: []
 })
 ```
 
@@ -400,9 +401,14 @@ For the example above, the `result` will be:
 It takes a Composable and a function that will map the input parameters to the expected input of the given Composable. Good to adequate the output of a composable into the input of the next composable in a composition. The function must return an array of parameters that will be passed to the Composable.
 
 ```ts
-const incrementId = composable(({ id }: { id: number }) => id + 1)
-const increment = mapParameters(incrementId, (id: number) => [{ id }])
-//    ^? Composable<(id: number) => number>
+const getUser = composable(({ id }: { id: number }) => db.users.find({ id }))
+//    ^? Composable<(input: { id: number }) => User>
+
+const getCurrentUser = mapParameters(
+  getUser,
+  (_input, user: { id: number }) => [{ id: user.id }]
+)
+//    ^? Composable<(input: unknown, env: { id: number }) => User>
 ```
 
 ## pipe
@@ -455,7 +461,7 @@ For the example above, the result will be:
 ```ts
 {
   success: true,
-  data: ['1', true, true],
+  data: ['1', true, false],
   errors: [],
 }
 ```
@@ -484,9 +490,9 @@ const traceToConsole = trace((result, ...args) => {
 })
 ```
 
-The `args` above will be the tuble of arguments passed to the composable.
+The `args` above will be the tuple of arguments passed to the composable.
 
-Then, assuming you want to trace all failures in a `otherFn`, you just need to pass that composable to our `tracetoConsole` function:
+Then, assuming you want to trace all failures in a `otherFn`, you just need to wrap it with the `tracetoConsole` function:
 
 ```ts
 traceToConsole(otherFn)
@@ -656,7 +662,7 @@ const result = await fn({ id: '1' }, { user: { id: 1 } })
 } */
 ```
 
-You can also use the `EnvironmentError` constructor to throw errors withing the composable:
+You can also use the `EnvironmentError` constructor to throw errors within the composable:
 
 ```ts
 const fn = composable(() => {
@@ -687,7 +693,7 @@ The resulting object will be:
 # Utility Types
 
 ## Composable
-A `Composable` type represents a function that results a `Promise<Result<T>>`:
+A `Composable` type represents a function that resturns a `Promise<Result<T>>`:
 
 ```ts
 const fn = composable((a: number, b: number) => a + b)
@@ -738,7 +744,7 @@ const s: Success<number> = {
 `UnpackData` infers the returned data of a successful composable function:
 
 ```ts
-const fn = composable()(async () => '')
+const fn = composable()(async () => 'hey')
 
 type Data = UnpackData<typeof fn>
 //   ^? string
@@ -815,7 +821,7 @@ const result = await d(1, { user: { admin: true } })
 ## serialize
 When serializing a `Result` to send over the wire, some of the `Error[]` information is lost.
 
-To solve that you may use the `serialize` helper that will turn the error list into a serializable object format:
+To solve that you may use the `serialize` helper that will turn the error list into a serializable format:
 
 ```ts
 const serializedResult = JSON.stringify(serialize({
