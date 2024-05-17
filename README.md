@@ -2,6 +2,17 @@
   <img width="300" src="https://github.com/seasonedcc/composable-functions/assets/566971/b786f157-9fb1-4506-9ddb-e438dcde06c8" alt="Composable Functions" />
 </p>
 
+A set of types and functions to make compositions easy and safe.
+
+- 🛟 Type-safe compositions of functions
+- 🧠 Always unwrap promises and errors as default
+- 😣 Get rid of the terrible try/catch syntax
+- ✅ End-to-end type safety, all the way from the Backend to the UI
+- 🏝️ Isolate your business logic making it easier to test and maintain
+- 📝 Allows business logic to be expressed in the type system
+
+#### Go to [API Reference](./API.md)
+
 ## Table of contents
 - [Quickstart](#quickstart)
 - [Composing type-safe functions](#composing-type-safe-functions)
@@ -14,7 +25,6 @@
   - [Catching](#catching)
   - [Mapping the error](#mapping-the-error)
 - [Unwrapping the result](#unwrapping-the-result)
-- [Read the API Reference](#read-the-api-reference)
 - [Recipes](#recipes)
 - [Using Deno](#using-deno)
 - [Acknowledgements](#acknowledgements)
@@ -196,8 +206,6 @@ const fn = composable(async (id: string) => {
 ```
 
 If the composable passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
-
-## Read the [API Reference](./API.md)
 
 ## Recipes
 
