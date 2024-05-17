@@ -1,6 +1,6 @@
 # Migrating from domain-functions
 
-If you are coming from `domain-functions`, you will find that `composable-functions` is a more flexible and powerful library.
+If you are coming from `domain-functions`, you will find that `composable-functions` is a more flexible and powerful and better typed library.
 This document will guide you through the migration process.
 
 # Table of contents
@@ -17,7 +17,7 @@ This document will guide you through the migration process.
   - [collectSequence](#collectsequence)
   - [merge](#merge)
 - [Incremental migration](#incremental-migration)
-  - [Asserting on Failures](#asserting-on-failures)
+  - [Dealing with Failures](#dealing-with-failures)
 - [Equivalence tables](#equivalence-tables)
     - [Constructors](#constructors)
     - [Combinators](#combinators)
@@ -25,9 +25,9 @@ This document will guide you through the migration process.
     - [Runtime code](#runtime-code)
 
 ## First steps
-The first thing you want to know is that the old `DomainFunction<T>` is equivalent to `Composable<(input?: unknown, environment?: unknwon) => T>`. We brought the arguments to the type signature se we could type check the compositions. A [commonly requested feature](https://github.com/seasonedcc/domain-functions/issues/80).
+The first thing you want to know is that the old `DomainFunction<T>` is equivalent to `Composable<(input?: unknown, environment?: unknwon) => T>`. We brought the arguments to the type signature se we could type check the compositions. A [commonly requested feature](https://github.com/seasonedcc/domain-functions/issues/80) in domain-functions.
 
-A composable does not need a schema, but you can still use one for runtime assertion. What we used to call a Domain Function is now a Composable with an environment and a schema.
+A composable does not need a schema, but you can still use one for runtime assertion. What we used to call a Domain Function is now a Composable with [environment](./environments.md) and a schema.
 
 The new constructor `withSchema` will work almost exactly as `makeDomainFunction`, except for the `Result` type of the resulting function.
 
@@ -59,7 +59,7 @@ This allows us to preserve stack traces and use the familiar exception interface
 #### Serialization
 The issue with native JS errors is that they lose most information when serialized to JSON.
 
-To solve that, whenever you send a `Result` over the wire you may use the new `serialize` helper that will turn your errors into a friendly object format:
+To solve that, whenever you send a `Result` over the wire you may use the new `serialize` helper that will turn your errors into a friendly object format, similar to the old `ErrorMessage` type:
 
 ```ts
 const serializedResult = JSON.stringify(serialize({
@@ -85,7 +85,7 @@ Use the sequential combinators from the namespace `environment` to keep this fam
 import { environment } from 'composable-functions'
 
 const result = environment.pipe(fn1, fn2)(input, env)
-// same for `sequence` and `branch`
+// same for `environment.sequence` and `environment.branch`
 ```
 
 **Note**: The `pipe`, `sequence`, and `branch` outside of the `environment` namespace will not keep the environment through the composition.
@@ -124,7 +124,7 @@ const incrementWithErrorSummary = mapError(increment, summarizeErrors)
 ```
 
 ### trace
-The `trace` function would get a function that had `result`, `input`, and `environment` as arguments. Now the only change is that it received all the arguments given to the function. In domain-functions the arguments were always input and environment but in composable-functions that limitation is gone therefore we can't assure it will always be the same.
+The `trace` function would get a function that had `result`, `input`, and `environment` as arguments. Now the only change is that it receives all the arguments given to the function. In domain-functions the arguments were always input and environment but in composable-functions that limitation is gone therefore we can't assure it will always be the same.
 
 ```ts
 const fn = composable((a: number, b: number, c: number) => a + b + c)
@@ -137,11 +137,11 @@ const result = await withTrace(1, 2, 3)
 ### first
 This function was removed because it had a hazardous behavior. It would return the first successful result, but it would run all functions in parallel which could cause unexpected side effects.
 
-Since we introduced `branch` we never had a use case for `first` since we used `first` for adding conditional logic in our compositions which `branch` does much better.
+Since we introduced `branch` we never had a use case for `first` since we used `first` solely for adding conditional logic in our compositions which `branch` does much better.
 We appreciate any feedback on this decision.
 
 ### collectSequence
-We removed this function because even though ECMAScript guarantees the order of the keys in an object, to get this typing right is challenging.
+We removed this function because even though ECMAScript guarantees the order of the keys in an object, to get this typing right is very challenging.
 
 If you want similar functionality, you can use `sequence` and `map` to give names to the results like so:
 
@@ -157,14 +157,14 @@ const fn = map(sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))
 ```
 
 ### merge
-We also removed the `merge` function because it was not a total function which meant that later dfs could override the previous ones.
+We also removed the `merge` function because it was not a total function which meant that later domain-functions could override the previous ones.
 
 You can easily achieve the same result with the `map` with `all` and `mergeObjects` functions like so:
 
 ```ts
 // instead of
-const df1 = mdf()(() => ({ firstName: 'John' }))
-const df2 = mdf()(() => ({ lastName: 'Doe' }))
+const df1 = makeDomainFunction()(() => ({ firstName: 'John' }))
+const df2 = makeDomainFunction()(() => ({ lastName: 'Doe' }))
 const df = merge(df1, df2)
 //    ^? DomainFunction<{ firstName: string, lastName: string }>
 
@@ -178,7 +178,7 @@ const fn = map(all(fn1, fn2), mergeObjects)
 You don't need to migrate the whole project at once.
 You can have both libraries in the project and migrate one module at a time.
 
-Choose a module that has fewer dependents, swipe all constructors from `makeDomainFunction` to `withSchema`.
+Choose a module that has fewer dependants and swipe all constructors from `makeDomainFunction` to `withSchema`.
 
 If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` function below to avoid having to migrate those modules.
 
@@ -205,10 +205,14 @@ function toComposable<T>(df: DomainFunction<T>) {
 }
 ```
 
-### Asserting on Failures
-- In the tests, change the `result.inputErrors` and `result.environmentErrors` for `result.errors`. You can test for the name: `InputError` or `EnvironmentError`
+Understanding the code above will also help you understand the differences between the two libraries. Once you finish migrating the other modules you can remove the `toComposable` function.
+
+### Dealing with Failures
+- In the tests, change the `result.inputErrors` and `result.environmentErrors` for `result.errors`. You can also test for the name: `InputError` or `EnvironmentError`
 ```ts
+// replace this
 expect(result.inputErrors).containSubset([{ path: ['name'] }])
+// with this
 expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 ```
 - Elsewhere, collect the inputErrors and environmentErrors with functions that look for `error instanceof InputError` or check the `name` of the error if the result was serialized.
@@ -259,4 +263,4 @@ expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 |---|---|
 | `{ success: true, data: { name: 'John' }, errors: [], inputErrors: [], environmentErrors: [] }` | `{ success: true, data: { name: 'John' }, errors: [] }` |
 | `{ success: false, errors: [{ message: 'Something went wrong' }], inputErrors: [{ message: 'Required', path: ['name'] }], environemntErrors: [{ message: 'Unauthorized', path: ['user'] }] }` | `{ success: false, errors: [new Error('Something went wrong'), new InputError('Required', ['name']), new EnvironmentError('Unauthorized', ['user'])] }` |
-| -- | with `serialize`: `{ success: false, errors: [{ message: 'Something went wrong', name: 'Error' }, { message: 'Required', name: 'InputError', path: ['name'] }, { message: 'Unauthorized', name: 'EnvironmentError', path: ['user'] }] }` |
+| -- | with `serialize`: `{ success: false, errors: [{ message: 'Something went wrong', name: 'Error', path: [] }, { message: 'Required', name: 'InputError', path: ['name'] }, { message: 'Unauthorized', name: 'EnvironmentError', path: ['user'] }] }` |

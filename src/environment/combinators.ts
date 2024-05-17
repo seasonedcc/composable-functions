@@ -71,9 +71,9 @@ function branch<
     if (!result.success) return result
 
     return composable(async () => {
-      const nextDf = await resolver(result.data)
-      if (typeof nextDf !== 'function') return result.data
-      return fromSuccess(nextDf)(result.data, environment)
+      const nextFn = await resolver(result.data)
+      if (typeof nextFn !== 'function') return result.data
+      return fromSuccess(nextFn)(result.data, environment)
     })()
   }) as BranchReturn<SourceComposable, Resolver>
 }
