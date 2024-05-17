@@ -1,7 +1,7 @@
 import type { Cookie, TypedResponse } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
-  catchError,
+  catchFailure,
   Result,
   SerializedResult,
   composable,
@@ -24,7 +24,7 @@ const strictReadCookie = composable(
     return cookieObj
   },
 )
-const safeReadCookie = catchError(strictReadCookie, () => ({}))
+const safeReadCookie = catchFailure(strictReadCookie, () => ({}))
 
 const envFromCookie = fromSuccess(safeReadCookie)
 

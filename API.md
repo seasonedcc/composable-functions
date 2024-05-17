@@ -9,7 +9,7 @@
 - [Combinators](#combinators)
   - [all](#all)
   - [branch](#branch)
-  - [catchError](#catcherror)
+  - [catchFailure](#catchfailure)
   - [collect](#collect)
   - [map](#map)
   - [mapErrors](#maperrors)
@@ -280,15 +280,15 @@ For the example above, the result type will be `Failure`:
 { success: false, errors: [new Error('Invalid input')] }
 ```
 
-## catchError
-You can catch an error in a `Composable`, using `catchError` which is similar to `map` but will run whenever the composable fails:
+## catchFailure
+You can catch an error in a `Composable`, using `catchFailure` which is similar to `map` but will run whenever the composable fails:
 
 ```typescript
-import { composable, catchError } from 'composable-functions'
+import { composable, catchFailure } from 'composable-functions'
 
 const getUser = composable((id: string) => fetchUser(id))
 //    ^? Composable<(id: string) => User>
-const getOptionalUser = catchError(getUser, (errors, id) => {
+const getOptionalUser = catchFailure(getUser, (errors, id) => {
   console.log(`Failed to fetch user with id ${id}`, errors)
   return null
 })

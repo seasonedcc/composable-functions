@@ -225,15 +225,15 @@ function mapParameters<
  * @example
  *
  * ```ts
- * import { composable, catchError } from 'composable-functions'
+ * import { composable, catchFailure } from 'composable-functions'
  *
  * const increment = composable(({ id }: { id: number }) => id + 1)
- * const negativeOnError = catchError(increment, (result, originalInput) => (
+ * const negativeOnError = catchFailure(increment, (result, originalInput) => (
  *  originalInput.id * -1
  * ))
  * ```
  */
-function catchError<
+function catchFailure<
   Fn extends Composable,
   C extends (err: Error[], ...originalInput: Parameters<Fn>) => any,
 >(
@@ -364,7 +364,7 @@ function branch<
 export {
   all,
   branch,
-  catchError,
+  catchFailure,
   collect,
   map,
   mapErrors,
