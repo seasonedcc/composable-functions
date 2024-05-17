@@ -195,6 +195,8 @@ const fn = composable(async (id: string) => {
 })
 ```
 
+If the composable passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
+
 ## Read the [API Reference](./API.md)
 
 ## Recipes
