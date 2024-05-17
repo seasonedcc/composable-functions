@@ -58,4 +58,16 @@ class ErrorList extends Error {
   }
 }
 
-export { EnvironmentError, ErrorList, InputError }
+const isInputError = (e: Error): e is InputError => e instanceof InputError
+const isEnvironmentError = (e: Error): e is EnvironmentError =>
+  e instanceof EnvironmentError
+const isError = (e: Error) => !isInputError(e) && !isEnvironmentError(e)
+
+export {
+  EnvironmentError,
+  ErrorList,
+  InputError,
+  isError,
+  isInputError,
+  isEnvironmentError,
+}
