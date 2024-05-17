@@ -17,8 +17,7 @@ await build({
   package: {
     name: 'composable-functions',
     version: pkg.version,
-    description:
-      'Decouple your business logic from your controllers. With first-class type inference from end to end.',
+    description: 'Types and functions to make composition easy and safe',
     license: 'MIT',
     author: 'Seasoned',
     bugs: {
