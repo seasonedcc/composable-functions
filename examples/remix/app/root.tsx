@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const result = await getGPDInfo(null, await envFromCookie(cookie)(request))
+  const result = await getGPDInfo(null, await envFromCookie(request, cookie))
   return loaderResponseOrThrow(result)
 }
 

@@ -3,7 +3,7 @@ import { withSchema } from 'composable-functions'
 import { createCookie } from '@remix-run/node'
 
 const cookie = createCookie('gpd', {
-  maxAge: 60, // One minute, but should probably be longer
+  maxAge: 20, // seconds
 })
 
 const getGPDInfo = withSchema(

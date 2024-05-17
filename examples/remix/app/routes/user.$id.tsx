@@ -5,6 +5,7 @@ import { formatUser, getUser } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
 
 // The output of getUser will be the input of formatUser
+// We could also be using `map` instead of `pipe` here
 const getData = pipe(getUser, formatUser)
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
