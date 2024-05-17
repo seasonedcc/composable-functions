@@ -40,7 +40,7 @@
   - [environment.sequence](#environmentsequence)
 - [Serialization](#serialization)
   - [serialize](#serialize)
-  - [toErrorPayload](#toerrorpayload)
+  - [serializeError](#serializeerror)
 
 
 # Constructors
@@ -835,14 +835,14 @@ const serializedResult = JSON.stringify(serialize({
 
 Thus, you can differentiate between the types of errors using their names and paths.
 
-## toErrorPayload
-`toErrorPayload` is a helper function that will convert a single error into a serializable error object. It is used internally by `serialize`:
+## serializeError
+`serializeError` is a helper function that will convert a single error into a serializable error object. It is used internally by `serialize`:
 
 ```ts
-const serializedError = JSON.stringify(
-  toErrorPayload(new InputError('Oops', ['name']))
+const serialized = JSON.stringify(
+  serializeError(new InputError('Oops', ['name']))
 )
 
-// serializedError is:
+// serialized is:
 `"{ message: 'Oops', name: 'InputError', path: ['name'] }"`
 ```
