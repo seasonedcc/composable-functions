@@ -140,8 +140,8 @@ type RecordToTuple<T extends Record<string, Composable>> =
 /**
  * A serializable error object.
  */
-type SerializableError<T extends Error = Error> = {
-  exception: T
+type SerializableError = {
+  exception: Error
   message: string
   name: string
   path: string[]
