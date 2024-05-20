@@ -213,7 +213,7 @@ const fn = composable(async (id: string) => {
 ```
 We recomend only using `fromSuccess` when you are sure the composable must succeed, like when you are testing the happy path of a composable.
 
-You can also use it within other composables whenever the composition utilities fall short, and you want to call other composables from inside your current one.
+You can also use it within other composables whenever the composition utilities fall short, the error will be propagated as `ErrorList` and available in the caller `Result`.
 
 ```ts
 const getUser = composable((id: string) => db().collection('users').findOne({ id }))
