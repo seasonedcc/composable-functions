@@ -128,10 +128,10 @@ function applySchema<I, E, A extends Composable>(
   environmentSchema?: ParserSchema<E>,
 ): Composable<(input?: unknown, environment?: unknown) => UnpackData<A>> {
   return async function (input, environment = {}) {
-    const envResult = await (environmentSchema ?? objectSchema).safeParseAsync(
-      environment,
-    )
-    const result = await (inputSchema ?? alwaysUndefinedSchema).safeParseAsync(
+    const envResult = await (
+      environmentSchema ?? alwaysUnknownSchema
+    ).safeParseAsync(environment)
+    const result = await (inputSchema ?? alwaysUnknownSchema).safeParseAsync(
       input,
     )
 
@@ -153,23 +153,8 @@ function applySchema<I, E, A extends Composable>(
   }
 }
 
-const objectSchema: ParserSchema<Record<PropertyKey, unknown>> = {
-  safeParseAsync: (data: unknown) => {
-    if (Object.prototype.toString.call(data) !== '[object Object]') {
-      return Promise.resolve({
-        success: false,
-        error: { issues: [{ path: [], message: 'Expected an object' }] },
-      })
-    }
-    const someRecord = data as Record<PropertyKey, unknown>
-    return Promise.resolve({ success: true, data: someRecord })
-  },
-}
-
-const alwaysUndefinedSchema: ParserSchema<undefined> = {
-  safeParseAsync: (_data: unknown) => {
-    return Promise.resolve({ success: true, data: undefined })
-  },
+const alwaysUnknownSchema: ParserSchema<unknown> = {
+  safeParseAsync: (data: unknown) => Promise.resolve({ success: true, data }),
 }
 
 export { applySchema, composable, failure, fromSuccess, success, withSchema }
