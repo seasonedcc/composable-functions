@@ -195,7 +195,14 @@ return result.data
 //            ^? User
 ```
 
-Whenever the composition utilities fall short, and you want to call other composables from inside your current one, you can use the `fromSuccess` function to create a composable that is expected to always succeed.
+TypeScript won't let you access the `data` property without checking for `success` first, so you can be sure that you are always handling the error case.
+```ts
+const result = await getUser('123')
+// @ts-expect-error: Property 'data' does not exist on type 'Result<User>'
+return result.data
+```
+
+You can also use `fromSuccess` to unwrap the result of a composable that is expected to always succeed. Keep in mind that this function will throw an error if the composable fails so you're losing the safety layer of the `Result` type.
 
 ```ts
 const fn = composable(async (id: string) => {
@@ -204,8 +211,19 @@ const fn = composable(async (id: string) => {
   return { valueA, valueB }
 })
 ```
+We recomend only using `fromSuccess` when you are sure the composable must succeed, like when you are testing the happy path of a composable.
 
-If the composable passed to `fromSuccess` happens to fail, the error will be bubbled up exactly as it was thrown.
+You can also use it within other composables whenever the composition utilities fall short, and you want to call other composables from inside your current one.
+
+```ts
+const getUser = composable((id: string) => db().collection('users').findOne({ id }))
+
+const getProfile = composable(async (id: string) => {
+  const user = await fromSuccess(getUser)(id)
+  // ... some logic
+  return { user, otherData }
+})
+```
 
 ## Recipes
 
