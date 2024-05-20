@@ -156,7 +156,7 @@ describe('withSchema', () => {
 
       assertEquals(await handler('some input'), {
         success: true,
-        data: undefined,
+        data: 'some input',
         errors: [],
       })
     })
@@ -186,10 +186,7 @@ describe('withSchema', () => {
         >
       >
 
-      assertEquals(
-        await handler(undefined, ''),
-        failure([new EnvironmentError('Expected an object')]),
-      )
+      assertEquals(await handler(undefined, ''), success('no input!'))
     })
 
     it('returns error when parsing fails', async () => {
