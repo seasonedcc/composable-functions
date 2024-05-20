@@ -158,7 +158,7 @@ type SerializedResult<T> =
  * The object used to validate either input or environment when creating composables with a schema.
  */
 type ParserSchema<T extends unknown = unknown> = {
-  safeParseAsync: (a: unknown) => Promise<
+  safeParse: (a: unknown) =>
     | {
         success: true
         data: T
@@ -167,7 +167,6 @@ type ParserSchema<T extends unknown = unknown> = {
         success: false
         error: { issues: { path: PropertyKey[]; message: string }[] }
       }
-  >
 }
 
 /**

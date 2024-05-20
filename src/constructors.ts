@@ -92,11 +92,10 @@ function withSchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
 ) {
-  return function <Output>(
+  return <Output>(
     handler: (input: I, environment: E) => Output,
-  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> {
-    return applySchema(composable(handler), inputSchema, environmentSchema)
-  }
+  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> =>
+    applySchema(composable(handler), inputSchema, environmentSchema)
 }
 
 /**
@@ -127,13 +126,11 @@ function applySchema<I, E, A extends Composable>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
 ): Composable<(input?: unknown, environment?: unknown) => UnpackData<A>> {
-  return async function (input, environment = {}) {
-    const envResult = await (
-      environmentSchema ?? alwaysUnknownSchema
-    ).safeParseAsync(environment)
-    const result = await (inputSchema ?? alwaysUnknownSchema).safeParseAsync(
-      input,
+  return (input, environment) => {
+    const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
+      environment,
     )
+    const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
     if (!result.success || !envResult.success) {
       const inputErrors = result.success
@@ -147,14 +144,14 @@ function applySchema<I, E, A extends Composable>(
             (error) =>
               new EnvironmentError(error.message, error.path as string[]),
           )
-      return failure([...inputErrors, ...envErrors])
+      return Promise.resolve(failure([...inputErrors, ...envErrors]))
     }
     return fn(result.data, envResult.data)
   }
 }
 
 const alwaysUnknownSchema: ParserSchema<unknown> = {
-  safeParseAsync: (data: unknown) => Promise.resolve({ success: true, data }),
+  safeParse: (data: unknown) => ({ success: true, data }),
 }
 
 export { applySchema, composable, failure, fromSuccess, success, withSchema }

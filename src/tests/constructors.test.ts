@@ -435,16 +435,16 @@ describe('withSchema', () => {
 
 describe('applySchema', () => {
   it('uses zod parsers to parse the input and environment turning it into a schema function', async () => {
-    const parser = z.object({ id: z.preprocess(Number, z.number()) })
-    const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
+    const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+    const envSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
       composable(
         ({ id }: { id: number }, { uid }: { uid: number }) =>
           [id, uid] as const,
       ),
-      parser,
-      envParser,
+      inputSchema,
+      envSchema,
     )
     type _R = Expect<
       Equal<
