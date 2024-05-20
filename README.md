@@ -26,9 +26,9 @@ A set of types and functions to make compositions easy and safe.
   - [Mapping the errors](#mapping-the-errors)
 - [Unwrapping the result](#unwrapping-the-result)
 - [Recipes](#recipes)
-    - [- Migrating from domain-functions](#--migrating-from-domain-functions)
-    - [- Handling external input](#--handling-external-input)
-    - [- Defining constants for multiple functions (environments)](#--defining-constants-for-multiple-functions-environments)
+    - [Migrating from domain-functions](#migrating-from-domain-functions)
+    - [Handling external input](#handling-external-input)
+    - [Defining constants for multiple functions (environments)](#defining-constants-for-multiple-functions-environments)
 - [Using Deno](#using-deno)
 - [Acknowledgements](#acknowledgements)
 
@@ -229,9 +229,9 @@ const getProfile = composable(async (id: string) => {
 
 ## Recipes
 
-#### - [Migrating from domain-functions](./migrating-df.md)
-#### - [Handling external input](./with-schema.md)
-#### - [Defining constants for multiple functions (environments)](./environments.md)
+#### [Migrating from domain-functions](./migrating-df.md)
+#### [Handling external input](./with-schema.md)
+#### [Defining constants for multiple functions (environments)](./environments.md)
 
 ## Using Deno
 
