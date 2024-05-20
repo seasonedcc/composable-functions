@@ -1,6 +1,6 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
-import { catchError, composable, success, withSchema } from '../index.ts'
+import { catchFailure, composable, success, withSchema } from '../index.ts'
 
 const schemaFaultyAdd = withSchema(
   z.number(),
@@ -15,9 +15,9 @@ const faultyAdd = composable((a: number, b: number) => {
   return a + b
 })
 
-describe('catchError', () => {
+describe('catchFailure', () => {
   it('changes the type to accomodate catcher return type', async () => {
-    const fn = catchError(schemaFaultyAdd, () => null)
+    const fn = catchFailure(schemaFaultyAdd, () => null)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -30,7 +30,7 @@ describe('catchError', () => {
 
   it('returns original type when catcher returns empty list', async () => {
     const getList = composable(() => [1, 2, 3])
-    const fn = catchError(getList, () => [])
+    const fn = catchFailure(getList, () => [])
     const res = await fn()
 
     type _FN = Expect<Equal<typeof fn, Composable<() => number[]>>>
@@ -39,7 +39,7 @@ describe('catchError', () => {
   })
 
   it('changes the type to accomodate catcher return type', async () => {
-    const fn = catchError(faultyAdd, () => null)
+    const fn = catchFailure(faultyAdd, () => null)
     const res = await fn(1, 2)
 
     type _FN = Expect<
@@ -51,9 +51,8 @@ describe('catchError', () => {
   })
 
   it('receives the list of errors as input to another function and returns a new composable', async () => {
-    const fn = catchError(
-      faultyAdd,
-      (errors, a, b) => errors.length > 1 ? NaN : a + b,
+    const fn = catchFailure(faultyAdd, (errors, a, b) =>
+      errors.length > 1 ? NaN : a + b,
     )
     const res = await fn(1, 2)
 
@@ -66,7 +65,7 @@ describe('catchError', () => {
   })
 
   it('fails when catcher fail', async () => {
-    const fn = catchError(faultyAdd, () => {
+    const fn = catchFailure(faultyAdd, () => {
       throw new Error('Catcher also has problems')
     })
     const res = await fn(1, 2)

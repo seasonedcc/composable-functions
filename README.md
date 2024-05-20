@@ -159,14 +159,14 @@ Two neat consequences is that we can handle errors using functions (no need for 
 ### Throwing
 
 ### Catching
-You can catch an error in a `Composable`, using `catchError` which is similar to `map` but will run whenever the first composable fails:
+You can catch an error in a `Composable`, using `catchFailure` which is similar to `map` but will run whenever the first composable fails:
 
 ```typescript
-import { composable, catchError } from 'composable-functions'
+import { composable, catchFailure } from 'composable-functions'
 
 const getUser = composable((id: string) => fetchUser(id))
 //    ^? Composable<(id: string) => User>
-const getOptionalUser = catchError(getUser, (errors, id) => {
+const getOptionalUser = catchFailure(getUser, (errors, id) => {
   console.log(`Failed to fetch user with id ${id}`, errors)
   return null
 })

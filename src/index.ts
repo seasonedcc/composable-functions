@@ -9,7 +9,7 @@ export {
 export {
   all,
   branch,
-  catchError,
+  catchFailure,
   collect,
   map,
   mapErrors,
