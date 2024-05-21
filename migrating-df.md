@@ -113,15 +113,13 @@ const summarizeErrors = (result: ErrorData) =>
 const incrementWithErrorSummary = mapError(increment, summarizeErrors)
 
 // New Composable code:
-import { mapErrors } from 'composable-functions'
+import { mapErrors, isInputError, isEnvironmentError } from 'composable-functions'
 
-const isInputError = (e: Error): e is InputError => e instanceof InputError
-const isEnvError = (e: Error): e is EnvironmentError => e instanceof EnvironmentError
 const summarizeErrors = (errors: Error[]) =>
   [
-    new Error('Number of errors: ' + errors.filter(e => !isInputError(e) && !isEnvError(e)).length),
+    new Error('Number of errors: ' + errors.filter((e) => !isInputError(e) && !isEnvironmentError(e)).length,
     new InputError('Number of input errors: ' + errors.filter(isInputError).length),
-    new EnvironmentError('Number of environment errors: ' + errors.filter(isEnvError).length),
+    new EnvironmentError('Number of environment errors: ' + errors.filter(isEnvironmentError).length),
   ]
 
 const incrementWithErrorSummary = mapErrors(increment, summarizeErrors)

@@ -1,19 +1,19 @@
 import { assertEquals, describe, it } from './prelude.ts'
 import {
-  serializeError,
-  failure,
-  success,
-  InputError,
   EnvironmentError,
+  failure,
+  InputError,
+  serializeError,
+  success,
 } from '../index.ts'
 import { SerializableError } from '../types.ts'
 import { serialize } from '../index.ts'
-import { SerializedResult } from '../types.ts'
+import { SerializableResult } from '../types.ts'
 
 describe('serializeError', () => {
   it('serializes an error into a payload friendly format', () => {
     const result = serializeError(new Error('Oops!'))
-    type _FN = Expect<Equal<typeof result, SerializableError>>
+    type _T = Expect<Equal<typeof result, SerializableError>>
 
     assertEquals(result, {
       message: 'Oops!',
@@ -70,7 +70,7 @@ describe('serializeError', () => {
 describe('serialize', () => {
   it('serializes a successfull result properly', () => {
     const result = serialize(success('Hello!'))
-    type _FN = Expect<Equal<typeof result, SerializedResult<'Hello!'>>>
+    type _T = Expect<Equal<typeof result, SerializableResult<'Hello!'>>>
 
     assertEquals(result, { success: true, data: 'Hello!', errors: [] })
   })
@@ -84,7 +84,7 @@ describe('serialize', () => {
       ]),
     )
 
-    type _FN = Expect<Equal<typeof result, SerializedResult<unknown>>>
+    type _T = Expect<Equal<typeof result, SerializableResult<unknown>>>
 
     assertEquals(result, {
       success: false,

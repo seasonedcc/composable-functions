@@ -3,7 +3,7 @@ import { json } from '@remix-run/node'
 import {
   catchFailure,
   Result,
-  SerializedResult,
+  SerializableResult,
   composable,
   serialize,
   fromSuccess,
@@ -31,7 +31,7 @@ const envFromCookie = fromSuccess(safeReadCookie)
 const actionResponse = <X>(
   result: Result<X>,
   opts?: RequestInit,
-): TypedResponse<SerializedResult<X>> =>
+): TypedResponse<SerializableResult<X>> =>
   json(serialize(result), { status: result.success ? 200 : 422, ...opts })
 
 const loaderResponseOrThrow = <T extends Result<unknown>>(

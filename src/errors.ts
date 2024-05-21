@@ -58,4 +58,21 @@ class ErrorList extends Error {
   }
 }
 
-export { EnvironmentError, ErrorList, InputError }
+function isInputError(e: { name: string; message: string }): boolean {
+  return e.name === 'InputError'
+}
+
+function isEnvironmentError(e: {
+  name: string
+  message: string
+}): boolean {
+  return e.name === 'EnvironmentError'
+}
+
+export {
+  EnvironmentError,
+  ErrorList,
+  InputError,
+  isEnvironmentError,
+  isInputError,
+}

@@ -26,7 +26,13 @@ export {
   inputFromUrl,
 } from './input-resolvers.ts'
 export { serialize, serializeError } from './serializer.ts'
-export { EnvironmentError, ErrorList, InputError } from './errors.ts'
+export {
+  EnvironmentError,
+  ErrorList,
+  InputError,
+  isEnvironmentError,
+  isInputError,
+} from './errors.ts'
 export type {
   Composable,
   Failure,
@@ -34,7 +40,7 @@ export type {
   ParserSchema,
   Result,
   SerializableError,
-  SerializedResult,
+  SerializableResult,
   Success,
   UnpackAll,
   UnpackData,

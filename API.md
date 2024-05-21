@@ -22,10 +22,12 @@
   - [inputFromFormData](#inputfromformdata)
   - [inputFromUrl](#inputfromurl)
   - [inputFromSearch](#inputfromsearch)
-- [Error Constructors](#error-constructors)
+- [Error Constructors and Handlers](#error-constructors-and-handlers)
   - [ErrorList](#errorlist)
   - [EnvironmentError](#environmenterror)
   - [InputError](#inputerror)
+  - [isEnvironmentError](#isenvironmenterror)
+  - [isInputError](#isinputerror)
 - [Type-safe runtime utilities](#type-safe-runtime-utilities)
   - [mergeObjects](#mergeobjects)
 - [Utility Types](#utility-types)
@@ -613,7 +615,7 @@ async (request: Request) => {
 }
 ```
 
-# Error Constructors
+# Error Constructors and Handlers
 The `Failure` results contain a list of errors that can be of any extended class of `Error`.
 To help with composables `withSchema` though, we provide some constructors that will help you create errors to differentiate between kinds of errors.
 
@@ -672,6 +674,22 @@ const fn = composable(() => {
 
 ## InputError
 Similar to `EnvironmentError`, an `InputError` is a special kind of error that represents an error in the input schema.
+
+## isEnvironmentError
+`isEnvironmentError` is a helper function that will check if an error is an instance of `EnvironmentError`.
+
+```ts
+isEnvironmentError(new EnvironmentError('yes')) // true
+isEnvironmentError(new Error('nope')) // false
+```
+
+## isInputError
+`isInputError` is a helper function that will check if an error is an instance of `InputError`.
+
+```ts
+isInputError(new InputError('yes')) // true
+isInputError(new Error('nope')) // false
+```
 
 # Type-safe runtime utilities
 ## mergeObjects
@@ -817,6 +835,7 @@ const result = await d(1, { user: { admin: true } })
 ```
 
 # Serialization
+In distributed systems where errors might be serialized across network boundaries, it is important to preserve information relevant to error handling.
 
 ## serialize
 When serializing a `Result` to send over the wire, some of the `Error[]` information is lost.
@@ -833,10 +852,12 @@ const serializedResult = JSON.stringify(serialize({
 `"{ success: false, errors: [{ message: 'Oops', name: 'InputError', path: ['name'] }] }"`
 ```
 
-Thus, you can differentiate between the types of errors using their names and paths.
+The resulting type is `SerializableResult` which means `Success<T> | { success: false, errors: SerializableError[] }`.
+
+Therefore, you can differentiate the error using names and paths.
 
 ## serializeError
-`serializeError` is a helper function that will convert a single error into a serializable error object. It is used internally by `serialize`:
+`serializeError` is a helper function that will convert a single `Error` into a `SerializableError` object. It is used internally by `serialize`:
 
 ```ts
 const serialized = JSON.stringify(
