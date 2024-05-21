@@ -58,16 +58,21 @@ class ErrorList extends Error {
   }
 }
 
-const isInputError = (e: Error): e is InputError => e instanceof InputError
-const isEnvironmentError = (e: Error): e is EnvironmentError =>
-  e instanceof EnvironmentError
-const isGeneralError = (e: Error) => !isInputError(e) && !isEnvironmentError(e)
+function isInputError(e: { name: string; message: string }): boolean {
+  return e.name === 'InputError'
+}
+
+function isEnvironmentError(e: {
+  name: string
+  message: string
+}): boolean {
+  return e.name === 'EnvironmentError'
+}
 
 export {
   EnvironmentError,
   ErrorList,
   InputError,
-  isGeneralError,
-  isInputError,
   isEnvironmentError,
+  isInputError,
 }

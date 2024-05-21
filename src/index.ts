@@ -25,18 +25,12 @@ export {
   inputFromSearch,
   inputFromUrl,
 } from './input-resolvers.ts'
-export {
-  deserialize,
-  deserializeError,
-  serialize,
-  serializeError,
-} from './serializer.ts'
+export { serialize, serializeError } from './serializer.ts'
 export {
   EnvironmentError,
   ErrorList,
   InputError,
   isEnvironmentError,
-  isGeneralError,
   isInputError,
 } from './errors.ts'
 export type {

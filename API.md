@@ -26,7 +26,6 @@
   - [ErrorList](#errorlist)
   - [EnvironmentError](#environmenterror)
   - [InputError](#inputerror)
-  - [isGeneralError](#isgeneralerror)
   - [isEnvironmentError](#isenvironmenterror)
   - [isInputError](#isinputerror)
 - [Type-safe runtime utilities](#type-safe-runtime-utilities)
@@ -43,9 +42,7 @@
   - [environment.sequence](#environmentsequence)
 - [Serialization](#serialization)
   - [serialize](#serialize)
-  - [deserialize](#deserialize)
   - [serializeError](#serializeerror)
-  - [deserializeError](#deserializeerror)
 
 
 # Constructors
@@ -678,15 +675,6 @@ const fn = composable(() => {
 ## InputError
 Similar to `EnvironmentError`, an `InputError` is a special kind of error that represents an error in the input schema.
 
-## isGeneralError
-`isGeneralError` is a helper function that will check if an error is not an instance of `InputError` nor `EnvironmentError`.
-
-```ts
-isGeneralError(new Error('yes')) // true
-isGeneralError(new InputError('nope')) // false
-isGeneralError(new EnvironmentError('nope')) // false
-```
-
 ## isEnvironmentError
 `isEnvironmentError` is a helper function that will check if an error is an instance of `EnvironmentError`.
 
@@ -847,7 +835,7 @@ const result = await d(1, { user: { admin: true } })
 ```
 
 # Serialization
-In distributed systems where errors might be serialized across network boundaries, it is important to have a way to serialize errors in a way that they won't lose data and can then be deserialized and understood by the receiving end.
+In distributed systems where errors might be serialized across network boundaries, it is important to preserve information relevant to error handling.
 
 ## serialize
 When serializing a `Result` to send over the wire, some of the `Error[]` information is lost.
@@ -868,20 +856,6 @@ The resulting type is `SerializedResult` which means `Success<T> | { success: fa
 
 Therefore, you can differentiate use the error names and paths.
 
-## deserialize
-
-When deserializing a `SerializedResult` you can use the `deserialize` helper to turn it back into a `Result`:
-
-```ts
-const deserializedResult = deserialize(JSON.parse(serializedResult))
-
-// deserializedResult is:
-{
-  success: false,
-  errors: [new InputError('Oops', ['name'])],
-}
-```
-
 ## serializeError
 `serializeError` is a helper function that will convert a single `Error` into a `SerializableError` object. It is used internally by `serialize`:
 
@@ -892,14 +866,4 @@ const serialized = JSON.stringify(
 
 // serialized is:
 `"{ message: 'Oops', name: 'InputError', path: ['name'] }"`
-```
-
-## deserializeError
-`deserializeError` is a helper function that will convert a `SerializableError` object back into an `Error`. It is used internally by `deserialize`:
-
-```ts
-const deserialized = deserializeError(JSON.parse(serialized))
-
-// deserialized is:
-new InputError('Oops', ['name'])
 ```

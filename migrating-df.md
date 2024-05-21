@@ -71,18 +71,6 @@ const serializedResult = JSON.stringify(serialize({
 `"{ success: false, errors: [{ message: 'Oops', name: 'InputError', path: ['name'] }] }"`
 ```
 
-After serialization, you can use the `deserialize` function to get the original `Result` back:
-
-```ts
-const deserializedResult = deserialize(JSON.parse(serializedResult))
-
-// deserializedResult is:
-{
-  success: false,
-  errors: [new InputError('Oops', ['name'])],
-}
-```
-
 ## Combinators which shouldn't be affected
 The parallel combinators like `all` and `collect`, along with `map` and `fromSuccess` should work the same way.
 
@@ -125,11 +113,11 @@ const summarizeErrors = (result: ErrorData) =>
 const incrementWithErrorSummary = mapError(increment, summarizeErrors)
 
 // New Composable code:
-import { mapErrors, isInputError, isEnvironmentError, isGeneralError } from 'composable-functions'
+import { mapErrors, isInputError, isEnvironmentError } from 'composable-functions'
 
 const summarizeErrors = (errors: Error[]) =>
   [
-    new Error('Number of errors: ' + errors.filter(isGeneralError).length,
+    new Error('Number of errors: ' + errors.filter((e) => !isInputError(e) && !isEnvironmentError(e)).length,
     new InputError('Number of input errors: ' + errors.filter(isInputError).length),
     new EnvironmentError('Number of environment errors: ' + errors.filter(isEnvironmentError).length),
   ]

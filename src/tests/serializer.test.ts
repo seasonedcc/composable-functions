@@ -1,14 +1,12 @@
 import { assertEquals, describe, it } from './prelude.ts'
 import {
-  deserializeError,
-  deserialize,
-  serializeError,
-  failure,
-  success,
-  InputError,
   EnvironmentError,
+  failure,
+  InputError,
+  serializeError,
+  success,
 } from '../index.ts'
-import { Result, SerializableError } from '../types.ts'
+import { SerializableError } from '../types.ts'
 import { serialize } from '../index.ts'
 import { SerializedResult } from '../types.ts'
 
@@ -111,89 +109,5 @@ describe('serialize', () => {
         },
       ],
     })
-  })
-})
-
-describe('deserializeError', () => {
-  it('deserializes a SerializableError', () => {
-    const err: Partial<SerializableError> = {
-      message: 'Oops',
-      name: 'Error',
-      path: [],
-    }
-    const result = deserializeError(err as SerializableError)
-    type _T = Expect<Equal<typeof result, Error>>
-
-    assertEquals(result.message, 'Oops')
-    assertEquals('path' in result, false)
-    assertEquals(result instanceof Error, true)
-    assertEquals(result instanceof InputError, false)
-    assertEquals(result instanceof EnvironmentError, false)
-  })
-
-  it('deserializes an InputError', () => {
-    const err = serializeError(new InputError('Required', ['name']))
-    const result = deserializeError(err)
-
-    assertEquals(result.message, 'Required')
-    assertEquals('path' in result && result.path, ['name'])
-    assertEquals(result instanceof Error, true)
-    assertEquals(result instanceof InputError, true)
-    assertEquals(result instanceof EnvironmentError, false)
-  })
-
-  it('deserializes an EnvironmentError', () => {
-    const err = serializeError(
-      new EnvironmentError('Not found', ['user', 'name']),
-    )
-    const result = deserializeError(err)
-
-    assertEquals(result.message, 'Not found')
-    assertEquals('path' in result && result.path, ['user', 'name'])
-    assertEquals(result instanceof Error, true)
-    assertEquals(result instanceof InputError, false)
-    assertEquals(result instanceof EnvironmentError, true)
-  })
-
-  it('deserializes a custom error', () => {
-    class MyCustomError extends Error {
-      constructor(message: string) {
-        super(message)
-        this.name = 'MyCustomError'
-      }
-    }
-
-    const err = serializeError(new MyCustomError('Custom error'))
-    const result = deserializeError(err)
-
-    assertEquals(result.message, 'Custom error')
-    assertEquals(result instanceof Error, true)
-    assertEquals(result instanceof InputError, false)
-    assertEquals(result instanceof EnvironmentError, false)
-  })
-})
-
-describe('deserialize', () => {
-  it('deserializes a successfull SerializedResult properly', () => {
-    const result = success('Hello!')
-    const serialized = serialize(result)
-    const deserialized = deserialize(serialized)
-    type _T = Expect<Equal<typeof deserialized, Result<'Hello!'>>>
-
-    assertEquals(deserialized, result)
-  })
-
-  it('deserializes a failed SerializedResult properly', () => {
-    const result = failure([
-      new Error('Oops!'),
-      new InputError('Required'),
-      new EnvironmentError('Not found', ['user', 'name']),
-    ])
-    const serialized = serialize(result)
-    const deserialized = deserialize(serialized)
-
-    type _T = Expect<Equal<typeof deserialized, Result<unknown>>>
-
-    assertEquals(deserialized, result)
   })
 })
