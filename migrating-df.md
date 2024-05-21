@@ -3,6 +3,15 @@
 If you are coming from `domain-functions`, you will find that `composable-functions` is a more flexible and powerful and better typed library.
 This document will guide you through the migration process.
 
+## Benefits of Migrating from `domain-functions` to `composable-functions`
+
+-	Enhanced Type Safety: Enjoy robust **type-safety during function composition**. The improved type-checking mechanisms prevent incompatible functions from being composed, reducing runtime errors and improving code reliability.
+-	Simplified Function Creation: **No need to define schemas**. Create composable functions easily and efficiently without the overhead of schema definitions.
+-	Runtime Validation: Use the `withSchema` function for optional runtime validation of inputs and environments. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use `applySchema` to run your runtime validation only once **avoiding unnecessary processing**.
+-	Flexible Compositions: The new combinators, such as `environment.pipe`, `environment.sequence`, and `environment.branch`, offer powerful ways to manage **typed environments** and contextual information across your compositions.
+-	Incremental Migration: Seamlessly migrate your existing codebase incrementally. **Both `domain-functions` and `composable-functions` can coexist**, allowing you to transition module by module.
+-	Enhanced Error Handling Combinators: New and improved combinators like `mapErrors` and `catchFailure` provide more control over error transformation and handling, making your **code more resilient**.
+
 # Table of contents
 - [First steps](#first-steps)
   - [The new `Result` type - `Success<T> | Failure`](#the-new-result-type---successt--failure)
