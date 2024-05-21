@@ -1,17 +1,23 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { inputFromUrl, collect, map } from 'composable-functions'
+import { inputFromUrl, collect, map, applySchema } from 'composable-functions'
 import { listColors } from '~/business/colors'
 import { listUsers } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
+import { z } from 'zod'
 
-// We'll run these 2 composables in parallel with Promise.all
-const getData = collect({
-  // The second argument will transform the successful result of listColors,
-  // we only care about what is in the "data" field
-  colors: map(listColors, ({ data }) => data),
-  users: listUsers,
-})
+const getData = applySchema(
+  // We'll run these 2 composables in parallel with Promise.all
+  collect({
+    // The second argument will transform the successful result of listColors,
+    // we only care about what is in the "data" field
+    colors: map(listColors, ({ data }) => data),
+    users: listUsers,
+  }),
+  // We are applying a schema for runtime safety
+  // By not defining schemas for every composable we avoid unnecessary processing
+  z.object({ page: z.string().optional() }),
+)
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
   const result = await getData(inputFromUrl(request))

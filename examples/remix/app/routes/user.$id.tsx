@@ -1,12 +1,17 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
-import { pipe } from 'composable-functions'
+import { applySchema, pipe } from 'composable-functions'
 import { formatUser, getUser } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
+import { z } from 'zod'
 
 // The output of getUser will be the input of formatUser
 // We could also be using `map` instead of `pipe` here
-const getData = pipe(getUser, formatUser)
+const getData = applySchema(
+  pipe(getUser, formatUser),
+  // We are adding runtime validation because the Remix's `Params` object is not strongly typed
+  z.object({ id: z.string() }),
+)
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const result = await getData(params)
