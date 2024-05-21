@@ -40,7 +40,7 @@ export type {
   ParserSchema,
   Result,
   SerializableError,
-  SerializedResult,
+  SerializableResult,
   Success,
   UnpackAll,
   UnpackData,

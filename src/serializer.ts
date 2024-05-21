@@ -1,6 +1,6 @@
 import { EnvironmentError } from './errors.ts'
 import { InputError } from './errors.ts'
-import type { Result, SerializableError, SerializedResult } from './types.ts'
+import type { Result, SerializableError, SerializableResult } from './types.ts'
 
 function serializeError(error: Error): SerializableError {
   if (error instanceof InputError || error instanceof EnvironmentError) {
@@ -19,7 +19,7 @@ function serializeError(error: Error): SerializableError {
   }
 }
 
-function serialize<T>(result: Result<T>): SerializedResult<T> {
+function serialize<T>(result: Result<T>): SerializableResult<T> {
   if (result.success) return result
 
   return { success: false, errors: result.errors.map(serializeError) }

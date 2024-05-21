@@ -852,9 +852,9 @@ const serializedResult = JSON.stringify(serialize({
 `"{ success: false, errors: [{ message: 'Oops', name: 'InputError', path: ['name'] }] }"`
 ```
 
-The resulting type is `SerializedResult` which means `Success<T> | { success: false, errors: SerializableError[] }`.
+The resulting type is `SerializableResult` which means `Success<T> | { success: false, errors: SerializableError[] }`.
 
-Therefore, you can differentiate use the error names and paths.
+Therefore, you can differentiate the error using names and paths.
 
 ## serializeError
 `serializeError` is a helper function that will convert a single `Error` into a `SerializableError` object. It is used internally by `serialize`:

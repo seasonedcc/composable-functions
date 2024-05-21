@@ -8,7 +8,7 @@ import {
 } from '../index.ts'
 import { SerializableError } from '../types.ts'
 import { serialize } from '../index.ts'
-import { SerializedResult } from '../types.ts'
+import { SerializableResult } from '../types.ts'
 
 describe('serializeError', () => {
   it('serializes an error into a payload friendly format', () => {
@@ -70,7 +70,7 @@ describe('serializeError', () => {
 describe('serialize', () => {
   it('serializes a successfull result properly', () => {
     const result = serialize(success('Hello!'))
-    type _T = Expect<Equal<typeof result, SerializedResult<'Hello!'>>>
+    type _T = Expect<Equal<typeof result, SerializableResult<'Hello!'>>>
 
     assertEquals(result, { success: true, data: 'Hello!', errors: [] })
   })
@@ -84,7 +84,7 @@ describe('serialize', () => {
       ]),
     )
 
-    type _T = Expect<Equal<typeof result, SerializedResult<unknown>>>
+    type _T = Expect<Equal<typeof result, SerializableResult<unknown>>>
 
     assertEquals(result, {
       success: false,
