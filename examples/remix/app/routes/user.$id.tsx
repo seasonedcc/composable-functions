@@ -9,6 +9,7 @@ import { z } from 'zod'
 // We could also be using `map` instead of `pipe` here
 const getData = applySchema(
   pipe(getUser, formatUser),
+  // We are adding runtime validation because the Remix's `Params` object is not strongly typed
   z.object({ id: z.string() }),
 )
 
