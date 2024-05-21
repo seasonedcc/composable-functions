@@ -61,13 +61,13 @@ class ErrorList extends Error {
 const isInputError = (e: Error): e is InputError => e instanceof InputError
 const isEnvironmentError = (e: Error): e is EnvironmentError =>
   e instanceof EnvironmentError
-const isError = (e: Error) => !isInputError(e) && !isEnvironmentError(e)
+const isGeneralError = (e: Error) => !isInputError(e) && !isEnvironmentError(e)
 
 export {
   EnvironmentError,
   ErrorList,
   InputError,
-  isError,
+  isGeneralError,
   isInputError,
   isEnvironmentError,
 }

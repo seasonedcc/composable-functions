@@ -22,10 +22,13 @@
   - [inputFromFormData](#inputfromformdata)
   - [inputFromUrl](#inputfromurl)
   - [inputFromSearch](#inputfromsearch)
-- [Error Constructors](#error-constructors)
+- [Error Constructors and Handlers](#error-constructors-and-handlers)
   - [ErrorList](#errorlist)
   - [EnvironmentError](#environmenterror)
   - [InputError](#inputerror)
+  - [isGeneralError](#isgeneralerror)
+  - [isEnvironmentError](#isenvironmenterror)
+  - [isInputError](#isinputerror)
 - [Type-safe runtime utilities](#type-safe-runtime-utilities)
   - [mergeObjects](#mergeobjects)
 - [Utility Types](#utility-types)
@@ -40,7 +43,9 @@
   - [environment.sequence](#environmentsequence)
 - [Serialization](#serialization)
   - [serialize](#serialize)
+  - [deserialize](#deserialize)
   - [serializeError](#serializeerror)
+  - [deserializeError](#deserializeerror)
 
 
 # Constructors
@@ -613,7 +618,7 @@ async (request: Request) => {
 }
 ```
 
-# Error Constructors
+# Error Constructors and Handlers
 The `Failure` results contain a list of errors that can be of any extended class of `Error`.
 To help with composables `withSchema` though, we provide some constructors that will help you create errors to differentiate between kinds of errors.
 
@@ -672,6 +677,31 @@ const fn = composable(() => {
 
 ## InputError
 Similar to `EnvironmentError`, an `InputError` is a special kind of error that represents an error in the input schema.
+
+## isGeneralError
+`isGeneralError` is a helper function that will check if an error is not an instance of `InputError` nor `EnvironmentError`.
+
+```ts
+isGeneralError(new Error('yes')) // true
+isGeneralError(new InputError('nope')) // false
+isGeneralError(new EnvironmentError('nope')) // false
+```
+
+## isEnvironmentError
+`isEnvironmentError` is a helper function that will check if an error is an instance of `EnvironmentError`.
+
+```ts
+isEnvironmentError(new EnvironmentError('yes')) // true
+isEnvironmentError(new Error('nope')) // false
+```
+
+## isInputError
+`isInputError` is a helper function that will check if an error is an instance of `InputError`.
+
+```ts
+isInputError(new InputError('yes')) // true
+isInputError(new Error('nope')) // false
+```
 
 # Type-safe runtime utilities
 ## mergeObjects
@@ -817,6 +847,7 @@ const result = await d(1, { user: { admin: true } })
 ```
 
 # Serialization
+In distributed systems where errors might be serialized across network boundaries, it is important to have a way to serialize errors in a way that they won't lose data and can then be deserialized and understood by the receiving end.
 
 ## serialize
 When serializing a `Result` to send over the wire, some of the `Error[]` information is lost.
@@ -833,10 +864,26 @@ const serializedResult = JSON.stringify(serialize({
 `"{ success: false, errors: [{ message: 'Oops', name: 'InputError', path: ['name'] }] }"`
 ```
 
-Thus, you can differentiate between the types of errors using their names and paths.
+The resulting type is `SerializedResult` which means `Success<T> | { success: false, errors: SerializableError[] }`.
+
+Therefore, you can differentiate use the error names and paths.
+
+## deserialize
+
+When deserializing a `SerializedResult` you can use the `deserialize` helper to turn it back into a `Result`:
+
+```ts
+const deserializedResult = deserialize(JSON.parse(serializedResult))
+
+// deserializedResult is:
+{
+  success: false,
+  errors: [new InputError('Oops', ['name'])],
+}
+```
 
 ## serializeError
-`serializeError` is a helper function that will convert a single error into a serializable error object. It is used internally by `serialize`:
+`serializeError` is a helper function that will convert a single `Error` into a `SerializableError` object. It is used internally by `serialize`:
 
 ```ts
 const serialized = JSON.stringify(
@@ -845,4 +892,14 @@ const serialized = JSON.stringify(
 
 // serialized is:
 `"{ message: 'Oops', name: 'InputError', path: ['name'] }"`
+```
+
+## deserializeError
+`deserializeError` is a helper function that will convert a `SerializableError` object back into an `Error`. It is used internally by `deserialize`:
+
+```ts
+const deserialized = deserializeError(JSON.parse(serialized))
+
+// deserialized is:
+new InputError('Oops', ['name'])
 ```
