@@ -140,7 +140,7 @@ function pipe<T extends DomainFunction[]>(
   ...fns: T
 ): DomainFunction<Last<UnpackAll<T>>> {
   const last = <T>(ls: T[]): T => ls[ls.length - 1]
-  return map(sequence(...fns), last)
+  return map(sequence(...fns), last) as DomainFunction<Last<UnpackAll<T>>>
 }
 
 /**
