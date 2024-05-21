@@ -256,7 +256,7 @@ function catchFailure<
 }
 
 /**
- * Creates a new function that will apply a transformation over a resulting Failure from the given function. When the given function succeeds, its result is returned without changes.
+ * Creates a new function that will apply a transformation over the list of Errors of a Failure from a given function. When the given function succeeds, its result is returned without changes.
  *
  * @example
  *
@@ -293,14 +293,14 @@ function mapErrors<Fn extends Composable>(
  * @example
  *
  * ```ts
- * import { withSchema, trace } from 'composable-functions'
+ * import { composable, trace } from 'composable-functions'
  *
- * const trackErrors = trace(({ input, output, result }) => {
- *   if(!result.success) sendToExternalService({ input, output, result })
+ * const trackErrors = trace((result, ...args) => {
+ *   if(!result.success) sendToExternalService({ result, arguments: args })
  * })
- * const increment = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+ * const increment = composable((id: number) => id + 1)
  * const incrementAndTrackErrors = trackErrors(increment)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => number>
+ * //    ^? Composable<(id: number) => number>
  * ```
  */
 function trace(

@@ -58,14 +58,17 @@ class ErrorList extends Error {
   }
 }
 
+/**
+ * A function to check if an `Error` or a `SerializableError` is an InputError
+ */
 function isInputError(e: { name: string; message: string }): boolean {
   return e.name === 'InputError'
 }
 
-function isEnvironmentError(e: {
-  name: string
-  message: string
-}): boolean {
+/**
+ * A function to check if an `Error` or a `SerializableError` is an EnvironmentError
+ */
+function isEnvironmentError(e: { name: string; message: string }): boolean {
   return e.name === 'EnvironmentError'
 }
 

@@ -3,10 +3,16 @@ import { EnvironmentError, ErrorList, InputError } from './errors.ts'
 import type { Composable, Failure, ParserSchema, Success } from './types.ts'
 import { UnpackData } from './types.ts'
 
+/**
+ * It receives any data (T) and returns a Success<T> object.
+ */
 function success<const T>(data: T): Success<T> {
   return { success: true, data, errors: [] }
 }
 
+/**
+ * It receives a list of errors and returns a Failure object.
+ */
 function failure(errors: Error[]): Failure {
   return { success: false, errors }
 }

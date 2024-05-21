@@ -1,3 +1,6 @@
+/**
+ * The return type of all the input resolvers.
+ */
 type QueryStringRecord = {
   [key: string]:
     | undefined
@@ -8,7 +11,14 @@ type QueryStringRecord = {
     | QueryStringRecord[]
 }
 
+/**
+ * A partial representation of a FormData object.
+ */
 type FormDataLike = Iterable<readonly [PropertyKey, unknown]>
+
+/**
+ * A partial representation of a Request object.
+ */
 type RequestLike = {
   url: string
   clone: () => { formData: () => Promise<FormDataLike> }
@@ -27,7 +37,7 @@ type RequestLike = {
  * //    ^? { a: '1', b: '2' }
  * ```
  */
-function inputFromSearch(queryString: URLSearchParams) {
+function inputFromSearch(queryString: URLSearchParams): QueryStringRecord {
   const pairs: [string, string][] = []
   queryString.forEach((value, key) => pairs.push([key, value]))
 
@@ -164,4 +174,5 @@ function inputFromUrl(request: RequestLike) {
   return inputFromSearch(new URL(request.url).searchParams)
 }
 
+export type { QueryStringRecord, FormDataLike, RequestLike }
 export { inputFromForm, inputFromFormData, inputFromSearch, inputFromUrl }

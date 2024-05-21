@@ -25,6 +25,11 @@ export {
   inputFromSearch,
   inputFromUrl,
 } from './input-resolvers.ts'
+export type {
+  QueryStringRecord,
+  RequestLike,
+  FormDataLike,
+} from './input-resolvers.ts'
 export { serialize, serializeError } from './serializer.ts'
 export {
   EnvironmentError,
