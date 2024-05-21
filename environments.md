@@ -25,100 +25,68 @@ const carryUser = environment.pipe(gatherInput, dangerousFunction)
 
 These combinators are useful for composing functions with environment. Note that the standard parallel compositions will work just fine with the concept of environments.
 
-* pipe
-* sequence
-* branch
+### `pipe`
 
+The environment.pipe function allows you to compose multiple functions in a sequence, forwarding the environment to each function in the chain.
 
-
-
-<!-- GPT -->
-
-# Handling Environments
-
-Composable-functions allow you to manage environments in your compositions, ensuring that contextual information is passed correctly through your function chains. This is particularly useful for scenarios where you need to maintain consistency in data such as user information, configuration settings, or other contextual parameters.
-
-## Environment-based Combinators
-
-The `environment` namespace provides a set of combinators that ensure the environment is correctly forwarded through sequential compositions. These combinators are essential when you need to maintain context across multiple function calls.
-
-### Environment Pipe
-
-The `environment.pipe` function allows you to compose multiple functions in a sequence, forwarding the environment to each function in the chain.
-
-```typescript
+```ts
 import { environment } from 'composable-functions'
 
-const a = composable((num: number, env: { user: User }) => String(num))
-const b = composable((str: string, env: { user: User }) => str === '1')
-const c = composable((bool: boolean, env: { user: User }) => bool && env.user.admin)
+const a = composable((str: string, env: { user: User }) => str === '1')
+const b = composable((bool: boolean, env: { user: User }) => bool && env.user.admin)
 
-const pipeline = environment.pipe(a, b, c)
+const pipeline = environment.pipe(a, b)
 
-const result = await pipeline(1, { user: { admin: true } })
+const result = await pipeline('1', { user: { admin: true } })
 /*
 result = {
   success: true,
-  data: false,
+  data: true,
   errors: []
 }
 */
 ```
 
-### Environment Sequence
-
+### `sequence`
 The environment.sequence function works similarly to pipe, but it returns a tuple containing the result of each function in the sequence.
 
 ```ts
 import { environment } from 'composable-functions'
 
-const a = composable((num: number, env: { user: User }) => String(num))
-const b = composable((str: string, env: { user: User }) => str === '1')
-const c = composable((bool: boolean, env: { user: User }) => bool && env.user.admin)
+const a = composable((str: string, env: { user: User }) => str === '1')
+const b = composable((bool: boolean, env: { user: User }) => bool && env.user.admin)
 
-const sequence = environment.sequence(a, b, c)
+const sequence = environment.sequence(a, b)
 
-const result = await sequence(1, { user: { admin: true } })
+const result = await sequence('1', { user: { admin: true } })
 /*
 result = {
   success: true,
-  data: ['1', true, false],
+  data: [true, true],
   errors: []
 }
 */
-````
+```
 
-### Environment Branch
+### `branch`
 
 The environment.branch function adds conditional logic to your compositions, forwarding the environment to each branch as needed.
 
 ```ts
-import { environment } from 'composable-functions'
+import { composable, environment } from 'composable-functions'
 
-const getIdOrEmail = composable((data: { id?: number, email?: string }) => data.id ?? data.email)
-const findUserById = composable((id: number, env: { user: User }) => {
-  if (!env.user.admin) throw new Error('Unauthorized')
-  return db.users.find({ id })
-})
-const findUserByEmail = composable((email: string, env: { user: User }) => {
-  if (!env.user.admin) throw new Error('Unauthorized')
-  return db.users.find({ email })
-})
-
-const findUserByIdOrEmail = environment.branch(
-  getIdOrEmail,
-  (data) => (typeof data === "number" ? findUserById : findUserByEmail)
+const adminIncrement = composable((a: number, { user }: { user: { admin: boolean } }) =>
+  user.admin ? a + 1 : a
 )
+const adminMakeItEven = (sum: number) => sum % 2 != 0 ? adminIncrement : null
+const incrementUntilEven = environment.branch(adminIncrement, adminMakeItEven)
 
-const result = await findUserByIdOrEmail({ id: 1 }, { user: { admin: true } })
+const result = await incrementUntilEven(1, { user: { admin: true } })
 /*
 result = {
   success: true,
-  data: { id: 1, email: 'john@doe.com' },
+  data: 2,
   errors: []
 }
 */
-````
-
-Using these environment-based combinators ensures that your context is preserved across complex compositions, making your business logic more predictable and easier to manage.
-
+```
