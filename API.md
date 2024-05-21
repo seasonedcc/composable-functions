@@ -515,6 +515,8 @@ We export some functions to help you extract values out of your requests before 
 
 These functions are better suited for use with `withSchema` rather than `composable` since they deal with external data and `withSchema` will ensure type-safety in runtime.
 
+For more details on how to structure your data, refer to this [test file](./src/tests/input-resolvers.test.ts).
+
 ## inputFromForm
 
 `inputFromForm` will read a request's `FormData` and extract its values into a structured object:
