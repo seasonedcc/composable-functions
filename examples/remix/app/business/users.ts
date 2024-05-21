@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { composable, withSchema } from 'composable-functions'
+import { composable } from 'composable-functions'
 import { makeService } from 'make-service'
 
 const jsonPlaceholder = makeService('https://jsonplaceholder.typicode.com')
@@ -15,12 +15,12 @@ const userSchema = z.object({
   website: z.string(),
 })
 
-const listUsers = withSchema()(async () => {
+const listUsers = composable(async () => {
   const response = await jsonPlaceholder.get('/users')
   return response.json(z.array(userSchema))
 })
 
-const getUser = withSchema(z.object({ id: z.string() }))(async ({ id }) => {
+const getUser = composable(async ({ id }: { id: string }) => {
   const response = await jsonPlaceholder.get('/users/:id', { params: { id } })
   return response.json(userSchema)
 })

@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { withSchema } from 'composable-functions'
+import { composable, withSchema } from 'composable-functions'
 import { makeService } from 'make-service'
 
 const reqRes = makeService('https://reqres.in/api')
@@ -12,14 +12,12 @@ const colorSchema = z.object({
   pantone_value: z.string(),
 })
 
-const listColors = withSchema(z.object({ page: z.string().optional() }))(
-  async ({ page = '1' }) => {
-    const response = await reqRes.get('/colors', { query: { page } })
-    return response.json(z.object({ data: z.array(colorSchema) }))
-  },
-)
+const listColors = composable(async ({ page = '1' }: { page?: string }) => {
+  const response = await reqRes.get('/colors', { query: { page } })
+  return response.json(z.object({ data: z.array(colorSchema) }))
+})
 
-const getColor = withSchema(z.object({ id: z.string() }))(async ({ id }) => {
+const getColor = composable(async ({ id }: { id: string }) => {
   const response = await reqRes.get('/colors/:id', { params: { id } })
   return response.json(z.object({ data: colorSchema }))
 })
