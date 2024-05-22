@@ -7,10 +7,10 @@ This document will guide you through the migration process.
 
 -	🛡️ Enhanced Type Safety: Enjoy robust **type-safety during function composition**. The improved type-checking mechanisms prevent incompatible functions from being composed, reducing runtime errors and improving code reliability.
 -	🤌 Simplified Function Creation: **No need to define schemas**. Create composable functions easily and efficiently without the overhead of schema definitions.
--	🕵🏽 Runtime Validation: Use the `withSchema` function for optional runtime validation of inputs and environments. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use `applySchema` to run your runtime validation only once **avoiding unnecessary processing**.
--	🔀 Flexible Compositions: The new combinators, such as `environment.pipe`, `environment.sequence`, and `environment.branch`, offer powerful ways to manage **typed environments** and contextual information across your compositions.
+-	🕵🏽 Runtime Validation: Use the [`withSchema`](./API.md#withschema) function for optional runtime validation of inputs and environments. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use [`applySchema`](./API.md#applyschema) to run your runtime validation only once **avoiding unnecessary processing**.
+-	🔀 Flexible Compositions: The new combinators, such as [`environment.pipe`](./API.md#environmentpipe), [`environment.sequence`](./API.md#environmentsequence), and [`environment.branch`](./API.md#environmentbranch), offer powerful ways to manage **typed environments** and contextual information across your compositions.
 -	🛠️ Incremental Migration: Seamlessly migrate your existing codebase incrementally. **Both `domain-functions` and `composable-functions` can coexist**, allowing you to transition module by module.
--	🛟 Enhanced Combinators: New and improved combinators like `map`, `mapErrors` and `catchFailure` provide more control over handling and error transformation, making your **code more resilient**.
+-	🛟 Enhanced Combinators: New and improved combinators like [`map`](./API.md#map), [`mapParameters`](./API.md#mapparameters), [`mapErrors`](./API.md#maperrors) and [`catchFailure`](./API.md#catchfailure) provide more control over handling and error transformation, making your **code more resilient**.
 
 # Table of contents
 - [First steps](#first-steps)
