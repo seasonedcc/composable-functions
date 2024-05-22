@@ -34,11 +34,16 @@ export {
   isInputError,
 } from './errors.ts'
 export type {
+  BranchReturn,
+  CanComposeInParallel,
+  CanComposeInSequence,
   Composable,
   Failure,
   MergeObjects,
   ParserSchema,
+  PipeReturn,
   Result,
+  SequenceReturn,
   SerializableError,
   SerializableResult,
   Success,
