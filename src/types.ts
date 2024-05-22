@@ -105,28 +105,6 @@ type UnpackDFObject<Obj extends Record<string, DomainFunction>> =
   | never
 
 /**
- * Merges the data types of a list of objects.
- * @example
- * type MyObjs = [
- *   { a: string },
- *   { b: number },
- * ]
- * type MyData = MergeObjs<MyObjs>
- * //   ^? { a: string, b: number }
- */
-type MergeObjs<Objs extends unknown[], output = {}> = Objs extends [
-  infer first,
-  ...infer rest,
-]
-  ? MergeObjs<rest, Prettify<Omit<output, keyof first> & first>>
-  : output
-
-type Prettify<T> = {
-  [K in keyof T]: T[K]
-  // deno-lint-ignore ban-types
-} & {}
-
-/**
  * Converts a tuple type to a union type.
  * @example
  * type MyTuple = [string, number]
@@ -184,6 +162,7 @@ type ParserSchema<T extends unknown = unknown> = {
   safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
 }
 
+export type { MergeObjects as MergeObjs } from 'npm:composable-functions@beta'
 export type {
   AtLeastOne,
   DomainFunction,
@@ -191,7 +170,6 @@ export type {
   ErrorResult,
   ErrorWithMessage,
   Last,
-  MergeObjs,
   ParserIssue,
   ParserResult,
   ParserSchema,

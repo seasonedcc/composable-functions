@@ -1,4 +1,9 @@
-import type { MergeObjs, ParserIssue, Result, SchemaError, SuccessResult } from './types.ts'
+import type {
+  ParserIssue,
+  Result,
+  SchemaError,
+  SuccessResult,
+} from './types.ts'
 
 function formatSchemaErrors(errors: ParserIssue[]): SchemaError[] {
   return errors.map((error) => {
@@ -11,20 +16,5 @@ function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
   return result.every(({ success }) => success === true)
 }
 
-/**
- * Merges a list of objects into a single object.
- * It is a type-safe version of Object.assign.
- * @param objs the list of objects to merge
- * @returns the merged object
- * @example
- * const obj1 = { a: 1, b: 2 }
- * const obj2 = { c: 3 }
- * const obj3 = { d: 4 }
- * const merged = mergeObjects([obj1, obj2, obj3])
- * //   ^? { a: number, b: number, c: number, d: number }
- */
-function mergeObjects<T extends unknown[] = unknown[]>(objs: T) {
-  return Object.assign({}, ...objs) as MergeObjs<T>
-}
-
-export { formatSchemaErrors, mergeObjects, isListOfSuccess }
+export { mergeObjects } from 'npm:composable-functions@beta'
+export { formatSchemaErrors, isListOfSuccess }
