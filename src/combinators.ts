@@ -166,16 +166,19 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 }
 
 /**
- * It takes a Composable and a predicate to apply a transformation over the resulting `data`. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
+ * It takes a Composable and a mapper to apply a transformation over the resulting output. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
+ * The mapper also receives the original input parameters.
  *
  * @example
  *
  * ```ts
  * import { composable, map } from 'composable-functions'
  *
- * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const increment = composable((n: number) => n + 1)
  * const incrementToString = map(increment, String)
- * //    ^? Composable<({ id }: { id: number }) => string>
+ * //    ^? Composable<(n: number) => string>
+ * const result = await map(increment, (result, n) => `${n} -> ${result}`)(1)
+ * // result === '1 -> 2'
  * ```
  */
 function map<Fn extends Composable, O>(

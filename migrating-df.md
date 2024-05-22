@@ -10,7 +10,7 @@ This document will guide you through the migration process.
 -	🕵🏽 Runtime Validation: Use the `withSchema` function for optional runtime validation of inputs and environments. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use `applySchema` to run your runtime validation only once **avoiding unnecessary processing**.
 -	🔀 Flexible Compositions: The new combinators, such as `environment.pipe`, `environment.sequence`, and `environment.branch`, offer powerful ways to manage **typed environments** and contextual information across your compositions.
 -	🛠️ Incremental Migration: Seamlessly migrate your existing codebase incrementally. **Both `domain-functions` and `composable-functions` can coexist**, allowing you to transition module by module.
--	🛟 Enhanced Error Handling Combinators: New and improved combinators like `mapErrors` and `catchFailure` provide more control over error transformation and handling, making your **code more resilient**.
+-	🛟 Enhanced Combinators: New and improved combinators like `map`, `mapErrors` and `catchFailure` provide more control over handling and error transformation, making your **code more resilient**.
 
 # Table of contents
 - [First steps](#first-steps)
@@ -19,6 +19,7 @@ This document will guide you through the migration process.
 - [Combinators which shouldn't be affected](#combinators-which-shouldnt-be-affected)
 - [Sequential combinators and the concept of environment](#sequential-combinators-and-the-concept-of-environment)
 - [Modified combinators](#modified-combinators)
+  - [map](#map)
   - [mapError](#maperror)
   - [trace](#trace)
 - [Removed combinators](#removed-combinators)
@@ -100,6 +101,15 @@ const result = environment.pipe(fn1, fn2)(input, env)
 **Note**: The `pipe`, `sequence`, and `branch` outside of the `environment` namespace will not keep the environment through the composition.
 
 ## Modified combinators
+### map
+The `map`'s mapper function now receives all the arguments given to the composable. In domain-functions the mapper would only work with the output of the first function, that limitation is gone therefore we can work with both input and output.
+
+```ts
+const add = composable((a: number, b: number) => a + b)
+const aggregateInputAndOutput = map(add, (result, a, b) => ({ result, a, b }))
+//    ^? Composable<(a: number, b: number) => { result: number, a: number, b: number }>
+```
+
 ### mapError
 The `mapError` was renamed to `mapErrors` function and it now receives and returns an `Array<Error>` instead of an `ErrorData` - which was removed.
 Since the new `Failure` is much simpler than `ErrorResult` this change will often lead to simpler code:
@@ -232,6 +242,8 @@ expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 | `sequence(df1, df2)` | `environment.sequence(fn1, fn2)` |
 | -- | `sequence(fn1, fn2)` without environment |
 | `collectSequence({ name: nameDf, age: ageDf })` | `map(environment.sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))` |
+| `map(df, (o) => ({ result: o }))` | `map(fn, (o) => ({ result: o }))` |
+| -- | `map(fn, (o, ...args) => ({ result: o, args }))` |
 | `first(df1, df2)` | -- * read docs above |
 | `safeResult(() => { throw new Error('oops') })` | `composable(() => { throw new Error('oops') })` |
 | `mapError(df, (result) => ({ inputErrors: [], environmentErrors: [], errors: [{ message: 'Oops' }] }))` | `mapErrors(fn, errors => [new Error('Oops')])` |
