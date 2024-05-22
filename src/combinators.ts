@@ -3,6 +3,7 @@ import type {
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
+  Last,
   MergeObjects,
   PipeReturn,
   RecordToTuple,
@@ -62,12 +63,10 @@ function mergeObjects<T extends unknown[] = unknown[]>(
  * ```
  */
 function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
-  return (async (...args: any[]) => {
-    const res = await sequence(...fns)(...args)
-    return !res.success
-      ? failure(res.errors)
-      : success(res.data[res.data.length - 1])
-  }) as PipeReturn<CanComposeInSequence<Fns>>
+  const last = <T extends any[]>(arr: T): Last<T> => arr.at(-1)
+  return map(sequence(...fns), last as never) as PipeReturn<
+    CanComposeInSequence<Fns>
+  >
 }
 
 /**
