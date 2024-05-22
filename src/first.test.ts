@@ -1,4 +1,4 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { describe, it, assertEquals, assertObjectMatch } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { mdf } from './constructor.ts'
@@ -47,15 +47,15 @@ describe('first', () => {
   it('should return error when all of the domain functions fails', async () => {
     const a = mdf(z.object({ id: z.string() }))(({ id }) => id)
     const b = mdf(z.object({ id: z.number() }))(() => {
-      throw 'Error'
+      throw new Error('Error')
     })
 
     const c = first(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<string>>>
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: 'Error' }],
       inputErrors: [
         {
           message: 'Expected string, received number',

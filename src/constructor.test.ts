@@ -210,7 +210,7 @@ describe('makeDomainFunction', () => {
 
     assertObjectMatch(await handler({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: '"Error"' }],
       inputErrors: [],
       environmentErrors: [],
     })
@@ -222,9 +222,9 @@ describe('makeDomainFunction', () => {
     })
     type _R = Expect<Equal<typeof handler, DomainFunction<never>>>
 
-    assertEquals(await handler({ id: 1 }), {
+    assertObjectMatch(await handler({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: { message: 'Error' } }],
+      errors: [{ message: JSON.stringify({ message: 'Error' }) }],
       inputErrors: [],
       environmentErrors: [],
     })

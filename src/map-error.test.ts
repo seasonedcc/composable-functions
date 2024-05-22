@@ -1,4 +1,4 @@
-import { describe, it, assertEquals } from './test-prelude.ts'
+import { describe, it, assertEquals, assertObjectMatch } from './test-prelude.ts'
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts'
 
 import { mdf } from './constructor.ts'
@@ -55,15 +55,15 @@ describe('mapError', () => {
   it('returns the error when the mapping function fails', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id + 1)
     const b = () => {
-      throw 'failed to map'
+      throw new Error('failed to map')
     }
 
     const c = mapError(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<number>>>
 
-    assertEquals(await c({ invalidInput: '1' }), {
+    assertObjectMatch(await c({ invalidInput: '1' }), {
       success: false,
-      errors: [{ message: 'failed to map', exception: 'failed to map' }],
+      errors: [{ message: 'failed to map' }],
       inputErrors: [],
       environmentErrors: [],
     })

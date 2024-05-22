@@ -51,15 +51,15 @@ describe('collect', () => {
   it('should return error when one of the domain functions fails', async () => {
     const a = mdf(z.object({ id: z.number() }))(({ id }) => id)
     const b = mdf(z.object({ id: z.number() }))(() => {
-      throw 'Error'
+      throw new Error('Error')
     })
 
     const c = collect({ a, b })
     type _R = Expect<Equal<typeof c, DomainFunction<{ a: number; b: never }>>>
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })

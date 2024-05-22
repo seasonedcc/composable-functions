@@ -108,15 +108,15 @@ describe('merge', () => {
       id,
     }))
     const b = mdf(z.object({ id: z.number() }))(() => {
-      throw 'Error'
+      throw new Error('Error')
     })
 
     const c: DomainFunction<never> = merge(a, b)
     type _R = Expect<Equal<typeof c, DomainFunction<never>>>
 
-    assertEquals(await c({ id: 1 }), {
+    assertObjectMatch(await c({ id: 1 }), {
       success: false,
-      errors: [{ message: 'Error', exception: 'Error' }],
+      errors: [{ message: 'Error' }],
       inputErrors: [],
       environmentErrors: [],
     })

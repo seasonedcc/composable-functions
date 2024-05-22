@@ -6,7 +6,13 @@ import {
 } from './errors.ts'
 import { schemaError, toErrorWithMessage } from './errors.ts'
 import { formatSchemaErrors } from './utils.ts'
-import type { DomainFunction, ParserSchema, Result } from './types.ts'
+import type {
+  DomainFunction,
+  ErrorResult,
+  ParserSchema,
+  Result,
+} from './types.ts'
+import { composable } from './future/index.ts'
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -28,47 +34,47 @@ import type { DomainFunction, ParserSchema, Result } from './types.ts'
  * }
  */
 async function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  try {
+  const result = await composable(fn)()
+  if (result.success) {
     return {
       success: true,
-      data: await fn(),
+      data: result.data,
       errors: [],
       inputErrors: [],
       environmentErrors: [],
     }
-  } catch (error) {
-    if (error instanceof InputError) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: [schemaError(error.message, error.path)],
-      }
-    }
-    if (error instanceof EnvironmentError) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [schemaError(error.message, error.path)],
-        inputErrors: [],
-      }
-    }
-    if (error instanceof InputErrors) {
-      return {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: error.errors.map((e) => schemaError(e.message, e.path)),
-      }
-    }
-    if (error instanceof ResultError) return error.result
+  } else {
+    return result.errors.reduce(
+      (previous, current) => {
+        if (current instanceof ResultError)
+          return { ...previous, ...current.result }
+        else if (current instanceof InputError) {
+          previous.inputErrors.push(schemaError(current.message, current.path))
+        } else if (current instanceof EnvironmentError) {
+          previous.environmentErrors.push(
+            schemaError(current.message, current.path),
+          )
+        } else if (current instanceof InputErrors) {
+          previous.inputErrors = [
+            ...previous.inputErrors,
+            ...current.errors.map((e) => schemaError(e.message, e.path)),
+          ]
+        } else {
+          previous.errors.push({
+            message: current.message,
+            exception: current,
+          })
+        }
 
-    return {
-      success: false,
-      errors: [toErrorWithMessage(error)],
-      inputErrors: [],
-      environmentErrors: [],
-    }
+        return previous
+      },
+      {
+        success: false,
+        errors: [],
+        environmentErrors: [],
+        inputErrors: [],
+      } as ErrorResult,
+    )
   }
 }
 
