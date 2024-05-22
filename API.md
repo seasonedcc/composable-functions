@@ -367,6 +367,14 @@ For the example above, the result will be something like this:
 }
 ```
 
+`map` will also receive the input parameters of the composable as arguments:
+
+```ts
+const add = composable((a: number, b: number) => a + b)
+const aggregateInputAndOutput = map(add, (result, a, b) => ({ result, a, b }))
+//    ^? Composable<(a: number, b: number) => { result: number, a: number, b: number }>
+```
+
 ## mapErrors
 
 `mapErrors` creates a single composable that will apply a transformation over the `Failure` of a failed `Composable`.

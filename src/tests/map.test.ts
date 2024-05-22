@@ -73,4 +73,22 @@ describe('map', () => {
     assertEquals(res.success, false)
     assertEquals(res.errors[0].message, 'Mapper also has problems')
   })
+
+  it('forwards the received parameters to the mapper', async () => {
+    const fn = map(add, (total, a, b) => {
+      type _Check1 = Expect<Equal<typeof total, number>>
+      type _Check2 = Expect<Equal<typeof a, number>>
+      type _Check3 = Expect<Equal<typeof b, number>>
+
+      return `the sum of ${a} and ${b} is ${total}`
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => string>>
+    >
+    type _R = Expect<Equal<typeof res, Result<string>>>
+
+    assertEquals(res, success('the sum of 1 and 2 is 3'))
+  })
 })

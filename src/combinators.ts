@@ -3,6 +3,7 @@ import type {
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
+  Last,
   MergeObjects,
   PipeReturn,
   RecordToTuple,
@@ -62,12 +63,10 @@ function mergeObjects<T extends unknown[] = unknown[]>(
  * ```
  */
 function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
-  return (async (...args: any[]) => {
-    const res = await sequence(...fns)(...args)
-    return !res.success
-      ? failure(res.errors)
-      : success(res.data[res.data.length - 1])
-  }) as PipeReturn<CanComposeInSequence<Fns>>
+  const last = <T extends any[]>(arr: T): Last<T> => arr.at(-1)
+  return map(sequence(...fns), last as never) as PipeReturn<
+    CanComposeInSequence<Fns>
+  >
 }
 
 /**
@@ -167,23 +166,31 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 }
 
 /**
- * It takes a Composable and a predicate to apply a transformation over the resulting `data`. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
+ * It takes a Composable and a mapper to apply a transformation over the resulting output. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
+ * The mapper also receives the original input parameters.
  *
  * @example
  *
  * ```ts
  * import { composable, map } from 'composable-functions'
  *
- * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const increment = composable((n: number) => n + 1)
  * const incrementToString = map(increment, String)
- * //    ^? Composable<({ id }: { id: number }) => string>
+ * //    ^? Composable<(n: number) => string>
+ * const result = await map(increment, (result, n) => `${n} -> ${result}`)(1)
+ * // result === '1 -> 2'
  * ```
  */
 function map<Fn extends Composable, O>(
   fn: Fn,
-  mapper: (res: UnpackData<Fn>) => O,
+  mapper: (res: UnpackData<Fn>, ...originalInput: Parameters<Fn>) => O,
 ): Composable<(...args: Parameters<Fn>) => O> {
-  return pipe(fn as Composable, composable(mapper) as Composable)
+  return (async (...args) => {
+    const result = await fn(...args)
+    if (!result.success) return failure(result.errors)
+
+    return composable(mapper)(result.data, ...args)
+  }) as Composable<(...args: Parameters<Fn>) => O>
 }
 
 /**
