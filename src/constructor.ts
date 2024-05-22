@@ -11,7 +11,7 @@ import type {
   ParserSchema,
   Result,
 } from './types.ts'
-import * as Future from './future/index.ts'
+import * as Future from 'npm:composable-functions@beta'
 
 function composableToDF<R>(
   cf: Future.Composable<(inout?: unknown, environment?: unknown) => R>,

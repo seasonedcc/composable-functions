@@ -1,5 +1,21 @@
 {
   "version": "3",
+  "packages": {
+    "specifiers": {
+      "npm:composable-functions": "npm:composable-functions@1.0.0",
+      "npm:composable-functions@beta": "npm:composable-functions@1.0.0-beta-20240521-1"
+    },
+    "npm": {
+      "composable-functions@1.0.0": {
+        "integrity": "sha512-3+QGphVybqPslIg/V6ZbcrGsGMcASIhZm3qzeeZD56lHCqs70kzdkd448B5cFq7x9wiuCk0hDQRFpvWAV2K67g==",
+        "dependencies": {}
+      },
+      "composable-functions@1.0.0-beta-20240521-1": {
+        "integrity": "sha512-0k5YRnujE+NHynfId1Njypf0ofCHzcdK2TdEOj4RuzeizrbNeBVgyitixY+7MH6YRGabRvHJgV41vFi8S3jgmw==",
+        "dependencies": {}
+      }
+    }
+  },
   "remote": {
     "https://deno.land/std@0.140.0/_util/assert.ts": "e94f2eb37cebd7f199952e242c77654e43333c1ac4c5c700e929ea3aa5489f74",
     "https://deno.land/std@0.140.0/_util/os.ts": "3b4c6e27febd119d36a416d7a97bd3b0251b77c88942c8f16ee5953ea13e2e49",
