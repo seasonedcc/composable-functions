@@ -1,5 +1,5 @@
 import { ResultError } from './errors.ts'
-import { isListOfSuccess, mergeObjects } from './utils.ts'
+import { mergeObjects } from './utils.ts'
 import type {
   DomainFunction,
   ErrorData,
@@ -169,23 +169,11 @@ function collectSequence<Fns extends Record<string, DomainFunction>>(
 function sequence<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return function (input: unknown, environment?: unknown) {
-    return safeResult(async () => {
-      const results = []
-      let currResult: undefined | Result<unknown>
-      for await (const fn of fns) {
-        const result = await fn(
-          currResult?.success ? currResult.data : input,
-          environment,
-        )
-        if (!result.success) throw new ResultError(result)
-        currResult = result
-        results.push(result.data)
-      }
-
-      return results
-    })
-  } as DomainFunction<UnpackAll<Fns>>
+  return fromComposable(
+    Future.environment.sequence(
+      ...(fns.map(toComposable) as [Future.Composable]),
+    ),
+  ) as DomainFunction<UnpackAll<Fns>>
 }
 
 /**

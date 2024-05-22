@@ -200,5 +200,5 @@ export {
   makeDomainFunction as mdf,
   safeResult,
   fromComposable,
-  toComposable
+  toComposable,
 }
