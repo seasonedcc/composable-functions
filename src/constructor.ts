@@ -19,21 +19,18 @@ import * as Future from 'npm:composable-functions@beta'
  * It will convert any DomainFunction<T> into a Composable<(input?: unknown, environment?: unknown) => T>
  *
  * @example
- * const result = await safeResult(() => ({
- *   message: 'hello',
- * }))
- * // the type of result is Result<{ message: string }>
- * if (result.success) {
- *   console.log(result.data.message)
- * }
  *
- * const result = await safeResult(() => {
- *  throw new Error('something went wrong')
- * })
- * // the type of result is Result<never>
- * if (!result.success) {
- *  console.log(result.errors[0].message)
- * }
+ * ```ts
+ * import * as DF from 'domain-functions'
+ * import * as CF from 'composable-functions'
+ * import { myDomainFunction } from 'domains'
+ * import { myComposableFunction } from 'new-domains'
+ *
+ * // mix and match Composable and DomainFunction
+ * const allComposable = CF.all(DF.toComposable(myDomainFunction), myComposableFunction)
+ * const allDomainFunction = CF.all(myDomainFunction, DF.fromComposable(myComposableFunction))
+ * ```
+ *
  */
 function toComposable<R>(
   df: DomainFunction<R>,
@@ -66,6 +63,25 @@ function toComposable<R>(
   }) as Future.Composable<(input?: unknown, environment?: unknown) => R>
 }
 
+/**
+ * A functions that helps incremental migration from the legacy `domain-functions` library to the `composable-functions`.
+ * Both libraries can be installed simultaneously, but to mix and match functions in compositions using `toComposable` and `fromComposable` are necessary to ensure the error types are compatible.
+ * It will convert any Composable<(input?: unknown, environment?: unknown) => T> into a DomainFunction<T>
+ *
+ * @example
+ *
+ * ```ts
+ * import * as DF from 'domain-functions'
+ * import * as CF from 'composable-functions'
+ * import { myDomainFunction } from 'domains'
+ * import { myComposableFunction } from 'new-domains'
+ *
+ * // mix and match Composable and DomainFunction
+ * const allComposable = CF.all(DF.toComposable(myDomainFunction), myComposableFunction)
+ * const allDomainFunction = CF.all(myDomainFunction, DF.fromComposable(myComposableFunction))
+ * ```
+ *
+ */
 function fromComposable<R>(
   cf: Future.Composable<(inout?: unknown, environment?: unknown) => R>,
 ) {
