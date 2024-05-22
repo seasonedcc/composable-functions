@@ -225,16 +225,18 @@ function branch<T, R extends DomainFunction | null>(
   dfn: DomainFunction<T>,
   resolver: (o: T) => Promise<R> | R,
 ) {
-  return (async (input, environment) => {
-    const result = await dfn(input, environment)
-    if (!result.success) return result
+  const newResolver = async (co: T) => {
+    const resolved = await resolver(co)
+    if (resolved == null) return null
 
-    return safeResult(async () => {
-      const nextDf = await resolver(result.data)
-      if (typeof nextDf !== 'function') return result.data
-      return fromSuccess(nextDf)(result.data, environment)
-    })
-  }) as DomainFunction<
+    return toComposable(resolved)
+  }
+  return fromComposable(
+    Future.environment.branch(
+      toComposable(dfn) as Future.Composable,
+      newResolver as any,
+    ),
+  ) as DomainFunction<
     R extends DomainFunction<infer U> ? U : UnpackData<NonNullable<R>> | T
   >
 }
