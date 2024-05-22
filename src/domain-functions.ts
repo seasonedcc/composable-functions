@@ -13,7 +13,8 @@ import type {
 } from './types.ts'
 import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
-import { safeResult } from './constructor.ts'
+import { safeResult, fromComposable, toComposable } from './constructor.ts'
+import * as Future from 'npm:composable-functions@beta'
 
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.
@@ -29,25 +30,9 @@ const df = all(a, b, c)
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return ((input, environment) => {
-    return safeResult(async () => {
-      const results = await Promise.all(
-        fns.map((fn) => (fn as DomainFunction)(input, environment)),
-      )
-
-      if (!isListOfSuccess(results)) {
-        throw new ResultError({
-          errors: results.map(({ errors }) => errors).flat(),
-          inputErrors: results.map(({ inputErrors }) => inputErrors).flat(),
-          environmentErrors: results
-            .map(({ environmentErrors }) => environmentErrors)
-            .flat(),
-        })
-      }
-
-      return results.map(({ data }) => data)
-    })
-  }) as DomainFunction<UnpackAll<Fns>>
+  return fromComposable(Future.all(...fns.map(toComposable))) as DomainFunction<
+    UnpackAll<Fns>
+  >
 }
 
 /**

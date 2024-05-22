@@ -13,7 +13,38 @@ import type {
 } from './types.ts'
 import * as Future from 'npm:composable-functions@beta'
 
-function composableToDF<R>(
+function toComposable<R>(
+  df: DomainFunction<R>,
+): Future.Composable<(input?: unknown, environment?: unknown) => R> {
+  return (async (input?: unknown, environment?: unknown) => {
+    const result = await df(input, environment)
+
+    if (result.success) {
+      return {
+        success: true,
+        data: result.data,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      }
+    } else {
+      return {
+        success: false,
+        errors: [
+          ...result.errors.map((e) => e.exception ?? new Error(e.message)),
+          ...result.inputErrors.map(
+            (e) => new Future.InputError(e.message, e.path),
+          ),
+          ...result.environmentErrors.map(
+            (e) => new Future.EnvironmentError(e.message, e.path),
+          ),
+        ],
+      }
+    }
+  }) as Future.Composable<(input?: unknown, environment?: unknown) => R>
+}
+
+function fromComposable<R>(
   cf: Future.Composable<(inout?: unknown, environment?: unknown) => R>,
 ) {
   return (async (input?: unknown, environment?: unknown) => {
@@ -92,7 +123,7 @@ function composableToDF<R>(
  * }
  */
 async function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  return await composableToDF(Future.composable(fn))()
+  return await fromComposable(Future.composable(fn))()
 }
 
 /**
@@ -129,7 +160,7 @@ function makeDomainFunction<I, E>(
         safeParse: () => inputResult,
       }
 
-      return composableToDF(
+      return fromComposable(
         Future.withSchema(
           futureInputSchema as any,
           futureEnvSchema as any,
@@ -164,4 +195,10 @@ const undefinedSchema: ParserSchema<undefined> = {
   },
 }
 
-export { makeDomainFunction, makeDomainFunction as mdf, safeResult }
+export {
+  makeDomainFunction,
+  makeDomainFunction as mdf,
+  safeResult,
+  fromComposable,
+  toComposable
+}
