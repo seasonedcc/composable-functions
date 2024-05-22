@@ -191,32 +191,9 @@ You can have both libraries in the project and migrate one module at a time.
 
 Choose a module that has fewer dependants and swipe all constructors from `makeDomainFunction` to `withSchema`.
 
-If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` function below to avoid having to migrate those modules.
+If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` from `domain-functions@3.0` to avoid having to migrate those modules.
 
-```ts
-function toComposable<T>(df: DomainFunction<T>) {
-  return (async (...args) => {
-    const result = await df(...args)
-    if (result.success) {
-      return { success: true, errors: [], data: result.data }
-    }
-    return {
-      success: false,
-      errors: [
-        ...result.errors.map((e) => e.exception),
-        ...result.inputErrors.map(
-          ({ message, path }) => new InputError(message, path),
-        ),
-        ...result.environmentErrors.map(
-          ({ message, path }) => new EnvironmentError(message, path),
-        ),
-      ],
-    }
-  }) as Composable<(input?: unknown, environment?: unknown) => T>
-}
-```
-
-Understanding the code above will also help you understand the differences between the two libraries. Once you finish migrating the other modules you can remove the `toComposable` function.
+Once you finish migrating the other modules you can remove the `domain-functions` dependency.
 
 ### Dealing with Failures
 - In the tests, change the `result.inputErrors` and `result.environmentErrors` for `result.errors`. You can also test for the name: `InputError` or `EnvironmentError`
