@@ -4,7 +4,7 @@ import {
   InputErrors,
   ResultError,
 } from './errors.ts'
-import { schemaError, toErrorWithMessage } from './errors.ts'
+import { schemaError } from './errors.ts'
 import { formatSchemaErrors } from './utils.ts'
 import type {
   DomainFunction,
@@ -12,7 +12,58 @@ import type {
   ParserSchema,
   Result,
 } from './types.ts'
-import { composable } from './future/index.ts'
+import * as Future from './future/index.ts'
+
+function composableToDF<R>(
+  cf: Future.Composable<(inout?: unknown, environment?: unknown) => R>,
+) {
+  return (async (input?: unknown, environment?: unknown) => {
+    const result = await cf(input, environment)
+    if (result.success) {
+      return {
+        success: true,
+        data: result.data,
+        errors: [],
+        inputErrors: [],
+        environmentErrors: [],
+      }
+    } else {
+      return result.errors.reduce(
+        (previous, current) => {
+          if (current instanceof ResultError)
+            return { ...previous, ...current.result }
+          else if (current instanceof InputError) {
+            previous.inputErrors.push(
+              schemaError(current.message, current.path),
+            )
+          } else if (current instanceof EnvironmentError) {
+            previous.environmentErrors.push(
+              schemaError(current.message, current.path),
+            )
+          } else if (current instanceof InputErrors) {
+            previous.inputErrors = [
+              ...previous.inputErrors,
+              ...current.errors.map((e) => schemaError(e.message, e.path)),
+            ]
+          } else {
+            previous.errors.push({
+              message: current.message,
+              exception: current,
+            })
+          }
+
+          return previous
+        },
+        {
+          success: false,
+          errors: [],
+          environmentErrors: [],
+          inputErrors: [],
+        } as ErrorResult,
+      )
+    }
+  }) as DomainFunction<R>
+}
 
 /**
  * A functions that turns the result of its callback into a Result object.
@@ -34,48 +85,7 @@ import { composable } from './future/index.ts'
  * }
  */
 async function safeResult<T>(fn: () => T): Promise<Result<T>> {
-  const result = await composable(fn)()
-  if (result.success) {
-    return {
-      success: true,
-      data: result.data,
-      errors: [],
-      inputErrors: [],
-      environmentErrors: [],
-    }
-  } else {
-    return result.errors.reduce(
-      (previous, current) => {
-        if (current instanceof ResultError)
-          return { ...previous, ...current.result }
-        else if (current instanceof InputError) {
-          previous.inputErrors.push(schemaError(current.message, current.path))
-        } else if (current instanceof EnvironmentError) {
-          previous.environmentErrors.push(
-            schemaError(current.message, current.path),
-          )
-        } else if (current instanceof InputErrors) {
-          previous.inputErrors = [
-            ...previous.inputErrors,
-            ...current.errors.map((e) => schemaError(e.message, e.path)),
-          ]
-        } else {
-          previous.errors.push({
-            message: current.message,
-            exception: current,
-          })
-        }
-
-        return previous
-      },
-      {
-        success: false,
-        errors: [],
-        environmentErrors: [],
-        inputErrors: [],
-      } as ErrorResult,
-    )
-  }
+  return await composableToDF(Future.composable(fn))()
 }
 
 /**
