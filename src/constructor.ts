@@ -5,7 +5,6 @@ import {
   ResultError,
 } from './errors.ts'
 import { schemaError } from './errors.ts'
-import { formatSchemaErrors } from './utils.ts'
 import type {
   DomainFunction,
   ErrorResult,
@@ -45,6 +44,14 @@ function composableToDF<R>(
               ...previous.inputErrors,
               ...current.errors.map((e) => schemaError(e.message, e.path)),
             ]
+          } else if (current instanceof Future.InputError) {
+            previous.inputErrors.push(
+              schemaError(current.message, current.path.join('.')),
+            )
+          } else if (current instanceof Future.EnvironmentError) {
+            previous.environmentErrors.push(
+              schemaError(current.message, current.path.join('.')),
+            )
           } else {
             previous.errors.push({
               message: current.message,
@@ -108,27 +115,26 @@ function makeDomainFunction<I, E>(
   environmentSchema?: ParserSchema<E>,
 ) {
   return function <Output>(handler: (input: I, environment: E) => Output) {
-    return function (input, environment = {}) {
-      return safeResult(async () => {
-        const envResult = await (
-          environmentSchema ?? objectSchema
-        ).safeParseAsync(environment)
-        const result = await (inputSchema ?? undefinedSchema).safeParseAsync(
-          input,
-        )
+    return async function (input, environment = {}) {
+      const envResult = await (
+        environmentSchema ?? objectSchema
+      ).safeParseAsync(environment)
+      const futureEnvSchema = {
+        safeParse: () => envResult,
+      }
+      const inputResult = await (inputSchema ?? undefinedSchema).safeParseAsync(
+        input,
+      )
+      const futureInputSchema = {
+        safeParse: () => inputResult,
+      }
 
-        if (!result.success || !envResult.success) {
-          throw new ResultError({
-            inputErrors: result.success
-              ? []
-              : formatSchemaErrors(result.error.issues),
-            environmentErrors: envResult.success
-              ? []
-              : formatSchemaErrors(envResult.error.issues),
-          })
-        }
-        return handler(result.data as I, envResult.data as E)
-      })
+      return composableToDF(
+        Future.withSchema(
+          futureInputSchema as any,
+          futureEnvSchema as any,
+        )(handler as any),
+      )(input, environment)
     } as DomainFunction<Awaited<Output>>
   }
 }
