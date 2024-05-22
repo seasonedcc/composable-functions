@@ -1,4 +1,10 @@
-# Keep your business logic clean with Domain Functions
+# Keep your business logic clean with ~Domain Functions~ Composable Functions
+
+The work in Domain Functions led us to a new, more generic library called Composable Functions.
+We recommend you migrate following [our migration guide](https://github.com/seasonedcc/composable-functions/blob/main/migrating-df.md).
+This guide also has some benefits that we see in migrating to the new library.
+Moreover, so make the transition smoother, there is a new Domain Functions release (3.0) that introduces very few breaking changes and
+uses the new library as a dependency. Using both libraries simultaneously is easy and an incremental migration is viable.
 
 Domain Functions helps you decouple your business logic from your controllers, with first-class type inference from end to end.
 It does this by enforcing the parameters' types at runtime (through [Zod](https://github.com/colinhacks/zod#what-is-zod) schemas) and always wrapping results (even exceptions) into a `Promise<Result<Output>>` type.
