@@ -37,17 +37,9 @@ function toComposable<R>(
 ): Future.Composable<(input?: unknown, environment?: unknown) => R> {
   return (async (input?: unknown, environment?: unknown) => {
     const result = await df(input, environment)
-
-    if (result.success) {
-      return {
-        success: true,
-        data: result.data,
-        errors: [],
-      }
-    } else {
-      return {
-        success: false,
-        errors: [
+    return result.success
+      ? Future.success(result.data)
+      : Future.failure([
           ...result.errors.map((e) => e.exception ?? new Error(e.message)),
           ...result.inputErrors.map(
             (e) => new Future.InputError(e.message, e.path),
@@ -55,9 +47,7 @@ function toComposable<R>(
           ...result.environmentErrors.map(
             (e) => new Future.EnvironmentError(e.message, e.path),
           ),
-        ],
-      }
-    }
+        ] as Error[])
   }) as Future.Composable<(input?: unknown, environment?: unknown) => R>
 }
 
