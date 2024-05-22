@@ -181,9 +181,14 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
  */
 function map<Fn extends Composable, O>(
   fn: Fn,
-  mapper: (res: UnpackData<Fn>) => O,
+  mapper: (res: UnpackData<Fn>, ...originalInput: Parameters<Fn>) => O,
 ): Composable<(...args: Parameters<Fn>) => O> {
-  return pipe(fn as Composable, composable(mapper) as Composable)
+  return (async (...args) => {
+    const result = await fn(...args)
+    if (!result.success) return failure(result.errors)
+
+    return composable(mapper)(result.data, ...args)
+  }) as Composable<(...args: Parameters<Fn>) => O>
 }
 
 /**
