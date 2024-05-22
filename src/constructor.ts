@@ -13,6 +13,28 @@ import type {
 } from './types.ts'
 import * as Future from 'npm:composable-functions@beta'
 
+/**
+ * A functions that helps incremental migration from the legacy `domain-functions` library to the `composable-functions`.
+ * Both libraries can be installed simultaneously, but to mix and match functions in compositions using `toComposable` and `fromComposable` are necessary to ensure the error types are compatible.
+ * It will convert any DomainFunction<T> into a Composable<(input?: unknown, environment?: unknown) => T>
+ *
+ * @example
+ * const result = await safeResult(() => ({
+ *   message: 'hello',
+ * }))
+ * // the type of result is Result<{ message: string }>
+ * if (result.success) {
+ *   console.log(result.data.message)
+ * }
+ *
+ * const result = await safeResult(() => {
+ *  throw new Error('something went wrong')
+ * })
+ * // the type of result is Result<never>
+ * if (!result.success) {
+ *  console.log(result.errors[0].message)
+ * }
+ */
 function toComposable<R>(
   df: DomainFunction<R>,
 ): Future.Composable<(input?: unknown, environment?: unknown) => R> {
