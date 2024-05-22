@@ -43,8 +43,6 @@ function toComposable<R>(
         success: true,
         data: result.data,
         errors: [],
-        inputErrors: [],
-        environmentErrors: [],
       }
     } else {
       return {
