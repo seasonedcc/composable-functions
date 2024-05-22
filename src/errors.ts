@@ -43,7 +43,7 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
  * @returns the SchemaError
  */
 function schemaError(message: string, path: string): SchemaError {
-  return { message, path: path.split('.') }
+  return { message, path: path === '' ? [] : path.split('.') }
 }
 
 /**
