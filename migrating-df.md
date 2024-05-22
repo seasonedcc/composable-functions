@@ -203,7 +203,7 @@ expect(result.inputErrors).containSubset([{ path: ['name'] }])
 // with this
 expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 ```
-- Elsewhere, collect the inputErrors and environmentErrors with functions that look for `error instanceof InputError` or check the `name` of the error if the result was serialized.
+- Elsewhere, collect the inputErrors and environmentErrors with the [`isInputError`](./API.md#isinputerror) and [`isEnvironmentError`](./API.md#isenvironmenterror) functions.
 
 # Equivalence tables
 
