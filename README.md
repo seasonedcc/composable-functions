@@ -29,6 +29,7 @@ A set of types and functions to make compositions easy and safe.
     - [Migrating from domain-functions](#migrating-from-domain-functions)
     - [Handling external input](#handling-external-input)
     - [Defining constants for multiple functions (environments)](#defining-constants-for-multiple-functions-environments)
+    - [Using custom parsers](#using-custom-parsers)
 - [Using Deno](#using-deno)
 - [Acknowledgements](#acknowledgements)
 
@@ -254,6 +255,7 @@ const getProfile = composable(async (id: string) => {
 #### [Migrating from domain-functions](./migrating-df.md)
 #### [Handling external input](./with-schema.md)
 #### [Defining constants for multiple functions (environments)](./environments.md)
+#### [Using custom parsers](./examples/arktype/README.md)
 
 ## Using Deno
 
