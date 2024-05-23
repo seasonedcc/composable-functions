@@ -11,7 +11,7 @@ import type {
   ParserSchema,
   Result,
 } from './types.ts'
-import * as Future from 'npm:composable-functions@beta'
+import * as Future from './deps.ts'
 
 /**
  * A functions that helps incremental migration from the legacy `domain-functions` library to the `composable-functions`.

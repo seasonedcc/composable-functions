@@ -3,4 +3,4 @@ export {
   inputFromFormData,
   inputFromSearch,
   inputFromUrl,
-} from 'npm:composable-functions@beta'
+} from './deps.ts'

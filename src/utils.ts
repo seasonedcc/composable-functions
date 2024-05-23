@@ -16,5 +16,5 @@ function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
   return result.every(({ success }) => success === true)
 }
 
-export { mergeObjects } from 'npm:composable-functions@beta'
+export { mergeObjects } from './deps.ts'
 export { formatSchemaErrors, isListOfSuccess }

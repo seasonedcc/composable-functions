@@ -13,7 +13,7 @@ import type {
 import type { Last } from './types.ts'
 import type { SuccessResult } from './types.ts'
 import { safeResult, fromComposable, toComposable } from './constructor.ts'
-import * as Future from 'npm:composable-functions@beta'
+import * as Future from './deps.ts'
 
 /**
  * Creates a single domain function out of multiple domain functions. It will pass the same input and environment to each provided function. The functions will run in parallel. If all constituent functions are successful, The data field will be a tuple containing each function's output.

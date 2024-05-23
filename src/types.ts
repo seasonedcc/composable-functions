@@ -162,7 +162,7 @@ type ParserSchema<T extends unknown = unknown> = {
   safeParseAsync: (a: unknown) => Promise<ParserResult<T>>
 }
 
-export type { MergeObjects as MergeObjs } from 'npm:composable-functions@beta'
+export type { MergeObjects as MergeObjs } from './deps.ts'
 export type {
   AtLeastOne,
   DomainFunction,
