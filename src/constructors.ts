@@ -101,7 +101,7 @@ function withSchema<I, E>(
   return <Output>(
     handler: (input: I, environment: E) => Output,
   ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> =>
-    applySchema(composable(handler), inputSchema, environmentSchema)
+    applySchema(inputSchema, environmentSchema)(composable(handler)) as never
 }
 
 /**
@@ -112,47 +112,47 @@ function withSchema<I, E>(
  * @returns a composable function that will assert the input and environment types at runtime.
  * @example
  * ```ts
- * const fn = composable((
- *  { greeting }: { greeting: string },
- *  { user }: { user: { name: string } },
- * ) => ({
- *   message: `${greeting} ${user.name}`
- * }))
  * const safeFunction = applySchema(
- *  fn,
  *  z.object({ greeting: z.string() }),
  *  z.object({
  *    user: z.object({ name: z.string() })
  *  }),
  * )
+ * const fn = safeFunction(composable((
+ *  { greeting }: { greeting: string },
+ *  { user }: { user: { name: string } },
+ * ) => ({
+ *   message: `${greeting} ${user.name}`
+ * })))
  * ```
  */
-function applySchema<I, E, A extends Composable>(
-  fn: A,
+function applySchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-): Composable<(input?: unknown, environment?: unknown) => UnpackData<A>> {
-  return (input, environment) => {
-    const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
-      environment,
-    )
-    const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
+) {
+  return <A extends Composable>(fn: A) => {
+    return ((input: I, environment: E) => {
+      const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
+        environment,
+      )
+      const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
-    if (!result.success || !envResult.success) {
-      const inputErrors = result.success
-        ? []
-        : result.error.issues.map(
-            (error) => new InputError(error.message, error.path as string[]),
-          )
-      const envErrors = envResult.success
-        ? []
-        : envResult.error.issues.map(
-            (error) =>
-              new EnvironmentError(error.message, error.path as string[]),
-          )
-      return Promise.resolve(failure([...inputErrors, ...envErrors]))
-    }
-    return fn(result.data, envResult.data)
+      if (!result.success || !envResult.success) {
+        const inputErrors = result.success
+          ? []
+          : result.error.issues.map(
+              (error) => new InputError(error.message, error.path as string[]),
+            )
+        const envErrors = envResult.success
+          ? []
+          : envResult.error.issues.map(
+              (error) =>
+                new EnvironmentError(error.message, error.path as string[]),
+            )
+        return Promise.resolve(failure([...inputErrors, ...envErrors]))
+      }
+      return fn(result.data as I, envResult.data as E)
+    }) as Composable<(input?: unknown, environment?: unknown) => UnpackData<A>>
   }
 }
 

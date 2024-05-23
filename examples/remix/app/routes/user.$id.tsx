@@ -5,12 +5,13 @@ import { formatUser, getUser } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
 import { z } from 'zod'
 
-// The output of getUser will be the input of formatUser
-// We could also be using `map` instead of `pipe` here
 const getData = applySchema(
-  pipe(getUser, formatUser),
   // We are adding runtime validation because the Remix's `Params` object is not strongly typed
   z.object({ id: z.string() }),
+)(
+  // The output of getUser will be the input of formatUser
+  // We could also be using `map` instead of `pipe` here
+  pipe(getUser, formatUser),
 )
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {

@@ -7,10 +7,9 @@ import { actionResponse, loaderResponseOrThrow } from '~/lib'
 import { z } from 'zod'
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const result = await applySchema(
-    getColor,
-    z.object({ id: z.string() }),
-  )(params)
+  const result = await applySchema(z.object({ id: z.string() }))(getColor)(
+    params,
+  )
   return loaderResponseOrThrow(result)
 }
 

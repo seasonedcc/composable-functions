@@ -7,6 +7,10 @@ import { loaderResponseOrThrow } from '~/lib'
 import { z } from 'zod'
 
 const getData = applySchema(
+  // We are applying a schema for runtime safety
+  // By not defining schemas for every composable we avoid unnecessary processing
+  z.object({ page: z.string().optional() }),
+)(
   // We'll run these 2 composables in parallel with Promise.all
   collect({
     // The second argument will transform the successful result of listColors,
@@ -14,9 +18,6 @@ const getData = applySchema(
     colors: map(listColors, ({ data }) => data),
     users: listUsers,
   }),
-  // We are applying a schema for runtime safety
-  // By not defining schemas for every composable we avoid unnecessary processing
-  z.object({ page: z.string().optional() }),
 )
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
