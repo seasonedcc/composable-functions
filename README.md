@@ -160,19 +160,41 @@ Two neat consequences is that we can handle errors using functions (no need for 
 
 ### Throwing
 
+You can throw anything derived from `Error`. Check [this documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types) on how to define your custom errors. The library will also wrap anything that does not extends `Error`, just to keep compatibility with code-bases that throw strings or objects.
+
+```typescript
+import { composable } from 'composable-functions'
+
+class NotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+const getUser = composable((userId: string, users: Array<string>) => {
+//    ^? Composable<(userId: string, users: Array<string>) => string>
+    const result = users.find(({id}) => id === userId)
+    if(result == undefined) throw new NotFoundError(`userId ${userId} was not found`)
+    return result
+})
+```
+
+The library defines a few custom errors out of the box but these will be more important later on, whend dealing with external input and schemas.
+See [the errors module](./src/errors.ts) for more details.
+
 ### Catching
 You can catch an error in a `Composable`, using `catchFailure` which is similar to `map` but will run whenever the first composable fails:
 
 ```typescript
 import { composable, catchFailure } from 'composable-functions'
 
-const getUser = composable((id: string) => fetchUser(id))
-//    ^? Composable<(id: string) => User>
+// assuming we have the definitions from the previous example
 const getOptionalUser = catchFailure(getUser, (errors, id) => {
   console.log(`Failed to fetch user with id ${id}`, errors)
   return null
 })
-//    ^? Composable<(id: string) => User | null>
+//    ^? Composable<(id: string) => string | null>
 ```
 
 ### Mapping the errors
