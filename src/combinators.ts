@@ -166,6 +166,27 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
 }
 
 /**
+ * TODO
+ * @param fns TODO
+ * @returns TODO
+ */
+function tap<Fns extends Composable[]>(...fns: Fns) {
+  return (async (...args) => {
+    const result = []
+    for await (const fn of fns) {
+      const res = await fn(...args)
+      if (!res.success) return failure(res.errors)
+      result.push(res.data)
+    }
+    return success(result)
+  }) as Composable<
+    (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
+      [k in keyof Fns]: UnpackData<Fns[k]>
+    }
+  >
+}
+
+/**
  * It takes a Composable and a mapper to apply a transformation over the resulting output. It only runs if the function was successfull. When the given function fails, its error is returned wihout changes.
  * The mapper also receives the original input parameters.
  *
@@ -382,5 +403,6 @@ export {
   mergeObjects,
   pipe,
   sequence,
+  tap,
   trace,
 }

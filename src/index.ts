@@ -17,6 +17,7 @@ export {
   mergeObjects,
   pipe,
   sequence,
+  tap,
   trace,
 } from './combinators.ts'
 export {
