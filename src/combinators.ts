@@ -183,7 +183,10 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
  */
 function map<Fn extends Composable, O>(
   fn: Fn,
-  mapper: (res: UnpackData<Fn>, ...originalInput: Parameters<Fn>) => O | Promise<O>,
+  mapper: (
+    res: UnpackData<Fn>,
+    ...originalInput: Parameters<Fn>
+  ) => O | Promise<O>,
 ): Composable<(...args: Parameters<Fn>) => O> {
   return (async (...args) => {
     const result = await fn(...args)
@@ -350,7 +353,7 @@ function trace(
 function branch<
   SourceComposable extends Composable,
   Resolver extends (
-    ...args: any[]
+    o: UnpackData<SourceComposable>,
   ) => Composable | null | Promise<Composable | null>,
 >(
   cf: SourceComposable,

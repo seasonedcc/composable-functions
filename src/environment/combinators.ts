@@ -1,4 +1,4 @@
-import type { Composable } from '../types.ts'
+import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
@@ -62,7 +62,7 @@ function sequence<Fns extends Composable[]>(...fns: Fns) {
 function branch<
   SourceComposable extends Composable,
   Resolver extends (
-    ...args: any[]
+    o: UnpackData<SourceComposable>,
   ) => Composable | null | Promise<Composable | null>,
 >(cf: SourceComposable, resolver: Resolver) {
   return (async (...args: Parameters<SourceComposable>) => {
