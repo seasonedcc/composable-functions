@@ -1,8 +1,10 @@
 # Keep your business logic clean with ~Domain Functions~ Composable Functions
 
 > **Important notices**: The work in Domain Functions led us to a new, more generic library called Composable Functions.
-We recommend you migrate following [our migration guide](https://github.com/seasonedcc/composable-functions/blob/main/migrating-df.md). `domain-functions` is going into a feature freeze  and we'll be only be doing minimal maintenance to solve crucial bugs.
+We recommend you migrate following [our migration guide](https://github.com/seasonedcc/composable-functions/blob/main/migrating-df.md). `domain-functions` is going into a feature freeze  and we'll only be doing minimal maintenance to solve crucial bugs.
+
 > This guide also has some benefits that we see in migrating to the new library.
+
 > Moreover, to make the transition smoother, there is a new Domain Functions release (3.0) that introduces very few breaking changes and uses the new library as a dependency. Using both libraries simultaneously is easy and an incremental migration is viable.
 
 Domain Functions helps you decouple your business logic from your controllers, with first-class type inference from end to end.
