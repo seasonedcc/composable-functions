@@ -4,12 +4,14 @@
 
 A set of types and functions to make compositions easy and safe.
 
-- 🛟 Type-safe compositions of functions
-- 🧠 Always unwrap promises and errors as default
-- 😣 Get rid of the terrible try/catch syntax
-- ✅ End-to-end type safety, all the way from the Backend to the UI
-- 🏝️ Isolate your business logic making it easier to test and maintain
-- 📝 Allows business logic to be expressed in the type system
+- 🛟 Type-Safe Compositions: Ensure robust type-safety during function composition, preventing incompatible functions from being combined and reducing runtime errors.
+- 🔄 Promise and Error Handling: Focus on the happy-path of your functions eliminating the need for verbose try/catch syntax.
+- 🏝️ Isolated Business Logic: Split your code into composable functions, making your code easier to test and maintain.
+- 🔒 End-to-End Type Safety: Achieve end-to-end type safety from the backend to the UI with serializable results, ensuring data integrity across your entire application.
+-	⚡ Parallel and Sequential Compositions: Compose functions both in parallel - with `all` and `collect` - and sequentially - with `pipe`, `branch`, and `sequence` -, to manage complex data flows optimizing your code for performance and clarity.
+-	🕵️‍♂️ Runtime Validation: Use `withSchema` or `applySchema` with your favorite parser for optional runtime validation of inputs and environments, enforcing data integrity only when needed.
+-	🚑 Resilient Error Handling: Leverage enhanced combinators like `mapErrors` and `catchFailure` to transform and handle errors more effectively.
+-	📊 Traceable Compositions: Use the `trace` function to log and monitor your composable functions’ inputs and results, simplifying debugging and monitoring.
 
 #### Go to [API Reference](./API.md)
 
