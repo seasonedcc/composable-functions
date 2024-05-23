@@ -34,3 +34,7 @@ await build({
 // post build steps
 Deno.copyFileSync('LICENSE', 'npm/LICENSE')
 Deno.copyFileSync('README.md', 'npm/README.md')
+Deno.copyFileSync('API.md', 'npm/API.md')
+Deno.copyFileSync('environments.md', 'npm/environments.md')
+Deno.copyFileSync('with-schema.md', 'npm/with-schema.md')
+Deno.copyFileSync('migrating-df.md', 'npm/migrating-df.md')
