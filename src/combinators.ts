@@ -183,7 +183,7 @@ function sequence<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
  */
 function map<Fn extends Composable, O>(
   fn: Fn,
-  mapper: (res: UnpackData<Fn>, ...originalInput: Parameters<Fn>) => O,
+  mapper: (res: UnpackData<Fn>, ...originalInput: Parameters<Fn>) => O | Promise<O>,
 ): Composable<(...args: Parameters<Fn>) => O> {
   return (async (...args) => {
     const result = await fn(...args)
