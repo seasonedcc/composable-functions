@@ -6,7 +6,7 @@ When dealing with external data such as API requests or form submissions, it's c
 
 To ensure type safety at runtime, use the `applySchema` or `withSchema` functions to validate external inputs against defined schemas.
 
-**Note about schema validation libraries:** Composable functions use Zod for schema validation by default. If you prefer to use another library, you can create your own `withSchema` function based on the library of your choice. For an example, see the [Arktype example](./examples/arktype/src/).
+**Note about schema validation libraries:** Composable functions use Zod for schema validation by default. If you prefer to use another library, you can create your own `withSchema` function based on the library of your choice. For an example, see the [Arktype example](./examples/arktype/README.md).
 
 ### applySchema
 
