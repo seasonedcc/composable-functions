@@ -1,6 +1,6 @@
 # Keep your business logic clean with ~Domain Functions~ Composable Functions
 
-> **Important notices**: The work in Domain Functions led us to a new, more generic library called Composable Functions.
+> **Important notice**: The work in Domain Functions led us to a new, more generic library called Composable Functions.
 We recommend you migrate following [our migration guide](https://github.com/seasonedcc/composable-functions/blob/main/migrating-df.md). `domain-functions` is going into a feature freeze  and we'll only be doing minimal maintenance to solve crucial bugs.
 
 > This guide also has some benefits that we see in migrating to the new library.
