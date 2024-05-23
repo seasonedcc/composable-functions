@@ -8,7 +8,7 @@ import {
   success,
   withSchema,
 } from '../../index.ts'
-import { Composable } from '../../types.ts'
+import { Composable, UnpackData } from '../../types.ts'
 
 describe('branch', () => {
   it('should pipe a composable with arbitrary types', async () => {
@@ -73,9 +73,10 @@ describe('branch', () => {
       next: 'multiply',
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const d = environment.branch(a, (output) =>
-      output.next === 'multiply' ? null : b,
-    )
+    const d = environment.branch(a, (output) => {
+      type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
+      return output.next === 'multiply' ? null : b
+    })
     type _R = Expect<
       Equal<
         typeof d,

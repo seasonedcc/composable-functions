@@ -46,12 +46,13 @@ describe('branch', () => {
       next: 'multiply',
     }))
     const b = composable(({ id }: { id: number }) => String(id))
-    const resolver = (output: UnpackData<typeof a>) =>
-      output.next === 'multiply' ? null : b
-    const d = branch(a, resolver)
+    const c = branch(a, (output) => {
+      type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
+      return output.next === 'multiply' ? null : b
+    })
     type _R = Expect<
       Equal<
-        typeof d,
+        typeof c,
         Composable<
           (
             input?: unknown,
@@ -61,7 +62,7 @@ describe('branch', () => {
       >
     >
 
-    assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
+    assertEquals(await c({ id: 1 }), success({ id: 3, next: 'multiply' }))
   })
 
   it('should gracefully fail if the first function fails', async () => {
