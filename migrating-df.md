@@ -203,6 +203,28 @@ Choose a module that has fewer dependants and swipe all constructors from `makeD
 
 If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` from `domain-functions@3.0` to avoid having to migrate those modules.
 
+During the migration, you might need to have polymorphic functions that can accept both `DomainFunction` and `Composable` or the different `Result` of both libraries. Check out an example of how to do that:
+
+```ts
+import type { Result as DFResult } from 'domain-functions'
+import { isInputError, isEnvironmentError } from 'composable-functions'
+import type { Result, SerializableResult } from 'composable-functions'
+
+const isFormError = (result: SerializableResult | Result | DFResult) => {
+  if ("inputErrors" in result) {
+    return result.inputErrors.length > 0
+  }
+  return result.errors.some(isInputError)
+}
+
+const isEnvError = (result: SerializableResult | Result | CFResult) => {
+  if ("environmentErrors" in result) {
+    return result.environmentErrors.length > 0
+  }
+  return result.errors.some(isEnvironmentError)
+}
+```
+
 Once you finish migrating the other modules you can remove the `domain-functions` dependency.
 
 ### Dealing with Failures
