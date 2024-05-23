@@ -61,12 +61,11 @@ const fn = composable((
 }))
 
 const safeFunction = applySchema(
-  fn,
   z.object({ greeting: z.string() }),
   z.object({
     user: z.object({ name: z.string() })
   }),
-)
+)(fn)
 
 type Test = typeof safeFunction
 //   ^? Composable<(input?: unknown, env?: unknown) => { message: string }>

@@ -439,12 +439,13 @@ describe('applySchema', () => {
     const envSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
+      inputSchema,
+      envSchema,
+    )(
       composable(
         ({ id }: { id: number }, { uid }: { uid: number }) =>
           [id, uid] as const,
       ),
-      inputSchema,
-      envSchema,
     )
     type _R = Expect<
       Equal<

@@ -243,7 +243,7 @@ expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 | Domain Functions | Composable Functions |
 |---|---|
 | `makeDomainFunction(z.string(), z.number())((input, env) => {})` | `withSchema(z.string, z.number())((input, env) => {})` |
-| -- | `applySchema(composable((input, env) => {}), z.string(), z.number())` |
+| -- | `applySchema(z.string(), z.number())(composable((input, env) => {}))` |
 | `makeSuccessResult(1)` | `success(1)` |
 | `makeErrorResult({ errors: [{ message: 'Something went wrong' }] })` | `failure([new Error('Something went wrong')])` |
 | `new InputError('required', 'user.name')` | `new InputError('required', ['user', 'name'])` |
