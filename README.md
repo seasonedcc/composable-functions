@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="300" src="https://github.com/seasonedcc/composable-functions/assets/566971/b786f157-9fb1-4506-9ddb-e438dcde06c8" alt="Composable Functions" />
+  <img width="300" src="./logo.png" alt="Composable Functions" />
 </p>
 
 A set of types and functions to make compositions easy and safe.
