@@ -2,11 +2,11 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "npm:composable-functions@beta": "npm:composable-functions@1.0.0-beta-20240523-3"
+      "npm:composable-functions@^4.0.0": "npm:composable-functions@4.0.0"
     },
     "npm": {
-      "composable-functions@1.0.0-beta-20240523-3": {
-        "integrity": "sha512-95HDdxbgTwV5jVgp8llhdH6MIDw+LL+748zZzAs049Nmlj5lFNUEqOS0+VNztxjY7w3OU1gHtgZnUafDpXIRUw==",
+      "composable-functions@4.0.0": {
+        "integrity": "sha512-MBJzf0vjY/++40td8QvYS0lU0bDPr/rGs0G7bzEgl+GIbpn4/TTtya7YW/sRlkVvZCONZxeTVLiEB8EoWIYwlg==",
         "dependencies": {}
       }
     }
