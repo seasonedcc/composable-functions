@@ -1,23 +1,38 @@
-import { Cookie, json, TypedResponse } from '@remix-run/node'
-import { Result } from 'domain-functions'
+import type { Cookie, TypedResponse } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import {
+  catchFailure,
+  Result,
+  SerializableResult,
+  composable,
+  serialize,
+  fromSuccess,
+} from 'composable-functions'
 
 /**
  * Given a Cookie and a Request it returns the stored cookie's value as an object
  */
-function envFromCookie(
-  cookie: Cookie,
-): (request: Request) => Promise<Record<string, unknown>> {
-  return async (request: Request) => {
+const strictReadCookie = composable(
+  async (request: Request, cookie: Cookie) => {
     const cookieHeader = request.headers.get('Cookie')
-    const parsedCookie = (await cookie.parse(cookieHeader)) || {}
-    return parsedCookie
-  }
-}
+    const cookieObj = (await cookie.parse(cookieHeader)) as Record<
+      string,
+      unknown
+    >
+    if (!cookieObj) throw new Error('Cookie not found')
 
-const actionResponse = <T extends Result<X>, X>(
-  result: T,
+    return cookieObj
+  },
+)
+const safeReadCookie = catchFailure(strictReadCookie, () => ({}))
+
+const envFromCookie = fromSuccess(safeReadCookie)
+
+const actionResponse = <X>(
+  result: Result<X>,
   opts?: RequestInit,
-) => json(result, { status: result.success ? 200 : 422, ...opts })
+): TypedResponse<SerializableResult<X>> =>
+  json(serialize(result), { status: result.success ? 200 : 422, ...opts })
 
 const loaderResponseOrThrow = <T extends Result<unknown>>(
   result: T,

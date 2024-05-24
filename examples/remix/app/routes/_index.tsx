@@ -1,17 +1,24 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData, useLocation } from '@remix-run/react'
-import { inputFromUrl, map, collect } from 'domain-functions'
-import { listColors } from '~/domain/colors'
-import { listUsers } from '~/domain/users'
+import { inputFromUrl, collect, map, applySchema } from 'composable-functions'
+import { listColors } from '~/business/colors'
+import { listUsers } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'
+import { z } from 'zod'
 
-// We'll run these 2 domain functions in parallel with Promise.all
-const getData = collect({
-  // The second argument will transform the successful result of listColors,
-  // we only care about what is in the "data" field
-  colors: map(listColors, ({ data }) => data),
-  users: listUsers,
-})
+const getData = applySchema(
+  // We are applying a schema for runtime safety
+  // By not defining schemas for every composable we avoid unnecessary processing
+  z.object({ page: z.string().optional() }),
+)(
+  // We'll run these 2 composables in parallel with Promise.all
+  collect({
+    // The second argument will transform the successful result of listColors,
+    // we only care about what is in the "data" field
+    colors: map(listColors, ({ data }) => data),
+    users: listUsers,
+  }),
+)
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
   const result = await getData(inputFromUrl(request))
@@ -24,7 +31,7 @@ export default function Index() {
   const qs = new URLSearchParams(location.search)
   return (
     <>
-      <h1 className="text-6xl font-extrabold">Domain Functions</h1>
+      <h1 className="text-6xl font-extrabold">Composables</h1>
       <ul className="flex flex-col gap-8 py-10">
         {colors.map(({ id, name, color }) => (
           <li key={id}>

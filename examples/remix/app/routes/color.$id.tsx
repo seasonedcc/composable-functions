@@ -1,17 +1,21 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { inputFromForm } from 'domain-functions'
+import { applySchema, inputFromForm } from 'composable-functions'
 import tinycolor from 'tinycolor2'
-import { getColor, mutateColor } from '~/domain/colors'
+import { getColor, mutateColor } from '~/business/colors'
 import { actionResponse, loaderResponseOrThrow } from '~/lib'
+import { z } from 'zod'
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const result = await getColor(params)
+  const result = await applySchema(z.object({ id: z.string() }))(getColor)(
+    params,
+  )
   return loaderResponseOrThrow(result)
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const result = await mutateColor(await inputFromForm(request))
+  const input = await inputFromForm(request)
+  const result = await mutateColor(input)
   return actionResponse(result)
 }
 
@@ -57,9 +61,9 @@ export default function Index() {
           >
             Error
           </button>
-          {actionData && actionData.inputErrors.length > 0 && (
+          {actionData && actionData.errors.length > 0 && (
             <small className="block text-sm text-red-500">
-              {actionData.inputErrors[0].message}
+              {actionData.errors[0].message}
             </small>
           )}
         </Form>

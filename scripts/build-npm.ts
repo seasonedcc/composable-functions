@@ -1,5 +1,5 @@
 // ex. scripts/build_npm.ts
-import { build, emptyDir } from 'https://deno.land/x/dnt@0.38.0/mod.ts'
+import { build, emptyDir } from 'https://deno.land/x/dnt@0.40.0/mod.ts'
 import pkg from '../deno.json' assert { type: 'json' }
 
 await emptyDir('./npm')
@@ -15,19 +15,18 @@ await build({
     undici: true,
   },
   package: {
-    name: 'domain-functions',
+    name: 'composable-functions',
     version: pkg.version,
-    description:
-      'Decouple your business logic from your controllers. With first-class type inference from end to end.',
+    description: 'Types and functions to make composition easy and safe',
     license: 'MIT',
     author: 'Seasoned',
     bugs: {
-      url: 'https://github.com/seasonedcc/domain-functions/issues',
+      url: 'https://github.com/seasonedcc/composable-functions/issues',
     },
-    homepage: 'https://github.com/seasonedcc/domain-functions',
+    homepage: 'https://github.com/seasonedcc/composable-functions',
     repository: {
-      type: "git",
-      url: "https://github.com/seasonedcc/domain-functions.git"
+      type: 'git',
+      url: 'https://github.com/seasonedcc/composable-functions.git',
     },
   },
 })
@@ -35,3 +34,7 @@ await build({
 // post build steps
 Deno.copyFileSync('LICENSE', 'npm/LICENSE')
 Deno.copyFileSync('README.md', 'npm/README.md')
+Deno.copyFileSync('API.md', 'npm/API.md')
+Deno.copyFileSync('environments.md', 'npm/environments.md')
+Deno.copyFileSync('with-schema.md', 'npm/with-schema.md')
+Deno.copyFileSync('migrating-df.md', 'npm/migrating-df.md')
