@@ -458,4 +458,19 @@ describe('applySchema', () => {
 
     assertEquals(await handler({ id: 1 }, { uid: 2 }), success([1, 2]))
   })
+
+  it('can be used as a layer on top of withSchema fn', async () => {
+    const fn = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const prepareSchema = z.string().transform((v) => ({ id: Number(v) }))
+    const handler = applySchema(prepareSchema)(fn)
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Composable<(input?: unknown, environment?: unknown) => number>
+      >
+    >
+
+    const result = await handler('1')
+    assertEquals(result, success(2))
+  })
 })
