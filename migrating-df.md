@@ -236,6 +236,16 @@ expect(result.inputErrors).containSubset([{ path: ['name'] }])
 expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 ```
 - Elsewhere, collect the inputErrors and environmentErrors with the [`isInputError`](./API.md#isinputerror) and [`isEnvironmentError`](./API.md#isenvironmenterror) functions.
+```ts
+// replace this
+if (result.inputErrors.length > 0) {
+  return result.inputErrors[0].message
+}
+// with this
+if (result.errors.some(isInputError)) {
+  return result.errors.find(isInputError).message
+}
+```
 
 # Equivalence tables
 
@@ -286,3 +296,6 @@ expect(result.errors).containSubset([{ name: 'InputError', path: ['name'] }])
 | `{ success: true, data: { name: 'John' }, errors: [], inputErrors: [], environmentErrors: [] }` | `{ success: true, data: { name: 'John' }, errors: [] }` |
 | `{ success: false, errors: [{ message: 'Something went wrong' }], inputErrors: [{ message: 'Required', path: ['name'] }], environemntErrors: [{ message: 'Unauthorized', path: ['user'] }] }` | `{ success: false, errors: [new Error('Something went wrong'), new InputError('Required', ['name']), new EnvironmentError('Unauthorized', ['user'])] }` |
 | -- | with `serialize`: `{ success: false, errors: [{ message: 'Something went wrong', name: 'Error', path: [] }, { message: 'Required', name: 'InputError', path: ['name'] }, { message: 'Unauthorized', name: 'EnvironmentError', path: ['user'] }] }` |
+| `result.inputErrors[0]?.message` | `result.errors.find(isInputError)?.message` |
+| `result.environmentErrors[0]?.message` | `result.errors.find(isEnvironmentError)?.message` |
+| `result.errors[0]?.exception instanceof CustomError` | `result.errors[0] instanceof CustomError` |
