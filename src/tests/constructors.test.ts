@@ -6,7 +6,12 @@ import {
   it,
   z,
 } from './prelude.ts'
-import type { ComposableWithSchema,Composable, Result, Success } from '../index.ts'
+import type {
+  ComposableWithSchema,
+  Composable,
+  Result,
+  Success,
+} from '../index.ts'
 import {
   composable,
   EnvironmentError,
@@ -135,24 +140,14 @@ describe('withSchema', () => {
   describe('when it has no input', () => {
     it('uses zod parser to create parse the input and call the schema function', async () => {
       const handler = withSchema()(() => 'no input!')
-      type _R = Expect<
-        Equal<
-          typeof handler,
-          ComposableWithSchema<string>
-        >
-      >
+      type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
 
       assertEquals(await handler(), success('no input!'))
     })
 
     it('ignores the input and pass undefined', async () => {
       const handler = withSchema()((args) => args)
-      type _R = Expect<
-        Equal<
-          typeof handler,
-          ComposableWithSchema<unknown>
-        >
-      >
+      type _R = Expect<Equal<typeof handler, ComposableWithSchema<unknown>>>
 
       assertEquals(await handler('some input'), {
         success: true,
@@ -167,24 +162,14 @@ describe('withSchema', () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
       const handler = withSchema(parser)(({ id }) => id)
-      type _R = Expect<
-        Equal<
-          typeof handler,
-          ComposableWithSchema<number>
-        >
-      >
+      type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
       assertEquals(await handler({ id: '1' }), success(1))
     })
 
     it('fails gracefully if gets something other than empty record', async () => {
       const handler = withSchema()(() => 'no input!')
-      type _R = Expect<
-        Equal<
-          typeof handler,
-          ComposableWithSchema<string>
-        >
-      >
+      type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
 
       assertEquals(await handler(undefined, ''), success('no input!'))
     })
@@ -192,12 +177,7 @@ describe('withSchema', () => {
     it('returns error when parsing fails', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
       const handler = withSchema(parser)(({ id }) => id)
-      type _R = Expect<
-        Equal<
-          typeof handler,
-          ComposableWithSchema<number>
-        >
-      >
+      type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
       assertEquals(
         await handler({ missingId: '1' }),
@@ -243,12 +223,7 @@ describe('withSchema', () => {
       parser,
       envParser,
     )(({ id }, { uid }) => [id, uid])
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<number[]>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
 
     assertEquals(
       await handler({ id: '1' }, { uid: '2' }),
@@ -261,12 +236,7 @@ describe('withSchema', () => {
 
   it('accepts literals as input of schema functions', async () => {
     const handler = withSchema(z.number(), z.string())((n) => n + 1)
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
     const result = await handler(1, 'not going to be used')
     assertEquals((result as Success<number>).data, 2)
@@ -274,12 +244,7 @@ describe('withSchema', () => {
 
   it('accepts sync functions', async () => {
     const handler = withSchema(z.number())((n) => n + 1)
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
     const result = await handler(1)
     assertEquals((result as Success<number>).data, 2)
@@ -293,12 +258,7 @@ describe('withSchema', () => {
       parser,
       envParser,
     )(({ id }, { uid }) => [id, uid])
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<number[]>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
 
     assertEquals(
       await handler({ id: '1' }, {}),
@@ -310,12 +270,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Error')
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     const {
       errors: [err],
@@ -327,12 +282,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new Error('Some message', { cause: { someUnknownFields: true } })
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     const {
       errors: [err],
@@ -345,12 +295,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw 'Error'
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     assertEquals(await handler({ id: 1 }), failure([new Error()]))
   })
@@ -359,12 +304,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw { message: 'Error' }
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     const {
       errors: [err],
@@ -377,12 +317,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new InputError('Custom input error', ['contact', 'id'])
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
@@ -394,12 +329,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
@@ -416,12 +346,7 @@ describe('withSchema', () => {
         new EnvironmentError('Custom env error', ['currentUser', 'role']),
       ])
     })
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<never>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
@@ -448,27 +373,20 @@ describe('applySchema', () => {
       ),
     )
     type _R = Expect<
-      Equal<
-        typeof handler,
-        Composable<
-          (input?: unknown, environment?: unknown) => readonly [number, number]
-        >
-      >
+      Equal<typeof handler, ComposableWithSchema<[number, number]>>
     >
 
-    assertEquals(await handler({ id: 1 }, { uid: 2 }), success([1, 2]))
+    assertEquals(
+      await handler({ id: 1 }, { uid: 2 }),
+      success([1, 2]) as Success<[number, number]>,
+    )
   })
 
   it('can be used as a layer on top of withSchema fn', async () => {
     const fn = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
     const prepareSchema = z.string().transform((v) => ({ id: Number(v) }))
     const handler = applySchema(prepareSchema)(fn)
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
     const result = await handler('1')
     assertEquals(result, success(2))
