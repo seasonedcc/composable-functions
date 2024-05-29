@@ -8,7 +8,7 @@ import {
   success,
   withSchema,
 } from '../../index.ts'
-import type { Composable } from '../../index.ts'
+import type { Composable, ComposableWithSchema } from '../../index.ts'
 import { Internal } from '../../internal/types.ts'
 
 describe('pipe', () => {
@@ -22,7 +22,7 @@ describe('pipe', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -45,7 +45,7 @@ describe('pipe', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -69,7 +69,7 @@ describe('pipe', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -97,7 +97,7 @@ describe('pipe', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -139,7 +139,7 @@ describe('pipe', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        Composable<(input?: unknown, environment?: unknown) => boolean>
+        ComposableWithSchema<boolean>
       >
     >
 

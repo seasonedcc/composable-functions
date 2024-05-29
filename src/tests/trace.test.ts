@@ -6,7 +6,7 @@ import {
   trace,
   withSchema,
 } from '../index.ts'
-import type { Composable } from '../index.ts'
+import type { Composable, ComposableWithSchema } from '../index.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to failures', async () => {
@@ -18,7 +18,7 @@ describe('trace', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -53,7 +53,7 @@ describe('trace', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 

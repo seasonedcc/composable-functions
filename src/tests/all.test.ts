@@ -3,6 +3,7 @@ import {
   all,
   Composable,
   composable,
+  ComposableWithSchema,
   failure,
   InputError,
   success,
@@ -39,7 +40,7 @@ describe('all', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => [number, string]>
+        ComposableWithSchema<[number, string]>
       >
     >
 
@@ -71,7 +72,7 @@ describe('all', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => [string, string]>
+        ComposableWithSchema<[string, string]>
       >
     >
 

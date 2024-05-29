@@ -50,6 +50,13 @@ type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> = (
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
 /**
+ * A composable async function that catches failures.
+ */
+type ComposableWithSchema<O> = Composable<
+  (input?: unknown, environment?: unknown) => O
+>
+
+/**
  * Extract the type of the returned data when a Composable is successful.
  */
 type UnpackData<T extends Composable> = Extract<
@@ -213,6 +220,7 @@ export type {
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
+  ComposableWithSchema,
   Failure,
   Last,
   MergeObjects,

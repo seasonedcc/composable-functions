@@ -1,6 +1,6 @@
 import { mapErrors } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
-import type { Composable, Failure, ParserSchema, Success } from './types.ts'
+import type { Composable, ComposableWithSchema, Failure, ParserSchema, Success } from './types.ts'
 import { UnpackData } from './types.ts'
 
 /**
@@ -100,7 +100,7 @@ function withSchema<I, E>(
 ) {
   return <Output>(
     handler: (input: I, environment: E) => Output,
-  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> =>
+  ): ComposableWithSchema<Awaited<Output>> =>
     applySchema(inputSchema, environmentSchema)(composable(handler)) as never
 }
 
@@ -148,7 +148,7 @@ function applySchema<I, E>(
         return Promise.resolve(failure([...inputErrors, ...envErrors]))
       }
       return fn(result.data as I, envResult.data as E)
-    }) as Composable<(input?: unknown, environment?: unknown) => UnpackData<A>>
+    }) as ComposableWithSchema<UnpackData<A>>
   }
 }
 

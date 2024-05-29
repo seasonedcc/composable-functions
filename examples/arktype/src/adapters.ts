@@ -1,6 +1,7 @@
 import {
   composable,
   Composable,
+  ComposableWithSchema,
   EnvironmentError,
   failure,
   InputError,
@@ -44,7 +45,7 @@ function withArkSchema<I, E>(
 ) {
   return function <Output>(
     handler: (input: I, environment: E) => Output,
-  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> {
+  ): ComposableWithSchema<Awaited<Output>> {
     return applyArkSchema(inputSchema, environmentSchema)(composable(handler))
   }
 }
@@ -73,7 +74,7 @@ function applyArkSchema<I, E>(
         return failure([...inputErrors, ...envErrors])
       }
       return fn(result.data as I, envResult.data as E)
-    } as Composable<(input?: unknown, environment?: unknown) => UnpackData<A>>
+    } as ComposableWithSchema<UnpackData<A>>
   }
 }
 
