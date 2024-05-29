@@ -103,11 +103,11 @@ function fromSuccess<O, P extends any[]>(
 function withSchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-) {
-  return <Output>(
-    handler: (input: I, environment: E) => Output,
-  ): ComposableWithSchema<Awaited<Output>> =>
-    applySchema(inputSchema, environmentSchema)(composable(handler)) as never
+): <Output>(
+  hander: (input: I, environment: E) => Output,
+) => ComposableWithSchema<Output> {
+  return (handler) =>
+    applySchema(inputSchema, environmentSchema)(composable(handler))
 }
 
 /**
