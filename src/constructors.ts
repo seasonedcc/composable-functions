@@ -61,18 +61,16 @@ function composable<T extends (...args: any[]) => any>(fn: T): Composable<T> {
  * expect(data).toBe(n + 1)
  * ```
  */
-function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
-  fn: T,
+function fromSuccess<O, P extends any[]>(
+  fn: Composable<(...a: P) => O>,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
-) {
-  return (async (...args: any[]) => {
+): (...args: P) => Promise<O> {
+  return (async (...args: P) => {
     const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }) as T extends Composable<(...a: infer P) => infer O>
-    ? (...args: P) => Promise<O>
-    : never
+  })
 }
 
 /**
@@ -138,17 +136,13 @@ function applySchema<I, E>(
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
       if (!result.success || !envResult.success) {
-        const inputErrors = result.success
-          ? []
-          : result.error.issues.map(
-              (error) => new InputError(error.message, error.path as string[]),
-            )
-        const envErrors = envResult.success
-          ? []
-          : envResult.error.issues.map(
-              (error) =>
-                new EnvironmentError(error.message, error.path as string[]),
-            )
+        const inputErrors = result.success ? [] : result.error.issues.map(
+          (error) => new InputError(error.message, error.path as string[]),
+        )
+        const envErrors = envResult.success ? [] : envResult.error.issues.map(
+          (error) =>
+            new EnvironmentError(error.message, error.path as string[]),
+        )
         return Promise.resolve(failure([...inputErrors, ...envErrors]))
       }
       return fn(result.data as I, envResult.data as E)
