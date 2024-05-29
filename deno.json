@@ -1,4 +1,6 @@
 {
+  "name": "@seasonedcc/composable-functions",
+  "exports": "./mod.ts",
   "version": "4.0.0",
   "tasks": {
     "test": "deno test --allow-env --allow-net src",
