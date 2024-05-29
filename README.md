@@ -127,7 +127,7 @@ const addAndReturnString = pipe(toString, add)
 ```
 
 Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.
-The error message comes in the form of an inferred `FailToCompose` type, this failure type is not callable therefore it will break any attempts to call `addAndReturnString`.
+The error message comes in the form of an inferred `FailToCompose` type. This failure type is not callable, therefore it will break any attempts to call `addAndReturnString`.
 
 ### Using non-composables (mapping)
 
@@ -163,7 +163,7 @@ Two neat consequences is that we can handle errors using functions (no need for 
 
 ### Throwing
 
-You can throw anything derived from `Error`. Check [this documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types) on how to define your custom errors. The library will also wrap anything that does not extends `Error`, just to keep compatibility with code-bases that throw strings or objects.
+You can throw anything derived from `Error`. Check [this documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#custom_error_types) on how to define your custom errors. The library will also wrap anything that does not extend `Error`, just to keep compatibility with code-bases that throw strings or objects.
 
 ```typescript
 import { composable } from 'composable-functions'
@@ -183,11 +183,11 @@ const getUser = composable((userId: string, users: Array<string>) => {
 })
 ```
 
-The library defines a few custom errors out of the box but these will be more important later on, whend dealing with external input and schemas.
+The library defines a few custom errors out of the box but these will be more important later on, when dealing with external input and schemas.
 See [the errors module](./src/errors.ts) for more details.
 
 ### Catching
-You can catch an error in a `Composable`, using `catchFailure` which is similar to `map` but will run whenever the first composable fails:
+You can catch an error in a `Composable` using `catchFailure`, which is similar to `map` but will run whenever the first composable fails:
 
 ```typescript
 import { composable, catchFailure } from 'composable-functions'
@@ -240,7 +240,7 @@ const fn = composable(async (id: string) => {
 ```
 We recomend only using `fromSuccess` when you are sure the composable must succeed, like when you are testing the happy path of a composable.
 
-You can also use it within other composables whenever the composition utilities fall short, the error will be propagated as `ErrorList` and available in the caller `Result`.
+You can also use it within other composables whenever the composition utilities fall short. In that case, the error will be propagated as `ErrorList` and available in the caller `Result`.
 
 ```ts
 const getUser = composable((id: string) => db().collection('users').findOne({ id }))
@@ -267,7 +267,7 @@ If you are using [Deno](https://deno.land/), just directly import the functions 
 import { composable } from "https://deno.land/x/composable_functions/mod.ts";
 ```
 
-This documentation will use Node.JS imports by convention, just replace `composable-functions` with `https://deno.land/x/composable_functions/mod.ts` when using [Deno](https://deno.land/).
+This documentation will use Node.JS imports by convention. Just replace `composable-functions` with `https://deno.land/x/composable_functions/mod.ts` when using [Deno](https://deno.land/).
 
 
 ## Acknowledgements
