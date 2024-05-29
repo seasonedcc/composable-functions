@@ -62,7 +62,9 @@ function mergeObjects<T extends unknown[] = unknown[]>(
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
+function pipe<Fns extends [Composable, ...Composable[]]>(
+  ...fns: Fns
+): PipeReturn<CanComposeInSequence<Fns>> {
   const last = <T extends any[]>(arr: T): Last<T> => arr.at(-1)
   return map(sequence(...fns), last as never) as PipeReturn<
     CanComposeInSequence<Fns>
@@ -89,7 +91,13 @@ function pipe<Fns extends [Composable, ...Composable[]]>(...fns: Fns) {
  * //     ^? Composable<(id: number) => [string, number, boolean]>
  * ```
  */
-function all<Fns extends Composable[]>(...fns: Fns) {
+function all<Fns extends Composable[]>(
+  ...fns: Fns
+): Composable<
+  (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
+    [k in keyof Fns]: UnpackData<Fns[k]>
+  }
+> {
   return (async (...args) => {
     const results = await Promise.all(fns.map((fn) => fn(...args)))
 
@@ -119,7 +127,17 @@ function all<Fns extends Composable[]>(...fns: Fns) {
  * //       ^? Composable<() => { a: string, b: number }>
  * ```
  */
-function collect<Fns extends Record<string, Composable>>(fns: Fns) {
+function collect<Fns extends Record<string, Composable>>(
+  fns: Fns,
+): Composable<
+  (
+    ...args: Parameters<
+      Exclude<CanComposeInParallel<RecordToTuple<Fns>>[0], undefined>
+    >
+  ) => {
+    [key in keyof Fns]: UnpackData<Fns[key]>
+  }
+> {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
     map(cf, (result) => ({ [key]: result })),
   )

@@ -27,7 +27,7 @@ function applyEnvironmentToList<
  * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends Composable[]>(...fns: Fns) {
+function pipe<Fns extends Composable[]>(...fns: Fns): PipeReturn<Fns> {
   return ((input: any, environment: any) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(
       input,
@@ -49,7 +49,7 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
  * ```
  */
 
-function sequence<Fns extends Composable[]>(...fns: Fns) {
+function sequence<Fns extends Composable[]>(...fns: Fns): SequenceReturn<Fns> {
   return ((input: any, environment: any) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
@@ -64,7 +64,10 @@ function branch<
   Resolver extends (
     o: UnpackData<SourceComposable>,
   ) => Composable | null | Promise<Composable | null>,
->(cf: SourceComposable, resolver: Resolver) {
+>(
+  cf: SourceComposable,
+  resolver: Resolver,
+): BranchReturn<SourceComposable, Resolver> {
   return (async (...args: Parameters<SourceComposable>) => {
     const [input, environment] = args
     const result = await cf(input, environment)
