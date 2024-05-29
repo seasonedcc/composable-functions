@@ -1,6 +1,12 @@
 import { mapErrors } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
-import type { Composable, ComposableWithSchema, Failure, ParserSchema, Success } from './types.ts'
+import type {
+  Composable,
+  ComposableWithSchema,
+  Failure,
+  ParserSchema,
+  Success,
+} from './types.ts'
 import { UnpackData } from './types.ts'
 
 /**
@@ -67,12 +73,12 @@ function fromSuccess<O, P extends any[]>(
   fn: Composable<(...a: P) => O>,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ): (...args: P) => Promise<O> {
-  return (async (...args: P) => {
+  return async (...args: P) => {
     const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  })
+  }
 }
 
 /**
@@ -129,26 +135,32 @@ function withSchema<I, E>(
 function applySchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-) {
-  return <A extends Composable>(fn: A) => {
-    return ((input: I, environment: E) => {
+): <R>(
+  fn: Composable<(input?: I, environment?: E) => R>,
+) => ComposableWithSchema<R> {
+  return (fn) => {
+    return (input?: unknown, environment?: unknown) => {
       const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
         environment,
       )
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
       if (!result.success || !envResult.success) {
-        const inputErrors = result.success ? [] : result.error.issues.map(
-          (error) => new InputError(error.message, error.path as string[]),
-        )
-        const envErrors = envResult.success ? [] : envResult.error.issues.map(
-          (error) =>
-            new EnvironmentError(error.message, error.path as string[]),
-        )
+        const inputErrors = result.success
+          ? []
+          : result.error.issues.map(
+              (error) => new InputError(error.message, error.path as string[]),
+            )
+        const envErrors = envResult.success
+          ? []
+          : envResult.error.issues.map(
+              (error) =>
+                new EnvironmentError(error.message, error.path as string[]),
+            )
         return Promise.resolve(failure([...inputErrors, ...envErrors]))
       }
       return fn(result.data as I, envResult.data as E)
-    }) as ComposableWithSchema<UnpackData<A>>
+    }
   }
 }
 
