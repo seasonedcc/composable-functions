@@ -384,6 +384,8 @@ describe('applySchema', () => {
 
     assertEquals(
       await handler({ id: 1 }, { uid: 2 }),
+      //@TODO: can we solve this typing preserving the output readonly
+      // so we dont need to cast the success to a mutable type?
       success([1, 2]) as Success<[number, number]>,
     )
   })
