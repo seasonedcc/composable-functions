@@ -6,7 +6,7 @@ import {
   it,
   z,
 } from './prelude.ts'
-import type { Composable, Result, Success } from '../index.ts'
+import type { ComposableWithSchema,Composable, Result, Success } from '../index.ts'
 import {
   composable,
   EnvironmentError,
@@ -138,7 +138,7 @@ describe('withSchema', () => {
       type _R = Expect<
         Equal<
           typeof handler,
-          Composable<(input?: unknown, environment?: unknown) => string>
+          ComposableWithSchema<string>
         >
       >
 
@@ -150,7 +150,7 @@ describe('withSchema', () => {
       type _R = Expect<
         Equal<
           typeof handler,
-          Composable<(input?: unknown, environment?: unknown) => unknown>
+          ComposableWithSchema<unknown>
         >
       >
 
@@ -170,7 +170,7 @@ describe('withSchema', () => {
       type _R = Expect<
         Equal<
           typeof handler,
-          Composable<(input?: unknown, environment?: unknown) => number>
+          ComposableWithSchema<number>
         >
       >
 
@@ -182,7 +182,7 @@ describe('withSchema', () => {
       type _R = Expect<
         Equal<
           typeof handler,
-          Composable<(input?: unknown, environment?: unknown) => string>
+          ComposableWithSchema<string>
         >
       >
 
@@ -195,7 +195,7 @@ describe('withSchema', () => {
       type _R = Expect<
         Equal<
           typeof handler,
-          Composable<(input?: unknown, environment?: unknown) => number>
+          ComposableWithSchema<number>
         >
       >
 
@@ -246,7 +246,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => number[]>
+        ComposableWithSchema<number[]>
       >
     >
 
@@ -264,7 +264,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -277,7 +277,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -296,7 +296,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => number[]>
+        ComposableWithSchema<number[]>
       >
     >
 
@@ -313,7 +313,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -330,7 +330,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -348,7 +348,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -362,7 +362,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -380,7 +380,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -397,7 +397,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -419,7 +419,7 @@ describe('withSchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => never>
+        ComposableWithSchema<never>
       >
     >
 
@@ -466,7 +466,7 @@ describe('applySchema', () => {
     type _R = Expect<
       Equal<
         typeof handler,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 

@@ -24,7 +24,7 @@ function applyEnvironmentToList<
  *   ({ aString }) => ({ aBoolean: aString == '1' }),
  * )
  * const d = environment.pipe(a, b)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
+ * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
 function pipe<Fns extends Composable[]>(...fns: Fns) {
@@ -45,7 +45,7 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
  * const a = withSchema(z.number())((aNumber) => String(aNumber))
  * const b = withSchema(z.string())((aString) => aString === '1')
  * const aComposable = environment.sequence(a, b)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
+ * //    ^? ComposableWithSchema<[string, boolean]>
  * ```
  */
 

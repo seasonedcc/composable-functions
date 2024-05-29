@@ -7,7 +7,7 @@ import {
   UnpackData,
   withSchema,
 } from '../index.ts'
-import { Composable } from '../types.ts'
+import { Composable, ComposableWithSchema } from '../types.ts'
 import { branch } from '../combinators.ts'
 
 describe('branch', () => {
@@ -74,7 +74,7 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -111,7 +111,7 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 

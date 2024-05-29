@@ -43,6 +43,7 @@ export type {
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
+  ComposableWithSchema,
   Failure,
   MergeObjects,
   ParserSchema,

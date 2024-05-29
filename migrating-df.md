@@ -35,7 +35,7 @@ This document will guide you through the migration process.
     - [Runtime code](#runtime-code)
 
 ## First steps
-The first thing you want to know is that the old `DomainFunction<T>` is equivalent to `Composable<(input?: unknown, environment?: unknown) => T>`. We brought the arguments to the type signature so we could type check the compositions. A [commonly requested feature](https://github.com/seasonedcc/domain-functions/issues/80) in domain-functions.
+The first thing you want to know is that the old `DomainFunction<T>` is equivalent to `Composable<(input?: unknown, environment?: unknown) => T>` (AKA `ComposableWithSchema<T>`). We brought the arguments to the type signature so we could type check the compositions. A [commonly requested feature](https://github.com/seasonedcc/domain-functions/issues/80) in domain-functions.
 
 A composable does not need a schema, but you can still use one for runtime assertion. What we used to call a Domain Function is now a Composable with [environment](./environments.md) and a schema.
 
@@ -285,7 +285,7 @@ if (result.errors.some(isInputError)) {
 #### Type utilities
 | Domain Functions | Composable Functions |
 |---|---|
-| `DomainFunction<string>` | `Composable<(input?: unknown, environment?: unknown) => string>` |
+| `DomainFunction<string>` | `ComposableWithSchema<string>` |
 | `SuccessResult<T>` | `Success<T>` |
 | `ErrorResult` | `Failure` |
 | `UnpackData<DomainFunction>` | `UnpackData<Composable>` |
