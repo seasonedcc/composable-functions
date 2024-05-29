@@ -50,7 +50,7 @@ type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> = (
 ) => Promise<Result<Awaited<ReturnType<T>>>>
 
 /**
- * A composable async function that catches failures.
+ * A composable async function with schema validation at runtime.
  */
 type ComposableWithSchema<O> = Composable<
   (input?: unknown, environment?: unknown) => O
