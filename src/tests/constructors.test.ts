@@ -359,18 +359,29 @@ describe('withSchema', () => {
 })
 
 describe('applySchema', () => {
+  it('breaks when schemas can produce types incompatible with comoposable', () => {
+    const handler = applySchema(
+      composable((id: 1, uid: 'some-user-id') => [id, uid] as const),
+      //@ts-expect-error the parser number() is to wide for the input type 1
+      z.number(),
+      z.literal('some-user-id'),
+    )
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<[1, 'some-user-id']>>
+    >
+  })
+
   it('uses zod parsers to parse the input and environment turning it into a schema function', async () => {
     const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
     const envSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
-      inputSchema,
-      envSchema,
-    )(
       composable(
         ({ id }: { id: number }, { uid }: { uid: number }) =>
           [id, uid] as const,
       ),
+      inputSchema,
+      envSchema,
     )
     type _R = Expect<
       Equal<typeof handler, ComposableWithSchema<[number, number]>>
@@ -385,7 +396,7 @@ describe('applySchema', () => {
   it('can be used as a layer on top of withSchema fn', async () => {
     const fn = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
     const prepareSchema = z.string().transform((v) => ({ id: Number(v) }))
-    const handler = applySchema(prepareSchema)(fn)
+    const handler = applySchema(fn, prepareSchema)
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
     const result = await handler('1')
