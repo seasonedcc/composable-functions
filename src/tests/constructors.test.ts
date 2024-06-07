@@ -49,6 +49,12 @@ describe('composable', () => {
     assertEquals(res, success(3))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const fn = composable((a) => a)
+    type _FN = Expect<Equal<typeof fn, Composable<(a: any) => any>>>
+  })
+
   it('infers the types of async functions', async () => {
     const fn = composable(asyncAdd)
     const res = await fn(1, 2)
@@ -110,7 +116,7 @@ describe('fromSuccess', () => {
     const a = composable(() => 1)
 
     const c = fromSuccess(a)
-    type _R = Expect<Equal<typeof c, () => Promise<number>>>
+    type _R = Expect<Equal<typeof c, () => Promise<1>>>
 
     assertEquals(await c(), 1)
   })
