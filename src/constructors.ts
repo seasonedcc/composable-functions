@@ -31,7 +31,9 @@ function toError(maybeError: unknown): Error {
  * That function is gonna catch any errors and always return a Result.
  * @param fn a function to be used as a Composable
  */
-function composable<T extends (...args: any[]) => any>(fn: T): Composable<T> {
+function composable<T extends Function>(
+  fn: T,
+): Composable<T extends (...args: any[]) => any ? T : never> {
   return async (...args) => {
     try {
       // deno-lint-ignore no-explicit-any
