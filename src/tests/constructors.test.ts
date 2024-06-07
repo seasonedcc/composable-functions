@@ -151,7 +151,7 @@ describe('withSchema', () => {
       assertEquals(await handler(), success('no input!'))
     })
 
-    it('ignores the input and pass undefined', async () => {
+    it('defaults non-declared input to unknown', async () => {
       const handler = withSchema()((args) => args)
       type _R = Expect<
         Equal<
