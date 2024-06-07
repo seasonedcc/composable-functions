@@ -33,7 +33,7 @@ function toError(maybeError: unknown): Error {
  */
 function composable<T extends Function>(
   fn: T,
-): Composable<Extract<T, (...args: any[]) => any>> {
+): Composable<T extends (...args: any[]) => any ? T : never> {
   return async (...args) => {
     try {
       // deno-lint-ignore no-explicit-any
