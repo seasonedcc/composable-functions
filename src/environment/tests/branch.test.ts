@@ -8,7 +8,7 @@ import {
   success,
   withSchema,
 } from '../../index.ts'
-import { Composable, UnpackData } from '../../types.ts'
+import { Composable, ComposableWithSchema, UnpackData } from '../../types.ts'
 
 describe('branch', () => {
   it('should pipe a composable with arbitrary types', async () => {
@@ -40,7 +40,7 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -60,7 +60,7 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof d,
-        Composable<(input?: unknown, environment?: unknown) => number | string>
+        ComposableWithSchema<number | string>
       >
     >
 
@@ -120,7 +120,7 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 
@@ -139,7 +139,7 @@ describe('branch', () => {
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input?: unknown, environment?: unknown) => number>
+        ComposableWithSchema<number>
       >
     >
 

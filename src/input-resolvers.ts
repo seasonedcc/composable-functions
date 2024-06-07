@@ -128,7 +128,7 @@ function inputFromSearch(queryString: URLSearchParams): QueryStringRecord {
  * //    ^? { a: '1', b: '2' }
  * ```
  */
-function inputFromFormData(formData: FormDataLike) {
+function inputFromFormData(formData: FormDataLike): QueryStringRecord {
   return inputFromSearch(new URLSearchParams(formData as URLSearchParams))
 }
 
@@ -152,7 +152,7 @@ function inputFromFormData(formData: FormDataLike) {
  * //    ^? { a: '1', b: '2' }
  * ```
  */
-async function inputFromForm(request: RequestLike) {
+async function inputFromForm(request: RequestLike): Promise<QueryStringRecord> {
   return inputFromFormData(await request.clone().formData())
 }
 
@@ -170,9 +170,9 @@ async function inputFromForm(request: RequestLike) {
  * //    ^? { a: '1', b: '2' }
  * ```
  */
-function inputFromUrl(request: RequestLike) {
+function inputFromUrl(request: RequestLike): QueryStringRecord {
   return inputFromSearch(new URL(request.url).searchParams)
 }
 
-export type { QueryStringRecord, FormDataLike, RequestLike }
+export type { FormDataLike, QueryStringRecord, RequestLike }
 export { inputFromForm, inputFromFormData, inputFromSearch, inputFromUrl }

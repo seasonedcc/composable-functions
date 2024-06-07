@@ -1,6 +1,12 @@
 import { mapErrors } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
-import type { Composable, Failure, ParserSchema, Success } from './types.ts'
+import type {
+  Composable,
+  ComposableWithSchema,
+  Failure,
+  ParserSchema,
+  Success,
+} from './types.ts'
 import { UnpackData } from './types.ts'
 
 /**
@@ -63,18 +69,16 @@ function composable<T extends Function>(
  * expect(data).toBe(n + 1)
  * ```
  */
-function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
-  fn: T,
+function fromSuccess<O, P extends any[]>(
+  fn: Composable<(...a: P) => O>,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
-) {
-  return (async (...args: any[]) => {
+): (...args: P) => Promise<O> {
+  return async (...args: P) => {
     const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }) as T extends Composable<(...a: infer P) => infer O>
-    ? (...args: P) => Promise<O>
-    : never
+  }
 }
 
 /**
@@ -99,11 +103,11 @@ function fromSuccess<O, T extends Composable<(...a: any[]) => O>>(
 function withSchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-) {
-  return <Output>(
-    handler: (input: I, environment: E) => Output,
-  ): Composable<(input?: unknown, environment?: unknown) => Awaited<Output>> =>
-    applySchema(inputSchema, environmentSchema)(composable(handler)) as never
+): <Output>(
+  hander: (input: I, environment: E) => Output,
+) => ComposableWithSchema<Output> {
+  return (handler) =>
+    applySchema(inputSchema, environmentSchema)(composable(handler))
 }
 
 /**
@@ -131,9 +135,11 @@ function withSchema<I, E>(
 function applySchema<I, E>(
   inputSchema?: ParserSchema<I>,
   environmentSchema?: ParserSchema<E>,
-) {
-  return <A extends Composable>(fn: A) => {
-    return ((input: I, environment: E) => {
+): <R>(
+  fn: Composable<(input?: I, environment?: E) => R>,
+) => ComposableWithSchema<R> {
+  return (fn) => {
+    return (input?: unknown, environment?: unknown) => {
       const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
         environment,
       )
@@ -154,7 +160,7 @@ function applySchema<I, E>(
         return Promise.resolve(failure([...inputErrors, ...envErrors]))
       }
       return fn(result.data as I, envResult.data as E)
-    }) as Composable<(input?: unknown, environment?: unknown) => UnpackData<A>>
+    }
   }
 }
 

@@ -24,10 +24,10 @@ function applyEnvironmentToList<
  *   ({ aString }) => ({ aBoolean: aString == '1' }),
  * )
  * const d = environment.pipe(a, b)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => { aBoolean: boolean }>
+ * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends Composable[]>(...fns: Fns) {
+function pipe<Fns extends Composable[]>(...fns: Fns): PipeReturn<Fns> {
   return ((input: any, environment: any) =>
     A.pipe(...applyEnvironmentToList(fns, environment))(
       input,
@@ -45,11 +45,11 @@ function pipe<Fns extends Composable[]>(...fns: Fns) {
  * const a = withSchema(z.number())((aNumber) => String(aNumber))
  * const b = withSchema(z.string())((aString) => aString === '1')
  * const aComposable = environment.sequence(a, b)
- * //    ^? Composable<(input?: unknown, environment?: unknown) => [string, boolean]>
+ * //    ^? ComposableWithSchema<[string, boolean]>
  * ```
  */
 
-function sequence<Fns extends Composable[]>(...fns: Fns) {
+function sequence<Fns extends Composable[]>(...fns: Fns): SequenceReturn<Fns> {
   return ((input: any, environment: any) =>
     A.sequence(...applyEnvironmentToList(fns, environment))(
       input,
@@ -64,7 +64,10 @@ function branch<
   Resolver extends (
     o: UnpackData<SourceComposable>,
   ) => Composable | null | Promise<Composable | null>,
->(cf: SourceComposable, resolver: Resolver) {
+>(
+  cf: SourceComposable,
+  resolver: Resolver,
+): BranchReturn<SourceComposable, Resolver> {
   return (async (...args: Parameters<SourceComposable>) => {
     const [input, environment] = args
     const result = await cf(input, environment)
