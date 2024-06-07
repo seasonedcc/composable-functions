@@ -1,5 +1,6 @@
 import { mapErrors } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
+import { Internal } from './internal/types.ts'
 import type {
   Composable,
   ComposableWithSchema,
@@ -107,7 +108,9 @@ function withSchema<I, E>(
   hander: (input: I, environment: E) => Output,
 ) => ComposableWithSchema<Output> {
   return (handler) =>
-    applySchema(inputSchema, environmentSchema)(composable(handler))
+    applySchema(inputSchema, environmentSchema)(
+      composable(handler),
+    ) as ComposableWithSchema<Awaited<ReturnType<typeof handler>>>
 }
 
 /**
@@ -132,36 +135,38 @@ function withSchema<I, E>(
  * })))
  * ```
  */
-function applySchema<I, E>(
-  inputSchema?: ParserSchema<I>,
-  environmentSchema?: ParserSchema<E>,
-): <R>(
-  fn: Composable<(input?: I, environment?: E) => R>,
-) => ComposableWithSchema<R> {
-  return (fn) => {
-    return (input?: unknown, environment?: unknown) => {
+function applySchema<ParsedInput, ParsedEnvironment>(
+  inputSchema?: ParserSchema<ParsedInput>,
+  environmentSchema?: ParserSchema<ParsedEnvironment>,
+) {
+  return (<R, Input, Environment>(
+    fn: Composable<(input?: Input, environment?: Environment) => R>,
+  ): ParsedInput extends Input
+    ? ParsedEnvironment extends Environment ? ComposableWithSchema<R>
+    : Internal.FailToCompose<ParsedEnvironment, Environment>
+    : Internal.FailToCompose<ParsedInput, Input> => {
+    return ((input?: unknown, environment?: unknown) => {
       const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
         environment,
       )
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
       if (!result.success || !envResult.success) {
-        const inputErrors = result.success
-          ? []
-          : result.error.issues.map(
-              (error) => new InputError(error.message, error.path as string[]),
-            )
-        const envErrors = envResult.success
-          ? []
-          : envResult.error.issues.map(
-              (error) =>
-                new EnvironmentError(error.message, error.path as string[]),
-            )
+        const inputErrors = result.success ? [] : result.error.issues.map(
+          (error) => new InputError(error.message, error.path as string[]),
+        )
+        const envErrors = envResult.success ? [] : envResult.error.issues.map(
+          (error) =>
+            new EnvironmentError(error.message, error.path as string[]),
+        )
         return Promise.resolve(failure([...inputErrors, ...envErrors]))
       }
-      return fn(result.data as I, envResult.data as E)
-    }
-  }
+      return fn(result.data as Input, envResult.data as Environment)
+    }) as ParsedInput extends Input
+      ? ParsedEnvironment extends Environment ? ComposableWithSchema<R>
+      : Internal.FailToCompose<ParsedEnvironment, Environment>
+      : Internal.FailToCompose<ParsedInput, Input>
+  })
 }
 
 const alwaysUnknownSchema: ParserSchema<unknown> = {

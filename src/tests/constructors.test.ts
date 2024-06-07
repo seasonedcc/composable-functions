@@ -7,8 +7,8 @@ import {
   z,
 } from './prelude.ts'
 import type {
-  ComposableWithSchema,
   Composable,
+  ComposableWithSchema,
   Result,
   Success,
 } from '../index.ts'
@@ -23,6 +23,7 @@ import {
   withSchema,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
+import { Internal } from '../internal/types.ts'
 
 const add = composable((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
@@ -386,6 +387,15 @@ describe('applySchema', () => {
       await handler({ id: 1 }, { uid: 2 }),
       success<[number, number]>([1, 2]),
     )
+  })
+
+  it('fails to compose when schema result is wider than composable input', async () => {
+    const inputSchema = z.string()
+
+    const handler = applySchema(inputSchema)(composable((x: 'a') => x))
+    type _R = Expect<
+      Equal<typeof handler, Internal.FailToCompose<string, 'a'>>
+    >
   })
 
   it('can be used as a layer on top of withSchema fn', async () => {
