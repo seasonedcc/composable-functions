@@ -23,7 +23,7 @@ import {
   withSchema,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
-import { Internal } from '../internal/types.ts'
+import type { Internal } from '../internal/types.ts'
 
 const add = composable((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
@@ -393,9 +393,9 @@ describe('applySchema', () => {
     const inputSchema = z.string()
 
     const handler = applySchema(inputSchema)(composable((x: 'a') => x))
-    type _R = Expect<
-      Equal<typeof handler, Internal.FailToCompose<string, 'a'>>
-    >
+    type _R = Expect<Equal<typeof handler, Internal.FailToCompose<string, 'a'>>>
+    // @ts-expect-error: 'a' is not assignable to 'string'
+    const _result = await handler('a')
   })
 
   it('can be used as a layer on top of withSchema fn', async () => {
