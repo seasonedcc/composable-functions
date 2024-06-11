@@ -1,4 +1,5 @@
 import {
+  ApplySchemaReturn,
   composable,
   Composable,
   ComposableWithSchema,
@@ -12,7 +13,7 @@ import { type, Type } from 'arktype'
 /**
  * Approach 1: Adapt your schema to return a ParserSchema
  */
-function adapt<U, T extends Type<U>>(schema: T) {
+function adapt<T extends Type>(schema: T) {
   return {
     safeParse: (val: unknown) => {
       const result = schema(val)
@@ -45,7 +46,7 @@ function withArkSchema<I, E>(
   handler: (input: I, environment: E) => Output,
 ) => ComposableWithSchema<Output> {
   return (handler) =>
-    applyArkSchema(inputSchema, environmentSchema)(composable(handler))
+    applyArkSchema(inputSchema, environmentSchema)(composable(handler)) as ComposableWithSchema<any>
 }
 
 function applyArkSchema<I, E>(
@@ -55,7 +56,7 @@ function applyArkSchema<I, E>(
   return <R, Input, Environment>(
     fn: Composable<(input?: Input, environment?: Environment) => R>,
   ) => {
-    return function (input: I, environment: E) {
+    return function (input?: unknown, environment?: unknown) {
       const envResult = (environmentSchema ?? type('unknown'))(environment)
       const result = (inputSchema ?? type('unknown'))(input)
 
@@ -77,7 +78,7 @@ function applyArkSchema<I, E>(
         return failure([...inputErrors, ...envErrors])
       }
       return fn(result as Input, envResult as Environment)
-    } as ComposableWithSchema<R>
+    } as ApplySchemaReturn<I, E, typeof fn>
   }
 }
 
