@@ -215,6 +215,16 @@ type BranchReturn<
     : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
   : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>
 
+// Re-exporting internal types
+/**
+ * A type that represents an error when composing functions with incompatible arguments.
+ */
+type IncompatibleArguments = Internal.IncompatibleArguments
+/**
+ * This is IncompatibleArguments supertype where we include the arguments that caused the incompatibility.
+ */
+type FailToCompose<A, B> = Internal.FailToCompose<A, B>
+
 export type {
   BranchReturn,
   CanComposeInParallel,
@@ -234,4 +244,6 @@ export type {
   Success,
   UnpackAll,
   UnpackData,
+  IncompatibleArguments,
+  FailToCompose,
 }

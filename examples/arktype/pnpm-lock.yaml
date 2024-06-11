@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       arktype:
-        specifier: 2.0.0-dev.7
-        version: 2.0.0-dev.7
+        specifier: 2.0.0-dev.22
+        version: 2.0.0-dev.22
       composable-functions:
         specifier: file:../../npm
         version: file:../../npm
@@ -24,11 +24,11 @@ importers:
 
 packages:
 
-  '@arktype/schema@0.0.7':
-    resolution: {integrity: sha512-awo14Oi98bn6pEgN7soiXvD+mQzidLgzABVO7Tpbw6xtU7+XRWp6JucSEmWLASC+fcoK0QSJxdoC+rm3iIKarQ==}
+  '@arktype/schema@0.1.14':
+    resolution: {integrity: sha512-NzmWveHypg3mZgn6+B4JhtlAfpQm0/oCvDGCHULWQYKHtn6UrnypotOx+fT96QNJftfaSFfptxzkwWiKPjMTow==}
 
-  '@arktype/util@0.0.33':
-    resolution: {integrity: sha512-MYbrLHf0tVYjxI84m0mMRISmKKVoPzv25B1/X05nePUcyPqROoDBn+hYhHpB0GqnJZQOr8UG1CyMuxjFeVbTNg==}
+  '@arktype/util@0.0.48':
+    resolution: {integrity: sha512-U5FO5EUAJ4LoYtLSyAMmTf6CEVgslObfSQuua2zoK5Tv2FB3aESVQ3rdLfhuz+coRhlzlynbkmimyoQWwQT+aQ==}
 
   '@esbuild/aix-ppc64@0.19.12':
     resolution: {integrity: sha512-bmoCYyWdEL3wDQIVbcyzRyeKLgk2WtWLTWz1ZIAZF/EGbNOwSA6ew3PftJ1PqMiOOGu0OyFMzG53L0zqIpPeNA==}
@@ -168,8 +168,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  arktype@2.0.0-dev.7:
-    resolution: {integrity: sha512-TeehK+ExNsvqNoEccNOMs73LcNwR9+gX9pQsoCIvZfuxrQ24nB5MUQGweAAuNSwVX7GUUU9Ad0BWGnsvD8ST+g==}
+  arktype@2.0.0-dev.22:
+    resolution: {integrity: sha512-oCXXi5cFaaavqPGw0QWjYI/vdOsvHLJVrDYRyCFseZqJrR3kRE4yQNI7z0VOaXyVEgGuRjXsjVvSqs3XjUb5qg==}
 
   composable-functions@file:../../npm:
     resolution: {directory: ../../npm, type: directory}
@@ -202,11 +202,11 @@ packages:
 
 snapshots:
 
-  '@arktype/schema@0.0.7':
+  '@arktype/schema@0.1.14':
     dependencies:
-      '@arktype/util': 0.0.33
+      '@arktype/util': 0.0.48
 
-  '@arktype/util@0.0.33': {}
+  '@arktype/util@0.0.48': {}
 
   '@esbuild/aix-ppc64@0.19.12':
     optional: true
@@ -277,10 +277,10 @@ snapshots:
   '@esbuild/win32-x64@0.19.12':
     optional: true
 
-  arktype@2.0.0-dev.7:
+  arktype@2.0.0-dev.22:
     dependencies:
-      '@arktype/schema': 0.0.7
-      '@arktype/util': 0.0.33
+      '@arktype/schema': 0.1.14
+      '@arktype/util': 0.0.48
 
   composable-functions@file:../../npm: {}
 
