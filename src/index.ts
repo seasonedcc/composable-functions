@@ -26,9 +26,9 @@ export {
   inputFromUrl,
 } from './input-resolvers.ts'
 export type {
+  FormDataLike,
   QueryStringRecord,
   RequestLike,
-  FormDataLike,
 } from './input-resolvers.ts'
 export { serialize, serializeError } from './serializer.ts'
 export {
@@ -39,12 +39,15 @@ export {
   isInputError,
 } from './errors.ts'
 export type {
+  ApplySchemaReturn,
   BranchReturn,
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
   ComposableWithSchema,
+  FailToCompose,
   Failure,
+  IncompatibleArguments,
   MergeObjects,
   ParserSchema,
   PipeReturn,
