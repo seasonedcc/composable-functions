@@ -393,7 +393,9 @@ describe('applySchema', () => {
     const inputSchema = z.string()
 
     const handler = applySchema(inputSchema)(composable((x: 'a') => x))
-    type _R = Expect<Equal<typeof handler, Internal.FailToCompose<string, 'a'>>>
+    type _R = Expect<
+      Equal<typeof handler, Internal.FailToCompose<string, 'a' | undefined>>
+    >
     // @ts-expect-error: 'a' is not assignable to 'string'
     const _result = await handler('a')
   })

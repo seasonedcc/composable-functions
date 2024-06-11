@@ -1,14 +1,13 @@
 import { mapErrors } from './combinators.ts'
 import { EnvironmentError, ErrorList, InputError } from './errors.ts'
-import { Internal } from './internal/types.ts'
 import type {
+  ApplySchemaReturn,
   Composable,
   ComposableWithSchema,
   Failure,
   ParserSchema,
   Success,
 } from './types.ts'
-import { UnpackData } from './types.ts'
 
 /**
  * It receives any data (T) and returns a Success<T> object.
@@ -141,10 +140,7 @@ function applySchema<ParsedInput, ParsedEnvironment>(
 ) {
   return (<R, Input, Environment>(
     fn: Composable<(input?: Input, environment?: Environment) => R>,
-  ): ParsedInput extends Input
-    ? ParsedEnvironment extends Environment ? ComposableWithSchema<R>
-    : Internal.FailToCompose<ParsedEnvironment, Environment>
-    : Internal.FailToCompose<ParsedInput, Input> => {
+  ): ApplySchemaReturn<ParsedInput, ParsedEnvironment, typeof fn> => {
     return ((input?: unknown, environment?: unknown) => {
       const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
         environment,
@@ -162,10 +158,7 @@ function applySchema<ParsedInput, ParsedEnvironment>(
         return Promise.resolve(failure([...inputErrors, ...envErrors]))
       }
       return fn(result.data as Input, envResult.data as Environment)
-    }) as ParsedInput extends Input
-      ? ParsedEnvironment extends Environment ? ComposableWithSchema<R>
-      : Internal.FailToCompose<ParsedEnvironment, Environment>
-      : Internal.FailToCompose<ParsedInput, Input>
+    }) as ApplySchemaReturn<ParsedInput, ParsedEnvironment, typeof fn>
   })
 }
 
