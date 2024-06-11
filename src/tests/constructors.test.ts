@@ -392,13 +392,31 @@ describe('applySchema', () => {
   it('allow composition with unknown environment', async () => {
     const inputSchema = z.string()
 
-    const handler = applySchema(inputSchema)(composable((x: string) => x))
+    const handler = applySchema(inputSchema, z.unknown())(
+      composable((x: string) => x),
+    )
     type _R = Expect<
       Equal<typeof handler, ComposableWithSchema<string>>
     >
     const result = await handler('a')
 
     assertEquals(result, success('a'))
+  })
+
+  it('fails to compose when there is an object schema with incompatible properties', async () => {
+    const inputSchema = z.object({ x: z.string() })
+
+    const handler = applySchema(inputSchema)(
+      composable(({ x }: { x: 'a' }) => x),
+    )
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Internal.FailToCompose<{ x: string }, { x: 'a' } | undefined>
+      >
+    >
+    // @ts-expect-error: { x: 'a' } is not assignable to { x: string }
+    const _result = await handler({ x: 'a' })
   })
 
   it('fails to compose when schema result is wider than composable input', async () => {
