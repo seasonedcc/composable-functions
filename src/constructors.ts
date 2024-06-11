@@ -109,7 +109,7 @@ function withSchema<I, E>(
   return (handler) =>
     applySchema(inputSchema, environmentSchema)(
       composable(handler),
-    ) as ComposableWithSchema<Awaited<ReturnType<typeof handler>>>
+    ) as ComposableWithSchema<any>
 }
 
 /**

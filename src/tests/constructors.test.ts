@@ -389,6 +389,18 @@ describe('applySchema', () => {
     )
   })
 
+  it('allow composition with unknown environment', async () => {
+    const inputSchema = z.string()
+
+    const handler = applySchema(inputSchema)(composable((x: string) => x))
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<string>>
+    >
+    const result = await handler('a')
+
+    assertEquals(result, success('a'))
+  })
+
   it('fails to compose when schema result is wider than composable input', async () => {
     const inputSchema = z.string()
 
