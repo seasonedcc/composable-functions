@@ -7,8 +7,8 @@ import {
   z,
 } from './prelude.ts'
 import type {
-  ComposableWithSchema,
   Composable,
+  ComposableWithSchema,
   Result,
   Success,
 } from '../index.ts'
@@ -23,6 +23,7 @@ import {
   withSchema,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
+import type { Internal } from '../internal/types.ts'
 
 const add = composable((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
@@ -386,6 +387,47 @@ describe('applySchema', () => {
       await handler({ id: 1 }, { uid: 2 }),
       success<[number, number]>([1, 2]),
     )
+  })
+
+  it('allow composition with unknown environment', async () => {
+    const inputSchema = z.string()
+
+    const handler = applySchema(inputSchema, z.unknown())(
+      composable((x: string) => x),
+    )
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<string>>
+    >
+    const result = await handler('a')
+
+    assertEquals(result, success('a'))
+  })
+
+  it('fails to compose when there is an object schema with incompatible properties', async () => {
+    const inputSchema = z.object({ x: z.string() })
+
+    const handler = applySchema(inputSchema)(
+      composable(({ x }: { x: 'a' }) => x),
+    )
+    type _R = Expect<
+      Equal<
+        typeof handler,
+        Internal.FailToCompose<{ x: string }, { x: 'a' } | undefined>
+      >
+    >
+    // @ts-expect-error: { x: 'a' } is not assignable to { x: string }
+    const _result = await handler({ x: 'a' })
+  })
+
+  it('fails to compose when schema result is wider than composable input', async () => {
+    const inputSchema = z.string()
+
+    const handler = applySchema(inputSchema)(composable((x: 'a') => x))
+    type _R = Expect<
+      Equal<typeof handler, Internal.FailToCompose<string, 'a' | undefined>>
+    >
+    // @ts-expect-error: 'a' is not assignable to 'string'
+    const _result = await handler('a')
   })
 
   it('can be used as a layer on top of withSchema fn', async () => {
