@@ -54,8 +54,9 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
-    const d = environment.branch(a, (output) =>
-      output.next === 'multiply' ? c : b,
+    const d = environment.branch(
+      a,
+      (output) => output.next === 'multiply' ? c : b,
     )
     type _R = Expect<
       Equal<

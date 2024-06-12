@@ -1,9 +1,9 @@
 import { assertEquals, describe, it } from './prelude.ts'
 import {
-  isInputError,
-  isEnvironmentError,
-  InputError,
   EnvironmentError,
+  InputError,
+  isEnvironmentError,
+  isInputError,
 } from '../index.ts'
 
 describe('isInputError', () => {

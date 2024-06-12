@@ -4,6 +4,7 @@ import type {
   CanComposeInSequence,
   Composable,
   Last,
+  MapParametersReturn,
   MergeObjects,
   PipeReturn,
   RecordToTuple,
@@ -13,7 +14,6 @@ import type {
   UnpackData,
 } from './types.ts'
 import { composable, failure, fromSuccess, success } from './constructors.ts'
-import { Internal } from './internal/types.ts'
 
 /**
  * Merges a list of objects into a single object.
@@ -139,7 +139,7 @@ function collect<Fns extends Record<string, Composable>>(
   }
 > {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
-    map(cf, (result) => ({ [key]: result })),
+    map(cf, (result) => ({ [key]: result }))
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (
@@ -234,15 +234,11 @@ function map<Fn extends Composable, O>(
 function mapParameters<
   Fn extends Composable,
   NewParameters extends unknown[],
-  const O extends Parameters<Fn>,
+  const MapperOutput extends Parameters<Fn>,
 >(
   fn: Fn,
-  mapper: (...args: NewParameters) => Promise<O> | O,
-): Composable<
-  (
-    ...args: NewParameters
-  ) => Internal.IsNever<Awaited<O>> extends true ? never : UnpackData<Fn>
-> {
+  mapper: (...args: NewParameters) => Promise<MapperOutput> | MapperOutput,
+): MapParametersReturn<Fn, NewParameters, MapperOutput> {
   return async (...args) => {
     const output = await composable(mapper)(...args)
     if (!output.success) return failure(output.errors)
@@ -274,9 +270,8 @@ function catchFailure<
   (
     ...args: Parameters<Fn>
   ) => Awaited<ReturnType<C>> extends never[]
-    ? UnpackData<Fn> extends any[]
-      ? UnpackData<Fn>
-      : Awaited<ReturnType<C>> | UnpackData<Fn>
+    ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
+    : Awaited<ReturnType<C>> | UnpackData<Fn>
     : Awaited<ReturnType<C>> | UnpackData<Fn>
 > {
   return async (...args: Parameters<Fn>) => {
@@ -342,14 +337,13 @@ function trace(
 ): <P extends unknown[], Output>(
   fn: Composable<(...args: P) => Output>,
 ) => Composable<(...args: P) => Output> {
-  return (fn) =>
-    async (...args) => {
-      const originalResult = await fn(...args)
-      const traceResult = await composable(traceFn)(originalResult, ...args)
-      if (traceResult.success) return originalResult
+  return (fn) => async (...args) => {
+    const originalResult = await fn(...args)
+    const traceResult = await composable(traceFn)(originalResult, ...args)
+    if (traceResult.success) return originalResult
 
-      return failure(traceResult.errors)
-    }
+    return failure(traceResult.errors)
+  }
 }
 
 /**

@@ -51,8 +51,9 @@ describe('catchFailure', () => {
   })
 
   it('receives the list of errors as input to another function and returns a new composable', async () => {
-    const fn = catchFailure(faultyAdd, (errors, a, b) =>
-      errors.length > 1 ? NaN : a + b,
+    const fn = catchFailure(
+      faultyAdd,
+      (errors, a, b) => errors.length > 1 ? NaN : a + b,
     )
     const res = await fn(1, 2)
 
