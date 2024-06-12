@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
 import { withSchema } from '../index.ts'
 import { assertEquals, describe, it } from './prelude.ts'
-import * as Subject from '../types.ts'
-import { Internal } from '../internal/types.ts'
+import type * as Subject from '../types.ts'
+import type { Internal } from '../internal/types.ts'
 
 namespace MergeObjects {
   const obj1 = { a: 1, b: 2 } as const

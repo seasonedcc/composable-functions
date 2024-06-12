@@ -1,4 +1,4 @@
-import { Internal } from './internal/types.ts'
+import type { Internal } from './internal/types.ts'
 
 /**
  * The failure case of a Result.
@@ -208,12 +208,31 @@ type BranchReturn<
   : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
   : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>
 
-type ApplySchemaReturn<ParsedInput, ParsedEnvironment, Fn extends Composable> =
-  ParsedInput extends Parameters<Fn>[0]
-    ? ParsedEnvironment extends Parameters<Fn>[1]
-      ? ComposableWithSchema<UnpackData<Fn>>
-    : FailToCompose<ParsedEnvironment, Parameters<Fn>[1]>
-    : FailToCompose<ParsedInput, Parameters<Fn>[0]>
+/**
+ * Ensure that schemas are compatible with composable input and environment otherwise return a FailToCompose.
+ */
+type ApplySchemaReturn<
+  ParsedInput,
+  ParsedEnvironment,
+  Fn extends Composable,
+> = ParsedInput extends Parameters<Fn>[0]
+  ? ParsedEnvironment extends Parameters<Fn>[1]
+    ? ComposableWithSchema<UnpackData<Fn>>
+  : FailToCompose<ParsedEnvironment, Parameters<Fn>[1]>
+  : FailToCompose<ParsedInput, Parameters<Fn>[0]>
+
+/**
+ * The return type of the mapParameters function
+ */
+type MapParametersReturn<
+  Fn extends Composable,
+  NewParams extends any[],
+  O extends Parameters<Fn>,
+> = Composable<
+  (
+    ...args: NewParams
+  ) => Internal.IsNever<O> extends true ? never : UnpackData<Fn>
+>
 
 // Re-exporting internal types
 /**
@@ -236,6 +255,7 @@ export type {
   Failure,
   IncompatibleArguments,
   Last,
+  MapParametersReturn,
   MergeObjects,
   ParserSchema,
   PipeReturn,

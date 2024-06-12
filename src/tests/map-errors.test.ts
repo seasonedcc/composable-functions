@@ -39,8 +39,9 @@ describe('mapErrors', () => {
   })
 
   it('accepts an async mapper', async () => {
-    const fn = mapErrors(faultyAdd, (errors) =>
-      Promise.resolve(errors.map(cleanError)),
+    const fn = mapErrors(
+      faultyAdd,
+      (errors) => Promise.resolve(errors.map(cleanError)),
     )
     const res = await fn(1, 2)
 

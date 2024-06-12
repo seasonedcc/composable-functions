@@ -48,6 +48,7 @@ export type {
   FailToCompose,
   Failure,
   IncompatibleArguments,
+  MapParametersReturn,
   MergeObjects,
   ParserSchema,
   PipeReturn,
