@@ -8,7 +8,11 @@ import {
   success,
   withSchema,
 } from '../../index.ts'
-import { Composable, ComposableWithSchema, UnpackData } from '../../types.ts'
+import type {
+  Composable,
+  ComposableWithSchema,
+  UnpackData,
+} from '../../types.ts'
 
 describe('branch', () => {
   it('should pipe a composable with arbitrary types', async () => {
@@ -37,12 +41,7 @@ describe('branch', () => {
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = environment.branch(a, () => Promise.resolve(b))
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
   })
@@ -58,12 +57,7 @@ describe('branch', () => {
       a,
       (output) => output.next === 'multiply' ? c : b,
     )
-    type _R = Expect<
-      Equal<
-        typeof d,
-        ComposableWithSchema<number | string>
-      >
-    >
+    type _R = Expect<Equal<typeof d, ComposableWithSchema<number | string>>>
 
     assertEquals(await d({ id: 1 }), success(6))
   })
@@ -118,12 +112,7 @@ describe('branch', () => {
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
     const c = environment.branch(a, () => b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
       await c('1'),
@@ -137,12 +126,7 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = environment.branch(a, () => b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
       await c({ id: 1 }),
