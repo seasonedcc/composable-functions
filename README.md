@@ -18,6 +18,7 @@ A set of types and functions to make compositions easy and safe.
 ## Table of contents
 - [Quickstart](#quickstart)
 - [Composing type-safe functions](#composing-type-safe-functions)
+  - [Adding runtime validation to the Composable](#adding-runtime-validation-to-the-composable)
 - [Creating primitive composables](#creating-primitive-composables)
 - [Sequential composition](#sequential-composition)
   - [Using non-composables (mapping)](#using-non-composables-mapping)
@@ -90,6 +91,26 @@ const addAndReturnString = pipe(add, toString)
 We can also extend the same reasoning to functions that return promises in a transparent way. Imagine we have `add: (a: number, b:number) => Promise<number>` and `toString: (a: number) => Promise<string>`, the composition above would work in the same fashion, returning a function `addAndReturnString(a: number, b: number): Promise<string>` that will wait for each promise in the chain before applying the next function.
 
 This library also defines several operations besides the `pipe` to compose functions in arbitrary ways, giving a powerful tool for the developer to reason about the data flow **without worrying about mistakenly connecting the wrong parameters** or **forgetting to unwrap some promise** or **handle some error** along the way.
+
+### Adding runtime validation to the Composable
+To ensure type safety at runtime, use the `applySchema` or `withSchema` functions to validate external inputs against defined schemas. These schemas can be specified with libraries such as [Zod](https://github.com/colinhacks/zod/) or [ArkType](https://github.com/arktypeio/arktype).
+
+Note that the resulting `Composable` will have unknown types for the parameters now that we rely on runtime validation.
+
+```ts
+import { applySchema } from 'composable-functions'
+import { z } from 'zod'
+
+const addAndReturnWithRuntimeValidation = applySchema(
+  z.number(),
+  z.number(),
+)(addAndReturnString)
+
+// Or you could have defined schemas and implementation in one shot:
+const add = withSchema(z.number(), z.number())((a, b) => a + b)
+```
+
+For more information and examples, check the [Handling external input](./with-schema.md) guide.
 
 ## Creating primitive composables
 
