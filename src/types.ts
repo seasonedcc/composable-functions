@@ -169,7 +169,9 @@ type ParserSchema<T extends unknown = unknown> = {
     }
     | {
       success: false
-      error: { issues: { path: Array<string | number>; message: string }[] }
+      error: {
+        issues: ReadonlyArray<{ path: PropertyKey[]; message: string }>
+      }
     }
 }
 
