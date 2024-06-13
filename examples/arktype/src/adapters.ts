@@ -13,27 +13,16 @@ import { type, Type } from 'arktype'
 /**
  * Approach 1: Adapt your schema to return a ParserSchema
  */
-function adapt<T extends Type>(schema: T) {
+function adapt<T extends Type>(schema: T): ParserSchema<T['infer']> {
   return {
     safeParse: (val: unknown) => {
-      const result = schema(val)
-      if (result instanceof type.errors) {
-        return {
-          success: false,
-          error: {
-            issues: result.map((e) => ({
-              path: e.path as string[],
-              message: e.message,
-            })),
-          },
-        }
+      const data = schema(val)
+      if (data instanceof type.errors) {
+        return { success: false, error: { issues: data } }
       }
-      return {
-        success: true,
-        data: result,
-      }
+      return { success: true, data }
     },
-  } as ParserSchema<T['infer']>
+  }
 }
 
 /**
@@ -46,7 +35,10 @@ function withArkSchema<I, E>(
   handler: (input: I, environment: E) => Output,
 ) => ComposableWithSchema<Output> {
   return (handler) =>
-    applyArkSchema(inputSchema, environmentSchema)(composable(handler)) as ComposableWithSchema<any>
+    applyArkSchema(
+      inputSchema,
+      environmentSchema,
+    )(composable(handler)) as ComposableWithSchema<any>
 }
 
 function applyArkSchema<I, E>(
