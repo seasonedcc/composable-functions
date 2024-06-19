@@ -10,7 +10,7 @@ To ensure type safety at runtime, use the `applySchema` or `withSchema` function
 
 ### applySchema
 
-The `applySchema` function takes a schemas for the input and environment, and a composable, applying these schemas to ensure data integrity.
+The `applySchema` function takes a schemas for the input and context, and a composable, applying these schemas to ensure data integrity.
 
 ```typescript
 import { composable, applySchema } from 'composable-functions'
@@ -27,7 +27,7 @@ const safeFunction = applySchema(
 const fnWithSchema = safeFunction(fn)
 
 type Test = typeof fnWithSchema
-//   ^? Composable<(input?: unknown, env?: unknown) => { message: string }>
+//   ^? Composable<(input?: unknown, ctx?: unknown) => { message: string }>
 ```
 
 ### withSchema
@@ -39,7 +39,7 @@ import { composable, withSchema } from 'composable-functions'
 import { z } from 'zod'
 
 const runtimeSafeAdd = withSchema(z.number(), z.number())((a, b) => a + b)
-//    ^? Composable<(input?: unknown, env?: unknown) => number>
+//    ^? Composable<(input?: unknown, ctx?: unknown) => number>
 const result = await runtimeSafeAdd(1, 2)
 /*
 result = {

@@ -55,7 +55,7 @@ describe('branch', () => {
         Composable<
           (
             input?: unknown,
-            environment?: unknown,
+            context?: unknown,
           ) => string | { id: number; next: string }
         >
       >

@@ -3,7 +3,7 @@ import {
   composable,
   Composable,
   ComposableWithSchema,
-  EnvironmentError,
+  ContextError,
   failure,
   InputError,
   ParserSchema,
@@ -28,31 +28,28 @@ function adapt<T extends Type>(schema: T): ParserSchema<T['infer']> {
 /**
  * Approach 2: Create your custom `withSchema` and `applySchema` functions that will return a `Result`
  */
-function withArkSchema<I, E>(
+function withArkSchema<I, C>(
   inputSchema?: Type<I>,
-  environmentSchema?: Type<E>,
+  contextSchema?: Type<C>,
 ): <Output>(
-  handler: (input: I, environment: E) => Output,
+  handler: (input: I, context: C) => Output,
 ) => ComposableWithSchema<Output> {
   return (handler) =>
     applyArkSchema(
       inputSchema,
-      environmentSchema,
+      contextSchema,
     )(composable(handler)) as ComposableWithSchema<any>
 }
 
-function applyArkSchema<I, E>(
-  inputSchema?: Type<I>,
-  environmentSchema?: Type<E>,
-) {
-  return <R, Input, Environment>(
-    fn: Composable<(input?: Input, environment?: Environment) => R>,
+function applyArkSchema<I, C>(inputSchema?: Type<I>, contextSchema?: Type<C>) {
+  return <R, Input, Context>(
+    fn: Composable<(input?: Input, context?: Context) => R>,
   ) => {
-    return function (input?: unknown, environment?: unknown) {
-      const envResult = (environmentSchema ?? type('unknown'))(environment)
+    return function (input?: unknown, context?: unknown) {
+      const ctxResult = (contextSchema ?? type('unknown'))(context)
       const result = (inputSchema ?? type('unknown'))(input)
 
-      if (result instanceof type.errors || envResult instanceof type.errors) {
+      if (result instanceof type.errors || ctxResult instanceof type.errors) {
         const inputErrors =
           result instanceof type.errors
             ? result.map(
@@ -60,17 +57,17 @@ function applyArkSchema<I, E>(
                   new InputError(error.message, error.path as string[]),
               )
             : []
-        const envErrors =
-          envResult instanceof type.errors
-            ? envResult.map(
+        const ctxErrors =
+          ctxResult instanceof type.errors
+            ? ctxResult.map(
                 (error) =>
-                  new EnvironmentError(error.message, error.path as string[]),
+                  new ContextError(error.message, error.path as string[]),
               )
             : []
-        return failure([...inputErrors, ...envErrors])
+        return failure([...inputErrors, ...ctxErrors])
       }
-      return fn(result as Input, envResult as Environment)
-    } as ApplySchemaReturn<I, E, typeof fn>
+      return fn(result as Input, ctxResult as Context)
+    } as ApplySchemaReturn<I, C, typeof fn>
   }
 }
 

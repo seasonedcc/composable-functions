@@ -1,6 +1,6 @@
 import { assertEquals, describe, it } from './prelude.ts'
 import {
-  EnvironmentError,
+  ContextError,
   failure,
   InputError,
   serializeError,
@@ -40,7 +40,7 @@ describe('serializeError', () => {
     })
   })
 
-  it('serializes InputError and EnvironmentError properly', () => {
+  it('serializes InputError and ContextError properly', () => {
     const inputError = new InputError('Oops!', ['foo', 'bar'])
 
     const result = serializeError(inputError)
@@ -54,14 +54,14 @@ describe('serializeError', () => {
   })
 
   it('defaults path to empty list', () => {
-    const environmentError = new EnvironmentError('Oops!')
+    const ctxError = new ContextError('Oops!')
 
-    const result = serializeError(environmentError)
+    const result = serializeError(ctxError)
 
     assertEquals(result, {
       message: 'Oops!',
-      exception: environmentError,
-      name: 'EnvironmentError',
+      exception: ctxError,
+      name: 'ContextError',
       path: [],
     })
   })
@@ -80,7 +80,7 @@ describe('serialize', () => {
       failure([
         new Error('Oops!'),
         new InputError('Required'),
-        new EnvironmentError('Not found', ['user', 'name']),
+        new ContextError('Not found', ['user', 'name']),
       ]),
     )
 
@@ -103,8 +103,8 @@ describe('serialize', () => {
         },
         {
           message: 'Not found',
-          exception: new EnvironmentError('Not found', ['user', 'name']),
-          name: 'EnvironmentError',
+          exception: new ContextError('Not found', ['user', 'name']),
+          name: 'ContextError',
           path: ['user', 'name'],
         },
       ],

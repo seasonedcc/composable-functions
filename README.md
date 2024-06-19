@@ -9,7 +9,7 @@ A set of types and functions to make compositions easy and safe.
 - 🏝️ Isolated Business Logic: Split your code into composable functions, making your code easier to test and maintain.
 - 🔒 End-to-End Type Safety: Achieve end-to-end type safety from the backend to the UI with serializable results, ensuring data integrity across your entire application.
 -	⚡ Parallel and Sequential Compositions: Compose functions both in parallel - with `all` and `collect` - and sequentially - with `pipe`, `branch`, and `sequence` -, to manage complex data flows optimizing your code for performance and clarity.
--	🕵️‍♂️ Runtime Validation: Use `withSchema` or `applySchema` with your favorite parser for optional runtime validation of inputs and environments, enforcing data integrity only when needed.
+-	🕵️‍♂️ Runtime Validation: Use `withSchema` or `applySchema` with your favorite parser for optional runtime validation of inputs and context, enforcing data integrity only when needed.
 -	🚑 Resilient Error Handling: Leverage enhanced combinators like `mapErrors` and `catchFailure` to transform and handle errors more effectively.
 -	📊 Traceable Compositions: Use the `trace` function to log and monitor your composable functions’ inputs and results, simplifying debugging and monitoring.
 
@@ -31,7 +31,7 @@ A set of types and functions to make compositions easy and safe.
 - [Guides](#guides)
     - [Migrating from domain-functions](#migrating-from-domain-functions)
     - [Handling external input](#handling-external-input)
-    - [Defining constants for multiple functions (environments)](#defining-constants-for-multiple-functions-environments)
+    - [Defining constants for multiple functions (context)](#defining-constants-for-multiple-functions-context)
     - [Using custom parsers](#using-custom-parsers)
 - [Using Deno](#using-deno)
 - [Acknowledgements](#acknowledgements)
@@ -277,7 +277,7 @@ const getProfile = composable(async (id: string) => {
 
 #### [Migrating from domain-functions](./migrating-df.md)
 #### [Handling external input](./with-schema.md)
-#### [Defining constants for multiple functions (environments)](./environments.md)
+#### [Defining constants for multiple functions (context)](./context.md)
 #### [Using custom parsers](./examples/arktype/README.md)
 
 ## Using Deno

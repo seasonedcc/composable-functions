@@ -1,8 +1,8 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import {
   composable,
-  environment,
-  EnvironmentError,
+  context,
+  ContextError,
   failure,
   InputError,
   success,
@@ -18,49 +18,49 @@ describe('pipe', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = environment.pipe(a, b)
+    const c = context.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
   })
 
-  it('should use the same environment in all composed functions', async () => {
+  it('should use the same context in all composed functions', async () => {
     const a = withSchema(
       z.undefined(),
-      z.object({ env: z.number() }),
-    )((_input, { env }) => ({
-      inp: env + 2,
+      z.object({ ctx: z.number() }),
+    )((_input, { ctx }) => ({
+      inp: ctx + 2,
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
-    )(({ inp }, { env }) => inp + env)
+      z.object({ ctx: z.number() }),
+    )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = environment.pipe(a, b)
+    const c = context.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
-    assertEquals(await c(undefined, { env: 1 }), success(4))
+    assertEquals(await c(undefined, { ctx: 1 }), success(4))
   })
 
-  it('should fail on the first environment parser failure', async () => {
-    const envParser = z.object({ env: z.number() })
+  it('should fail on the first context parser failure', async () => {
+    const ctxParser = z.object({ ctx: z.number() })
     const a = withSchema(
       z.undefined(),
-      envParser,
-    )((_input, { env }) => ({
-      inp: env + 2,
+      ctxParser,
+    )((_input, { ctx }) => ({
+      inp: ctx + 2,
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      envParser,
-    )(({ inp }, { env }) => inp + env)
+      ctxParser,
+    )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = environment.pipe(a, b)
+    const c = context.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
       await c(undefined, {}),
-      failure([new EnvironmentError('Required', ['env'])]),
+      failure([new ContextError('Required', ['ctx'])]),
     )
   })
 
@@ -69,39 +69,39 @@ describe('pipe', () => {
 
     const a = withSchema(
       firstInputParser,
-      z.object({ env: z.number() }),
-    )((_input, { env }) => ({
-      inp: env + 2,
+      z.object({ ctx: z.number() }),
+    )((_input, { ctx }) => ({
+      inp: ctx + 2,
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
-    )(({ inp }, { env }) => inp + env)
+      z.object({ ctx: z.number() }),
+    )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = environment.pipe(a, b)
+    const c = context.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
-      await c({ inp: 'some invalid input' }, { env: 1 }),
+      await c({ inp: 'some invalid input' }, { ctx: 1 }),
       failure([new InputError('Expected undefined, received object')]),
     )
   })
 
-  it('should compose mandatory environments', async () => {
+  it('should compose mandatory contexts', async () => {
     const a = composable(() => ({ inp: 1 }))
     const b = composable(
-      ({ inp }: { inp: number }, { env }: { env: number }) => inp + env,
+      ({ inp }: { inp: number }, { ctx }: { ctx: number }) => inp + ctx,
     )
 
-    const c = environment.pipe(a, b)
+    const c = context.pipe(a, b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(inp: unknown, env: { env: number }) => number>
+        Composable<(inp: unknown, ctx: { ctx: number }) => number>
       >
     >
 
-    assertEquals(await c(undefined, { env: 1 }), success(2))
+    assertEquals(await c(undefined, { ctx: 1 }), success(2))
   })
 
   it('should compose more than 2 functions', async () => {
@@ -115,17 +115,17 @@ describe('pipe', () => {
       ({ aBoolean }) => !aBoolean,
     )
 
-    const d = environment.pipe(a, b, c)
+    const d = context.pipe(a, b, c)
     type _R = Expect<Equal<typeof d, ComposableWithSchema<boolean>>>
 
     assertEquals(await d({ aNumber: 1 }), success(false))
   })
 
   it('fails to compose functions with third mandatory parameter', async () => {
-    const add = composable((a: number, env: number) => a + env)
-    const fn = environment.pipe(
+    const add = composable((a: number, ctx: number) => a + ctx)
+    const fn = context.pipe(
       add,
-      composable((x: number, _env: number, _makeItFail: boolean) => x),
+      composable((x: number, _ctx: number, _makeItFail: boolean) => x),
     )
 
     // @ts-expect-error composition will fail
@@ -137,8 +137,8 @@ describe('pipe', () => {
   })
 
   it('fails to compose incompatible functions', async () => {
-    const add = composable((a: number, env: number) => a + env)
-    const fn = environment.pipe(
+    const add = composable((a: number, ctx: number) => a + ctx)
+    const fn = context.pipe(
       add,
       composable((x: string) => x),
     )
@@ -149,14 +149,14 @@ describe('pipe', () => {
     type _FN = Expect<Equal<typeof fn, Internal.FailToCompose<number, string>>>
   })
 
-  it('compose using environment when piped functions requires a second parameter', async () => {
-    const add = composable((a: number, env: number) => a + env)
-    const fn = environment.pipe(add, add)
+  it('compose using context when piped functions requires a second parameter', async () => {
+    const add = composable((a: number, ctx: number) => a + ctx)
+    const fn = context.pipe(add, add)
 
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Composable<(a: number, env: number) => number>>
+      Equal<typeof fn, Composable<(a: number, ctx: number) => number>>
     >
     assertEquals(res, success(5))
   })

@@ -1,8 +1,8 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import {
   composable,
-  environment,
-  EnvironmentError,
+  context,
+  ContextError,
   failure,
   InputError,
   success,
@@ -19,14 +19,14 @@ describe('sequence', () => {
       result: id - 1,
     }))
 
-    const c = environment.sequence(a, b)
+    const c = context.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
         Composable<
           (
             input?: unknown,
-            environment?: unknown,
+            context?: unknown,
           ) => [{ id: number }, { result: number }]
         >
       >
@@ -38,33 +38,33 @@ describe('sequence', () => {
     )
   })
 
-  it('should use the same environment in all composed functions', async () => {
+  it('should use the same context in all composed functions', async () => {
     const a = withSchema(
       z.undefined(),
-      z.object({ env: z.number() }),
-    )((_input, { env }) => ({
-      inp: env + 2,
+      z.object({ ctx: z.number() }),
+    )((_input, { ctx }) => ({
+      inp: ctx + 2,
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
-    )(({ inp }, { env }) => ({ result: inp + env }))
+      z.object({ ctx: z.number() }),
+    )(({ inp }, { ctx }) => ({ result: inp + ctx }))
 
-    const c = environment.sequence(a, b)
+    const c = context.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
         Composable<
           (
             input?: unknown,
-            environment?: unknown,
+            context?: unknown,
           ) => [{ inp: number }, { result: number }]
         >
       >
     >
 
     assertEquals(
-      await c(undefined, { env: 1 }),
+      await c(undefined, { ctx: 1 }),
       success<[{ inp: number }, { result: number }]>([
         { inp: 3 },
         { result: 4 },
@@ -72,32 +72,32 @@ describe('sequence', () => {
     )
   })
 
-  it('should fail on the first environment parser failure', async () => {
-    const envParser = z.object({ env: z.number() })
+  it('should fail on the first context parser failure', async () => {
+    const ctxParser = z.object({ ctx: z.number() })
     const a = withSchema(
       z.undefined(),
-      envParser,
-    )((_input, { env }) => ({
-      inp: env + 2,
+      ctxParser,
+    )((_input, { ctx }) => ({
+      inp: ctx + 2,
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      envParser,
-    )(({ inp }, { env }) => inp + env)
+      ctxParser,
+    )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = environment.sequence(a, b)
+    const c = context.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
         Composable<
-          (input?: unknown, environment?: unknown) => [{ inp: number }, number]
+          (input?: unknown, context?: unknown) => [{ inp: number }, number]
         >
       >
     >
 
     assertEquals(
       await c(undefined, {}),
-      failure([new EnvironmentError('Required', ['env'])]),
+      failure([new ContextError('Required', ['ctx'])]),
     )
   })
 
@@ -106,27 +106,27 @@ describe('sequence', () => {
 
     const a = withSchema(
       firstInputParser,
-      z.object({ env: z.number() }),
-    )((_input, { env }) => ({
-      inp: env + 2,
+      z.object({ ctx: z.number() }),
+    )((_input, { ctx }) => ({
+      inp: ctx + 2,
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
-    )(({ inp }, { env }) => inp + env)
+      z.object({ ctx: z.number() }),
+    )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = environment.sequence(a, b)
+    const c = context.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
         Composable<
-          (input?: unknown, environment?: unknown) => [{ inp: number }, number]
+          (input?: unknown, context?: unknown) => [{ inp: number }, number]
         >
       >
     >
 
     assertEquals(
-      await c({ inp: 'some invalid input' }, { env: 1 }),
+      await c({ inp: 'some invalid input' }, { ctx: 1 }),
       failure([new InputError('Expected undefined, received object')]),
     )
   })
@@ -134,27 +134,27 @@ describe('sequence', () => {
   it('should fail on the second input parser failure', async () => {
     const a = withSchema(
       z.undefined(),
-      z.object({ env: z.number() }),
+      z.object({ ctx: z.number() }),
     )(() => ({
       inp: 'some invalid input',
     }))
     const b = withSchema(
       z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
-    )(({ inp }, { env }) => inp + env)
+      z.object({ ctx: z.number() }),
+    )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = environment.sequence(a, b)
+    const c = context.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
         Composable<
-          (input?: unknown, environment?: unknown) => [{ inp: string }, number]
+          (input?: unknown, context?: unknown) => [{ inp: string }, number]
         >
       >
     >
 
     assertEquals(
-      await c(undefined, { env: 1 }),
+      await c(undefined, { ctx: 1 }),
       failure([new InputError('Expected number, received string', ['inp'])]),
     )
   })
@@ -172,14 +172,14 @@ describe('sequence', () => {
       }),
     )
 
-    const d = environment.sequence(a, b, c)
+    const d = context.sequence(a, b, c)
     type _R = Expect<
       Equal<
         typeof d,
         Composable<
           (
             input?: unknown,
-            environment?: unknown,
+            context?: unknown,
           ) => [
             { aString: string },
             { aBoolean: boolean },
@@ -201,10 +201,10 @@ describe('sequence', () => {
     )
   })
 
-  it('should properly type the environment', async () => {
+  it('should properly type the context', async () => {
     const a = composable((a: number, b: number) => a + b)
     const b = composable((a: number, b: number) => `${a} + ${b}`)
-    const c = environment.sequence(a, b)
+    const c = context.sequence(a, b)
     type _R = Expect<
       Equal<typeof c, Composable<(a: number, b: number) => [number, string]>>
     >

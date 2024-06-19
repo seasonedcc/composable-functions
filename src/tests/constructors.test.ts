@@ -14,7 +14,7 @@ import type {
 } from '../index.ts'
 import {
   composable,
-  EnvironmentError,
+  ContextError,
   ErrorList,
   failure,
   fromSuccess,
@@ -93,10 +93,7 @@ describe('fromSuccess', () => {
 
     const c = fromSuccess(a)
     type _R = Expect<
-      Equal<
-        typeof c,
-        (input?: unknown, environment?: unknown) => Promise<number>
-      >
+      Equal<typeof c, (input?: unknown, context?: unknown) => Promise<number>>
     >
 
     assertEquals(await c({ id: 1 }), 2)
@@ -107,10 +104,7 @@ describe('fromSuccess', () => {
 
     const c = fromSuccess(a)
     type _R = Expect<
-      Equal<
-        typeof c,
-        (input?: unknown, environment?: unknown) => Promise<number>
-      >
+      Equal<typeof c, (input?: unknown, context?: unknown) => Promise<number>>
     >
 
     assertRejects(async () => {
@@ -164,7 +158,7 @@ describe('withSchema', () => {
     })
   })
 
-  describe('when it has no environment', () => {
+  describe('when it has no context', () => {
     it('uses zod parser to create parse the input and call the schema function', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
@@ -193,19 +187,19 @@ describe('withSchema', () => {
     })
   })
 
-  it('uses zod parsers to parse the input and environment and call the schema function', async () => {
+  it('uses zod parsers to parse the input and context and call the schema function', async () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
-    const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
+    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = withSchema(
       parser,
-      envParser,
+      ctxParser,
     )(({ id }, { uid }) => [id, uid] as const)
     type _R = Expect<
       Equal<
         typeof handler,
         Composable<
-          (input?: unknown, environment?: unknown) => readonly [number, number]
+          (input?: unknown, context?: unknown) => readonly [number, number]
         >
       >
     >
@@ -220,7 +214,7 @@ describe('withSchema', () => {
         .refine((value) => value !== 1, { message: 'ID already taken' }),
     })
 
-    const envParser = z.object({
+    const ctxParser = z.object({
       uid: z
         .preprocess(Number, z.number())
         .refine((value) => value !== 2, { message: 'UID already taken' }),
@@ -228,7 +222,7 @@ describe('withSchema', () => {
 
     const handler = withSchema(
       parser,
-      envParser,
+      ctxParser,
     )(({ id }, { uid }) => [id, uid])
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
 
@@ -236,7 +230,7 @@ describe('withSchema', () => {
       await handler({ id: '1' }, { uid: '2' }),
       failure([
         new InputError('ID already taken', ['id']),
-        new EnvironmentError('UID already taken', ['uid']),
+        new ContextError('UID already taken', ['uid']),
       ]),
     )
   })
@@ -257,19 +251,19 @@ describe('withSchema', () => {
     assertEquals((result as Success<number>).data, 2)
   })
 
-  it('returns error when environment parsing fails', async () => {
+  it('returns error when context parsing fails', async () => {
     const parser = z.object({ id: z.preprocess(Number, z.number()) })
-    const envParser = z.object({ uid: z.preprocess(Number, z.number()) })
+    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = withSchema(
       parser,
-      envParser,
+      ctxParser,
     )(({ id }, { uid }) => [id, uid])
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
 
     assertEquals(
       await handler({ id: '1' }, {}),
-      failure([new EnvironmentError('Expected number, received nan', ['uid'])]),
+      failure([new ContextError('Expected number, received nan', ['uid'])]),
     )
   })
 
@@ -332,17 +326,15 @@ describe('withSchema', () => {
     )
   })
 
-  it('returns environmentErrors when the schema function throws an EnvironmentError', async () => {
+  it('returns contextErrors when the schema function throws an ContextError', async () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
+      throw new ContextError('Custom ctx error', ['currentUser', 'role'])
     })
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
 
     assertEquals(
       await handler({ id: 1 }),
-      failure([
-        new EnvironmentError('Custom env error', ['currentUser', 'role']),
-      ]),
+      failure([new ContextError('Custom ctx error', ['currentUser', 'role'])]),
     )
   })
 
@@ -350,7 +342,7 @@ describe('withSchema', () => {
     const handler = withSchema(z.object({ id: z.number() }))(() => {
       throw new ErrorList([
         new InputError('Custom input error', ['contact', 'id']),
-        new EnvironmentError('Custom env error', ['currentUser', 'role']),
+        new ContextError('Custom ctx error', ['currentUser', 'role']),
       ])
     })
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
@@ -359,20 +351,20 @@ describe('withSchema', () => {
       await handler({ id: 1 }),
       failure([
         new InputError('Custom input error', ['contact', 'id']),
-        new EnvironmentError('Custom env error', ['currentUser', 'role']),
+        new ContextError('Custom ctx error', ['currentUser', 'role']),
       ]),
     )
   })
 })
 
 describe('applySchema', () => {
-  it('uses zod parsers to parse the input and environment turning it into a schema function', async () => {
+  it('uses zod parsers to parse the input and context turning it into a schema function', async () => {
     const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
-    const envSchema = z.object({ uid: z.preprocess(Number, z.number()) })
+    const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
       inputSchema,
-      envSchema,
+      ctxSchema,
     )(
       composable(
         ({ id }: { id: number }, { uid }: { uid: number }) =>
@@ -389,15 +381,14 @@ describe('applySchema', () => {
     )
   })
 
-  it('allow composition with unknown environment', async () => {
+  it('allow composition with unknown context', async () => {
     const inputSchema = z.string()
 
-    const handler = applySchema(inputSchema, z.unknown())(
-      composable((x: string) => x),
-    )
-    type _R = Expect<
-      Equal<typeof handler, ComposableWithSchema<string>>
-    >
+    const handler = applySchema(
+      inputSchema,
+      z.unknown(),
+    )(composable((x: string) => x))
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
     const result = await handler('a')
 
     assertEquals(result, success('a'))

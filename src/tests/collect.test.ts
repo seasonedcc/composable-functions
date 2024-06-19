@@ -118,7 +118,7 @@ describe('collect', () => {
       Equal<
         typeof c,
         Composable<
-          (input?: unknown, environment?: unknown) => { a: number; b: string }
+          (input?: unknown, context?: unknown) => { a: number; b: string }
         >
       >
     >
@@ -138,7 +138,7 @@ describe('collect', () => {
       Equal<
         typeof c,
         Composable<
-          (input?: unknown, environment?: unknown) => { a: string; b: string }
+          (input?: unknown, context?: unknown) => { a: string; b: string }
         >
       >
     >

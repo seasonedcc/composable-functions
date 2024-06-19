@@ -1,5 +1,5 @@
 import { mapErrors } from './combinators.ts'
-import { EnvironmentError, ErrorList, InputError } from './errors.ts'
+import { ContextError, ErrorList, InputError } from './errors.ts'
 import type {
   ApplySchemaReturn,
   Composable,
@@ -82,13 +82,13 @@ function fromSuccess<O, P extends any[]>(
 }
 
 /**
- * Creates a composable with unknown input and environment that uses schemas to parse them into known types.
+ * Creates a composable with unknown input and context that uses schemas to parse them into known types.
  * This allows you to code the function with arbitrary types knowinng that they will be enforced in runtime.
  * Very useful when piping data coming from any external source into your composables.
- * After giving the input and environment schemas, you can pass a handler function that takes type safe input and environment. That function is gonna catch any errors and always return a Result.
+ * After giving the input and context schemas, you can pass a handler function that takes type safe input and context. That function is gonna catch any errors and always return a Result.
  * @param inputSchema the schema for the input
- * @param environmentSchema the schema for the environment
- * @returns a handler function that takes type safe input and environment
+ * @param contextSchema the schema for the context
+ * @returns a handler function that takes type safe input and context
  * @example
  * const safeFunction = withSchema(
  *  z.object({ greeting: z.string() }),
@@ -100,24 +100,25 @@ function fromSuccess<O, P extends any[]>(
  *   message: `${greeting} ${user.name}`
  * })
  */
-function withSchema<I, E>(
+function withSchema<I, C>(
   inputSchema?: ParserSchema<I>,
-  environmentSchema?: ParserSchema<E>,
+  contextSchema?: ParserSchema<C>,
 ): <Output>(
-  hander: (input: I, environment: E) => Output,
+  hander: (input: I, context: C) => Output,
 ) => ComposableWithSchema<Output> {
   return (handler) =>
-    applySchema(inputSchema, environmentSchema)(
-      composable(handler),
-    ) as ComposableWithSchema<any>
+    applySchema(
+      inputSchema,
+      contextSchema,
+    )(composable(handler)) as ComposableWithSchema<any>
 }
 
 /**
- * Takes a composable and creates a composable withSchema that will assert the input and environment types according to the given schemas.
+ * Takes a composable and creates a composable withSchema that will assert the input and context types according to the given schemas.
  * @param fn a composable function
  * @param inputSchema the schema for the input
- * @param environmentSchema the schema for the environment
- * @returns a composable function that will assert the input and environment types at runtime.
+ * @param contextSchema the schema for the context
+ * @returns a composable function that will assert the input and context types at runtime.
  * @example
  * ```ts
  * const safeFunction = applySchema(
@@ -134,32 +135,31 @@ function withSchema<I, E>(
  * })))
  * ```
  */
-function applySchema<ParsedInput, ParsedEnvironment>(
+function applySchema<ParsedInput, ParsedContext>(
   inputSchema?: ParserSchema<ParsedInput>,
-  environmentSchema?: ParserSchema<ParsedEnvironment>,
+  contextSchema?: ParserSchema<ParsedContext>,
 ) {
-  return (<R, Input, Environment>(
-    fn: Composable<(input?: Input, environment?: Environment) => R>,
-  ): ApplySchemaReturn<ParsedInput, ParsedEnvironment, typeof fn> => {
-    return ((input?: unknown, environment?: unknown) => {
-      const envResult = (environmentSchema ?? alwaysUnknownSchema).safeParse(
-        environment,
+  return <R, Input, Context>(
+    fn: Composable<(input?: Input, context?: Context) => R>,
+  ): ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn> => {
+    return ((input?: unknown, context?: unknown) => {
+      const ctxResult = (contextSchema ?? alwaysUnknownSchema).safeParse(
+        context,
       )
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
-      if (!result.success || !envResult.success) {
+      if (!result.success || !ctxResult.success) {
         const inputErrors = result.success ? [] : result.error.issues.map(
           (error) => new InputError(error.message, error.path as string[]),
         )
-        const envErrors = envResult.success ? [] : envResult.error.issues.map(
-          (error) =>
-            new EnvironmentError(error.message, error.path as string[]),
+        const ctxErrors = ctxResult.success ? [] : ctxResult.error.issues.map(
+          (error) => new ContextError(error.message, error.path as string[]),
         )
-        return Promise.resolve(failure([...inputErrors, ...envErrors]))
+        return Promise.resolve(failure([...inputErrors, ...ctxErrors]))
       }
-      return fn(result.data as Input, envResult.data as Environment)
-    }) as ApplySchemaReturn<ParsedInput, ParsedEnvironment, typeof fn>
-  })
+      return fn(result.data as Input, ctxResult.data as Context)
+    }) as ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn>
+  }
 }
 
 const alwaysUnknownSchema: ParserSchema<unknown> = {

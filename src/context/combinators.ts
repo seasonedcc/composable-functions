@@ -3,19 +3,19 @@ import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import type { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
 
-function applyEnvironmentToList<
-  Fns extends Array<(input: unknown, environment: unknown) => unknown>,
->(fns: Fns, environment: unknown) {
-  return fns.map((fn) => (input) => fn(input, environment)) as [Composable]
+function applyContextToList<
+  Fns extends Array<(input: unknown, context: unknown) => unknown>,
+>(fns: Fns, context: unknown) {
+  return fns.map((fn) => (input) => fn(input, context)) as [Composable]
 }
 
 /**
- * Creates a single composable out of a chain of multiple functions. It will pass the same environment to all given functions, and it will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
+ * Creates a single composable out of a chain of multiple functions. It will pass the same context to all given functions, and it will pass the output of a function as the next function's input in left-to-right order. The resulting data will be the output of the rightmost function.
  *
  * @example
  *
  * ```ts
- * import { withSchema, environment } from 'composable-functions'
+ * import { withSchema, context } from 'composable-functions'
  *
  * const a = withSchema(z.object({ aNumber: z.number() }))(
  *   ({ aNumber }) => ({ aString: String(aNumber) }),
@@ -23,41 +23,39 @@ function applyEnvironmentToList<
  * const b = withSchema(z.object({ aString: z.string() }))(
  *   ({ aString }) => ({ aBoolean: aString == '1' }),
  * )
- * const d = environment.pipe(a, b)
+ * const d = context.pipe(a, b)
  * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
 function pipe<Fns extends Composable[]>(...fns: Fns): PipeReturn<Fns> {
-  return ((input: any, environment: any) =>
-    A.pipe(...applyEnvironmentToList(fns, environment))(
-      input,
-    )) as PipeReturn<Fns>
+  return ((input: any, context: any) =>
+    A.pipe(...applyContextToList(fns, context))(input)) as PipeReturn<Fns>
 }
 
 /**
- * Works like `environment.pipe` but it will collect the output of every function in a tuple.
+ * Works like `context.pipe` but it will collect the output of every function in a tuple.
  *
  * @example
  *
  * ```ts
- * import { withSchema, environment } from 'composable-functions'
+ * import { withSchema, context } from 'composable-functions'
  *
  * const a = withSchema(z.number())((aNumber) => String(aNumber))
  * const b = withSchema(z.string())((aString) => aString === '1')
- * const aComposable = environment.sequence(a, b)
+ * const aComposable = context.sequence(a, b)
  * //    ^? ComposableWithSchema<[string, boolean]>
  * ```
  */
 
 function sequence<Fns extends Composable[]>(...fns: Fns): SequenceReturn<Fns> {
-  return ((input: any, environment: any) =>
-    A.sequence(...applyEnvironmentToList(fns, environment))(
+  return ((input: any, context: any) =>
+    A.sequence(...applyContextToList(fns, context))(
       input,
     )) as SequenceReturn<Fns>
 }
 
 /**
- * Like branch but preserving the environment parameter.
+ * Like branch but preserving the context parameter.
  */
 function branch<
   SourceComposable extends Composable,
@@ -69,14 +67,14 @@ function branch<
   resolver: Resolver,
 ): BranchReturn<SourceComposable, Resolver> {
   return (async (...args: Parameters<SourceComposable>) => {
-    const [input, environment] = args
-    const result = await cf(input, environment)
+    const [input, context] = args
+    const result = await cf(input, context)
     if (!result.success) return result
 
     return composable(async () => {
       const nextFn = await resolver(result.data)
       if (typeof nextFn !== 'function') return result.data
-      return fromSuccess(nextFn)(result.data, environment)
+      return fromSuccess(nextFn)(result.data, context)
     })()
   }) as BranchReturn<SourceComposable, Resolver>
 }

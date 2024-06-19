@@ -20,7 +20,8 @@ class InputError extends Error {
 }
 
 /**
- * A custom error class for environment errors.
+ * @deprecated Use `ContextError` instead
+ * A custom error class for context errors.
  *
  * @example
  * const aComposable = withSchema()(() => {
@@ -29,13 +30,34 @@ class InputError extends Error {
  */
 class EnvironmentError extends Error {
   /**
-   * Path of environment attribute that originated the error.
+   * Path of context attribute that originated the error.
    */
   path: string[]
 
   constructor(message: string, path: string[] = []) {
     super(message)
     this.name = 'EnvironmentError'
+    this.path = path
+  }
+}
+
+/**
+ * A custom error class for context errors.
+ *
+ * @example
+ * const aComposable = withSchema()(() => {
+ *  throw new ContextError('Invalid context', 'user.name')
+ * })
+ */
+class ContextError extends Error {
+  /**
+   * Path of context attribute that originated the error.
+   */
+  path: string[]
+
+  constructor(message: string, path: string[] = []) {
+    super(message)
+    this.name = 'ContextError'
     this.path = path
   }
 }
@@ -66,16 +88,24 @@ function isInputError(e: { name: string; message: string }): boolean {
 }
 
 /**
- * A function to check if an `Error` or a `SerializableError` is an EnvironmentError
+ * @deprecated Use `isContextError` instead
+ * A function to check if an `Error` or a `SerializableError` is a ContextError
  */
-function isEnvironmentError(e: { name: string; message: string }): boolean {
-  return e.name === 'EnvironmentError'
+const isEnvironmentError = isContextError
+
+/**
+ * A function to check if an `Error` or a `SerializableError` is a ContextError
+ */
+function isContextError(e: { name: string; message: string }): boolean {
+  return e.name === 'EnvironmentError' || e.name === 'ContextError'
 }
 
 export {
+  ContextError,
   EnvironmentError,
   ErrorList,
   InputError,
+  isContextError,
   isEnvironmentError,
   isInputError,
 }

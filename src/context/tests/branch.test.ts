@@ -2,7 +2,7 @@ import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
   all,
   composable,
-  environment,
+  context,
   failure,
   InputError,
   success,
@@ -16,18 +16,18 @@ import type {
 
 describe('branch', () => {
   it('should pipe a composable with arbitrary types', async () => {
-    const a = composable(({ id }: { id: number }, environment: number) => ({
-      id: id + 2 + environment,
+    const a = composable(({ id }: { id: number }, context: number) => ({
+      id: id + 2 + context,
     }))
     const b = composable(
-      ({ id }: { id: number }, environment: number) => id - 1 + environment,
+      ({ id }: { id: number }, context: number) => id - 1 + context,
     )
 
-    const c = environment.branch(a, () => Promise.resolve(b))
+    const c = context.branch(a, () => Promise.resolve(b))
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input: { id: number }, environment: number) => number>
+        Composable<(input: { id: number }, context: number) => number>
       >
     >
 
@@ -40,7 +40,7 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = environment.branch(a, () => Promise.resolve(b))
+    const c = context.branch(a, () => Promise.resolve(b))
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
@@ -53,10 +53,7 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
-    const d = environment.branch(
-      a,
-      (output) => output.next === 'multiply' ? c : b,
-    )
+    const d = context.branch(a, (output) => output.next === 'multiply' ? c : b)
     type _R = Expect<Equal<typeof d, ComposableWithSchema<number | string>>>
 
     assertEquals(await d({ id: 1 }), success(6))
@@ -68,7 +65,7 @@ describe('branch', () => {
       next: 'multiply',
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const d = environment.branch(a, (output) => {
+    const d = context.branch(a, (output) => {
       type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
       return output.next === 'multiply' ? null : b
     })
@@ -78,7 +75,7 @@ describe('branch', () => {
         Composable<
           (
             input?: unknown,
-            environment?: unknown,
+            context?: unknown,
           ) => string | { id: number; next: string }
         >
       >
@@ -87,23 +84,23 @@ describe('branch', () => {
     assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
   })
 
-  it('should use the same environment in all composed functions', async () => {
-    const a = composable((_input: unknown, { env }: { env: number }) => ({
-      inp: env + 2,
+  it('should use the same context in all composed functions', async () => {
+    const a = composable((_input: unknown, { ctx }: { ctx: number }) => ({
+      inp: ctx + 2,
     }))
     const b = composable(
-      ({ inp }: { inp: number }, { env }: { env: number }) => inp + env,
+      ({ inp }: { inp: number }, { ctx }: { ctx: number }) => inp + ctx,
     )
 
-    const c = environment.branch(a, () => b)
+    const c = context.branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
-        Composable<(input: unknown, environment: { env: number }) => number>
+        Composable<(input: unknown, context: { ctx: number }) => number>
       >
     >
 
-    assertEquals(await c(undefined, { env: 1 }), success(4))
+    assertEquals(await c(undefined, { ctx: 1 }), success(4))
   })
 
   it('should gracefully fail if the first function fails', async () => {
@@ -111,7 +108,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
-    const c = environment.branch(a, () => b)
+    const c = context.branch(a, () => b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
@@ -125,7 +122,7 @@ describe('branch', () => {
       id: String(id),
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = environment.branch(a, () => b)
+    const c = context.branch(a, () => b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
@@ -139,7 +136,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
-    const c = environment.branch(a, (_) => {
+    const c = context.branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable
       return b
@@ -153,16 +150,16 @@ describe('branch', () => {
   it('should not break composition with other combinators', async () => {
     const a = withSchema(
       z.object({ id: z.number() }),
-      // TODO: Why don't we have z.any or z.unknown as default for env?
+      // TODO: Why don't we have z.any or z.unknown as default for ctx?
       z.unknown(),
     )(({ id }) => ({
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
-    const c = composable((n: number, env: number) => env + n * 2)
+    const c = composable((n: number, ctx: number) => ctx + n * 2)
     const d = all(
-      environment.pipe(
-        environment.branch(a, () => b),
+      context.pipe(
+        context.branch(a, () => b),
         c,
       ),
       a,
@@ -171,10 +168,7 @@ describe('branch', () => {
       Equal<
         typeof d,
         Composable<
-          (
-            input: Partial<unknown>,
-            environment: number,
-          ) => [number, { id: number }]
+          (input: Partial<unknown>, context: number) => [number, { id: number }]
         >
       >
     >
