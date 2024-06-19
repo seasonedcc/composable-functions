@@ -52,7 +52,7 @@ type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> = (
  * A composable async function with schema validation at runtime.
  */
 type ComposableWithSchema<O> = Composable<
-  (input?: unknown, environment?: unknown) => O
+  (input?: unknown, context?: unknown) => O
 >
 
 /**
@@ -159,7 +159,7 @@ type SerializableResult<T> =
   | { success: false; errors: SerializableError[] }
 
 /**
- * The object used to validate either input or environment when creating composables with a schema.
+ * The object used to validate either input or context when creating composables with a schema.
  */
 type ParserSchema<T extends unknown = unknown> = {
   safeParse: (a: unknown) =>
@@ -211,16 +211,16 @@ type BranchReturn<
   : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>
 
 /**
- * Ensure that schemas are compatible with composable input and environment otherwise return a FailToCompose.
+ * Ensure that schemas are compatible with composable input and context otherwise return a FailToCompose.
  */
 type ApplySchemaReturn<
   ParsedInput,
-  ParsedEnvironment,
+  ParsedContext,
   Fn extends Composable,
 > = ParsedInput extends Parameters<Fn>[0]
-  ? ParsedEnvironment extends Parameters<Fn>[1]
+  ? ParsedContext extends Parameters<Fn>[1]
     ? ComposableWithSchema<UnpackData<Fn>>
-  : FailToCompose<ParsedEnvironment, Parameters<Fn>[1]>
+  : FailToCompose<ParsedContext, Parameters<Fn>[1]>
   : FailToCompose<ParsedInput, Parameters<Fn>[0]>
 
 /**

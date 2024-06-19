@@ -4,19 +4,19 @@ import type { Internal } from '../../internal/types.ts'
 import type { Composable } from '../../types.ts'
 import type * as Subject from '../types.ts'
 
-namespace CommonEnvironment {
+namespace CommonContext {
   type testNoEmptyArgumentList = Expect<
-    Equal<Subject.CommonEnvironment<[]>, [unknown?]>
+    Equal<Subject.CommonContext<[]>, [unknown?]>
   >
   type testOneComposable = Expect<
-    Equal<Subject.CommonEnvironment<[Composable]>, [any]>
+    Equal<Subject.CommonContext<[Composable]>, [any]>
   >
   type testForTwoOptionalUnknowns = Expect<
     Equal<
-      Subject.CommonEnvironment<
+      Subject.CommonContext<
         [
-          Composable<(x: string, env?: unknown) => number>,
-          Composable<(y: number, env?: unknown) => boolean>,
+          Composable<(x: string, ctx?: unknown) => number>,
+          Composable<(y: number, ctx?: unknown) => boolean>,
         ]
       >,
       [unknown?]
@@ -24,10 +24,10 @@ namespace CommonEnvironment {
   >
   type testForTwoComposables = Expect<
     Equal<
-      Subject.CommonEnvironment<
+      Subject.CommonContext<
         [
-          Composable<(x: string, env: number) => number>,
-          Composable<(y: number, env: 1) => boolean>,
+          Composable<(x: string, ctx: number) => number>,
+          Composable<(y: number, ctx: 1) => boolean>,
         ]
       >,
       [1]
@@ -35,7 +35,7 @@ namespace CommonEnvironment {
   >
   type testForComponentsWithArityGreaterThan1WithOptionalParameters = Expect<
     Equal<
-      Subject.CommonEnvironment<
+      Subject.CommonContext<
         [
           Composable<(x: number) => number>,
           Composable<(y: number, optionalArgument?: string) => boolean>,
@@ -47,7 +47,7 @@ namespace CommonEnvironment {
 
   type testForComponentsWithArityGreaterThan1 = Expect<
     Equal<
-      Subject.CommonEnvironment<
+      Subject.CommonContext<
         [
           Composable<(x: string) => number>,
           Composable<(y: number, willBeUndefined: string) => boolean>,
@@ -59,10 +59,10 @@ namespace CommonEnvironment {
 
   type testFailureToCompose = Expect<
     Equal<
-      Subject.CommonEnvironment<
+      Subject.CommonContext<
         [
-          Composable<(x: string, env: number) => void>,
-          Composable<(y: number, env: string) => boolean>,
+          Composable<(x: string, ctx: number) => void>,
+          Composable<(y: number, ctx: string) => boolean>,
         ]
       >,
       Internal.FailToCompose<[number], [string]>
@@ -71,7 +71,7 @@ namespace CommonEnvironment {
 
   type testMultipleOptionalUnknown = Expect<
     Equal<
-      Subject.CommonEnvironment<
+      Subject.CommonContext<
         [
           Composable<(a?: unknown, e?: unknown) => void>,
           Composable<(a?: unknown, e?: unknown) => void>,
@@ -137,7 +137,7 @@ namespace PipeReturn {
 }
 
 namespace BranchReturn {
-  type testCommonEnv = Expect<
+  type testCommonCtx = Expect<
     Equal<
       Subject.BranchReturn<
         Composable<(a: number, e?: unknown) => number>,
@@ -157,32 +157,38 @@ namespace BranchReturn {
   >
 }
 
-namespace GetEnv {
+namespace GetContext {
   type test1 = Expect<
     Equal<
-      Subject.GetEnv<Parameters<Composable<(a: number, e: number) => void>>>,
+      Subject.GetContext<
+        Parameters<Composable<(a: number, e: number) => void>>
+      >,
       [number]
     >
   >
   type test2 = Expect<
-    Equal<Subject.GetEnv<Parameters<Composable<() => void>>>, [unknown?]>
+    Equal<Subject.GetContext<Parameters<Composable<() => void>>>, [unknown?]>
   >
   type test3 = Expect<
     Equal<
-      Subject.GetEnv<Parameters<Composable<(a: number, e?: number) => void>>>,
+      Subject.GetContext<
+        Parameters<Composable<(a: number, e?: number) => void>>
+      >,
       [number?]
     >
   >
   type test4 = Expect<
     Equal<
-      Subject.GetEnv<Parameters<Composable<(a?: number, e?: number) => void>>>,
+      Subject.GetContext<
+        Parameters<Composable<(a?: number, e?: number) => void>>
+      >,
       [number?]
     >
   >
-  type test5 = Expect<Equal<Subject.GetEnv<Parameters<Composable>>, [any]>>
+  type test5 = Expect<Equal<Subject.GetContext<Parameters<Composable>>, [any]>>
   type test6 = Expect<
     Equal<
-      Subject.GetEnv<
+      Subject.GetContext<
         Parameters<Composable<(a?: unknown, b?: unknown) => void>>
       >,
       [unknown?]
@@ -190,34 +196,37 @@ namespace GetEnv {
   >
 }
 
-namespace SetEnv {
+namespace SetContext {
   type test1 = Expect<
     Equal<
-      Subject.SetEnv<Parameters<Composable<(a: number) => void>>>,
+      Subject.SetContext<Parameters<Composable<(a: number) => void>>>,
       [number, unknown?]
     >
   >
   type test2 = Expect<
     Equal<
-      Subject.SetEnv<Parameters<Composable<(a: number) => void>>, [number]>,
+      Subject.SetContext<Parameters<Composable<(a: number) => void>>, [number]>,
       [number, number]
     >
   >
   type test3 = Expect<
     Equal<
-      Subject.SetEnv<Parameters<Composable<(a?: number) => void>>, [number]>,
+      Subject.SetContext<
+        Parameters<Composable<(a?: number) => void>>,
+        [number]
+      >,
       [number | undefined, number]
     >
   >
   type test4 = Expect<
     Equal<
-      Subject.SetEnv<Parameters<Composable<() => void>>>,
+      Subject.SetContext<Parameters<Composable<() => void>>>,
       [unknown?, unknown?]
     >
   >
   type test5 = Expect<
     Equal<
-      Subject.SetEnv<
+      Subject.SetContext<
         Parameters<Composable<(a?: unknown, e?: unknown) => void>>,
         [unknown?]
       >,

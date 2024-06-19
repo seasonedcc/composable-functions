@@ -32,9 +32,11 @@ export type {
 } from './input-resolvers.ts'
 export { serialize, serializeError } from './serializer.ts'
 export {
+  ContextError,
   EnvironmentError,
   ErrorList,
   InputError,
+  isContextError,
   isEnvironmentError,
   isInputError,
 } from './errors.ts'
@@ -61,5 +63,9 @@ export type {
   UnpackData,
 } from './types.ts'
 
-// FUNCTIONS WITH ENVIRONMENT
-export * as environment from './environment/index.ts'
+// FUNCTIONS WITH CONTEXT
+/**
+ * @deprecated use `import { context }` instead
+ */
+export * as environment from './context/index.ts'
+export * as context from './context/index.ts'

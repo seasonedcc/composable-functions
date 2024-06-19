@@ -6,20 +6,23 @@ import type {
   UnpackData,
 } from '../types.ts'
 
-type CommonEnvironment<
+type CommonContext<
   Fns extends Composable[],
-  Env extends [unknown?] = [unknown?],
-> = Fns extends [] ? Env
+  Ctx extends [unknown?] = [unknown?],
+> = Fns extends [] ? Ctx
   : Fns extends [
     Composable<(...args: infer CParameters) => any>,
     ...infer RestFns,
   ]
-    ? GetEnv<CParameters> extends [unknown?]
-      ? Internal.IsIncompatible<Env, GetEnv<CParameters>> extends true
-        ? Internal.FailToCompose<Env, GetEnv<CParameters>>
-      : CommonEnvironment<
+    ? GetContext<CParameters> extends [unknown?]
+      ? Internal.IsIncompatible<Ctx, GetContext<CParameters>> extends true
+        ? Internal.FailToCompose<Ctx, GetContext<CParameters>>
+      : CommonContext<
         Extract<RestFns, Composable[]>,
-        Extract<Internal.CommonSubType<Env, GetEnv<CParameters>>, [unknown?]>
+        Extract<
+          Internal.CommonSubType<Ctx, GetContext<CParameters>>,
+          [unknown?]
+        >
       >
     : never
   : never
@@ -27,20 +30,20 @@ type CommonEnvironment<
 type SequenceReturn<Fns extends Composable[]> = BaseSequenceReturn<
   CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
-  ? CommonEnvironment<Fns> extends Internal.IncompatibleArguments
-    ? CommonEnvironment<Fns>
+  ? CommonContext<Fns> extends Internal.IncompatibleArguments
+    ? CommonContext<Fns>
   : Composable<
-    (...args: SetEnv<Parameters<Fns[0]>, CommonEnvironment<Fns>>) => CReturn
+    (...args: SetContext<Parameters<Fns[0]>, CommonContext<Fns>>) => CReturn
   >
   : CanComposeInSequence<Fns>
 
 type PipeReturn<Fns extends Composable[]> = BasePipeReturn<
   CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
-  ? CommonEnvironment<Fns> extends Internal.IncompatibleArguments
-    ? CommonEnvironment<Fns>
+  ? CommonContext<Fns> extends Internal.IncompatibleArguments
+    ? CommonContext<Fns>
   : Composable<
-    (...args: SetEnv<Parameters<Fns[0]>, CommonEnvironment<Fns>>) => CReturn
+    (...args: SetContext<Parameters<Fns[0]>, CommonContext<Fns>>) => CReturn
   >
   : CanComposeInSequence<Fns>
 
@@ -71,31 +74,31 @@ type CanComposeInSequence<
   : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
-type GetEnv<Params extends unknown[]> = Params extends [
+type GetContext<Params extends unknown[]> = Params extends [
   unknown,
-  infer envMandatory,
-] ? [envMandatory]
-  : Params extends Partial<[unknown, infer envOptional]> ? [envOptional?]
+  infer ctxMandatory,
+] ? [ctxMandatory]
+  : Params extends Partial<[unknown, infer ctxOptional]> ? [ctxOptional?]
   : Params extends [...Partial<[unknown]>] ? [unknown?]
   : Params extends [...infer AnyArg] ? [AnyArg[1]]
   : never
 
-type SetEnv<
+type SetContext<
   Params extends unknown[],
-  Env extends [unknown?] = [unknown?],
-> = Params extends [infer firstMandatory, ...any] ? [firstMandatory, ...Env]
+  Ctx extends [unknown?] = [unknown?],
+> = Params extends [infer firstMandatory, ...any] ? [firstMandatory, ...Ctx]
   : Params extends [...Partial<[infer firstOptional, ...any]>]
-    ? [firstOptional?, ...Env]
+    ? [firstOptional?, ...Ctx]
   : never
 
-type BranchEnvironment<
+type BranchContext<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
 > = Awaited<ReturnType<Resolver>> extends Composable<any>
-  ? CommonEnvironment<[SourceComposable, Awaited<ReturnType<Resolver>>]>
-  : GetEnv<Parameters<SourceComposable>>
+  ? CommonContext<[SourceComposable, Awaited<ReturnType<Resolver>>]>
+  : GetContext<Parameters<SourceComposable>>
 
 type BranchReturn<
   SourceComposable extends Composable,
@@ -110,13 +113,13 @@ type BranchReturn<
     [SourceComposable, Awaited<ReturnType<Resolver>>]
   > extends [Composable, ...any] ? Composable<
       (
-        ...args: SetEnv<
+        ...args: SetContext<
           Parameters<
             CanComposeInSequence<
               [SourceComposable, Awaited<ReturnType<Resolver>>]
             >[0]
           >,
-          BranchEnvironment<SourceComposable, Resolver>
+          BranchContext<SourceComposable, Resolver>
         >
       ) => null extends Awaited<ReturnType<Resolver>> ?
           | UnpackData<SourceComposable>
@@ -128,9 +131,9 @@ type BranchReturn<
 
 export type {
   BranchReturn,
-  CommonEnvironment,
-  GetEnv,
+  CommonContext,
+  GetContext,
   PipeReturn,
   SequenceReturn,
-  SetEnv,
+  SetContext,
 }
