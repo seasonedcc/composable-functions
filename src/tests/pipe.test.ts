@@ -1,7 +1,7 @@
-import { assertEquals, describe, it } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
 import { composable, pipe, success } from '../index.ts'
-import { Internal } from '../internal/types.ts'
+import type { Internal } from '../internal/types.ts'
+import { assertEquals, describe, it } from './prelude.ts'
 
 const toString = composable((a: unknown) => `${a}`)
 const add = composable((a: number, b: number) => a + b)
@@ -61,10 +61,7 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<
-        typeof fn,
-        Internal.FailToCompose<undefined, number>
-      >
+      Equal<typeof fn, Internal.FailToCompose<undefined, number>>
     >
   })
 
@@ -73,9 +70,7 @@ describe('pipe', () => {
     // @ts-expect-error alwaysThrow won't type-check the composition since its return type is never and toString expects an unknown parameter
     const res = await fn(1, 2)
 
-    type _FN = Expect<
-      Equal<typeof fn, Internal.FailToCompose<never, unknown>>
-    >
+    type _FN = Expect<Equal<typeof fn, Internal.FailToCompose<never, unknown>>>
     type _R = Expect<Equal<typeof res, Result<string>>>
 
     assertEquals(res.success, false)

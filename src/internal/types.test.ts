@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
 import { assertEquals, describe, it } from '../tests/prelude.ts'
-import { Internal } from './types.ts'
+import type { Internal } from './types.ts'
 
 namespace UnionToTuple {
   type WithStringUnion = Expect<

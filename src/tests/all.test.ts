@@ -1,14 +1,13 @@
-import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
   all,
-  Composable,
   composable,
-  ComposableWithSchema,
   failure,
   InputError,
   success,
   withSchema,
 } from '../index.ts'
+import type { Composable, ComposableWithSchema } from '../types.ts'
+import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 
 const voidFn = composable(() => {})
 const toString = withSchema(z.unknown(), z.any())(String)
@@ -37,12 +36,7 @@ describe('all', () => {
     const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<[number, string]>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<[number, string]>>>
 
     assertEquals(
       await c({ id: 1 }),
@@ -69,12 +63,7 @@ describe('all', () => {
     const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<[string, string]>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<[string, string]>>>
 
     assertEquals(
       await c({ id: 1 }),

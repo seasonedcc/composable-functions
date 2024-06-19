@@ -1,5 +1,5 @@
-import { Internal } from '../internal/types.ts'
-import {
+import type { Internal } from '../internal/types.ts'
+import type {
   Composable,
   PipeReturn as BasePipeReturn,
   SequenceReturn as BaseSequenceReturn,

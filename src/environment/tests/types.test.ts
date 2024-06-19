@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-namespace
 
-import { Internal } from '../../internal/types.ts'
-import { Composable } from '../../types.ts'
-import * as Subject from '../types.ts'
+import type { Internal } from '../../internal/types.ts'
+import type { Composable } from '../../types.ts'
+import type * as Subject from '../types.ts'
 
 namespace CommonEnvironment {
   type testNoEmptyArgumentList = Expect<

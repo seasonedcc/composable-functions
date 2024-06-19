@@ -9,7 +9,7 @@ import {
   withSchema,
 } from '../../index.ts'
 import type { Composable, ComposableWithSchema } from '../../index.ts'
-import { Internal } from '../../internal/types.ts'
+import type { Internal } from '../../internal/types.ts'
 
 describe('pipe', () => {
   it('should compose functions from left-to-right', async () => {
@@ -19,12 +19,7 @@ describe('pipe', () => {
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = environment.pipe(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
   })
@@ -42,12 +37,7 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = environment.pipe(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c(undefined, { env: 1 }), success(4))
   })
@@ -66,12 +56,7 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = environment.pipe(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
       await c(undefined, {}),
@@ -94,12 +79,7 @@ describe('pipe', () => {
     )(({ inp }, { env }) => inp + env)
 
     const c = environment.pipe(a, b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
       await c({ inp: 'some invalid input' }, { env: 1 }),
@@ -136,12 +116,7 @@ describe('pipe', () => {
     )
 
     const d = environment.pipe(a, b, c)
-    type _R = Expect<
-      Equal<
-        typeof d,
-        ComposableWithSchema<boolean>
-      >
-    >
+    type _R = Expect<Equal<typeof d, ComposableWithSchema<boolean>>>
 
     assertEquals(await d({ aNumber: 1 }), success(false))
   })
@@ -157,10 +132,7 @@ describe('pipe', () => {
     const res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<
-        typeof fn,
-        Internal.FailToCompose<undefined, boolean>
-      >
+      Equal<typeof fn, Internal.FailToCompose<undefined, boolean>>
     >
   })
 
@@ -174,9 +146,7 @@ describe('pipe', () => {
     // @ts-expect-error composition will fail
     const res = await fn(1, 2)
 
-    type _FN = Expect<
-      Equal<typeof fn, Internal.FailToCompose<number, string>>
-    >
+    type _FN = Expect<Equal<typeof fn, Internal.FailToCompose<number, string>>>
   })
 
   it('compose using environment when piped functions requires a second parameter', async () => {

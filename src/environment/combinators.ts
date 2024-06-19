@@ -1,7 +1,7 @@
 import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
-import { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
+import type { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
 
 function applyEnvironmentToList<
   Fns extends Array<(input: unknown, environment: unknown) => unknown>,

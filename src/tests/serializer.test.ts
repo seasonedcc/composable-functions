@@ -6,9 +6,9 @@ import {
   serializeError,
   success,
 } from '../index.ts'
-import { SerializableError } from '../types.ts'
+import type { SerializableError } from '../types.ts'
 import { serialize } from '../index.ts'
-import { SerializableResult } from '../types.ts'
+import type { SerializableResult } from '../types.ts'
 
 describe('serializeError', () => {
   it('serializes an error into a payload friendly format', () => {

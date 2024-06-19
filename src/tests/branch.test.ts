@@ -1,14 +1,13 @@
-import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
+import { branch } from '../combinators.ts'
 import {
   composable,
   failure,
   InputError,
   success,
-  UnpackData,
   withSchema,
 } from '../index.ts'
-import { Composable, ComposableWithSchema } from '../types.ts'
-import { branch } from '../combinators.ts'
+import type { Composable, ComposableWithSchema, UnpackData } from '../types.ts'
+import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 
 describe('branch', () => {
   it('should pipe a composable with arbitrary types', async () => {
@@ -71,12 +70,7 @@ describe('branch', () => {
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
     const c = branch(a, () => b)
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
       await c({ id: '1' }),
@@ -108,12 +102,7 @@ describe('branch', () => {
       // deno-lint-ignore no-unreachable
       return b
     })
-    type _R = Expect<
-      Equal<
-        typeof c,
-        ComposableWithSchema<number>
-      >
-    >
+    type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     const {
       errors: [err],
