@@ -24,9 +24,9 @@
   - [inputFromSearch](#inputfromsearch)
 - [Error Constructors and Handlers](#error-constructors-and-handlers)
   - [ErrorList](#errorlist)
-  - [EnvironmentError](#environmenterror)
+  - [ContextError](#contexterror)
   - [InputError](#inputerror)
-  - [isEnvironmentError](#isenvironmenterror)
+  - [isContextError](#iscontexterror)
   - [isInputError](#isinputerror)
 - [Type-safe runtime utilities](#type-safe-runtime-utilities)
   - [mergeObjects](#mergeobjects)
@@ -36,10 +36,10 @@
   - [Result](#result)
   - [Success](#success-1)
   - [UnpackData](#unpackdata)
-- [Combinators with Environment](#combinators-with-environment)
-  - [environment.branch](#environmentbranch)
-  - [environment.pipe](#environmentpipe)
-  - [environment.sequence](#environmentsequence)
+- [Combinators with Context](#combinators-with-context)
+  - [context.branch](#contextbranch)
+  - [context.pipe](#contextpipe)
+  - [context.sequence](#contextsequence)
 - [Serialization](#serialization)
   - [serialize](#serialize)
   - [serializeError](#serializeerror)
@@ -48,7 +48,7 @@
 # Constructors
 
 ## applySchema
-It takes a composable and schemas for the input and environment, and returns the same composable with the schemas applied. So the types will be asserted at runtime.
+It takes a composable and schemas for the input and context, and returns the same composable with the schemas applied. So the types will be asserted at runtime.
 
 It is useful when dealing with external data, such as API requests, where you want to ensure the data is in the correct shape before processing it.
 
@@ -68,7 +68,7 @@ const safeFunction = applySchema(
 )(fn)
 
 type Test = typeof safeFunction
-//   ^? Composable<(input?: unknown, env?: unknown) => { message: string }>
+//   ^? Composable<(input?: unknown, ctx?: unknown) => { message: string }>
 ```
 
 ## composable
@@ -151,7 +151,7 @@ expect(result).toEqual({
 ```
 
 ## withSchema
-It creates a composable with unknown input and environment types, and applies the schemas to them so the arguments are assured at runtime.
+It creates a composable with unknown input and context types, and applies the schemas to them so the arguments are assured at runtime.
 
 See `applySchema` above for more information.
 
@@ -164,14 +164,14 @@ const result = await runtimeSafeAdd(1, 2)
 console.log(result.success ? result.data : result.errors)
 ```
 
-If there are input or environment errors, they will be returned in the `errors` property of the result.
+If there are input or context errors, they will be returned in the `errors` property of the result.
 ```ts
 const result = await runtimeSafeAdd('1', null)
 // {
 //   success: false,
 //   errors: [
 //     new InputError('Expected number, received string'),
-//     new EnvironmentError('Expected number, received null')
+//     new ContextError('Expected number, received null')
 //   ],
 // }
 ```
@@ -417,7 +417,7 @@ const getCurrentUser = mapParameters(
   getUser,
   (_input, user: { id: number }) => [{ id: user.id }]
 )
-//    ^? Composable<(input: unknown, env: { id: number }) => User>
+//    ^? Composable<(input: unknown, ctx: { id: number }) => User>
 ```
 
 ## pipe
@@ -635,7 +635,7 @@ An `ErrorList` is a special kind of error that carries a list of errors that can
 const fn = composable(() => {
   throw new ErrorList([
     new InputError('Custom input error', ['contact', 'id']),
-    new EnvironmentError('Custom env error', ['currentUser', 'role']),
+    new ContextError('Custom context error', ['currentUser', 'role']),
   ])
 })
 const result = await fn()
@@ -643,15 +643,15 @@ const result = await fn()
 //   success: false,
 //   errors: [
 //     new InputError('Custom input error', ['contact', 'id']),
-//     new EnvironmentError('Custom env error', ['currentUser', 'role']),
+//     new ContextError('Custom context error', ['currentUser', 'role']),
 //   ],
 // }
 ```
 
-## EnvironmentError
-An `EnvironmentError` is a special kind of error that represents an error in the environment schema.
+## ContextError
+An `ContextError` is a special kind of error that represents an error in the context schema.
 
-It has an optional second parameter that is an array of strings representing the path to the error in the environment schema.
+It has an optional second parameter that is an array of strings representing the path to the error in the context schema.
 
 ```ts
 const fn = withSchema(
@@ -665,7 +665,7 @@ const result = await fn({ id: '1' }, { user: { id: 1 } })
 /* {
   success: false,
   errors: [
-    new EnvironmentError(
+    new ContextError(
       'Expected string, received number',
       ['user', 'id'],
     ),
@@ -673,23 +673,23 @@ const result = await fn({ id: '1' }, { user: { id: 1 } })
 } */
 ```
 
-You can also use the `EnvironmentError` constructor to throw errors within the composable:
+You can also use the `ContextError` constructor to throw errors within the composable:
 
 ```ts
 const fn = composable(() => {
-  throw new EnvironmentError('Custom env error', ['currentUser', 'role'])
+  throw new ContextError('Custom context error', ['currentUser', 'role'])
 })
 ```
 
 ## InputError
-Similar to `EnvironmentError`, an `InputError` is a special kind of error that represents an error in the input schema.
+Similar to `ContextError`, an `InputError` is a special kind of error that represents an error in the input schema.
 
-## isEnvironmentError
-`isEnvironmentError` is a helper function that will check if an error is an instance of `EnvironmentError`.
+## isContextError
+`isContextError` is a helper function that will check if an error is an instance of `ContextError`.
 
 ```ts
-isEnvironmentError(new EnvironmentError('yes')) // true
-isEnvironmentError(new Error('nope')) // false
+isContextError(new ContextError('yes')) // true
+isContextError(new Error('nope')) // false
 ```
 
 ## isInputError
@@ -777,68 +777,68 @@ type Data = UnpackData<typeof fn>
 //   ^? string
 ```
 
-# Combinators with Environment
-The environment is a concept of an argument that is passed to every functions of a sequential composition. When it comes to parallel compositions, all arguments are already forwarded to every function.
+# Combinators with Context
+The context is a concept of an argument that is passed to every functions of a sequential composition. When it comes to parallel compositions, all arguments are already forwarded to every function.
 
-However in sequential compositions, we need a set of special combinators that will forward the environment - the second parameter - to every function in the composition.
+However in sequential compositions, we need a set of special combinators that will forward the context - the second parameter - to every function in the composition.
 
-Use the sequential combinators from the namespace `environment` to get this behavior.
+Use the sequential combinators from the namespace `context` to get this behavior.
 
-For a deeper explanation check the [`environment` docs](./environments.md).
+For a deeper explanation check the [`context` docs](./context.md).
 
-## environment.branch
-It is the same as `branch` but it will forward the environment to the next composable.
+## context.branch
+It is the same as `branch` but it will forward the context to the next composable.
 
 ```ts
-import { environment } from 'composable-functions'
+import { context } from 'composable-functions'
 
 const getIdOrEmail = composable((data: { id?: number, email?: string }) => {
   return data.id ?? data.email
 })
-const findUserById = composable((id: number, env: { user: User }) => {
-  if (!env.user.admin) {
+const findUserById = composable((id: number, ctx: { user: User }) => {
+  if (!ctx.user.admin) {
     throw new Error('Unauthorized')
   }
   return db.users.find({ id })
 })
-const findUserByEmail = composable((email: string, env: { user: User }) => {
-  if (!env.user.admin) {
+const findUserByEmail = composable((email: string, ctx: { user: User }) => {
+  if (!ctx.user.admin) {
     throw new Error('Unauthorized')
   }
   return db.users.find
 })
-const findUserByIdOrEmail = environment.branch(
+const findUserByIdOrEmail = context.branch(
   getIdOrEmail,
   (data) => (typeof data === "number" ? findUserById : findUserByEmail),
 )
 const result = await findUserByIdOrEmail({ id: 1 }, { user: { admin: true } })
 ```
-## environment.pipe
-Similar to `pipe` but it will forward the environment to the next composable.
+## context.pipe
+Similar to `pipe` but it will forward the context to the next composable.
 
 ```ts
-import { environment } from 'composable-functions'
+import { context } from 'composable-functions'
 
-const a = composable((aNumber: number, env: { user: User }) => String(aNumber))
-const b = composable((aString: string, env: { user: User }) => aString == '1')
-const c = composable((aBoolean: boolean, env: { user: User }) => aBoolean && env.user.admin)
+const a = composable((aNumber: number, ctx: { user: User }) => String(aNumber))
+const b = composable((aString: string, ctx: { user: User }) => aString == '1')
+const c = composable((aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin)
 
-const d = environment.pipe(a, b, c)
+const d = context.pipe(a, b, c)
 
 const result = await d(1, { user: { admin: true } })
 ```
 
-## environment.sequence
-Similar to `sequence` but it will forward the environment to the next composable.
+## context.sequence
+Similar to `sequence` but it will forward the context to the next composable.
 
 ```ts
-import { environment } from 'composable-functions'
+import { context } from 'composable-functions'
 
-const a = composable((aNumber: number, env: { user: User }) => String(aNumber))
-const b = composable((aString: string, env: { user: User }) => aString === '1')
-const c = composable((aBoolean: boolean, env: { user: User }) => aBoolean && env.user.admin)
+const a = composable((aNumber: number, ctx: { user: User }) => String(aNumber))
+const b = composable((aString: string, ctx: { user: User }) => aString === '1')
+const c = composable((aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin)
 
-const d = environment.sequence(a, b, c)
+const d = context.sequence(a, b, c)
 
 const result = await d(1, { user: { admin: true } })
 ```
