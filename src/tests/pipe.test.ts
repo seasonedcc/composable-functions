@@ -58,7 +58,7 @@ describe('pipe', () => {
   it('fails to compose when piped functions requires a second parameter', async () => {
     const fn = pipe(add, add)
     // @ts-expect-error composition will fail
-    const res = await fn(1, 2)
+    const _res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<typeof fn, Internal.FailToCompose<undefined, number>>

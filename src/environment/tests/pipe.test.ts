@@ -125,11 +125,11 @@ describe('pipe', () => {
     const add = composable((a: number, env: number) => a + env)
     const fn = environment.pipe(
       add,
-      composable((x: number, env: number, makeItFail: boolean) => x),
+      composable((x: number, _env: number, _makeItFail: boolean) => x),
     )
 
     // @ts-expect-error composition will fail
-    const res = await fn(1, 2)
+    const _res = await fn(1, 2)
 
     type _FN = Expect<
       Equal<typeof fn, Internal.FailToCompose<undefined, boolean>>
@@ -144,7 +144,7 @@ describe('pipe', () => {
     )
 
     // @ts-expect-error composition will fail
-    const res = await fn(1, 2)
+    const _res = await fn(1, 2)
 
     type _FN = Expect<Equal<typeof fn, Internal.FailToCompose<number, string>>>
   })
