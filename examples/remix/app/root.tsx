@@ -17,7 +17,7 @@ import {
 
 import styles from './tailwind.css?url'
 
-import { actionResponse, envFromCookie, loaderResponseOrThrow } from '~/lib'
+import { actionResponse, ctxFromCookie, loaderResponseOrThrow } from '~/lib'
 import { agreeToGPD, cookie, getGPDInfo } from '~/business/gpd'
 import { inputFromForm } from 'composable-functions'
 
@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const result = await getGPDInfo(null, await envFromCookie(request, cookie))
+  const result = await getGPDInfo(null, await ctxFromCookie(request, cookie))
   return loaderResponseOrThrow(result)
 }
 

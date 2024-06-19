@@ -26,7 +26,7 @@ const strictReadCookie = composable(
 )
 const safeReadCookie = catchFailure(strictReadCookie, () => ({}))
 
-const envFromCookie = fromSuccess(safeReadCookie)
+const ctxFromCookie = fromSuccess(safeReadCookie)
 
 const actionResponse = <X>(
   result: Result<X>,
@@ -47,4 +47,4 @@ const loaderResponseOrThrow = <T extends Result<unknown>>(
   return json(result.data, { status: 200, ...opts }) as never
 }
 
-export { envFromCookie, actionResponse, loaderResponseOrThrow }
+export { ctxFromCookie, actionResponse, loaderResponseOrThrow }

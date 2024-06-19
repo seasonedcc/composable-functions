@@ -8,7 +8,7 @@ const cookie = createCookie('gpd', {
 
 const getGPDInfo = withSchema(
   z.any(),
-  // The "environment" knows there can be cookie information in the Request
+  // The "context" knows there can be cookie information in the Request
   z.object({ agreed: z.boolean().optional() }),
 )(async (_input, { agreed }) => {
   return { agreed }
