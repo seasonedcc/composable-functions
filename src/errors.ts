@@ -36,7 +36,7 @@ class EnvironmentError extends Error {
 
   constructor(message: string, path: string[] = []) {
     super(message)
-    this.name = 'ContextError'
+    this.name = 'EnvironmentError'
     this.path = path
   }
 }
