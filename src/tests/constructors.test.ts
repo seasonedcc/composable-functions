@@ -13,12 +13,14 @@ import type {
   Success,
 } from '../index.ts'
 import {
+  always,
   composable,
   ContextError,
   ErrorList,
   failure,
   fromSuccess,
   InputError,
+  pipe,
   success,
   withSchema,
 } from '../index.ts'
@@ -429,5 +431,48 @@ describe('applySchema', () => {
 
     const result = await handler('1')
     assertEquals(result, success(2))
+  })
+})
+
+describe('always', () => {
+  it('returns a success with data', async () => {
+    const willSucceed = always('any data')
+
+    type _FN = Expect<
+      Equal<typeof willSucceed extends Composable ? true : false, true>
+    >
+    const result = await willSucceed()
+
+    assertEquals(result.data, 'any data')
+  })
+
+  it('gives an easy way to feed constant data to a pipe', async () => {
+    const incrementOne = pipe(
+      always(1),
+      composable((aNumber: number) => aNumber + 1),
+    )
+
+    type _FN = Expect<
+      Equal<typeof incrementOne, Composable<(...args: any[]) => number>>
+    >
+    const result = await incrementOne()
+
+    assertEquals(result, { success: true, data: 2, errors: [] })
+  })
+
+  it('allows composition with any sort of input', async () => {
+    const maySucceed = pipe(
+      always({ willBeDiscarded: true }),
+      always('any data'),
+    )
+
+    // the pipe introduces the possibility of failure
+    // our typing is not yet smart enough to detect that all Results are success
+    type _FN = Expect<
+      Equal<typeof maySucceed, Composable<(...args: any[]) => 'any data'>>
+    >
+    const result = await maySucceed()
+
+    assertEquals(result, { success: true, data: 'any data', errors: [] })
   })
 })

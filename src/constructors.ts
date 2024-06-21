@@ -17,6 +17,13 @@ function success<const T>(data: T): Success<T> {
 }
 
 /**
+ * It receives any data (T) and returns a constant Composable that always succeeds
+ */
+function always<const T>(data: T): (...args: any[]) => Promise<Success<T>> {
+  return () => Promise.resolve(success(data))
+}
+
+/**
  * It receives a list of errors and returns a Failure object.
  */
 function failure(errors: Error[]): Failure {
@@ -166,4 +173,12 @@ const alwaysUnknownSchema: ParserSchema<unknown> = {
   safeParse: (data: unknown) => ({ success: true, data }),
 }
 
-export { applySchema, composable, failure, fromSuccess, success, withSchema }
+export {
+  always,
+  applySchema,
+  composable,
+  failure,
+  fromSuccess,
+  success,
+  withSchema,
+}
