@@ -20,16 +20,7 @@ const faultyAdd = composable((a: number, b: number) => {
 
 describe('collect', () => {
   it('collects the results of an object of Composables into a result with same format', async () => {
-    const fn: Composable<
-      (
-        args_0: number,
-        args_1: number,
-      ) => {
-        add: number
-        string: string
-        void: void
-      }
-    > = collect({ add: add, string: toString, void: voidFn })
+    const fn = collect({ add: add, string: toString, void: voidFn })
 
     const res = await fn(1, 2)
 
@@ -53,6 +44,18 @@ describe('collect', () => {
     >
 
     assertEquals(res, success({ add: 3, string: '1', void: undefined }))
+  })
+
+  it('accepts plain functions', async () => {
+    const fn = collect({
+      add: add,
+      string: (a: string, b: string) => `${a}${b}`,
+    })
+    // TODO:
+    // @ts-expect-error: string function has incompatible parameters
+    const res = await fn(1, 2)
+
+    assertEquals(res, success({ add: 3, string: '12' }))
   })
 
   it('uses the same arguments for every function', async () => {

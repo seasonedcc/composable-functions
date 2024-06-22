@@ -3,6 +3,7 @@ export {
   composable,
   failure,
   fromSuccess,
+  ensureComposable,
   success,
   withSchema,
 } from './constructors.ts'

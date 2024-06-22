@@ -6,6 +6,7 @@ import type {
   ComposableWithSchema,
   Failure,
   ParserSchema,
+  Result,
   Success,
 } from './types.ts'
 
@@ -30,6 +31,55 @@ function toError(maybeError: unknown): Error {
   } catch (_e) {
     return new Error(String(maybeError))
   }
+}
+
+function isSuccess(result: unknown): result is Success {
+  if (!result) return false
+  return (
+    typeof result === 'object' &&
+    'success' in result &&
+    result.success === true &&
+    'data' in result &&
+    'errors' in result &&
+    Array.isArray(result.errors) &&
+    result.errors.length === 0
+  )
+}
+function isFailure(result: unknown): result is Failure {
+  if (!result) return false
+  return (
+    typeof result === 'object' &&
+    'success' in result &&
+    result.success === false &&
+    !('data' in result) &&
+    'errors' in result &&
+    Array.isArray(result.errors) &&
+    result.errors.length > 0
+  )
+}
+
+type EnsureComposable<T extends (...args: any[]) => any> = T extends Composable<
+  infer F
+>
+  ? Composable<F>
+  : Composable<T>
+
+function ensureComposable<T extends Function>(
+  fn: T,
+): EnsureComposable<Extract<T, (...args: any[]) => any>> {
+  return (async (...args) => {
+    try {
+      const result = await fn(...(args as any[]))
+      if (isSuccess(result)) return result
+      if (isFailure(result)) throw new ErrorList(result.errors)
+      return success(result)
+    } catch (e) {
+      if (e instanceof ErrorList) {
+        return failure(e.list)
+      }
+      return failure([toError(e)])
+    }
+  }) as EnsureComposable<Extract<T, (...args: any[]) => any>>
 }
 
 /**
@@ -70,15 +120,15 @@ function composable<T extends Function>(
  * ```
  */
 function fromSuccess<O, P extends any[]>(
-  fn: Composable<(...a: P) => O>,
+  fn: EnsureComposable<(...a: P) => O>,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ): (...args: P) => Promise<O> {
-  return async (...args: P) => {
+  return (async (...args: P) => {
     const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }
+  }) as (...args: P) => Promise<O>
 }
 
 /**
@@ -149,12 +199,17 @@ function applySchema<ParsedInput, ParsedContext>(
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
       if (!result.success || !ctxResult.success) {
-        const inputErrors = result.success ? [] : result.error.issues.map(
-          (error) => new InputError(error.message, error.path as string[]),
-        )
-        const ctxErrors = ctxResult.success ? [] : ctxResult.error.issues.map(
-          (error) => new ContextError(error.message, error.path as string[]),
-        )
+        const inputErrors = result.success
+          ? []
+          : result.error.issues.map(
+              (error) => new InputError(error.message, error.path as string[]),
+            )
+        const ctxErrors = ctxResult.success
+          ? []
+          : ctxResult.error.issues.map(
+              (error) =>
+                new ContextError(error.message, error.path as string[]),
+            )
         return Promise.resolve(failure([...inputErrors, ...ctxErrors]))
       }
       return fn(result.data as Input, ctxResult.data as Context)
@@ -166,4 +221,13 @@ const alwaysUnknownSchema: ParserSchema<unknown> = {
   safeParse: (data: unknown) => ({ success: true, data }),
 }
 
-export { applySchema, composable, failure, fromSuccess, success, withSchema }
+export type { EnsureComposable }
+export {
+  applySchema,
+  ensureComposable,
+  composable,
+  failure,
+  fromSuccess,
+  success,
+  withSchema,
+}

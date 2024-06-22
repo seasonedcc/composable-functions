@@ -13,7 +13,16 @@ import type {
   Success,
   UnpackData,
 } from './types.ts'
-import { composable, failure, fromSuccess, success } from './constructors.ts'
+import {
+  composable,
+  ensureComposable,
+  failure,
+  fromSuccess,
+  success,
+} from './constructors.ts'
+import { EnsureComposable } from './constructors.ts'
+
+type AnyFn = (...args: any[]) => any
 
 /**
  * Merges a list of objects into a single object.
@@ -62,7 +71,7 @@ function mergeObjects<T extends unknown[] = unknown[]>(
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends [Composable, ...Composable[]]>(
+function pipe<Fns extends [AnyFn, ...AnyFn[]]>(
   ...fns: Fns
 ): PipeReturn<CanComposeInSequence<Fns>> {
   const last = <T extends any[]>(arr: T): Last<T> => arr.at(-1)
@@ -91,7 +100,7 @@ function pipe<Fns extends [Composable, ...Composable[]]>(
  * //     ^? Composable<(id: number) => [string, number, boolean]>
  * ```
  */
-function all<Fns extends Composable[]>(
+function all<Fns extends AnyFn[]>(
   ...fns: Fns
 ): Composable<
   (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
@@ -99,7 +108,9 @@ function all<Fns extends Composable[]>(
   }
 > {
   return (async (...args) => {
-    const results = await Promise.all(fns.map((fn) => fn(...args)))
+    const results = await Promise.all(
+      fns.map((fn) => ensureComposable(fn)(...args)),
+    )
 
     if (results.some(({ success }) => success === false)) {
       return failure(results.map(({ errors }) => errors).flat())
@@ -127,7 +138,7 @@ function all<Fns extends Composable[]>(
  * //       ^? Composable<() => { a: string, b: number }>
  * ```
  */
-function collect<Fns extends Record<string, Composable>>(
+function collect<Fns extends Record<string, AnyFn>>(
   fns: Fns,
 ): Composable<
   (
@@ -139,7 +150,7 @@ function collect<Fns extends Record<string, Composable>>(
   }
 > {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
-    map(cf, (result) => ({ [key]: result }))
+    map(cf, (result) => ({ [key]: result })),
   )
   return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
     (
@@ -167,18 +178,18 @@ function collect<Fns extends Record<string, Composable>>(
  * ```
  */
 
-function sequence<Fns extends [Composable, ...Composable[]]>(
+function sequence<Fns extends [AnyFn, ...AnyFn[]]>(
   ...fns: Fns
 ): SequenceReturn<CanComposeInSequence<Fns>> {
   return (async (...args) => {
     const [head, ...tail] = fns
 
-    const res = await head(...args)
+    const res = await ensureComposable(head)(...args)
     if (!res.success) return failure(res.errors)
 
     const result = [res.data]
     for await (const fn of tail) {
-      const res = await fn(result.at(-1))
+      const res = await ensureComposable(fn)(result.at(-1))
       if (!res.success) return failure(res.errors)
       result.push(res.data)
     }
@@ -202,7 +213,7 @@ function sequence<Fns extends [Composable, ...Composable[]]>(
  * // result === '1 -> 2'
  * ```
  */
-function map<Fn extends Composable, O>(
+function map<Fn extends AnyFn, O>(
   fn: Fn,
   mapper: (
     res: UnpackData<Fn>,
@@ -210,7 +221,7 @@ function map<Fn extends Composable, O>(
   ) => O | Promise<O>,
 ): Composable<(...args: Parameters<Fn>) => O> {
   return async (...args) => {
-    const result = await fn(...args)
+    const result = await ensureComposable(fn)(...args)
     if (!result.success) return failure(result.errors)
 
     return composable(mapper)(result.data, ...args)
@@ -232,7 +243,7 @@ function map<Fn extends Composable, O>(
  * ```
  */
 function mapParameters<
-  Fn extends Composable,
+  Fn extends AnyFn,
   NewParameters extends unknown[],
   const MapperOutput extends Parameters<Fn>,
 >(
@@ -242,7 +253,7 @@ function mapParameters<
   return async (...args) => {
     const output = await composable(mapper)(...args)
     if (!output.success) return failure(output.errors)
-    return fn(...output.data)
+    return ensureComposable(fn)(...output.data)
   }
 }
 
@@ -261,7 +272,7 @@ function mapParameters<
  * ```
  */
 function catchFailure<
-  Fn extends Composable,
+  Fn extends AnyFn,
   C extends (err: Error[], ...originalInput: Parameters<Fn>) => any,
 >(
   fn: Fn,
@@ -270,12 +281,13 @@ function catchFailure<
   (
     ...args: Parameters<Fn>
   ) => Awaited<ReturnType<C>> extends never[]
-    ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
-    : Awaited<ReturnType<C>> | UnpackData<Fn>
+    ? UnpackData<Fn> extends any[]
+      ? UnpackData<Fn>
+      : Awaited<ReturnType<C>> | UnpackData<Fn>
     : Awaited<ReturnType<C>> | UnpackData<Fn>
 > {
   return async (...args: Parameters<Fn>) => {
-    const res = await fn(...args)
+    const res = await ensureComposable(fn)(...args)
     if (res.success) return success(res.data)
     return composable(catcher)(res.errors, ...(args as never))
   }
@@ -296,11 +308,11 @@ function catchFailure<
  * ```
  */
 function mapErrors<P extends unknown[], Output>(
-  fn: Composable<(...args: P) => Output>,
+  fn: EnsureComposable<(...args: P) => Output>,
   mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ): Composable<(...args: P) => Output> {
   return async (...args) => {
-    const res = await fn(...args)
+    const res = await ensureComposable(fn)(...args)
     if (res.success) return success(res.data)
     const mapped = await composable(mapper)(res.errors)
     if (mapped.success) {
@@ -335,15 +347,16 @@ function trace(
     ...originalInput: unknown[]
   ) => Promise<void> | void,
 ): <P extends unknown[], Output>(
-  fn: Composable<(...args: P) => Output>,
+  fn: EnsureComposable<(...args: P) => Output>,
 ) => Composable<(...args: P) => Output> {
-  return (fn) => async (...args) => {
-    const originalResult = await fn(...args)
-    const traceResult = await composable(traceFn)(originalResult, ...args)
-    if (traceResult.success) return originalResult
+  return (fn) =>
+    async (...args) => {
+      const originalResult = await ensureComposable(fn)(...args)
+      const traceResult = await composable(traceFn)(originalResult, ...args)
+      if (traceResult.success) return originalResult
 
-    return failure(traceResult.errors)
-  }
+      return failure(traceResult.errors)
+    }
 }
 
 /**
@@ -368,24 +381,24 @@ function trace(
  * ```
  */
 function branch<
-  SourceComposable extends Composable,
+  SourceComposable extends AnyFn,
   Resolver extends (
     o: UnpackData<SourceComposable>,
-  ) => Composable | null | Promise<Composable | null>,
+  ) => AnyFn | null | Promise<AnyFn | null>,
 >(
   cf: SourceComposable,
   resolver: Resolver,
-): BranchReturn<SourceComposable, Resolver> {
+): BranchReturn<EnsureComposable<SourceComposable>, Resolver> {
   return (async (...args: Parameters<SourceComposable>) => {
     const result = await cf(...args)
     if (!result.success) return result
 
     return composable(async () => {
-      const nextComposable = await resolver(result.data)
+      const nextComposable = await ensureComposable(resolver)(result.data)
       if (typeof nextComposable !== 'function') return result.data
-      return fromSuccess(nextComposable)(result.data)
+      return fromSuccess(ensureComposable(nextComposable))(result.data)
     })()
-  }) as BranchReturn<SourceComposable, Resolver>
+  }) as BranchReturn<EnsureComposable<SourceComposable>, Resolver>
 }
 
 export {

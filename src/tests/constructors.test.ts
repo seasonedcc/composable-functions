@@ -21,6 +21,7 @@ import {
   InputError,
   success,
   withSchema,
+  ensureComposable,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
 import type { Internal } from '../internal/types.ts'
@@ -30,6 +31,61 @@ const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b
+})
+
+describe('ensureComposable', () => {
+  it('keeps a composable as a composable when succeeding', async () => {
+    const fn = ensureComposable(add)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(3))
+  })
+
+  it('keeps a composable as a composable when failing', async () => {
+    const fn = ensureComposable(faultyAdd)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors[0].message, 'a is 1')
+  })
+
+  it('turns a normal function into a composable when succeeding', async () => {
+    const fn = ensureComposable((a: number, b: number) => a + b)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(3))
+  })
+
+  it('turns a normal function into a composable when failing', async () => {
+    const fn = ensureComposable((a: number, b: number) => {
+      if (a === 1) throw new Error('a is 1')
+      return a + b
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors[0].message, 'a is 1')
+  })
 })
 
 describe('composable', () => {
