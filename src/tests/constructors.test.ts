@@ -401,10 +401,7 @@ describe('applySchema', () => {
       composable(({ x }: { x: 'a' }) => x),
     )
     type _R = Expect<
-      Equal<
-        typeof handler,
-        Internal.FailToCompose<{ x: string }, { x: 'a' } | undefined>
-      >
+      Equal<typeof handler, Internal.FailToCompose<{ x: string }, { x: 'a' }>>
     >
     // @ts-expect-error: { x: 'a' } is not assignable to { x: string }
     const _result = await handler({ x: 'a' })
@@ -414,9 +411,7 @@ describe('applySchema', () => {
     const inputSchema = z.string()
 
     const handler = applySchema(inputSchema)(composable((x: 'a') => x))
-    type _R = Expect<
-      Equal<typeof handler, Internal.FailToCompose<string, 'a' | undefined>>
-    >
+    type _R = Expect<Equal<typeof handler, Internal.FailToCompose<string, 'a'>>>
     // @ts-expect-error: 'a' is not assignable to 'string'
     const _result = await handler('a')
   })

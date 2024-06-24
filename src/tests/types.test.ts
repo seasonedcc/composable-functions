@@ -136,6 +136,16 @@ namespace CanComposeInParallel {
       [Subject.Composable]
     >
   >
+  type _ = Parameters<
+    NonNullable<
+      Subject.CanComposeInParallel<
+        [
+          Subject.Composable<(x: string, y: 1) => void>,
+          Subject.Composable<(x: 'foo', y: number) => void>,
+        ]
+      >[0]
+    >
+  >
   type testSubtypesForTwoComposables = Expect<
     Equal<
       Subject.CanComposeInParallel<
@@ -375,7 +385,7 @@ namespace BranchReturn {
 
 namespace UnpackData {
   type testExtractsDataFromPromisedResult = Expect<
-    Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>
+    Equal<Subject.UnpackData<Subject.Composable<() => string>>, string>
   >
 
   const result = withSchema()(() => ({ name: 'foo' } as const))

@@ -253,6 +253,7 @@ namespace Prettify {
 
 namespace ApplyArgumentsToFns {
   type WithEmpty = Expect<Equal<Internal.ApplyArgumentsToFns<[], [string]>, []>>
+  type _ = Internal.ApplyArgumentsToFns<[() => 1], [string]>
   type WithSingle = Expect<
     Equal<
       Internal.ApplyArgumentsToFns<[Composable<() => 1>], [string]>,

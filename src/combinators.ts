@@ -99,7 +99,7 @@ function all<Fns extends Composable[]>(
   }
 > {
   return (async (...args) => {
-    const results = await Promise.all(fns.map((fn) => fn(...args)))
+    const results = await Promise.all(fns.map((fn) => fn(...(args))))
 
     if (results.some(({ success }) => success === false)) {
       return failure(results.map(({ errors }) => errors).flat())
@@ -139,9 +139,10 @@ function collect<Fns extends Record<string, Composable>>(
   }
 > {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
-    map(cf, (result) => ({ [key]: result }))
+    map(cf, (result) => ({ [key]: result })),
   )
-  return map(all(...(fnsWithKey as any)), mergeObjects) as Composable<
+  const allFns = all(...(fnsWithKey as any)) as Composable
+  return map(allFns, mergeObjects) as Composable<
     (
       ...args: Parameters<
         Exclude<CanComposeInParallel<RecordToTuple<Fns>>[0], undefined>
@@ -209,12 +210,12 @@ function map<Fn extends Composable, O>(
     ...originalInput: Parameters<Fn>
   ) => O | Promise<O>,
 ): Composable<(...args: Parameters<Fn>) => O> {
-  return async (...args) => {
+  return (async (...args) => {
     const result = await fn(...args)
     if (!result.success) return failure(result.errors)
 
     return composable(mapper)(result.data, ...args)
-  }
+  }) as Composable<(...args: Parameters<Fn>) => O>
 }
 
 /**
@@ -239,11 +240,11 @@ function mapParameters<
   fn: Fn,
   mapper: (...args: NewParameters) => Promise<MapperOutput> | MapperOutput,
 ): MapParametersReturn<Fn, NewParameters, MapperOutput> {
-  return async (...args) => {
+  return (async (...args) => {
     const output = await composable(mapper)(...args)
     if (!output.success) return failure(output.errors)
     return fn(...output.data)
-  }
+  }) as MapParametersReturn<Fn, NewParameters, MapperOutput>
 }
 
 /**
@@ -270,15 +271,24 @@ function catchFailure<
   (
     ...args: Parameters<Fn>
   ) => Awaited<ReturnType<C>> extends never[]
-    ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
-    : Awaited<ReturnType<C>> | UnpackData<Fn>
+    ? UnpackData<Fn> extends any[]
+      ? UnpackData<Fn>
+      : Awaited<ReturnType<C>> | UnpackData<Fn>
     : Awaited<ReturnType<C>> | UnpackData<Fn>
 > {
-  return async (...args: Parameters<Fn>) => {
+  return (async (...args: Parameters<Fn>) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
     return composable(catcher)(res.errors, ...(args as never))
-  }
+  }) as Composable<
+    (
+      ...args: Parameters<Fn>
+    ) => Awaited<ReturnType<C>> extends never[]
+      ? UnpackData<Fn> extends any[]
+        ? UnpackData<Fn>
+        : Awaited<ReturnType<C>> | UnpackData<Fn>
+      : Awaited<ReturnType<C>> | UnpackData<Fn>
+  >
 }
 
 /**
@@ -299,7 +309,7 @@ function mapErrors<P extends unknown[], Output>(
   fn: Composable<(...args: P) => Output>,
   mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ): Composable<(...args: P) => Output> {
-  return async (...args) => {
+  return (async (...args) => {
     const res = await fn(...args)
     if (res.success) return success(res.data)
     const mapped = await composable(mapper)(res.errors)
@@ -308,7 +318,7 @@ function mapErrors<P extends unknown[], Output>(
     } else {
       return failure(mapped.errors)
     }
-  }
+  }) as Composable<(...args: P) => Output>
 }
 
 /**
@@ -337,13 +347,16 @@ function trace(
 ): <P extends unknown[], Output>(
   fn: Composable<(...args: P) => Output>,
 ) => Composable<(...args: P) => Output> {
-  return (fn) => async (...args) => {
-    const originalResult = await fn(...args)
-    const traceResult = await composable(traceFn)(originalResult, ...args)
-    if (traceResult.success) return originalResult
+  return ((fn) =>
+    async (...args) => {
+      const originalResult = await fn(...args)
+      const traceResult = await composable(traceFn)(originalResult, ...args)
+      if (traceResult.success) return originalResult
 
-    return failure(traceResult.errors)
-  }
+      return failure(traceResult.errors)
+    }) as <P extends unknown[], Output>(
+    fn: Composable<(...args: P) => Output>,
+  ) => Composable<(...args: P) => Output>
 }
 
 /**

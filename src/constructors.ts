@@ -40,7 +40,7 @@ function toError(maybeError: unknown): Error {
 function composable<T extends Function>(
   fn: T,
 ): Composable<T extends (...args: any[]) => any ? T : never> {
-  return async (...args) => {
+  const callable = async (...args: any[]) => {
     try {
       // deno-lint-ignore no-explicit-any
       const result = await fn(...(args as any[]))
@@ -52,6 +52,8 @@ function composable<T extends Function>(
       return failure([toError(e)])
     }
   }
+  callable.kind = 'composable' as const
+  return callable as Composable<T extends (...args: any[]) => any ? T : never>
 }
 
 /**
@@ -140,7 +142,7 @@ function applySchema<ParsedInput, ParsedContext>(
   contextSchema?: ParserSchema<ParsedContext>,
 ) {
   return <R, Input, Context>(
-    fn: Composable<(input?: Input, context?: Context) => R>,
+    fn: Composable<(input: Input, context: Context) => R>,
   ): ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn> => {
     return ((input?: unknown, context?: unknown) => {
       const ctxResult = (contextSchema ?? alwaysUnknownSchema).safeParse(
@@ -149,12 +151,17 @@ function applySchema<ParsedInput, ParsedContext>(
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
       if (!result.success || !ctxResult.success) {
-        const inputErrors = result.success ? [] : result.error.issues.map(
-          (error) => new InputError(error.message, error.path as string[]),
-        )
-        const ctxErrors = ctxResult.success ? [] : ctxResult.error.issues.map(
-          (error) => new ContextError(error.message, error.path as string[]),
-        )
+        const inputErrors = result.success
+          ? []
+          : result.error.issues.map(
+              (error) => new InputError(error.message, error.path as string[]),
+            )
+        const ctxErrors = ctxResult.success
+          ? []
+          : ctxResult.error.issues.map(
+              (error) =>
+                new ContextError(error.message, error.path as string[]),
+            )
         return Promise.resolve(failure([...inputErrors, ...ctxErrors]))
       }
       return fn(result.data as Input, ctxResult.data as Context)
