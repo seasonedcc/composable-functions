@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
+import { Composable } from '../index.ts'
 import { assertEquals, describe, it } from '../tests/prelude.ts'
 import type { Internal } from './types.ts'
 
@@ -253,12 +254,18 @@ namespace Prettify {
 namespace ApplyArgumentsToFns {
   type WithEmpty = Expect<Equal<Internal.ApplyArgumentsToFns<[], [string]>, []>>
   type WithSingle = Expect<
-    Equal<Internal.ApplyArgumentsToFns<[() => 1], [string]>, [(a: string) => 1]>
+    Equal<
+      Internal.ApplyArgumentsToFns<[Composable<() => 1>], [string]>,
+      [Composable<(a: string) => 1>]
+    >
   >
   type WithMultiple = Expect<
     Equal<
-      Internal.ApplyArgumentsToFns<[() => 1, (a: 1) => 'a'], [string]>,
-      [(a: string) => 1, (a: string) => 'a']
+      Internal.ApplyArgumentsToFns<
+        [Composable<() => 1>, Composable<(a: 1) => 'a'>],
+        [string]
+      >,
+      [Composable<(a: string) => 1>, Composable<(a: string) => 'a'>]
     >
   >
 }

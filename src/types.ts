@@ -96,8 +96,8 @@ type PipeReturn<Fns extends unknown[]> = Fns extends [
  * Determines whether a sequence of Composables can be composed sequentially.
  */
 type CanComposeInSequence<
-  Fns extends any[],
-  Arguments extends any[] = [],
+  Fns extends unknown[],
+  Arguments extends unknown[] = [],
 > = Fns extends [Composable<(...a: infer PA) => infer OA>, ...infer restA]
   ? restA extends [
     Composable<
@@ -122,9 +122,9 @@ type CanComposeInSequence<
  * Determines whether a sequence of Composables can be composed in parallel.
  */
 type CanComposeInParallel<
-  Fns extends any[],
-  OriginalFns extends any[] = Fns,
-> = Fns extends [Composable<(...a: infer PA) => any>, ...infer restA]
+  Fns extends unknown[],
+  OriginalFns extends unknown[] = Fns,
+> = Fns extends [Composable<(...a: infer PA) => unknown>, ...infer restA]
   ? restA extends [Composable<(...b: infer PB) => infer OB>, ...infer restB]
     ? Internal.SubtypesTuple<PA, PB> extends [...infer MergedP]
       ? CanComposeInParallel<
@@ -228,7 +228,7 @@ type ApplySchemaReturn<
  */
 type MapParametersReturn<
   Fn extends Composable,
-  NewParams extends any[],
+  NewParams extends unknown[],
   O extends Parameters<Fn>,
 > = Composable<
   (
