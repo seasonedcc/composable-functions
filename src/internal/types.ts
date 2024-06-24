@@ -1,5 +1,7 @@
 // deno-lint-ignore-file no-namespace
 
+import { Composable } from '../types.ts'
+
 namespace Internal {
   export type IncompatibleArguments = {
     'Incompatible arguments ': true
@@ -29,11 +31,15 @@ namespace Internal {
       : false
 
   export type ApplyArgumentsToFns<
-    Fns extends any[],
-    Args extends any[],
-    Output extends any[] = [],
-  > = Fns extends [(...a: any[]) => infer OA, ...infer restA]
-    ? ApplyArgumentsToFns<restA, Args, [...Output, (...a: Args) => OA]>
+    Fns extends unknown[],
+    Args extends unknown[],
+    Output extends Composable[] = [],
+  > = Fns extends [Composable<(...a: any[]) => infer OA>, ...infer restA]
+    ? ApplyArgumentsToFns<
+      restA,
+      Args,
+      [...Output, Composable<(...a: Args) => OA>]
+    >
     : Output
 
   // Thanks to https://github.com/tjjfvi
