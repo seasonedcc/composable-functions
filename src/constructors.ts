@@ -39,11 +39,11 @@ function toError(maybeError: unknown): Error {
  */
 function composable<T extends Function>(
   fn: T,
-): T extends { kind: 'composable' } ? T
-  : Composable<T extends (...args: any[]) => any ? T : never> {
+): Composable<T extends (...args: any[]) => any ? T : never> {
   if ('kind' in fn && fn.kind === 'composable') {
-    return fn as unknown as T extends { kind: 'composable' } ? T
-      : Composable<T extends (...args: any[]) => any ? T : never>
+    return fn as unknown as Composable<
+      T extends (...args: any[]) => any ? T : never
+    >
   }
   const callable = async (...args: any[]) => {
     try {
@@ -58,8 +58,7 @@ function composable<T extends Function>(
     }
   }
   callable.kind = 'composable' as const
-  return callable as T extends { kind: 'composable' } ? T
-    : Composable<T extends (...args: any[]) => any ? T : never>
+  return callable as Composable<T extends (...args: any[]) => any ? T : never>
 }
 
 /**
@@ -81,12 +80,12 @@ function fromSuccess<O, P extends any[]>(
   fn: Composable<(...a: P) => O>,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ): (...args: P) => Promise<O> {
-  return async (...args: P) => {
+  return (async (...args: P) => {
     const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }
+  }) as (...args: P) => Promise<O>
 }
 
 /**

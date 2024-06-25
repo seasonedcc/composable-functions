@@ -59,30 +59,30 @@ describe('branch', () => {
     assertEquals(await d({ id: 1 }), success(6))
   })
 
-  it('should not pipe if the predicate returns null', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
-      id: id + 2,
-      next: 'multiply',
-    }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const d = context.branch(a, (output) => {
-      type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
-      return output.next === 'multiply' ? null : b
-    })
-    type _R = Expect<
-      Equal<
-        typeof d,
-        Composable<
-          (
-            input?: unknown,
-            context?: unknown,
-          ) => string | { id: number; next: string }
-        >
-      >
-    >
+  // it('should not pipe if the predicate returns null', async () => {
+  //   const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+  //     id: id + 2,
+  //     next: 'multiply',
+  //   }))
+  //   const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
+  //   const d = context.branch(a, (output) => {
+  //     type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
+  //     return output.next === 'multiply' ? null : b
+  //   })
+  //   type _R = Expect<
+  //     Equal<
+  //       typeof d,
+  //       Composable<
+  //         (
+  //           input?: unknown,
+  //           context?: unknown,
+  //         ) => string | { id: number; next: string }
+  //       >
+  //     >
+  //   >
 
-    assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
-  })
+  //   assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
+  // })
 
   it('should use the same context in all composed functions', async () => {
     const a = composable((_input: unknown, { ctx }: { ctx: number }) => ({

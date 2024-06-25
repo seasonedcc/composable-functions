@@ -45,10 +45,12 @@ type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
  * A composable async function that catches failures.
  */
 type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> =
-  & ((...args: Parameters<T>) => Promise<Result<Awaited<ReturnType<T>>>>)
-  & {
-    kind: 'composable'
-  }
+  T extends { kind: 'composable' } ? T
+    :
+      & ((...args: Parameters<T>) => Promise<Result<Awaited<ReturnType<T>>>>)
+      & {
+        kind: 'composable'
+      }
 
 /**
  * A composable async function with schema validation at runtime.
@@ -140,7 +142,7 @@ type CanComposeInParallel<
 /**
  * Transforms a record of Composables into a tuple of their return types.
  */
-type RecordToTuple<T extends Record<string, Composable>> =
+type RecordToTuple<T extends Record<string, (...args: any) => any>> =
   Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
 
 /**
