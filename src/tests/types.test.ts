@@ -136,16 +136,6 @@ namespace CanComposeInParallel {
       [Subject.Composable]
     >
   >
-  type _ = Parameters<
-    NonNullable<
-      Subject.CanComposeInParallel<
-        [
-          Subject.Composable<(x: string, y: 1) => void>,
-          Subject.Composable<(x: 'foo', y: number) => void>,
-        ]
-      >[0]
-    >
-  >
   type testSubtypesForTwoComposables = Expect<
     Equal<
       Subject.CanComposeInParallel<

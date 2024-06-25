@@ -39,7 +39,12 @@ function toError(maybeError: unknown): Error {
  */
 function composable<T extends Function>(
   fn: T,
-): Composable<T extends (...args: any[]) => any ? T : never> {
+): T extends { kind: 'composable' } ? T
+  : Composable<T extends (...args: any[]) => any ? T : never> {
+  if ('kind' in fn && fn.kind === 'composable') {
+    return fn as unknown as T extends { kind: 'composable' } ? T
+      : Composable<T extends (...args: any[]) => any ? T : never>
+  }
   const callable = async (...args: any[]) => {
     try {
       // deno-lint-ignore no-explicit-any
@@ -53,7 +58,8 @@ function composable<T extends Function>(
     }
   }
   callable.kind = 'composable' as const
-  return callable as Composable<T extends (...args: any[]) => any ? T : never>
+  return callable as T extends { kind: 'composable' } ? T
+    : Composable<T extends (...args: any[]) => any ? T : never>
 }
 
 /**
@@ -151,17 +157,12 @@ function applySchema<ParsedInput, ParsedContext>(
       const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
 
       if (!result.success || !ctxResult.success) {
-        const inputErrors = result.success
-          ? []
-          : result.error.issues.map(
-              (error) => new InputError(error.message, error.path as string[]),
-            )
-        const ctxErrors = ctxResult.success
-          ? []
-          : ctxResult.error.issues.map(
-              (error) =>
-                new ContextError(error.message, error.path as string[]),
-            )
+        const inputErrors = result.success ? [] : result.error.issues.map(
+          (error) => new InputError(error.message, error.path as string[]),
+        )
+        const ctxErrors = ctxResult.success ? [] : ctxResult.error.issues.map(
+          (error) => new ContextError(error.message, error.path as string[]),
+        )
         return Promise.resolve(failure([...inputErrors, ...ctxErrors]))
       }
       return fn(result.data as Input, ctxResult.data as Context)

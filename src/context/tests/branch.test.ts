@@ -1,6 +1,6 @@
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
-  // all,
+  all,
   composable,
   context,
   failure,
@@ -53,9 +53,7 @@ describe('branch', () => {
     }))
     const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
-    const d = context.branch(a, (output) =>
-      output.next === 'multiply' ? c : b,
-    )
+    const d = context.branch(a, (output) => output.next === 'multiply' ? c : b)
     type _R = Expect<Equal<typeof d, ComposableWithSchema<number | string>>>
 
     assertEquals(await d({ id: 1 }), success(6))
@@ -149,36 +147,33 @@ describe('branch', () => {
     assertIsError(err, Error, 'condition function failed')
   })
 
-  // TODO: Fix BranchReturn
-  // it('should not break composition with other combinators', async () => {
-  //   const a = withSchema(
-  //     z.object({ id: z.number() }),
-  //     // TODO: Why don't we have z.any or z.unknown as default for ctx?
-  //     z.unknown(),
-  //   )(({ id }) => ({
-  //     id: id + 2,
-  //   }))
-  //   const b = composable(({ id }: { id: number }) => id - 1)
-  //   const c = composable((n: number, ctx: number) => ctx + n * 2)
-  //   const d = all(
-  //     context.pipe(
-  //       context.branch(a, () => b),
-  //       c,
-  //     ),
-  //     a,
-  //   )
-  //   type _R = Expect<
-  //     Equal<
-  //       typeof d,
-  //       Composable<
-  //         (input: Partial<unknown>, context: number) => [number, { id: number }]
-  //       >
-  //     >
-  //   >
+  it('should not break composition with other combinators', async () => {
+    const a = withSchema(
+      z.object({ id: z.number() }),
+    )(({ id }) => ({
+      id: id + 2,
+    }))
+    const b = composable(({ id }: { id: number }) => id - 1)
+    const c = composable((n: number, ctx: number) => ctx + n * 2)
+    const d = all(
+      context.pipe(
+        context.branch(a, () => b),
+        c,
+      ),
+      a,
+    )
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<
+          (input: Partial<unknown>, context: number) => [number, { id: number }]
+        >
+      >
+    >
 
-  //   assertEquals(
-  //     await d({ id: 1 }, 3),
-  //     success<[number, { id: number }]>([7, { id: 3 }]),
-  //   )
-  // })
+    assertEquals(
+      await d({ id: 1 }, 3),
+      success<[number, { id: number }]>([7, { id: 3 }]),
+    )
+  })
 })

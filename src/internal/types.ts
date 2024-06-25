@@ -10,8 +10,7 @@ namespace Internal {
   export type IsIncompatible<A, B> = Internal.CommonSubType<
     A,
     B
-  > extends IncompatibleArguments
-    ? true
+  > extends IncompatibleArguments ? true
     : false
 
   export type FailToCompose<A, B> = IncompatibleArguments & {
@@ -19,9 +18,11 @@ namespace Internal {
     argument2: B
   }
 
-  export type Prettify<T> = {
-    [K in keyof T]: T[K]
-  } & {}
+  export type Prettify<T> =
+    & {
+      [K in keyof T]: T[K]
+    }
+    & {}
 
   export type IsNever<A> =
     // prettier-ignore
@@ -46,12 +47,10 @@ namespace Internal {
   // This will not preserve union order but we don't care since this is for Composable paralel application
   export type UnionToTuple<T> = (
     (T extends any ? (t: T) => T : never) extends infer U
-      ? (U extends any ? (u: U) => any : never) extends (v: infer V) => any
-        ? V
-        : never
+      ? (U extends any ? (u: U) => any : never) extends (v: infer V) => any ? V
       : never
-  ) extends (_: any) => infer W
-    ? [...UnionToTuple<Exclude<T, W>>, W]
+      : never
+  ) extends (_: any) => infer W ? [...UnionToTuple<Exclude<T, W>>, W]
     : []
 
   export type Keys<R extends Record<string, any>> = UnionToTuple<keyof R>
@@ -64,8 +63,8 @@ namespace Internal {
     ? Head extends string
       ? rest extends string[]
         ? RecordValuesFromKeysTuple<R, rest, [...ValuesTuple, R[Head]]>
-        : never
-      : ValuesTuple
+      : never
+    : ValuesTuple
     : ValuesTuple
 
   export type Zip<
@@ -78,90 +77,81 @@ namespace Internal {
         ? restK extends string[]
           ? restV extends unknown[]
             ? Prettify<Zip<restK, restV, O & { [key in HeadK]: HeadV }>>
-            : V // in this case V has the CanComposeInParallel failure type
-          : never
+          : V // in this case V has the CanComposeInParallel failure type
         : never
       : never
+    : never
     : O
 
   export type EveryElementTakes<T extends any[], U> = T extends [
     infer HEAD,
     ...infer TAIL,
-  ]
-    ? U extends HEAD
-      ? EveryElementTakes<TAIL, U>
-      : FailToCompose<undefined, HEAD>
+  ] ? U extends HEAD ? EveryElementTakes<TAIL, U>
+    : FailToCompose<undefined, HEAD>
     : true
 
   export type SubtypesTuple<
     TupleA extends unknown[],
     TupleB extends unknown[],
     Output extends unknown[] = [],
-  > = TupleA extends []
-    ? [...Output, ...TupleB]
-    : TupleB extends []
-    ? [...Output, ...TupleA]
+  > = TupleA extends [] ? [...Output, ...TupleB]
+    : TupleB extends [] ? [...Output, ...TupleA]
     : TupleA extends [infer headA, ...infer restA]
-    ? TupleB extends [infer headB, ...infer restB]
-      ? IsIncompatible<headA, headB> extends true
-        ? FailToCompose<headA, headB>
+      ? TupleB extends [infer headB, ...infer restB]
+        ? IsIncompatible<headA, headB> extends true
+          ? FailToCompose<headA, headB>
         : SubtypesTuple<restA, restB, [...Output, CommonSubType<headA, headB>]>
-      : // TupleB is partial
-      // We should handle partial case before recursion
-      TupleB extends Partial<[infer headPartial, ...infer restPartial]>
-      ? IsIncompatible<headA, headPartial> extends true
-        ? FailToCompose<headA, headPartial>
+        // TupleB is partial
+        // We should handle partial case before recursion
+      : TupleB extends Partial<[infer headPartial, ...infer restPartial]>
+        ? IsIncompatible<headA, headPartial> extends true
+          ? FailToCompose<headA, headPartial>
         : SubtypesTuple<
-            restA,
-            Partial<restPartial>,
-            [...Output, CommonSubType<headA, Partial<headPartial>>]
-          >
+          restA,
+          Partial<restPartial>,
+          [...Output, CommonSubType<headA, Partial<headPartial>>]
+        >
       : never
     : TupleB extends [infer headBNoA, ...infer restB]
-    ? // TupleA is partial
-      // We should handle partial case before recursion
-      TupleA extends Partial<[infer headPartial, ...infer restPartial]>
-      ? IsIncompatible<headBNoA, headPartial> extends true
-        ? FailToCompose<headBNoA, headPartial>
+    // TupleA is partial
+    // We should handle partial case before recursion
+      ? TupleA extends Partial<[infer headPartial, ...infer restPartial]>
+        ? IsIncompatible<headBNoA, headPartial> extends true
+          ? FailToCompose<headBNoA, headPartial>
         : SubtypesTuple<
-            restB,
-            Partial<restPartial>,
-            [...Output, CommonSubType<headBNoA, Partial<headPartial>>]
-          >
+          restB,
+          Partial<restPartial>,
+          [...Output, CommonSubType<headBNoA, Partial<headPartial>>]
+        >
       : never
-    : /*
+    /*
      * We should continue the recursion checking optional parameters
      * We can pattern match optionals using Partial
      * We should start handling partials as soon one side of mandatory ends
      * Remove ...TupleA, ...TupleB bellow
      */
-    TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
-    ? TupleB extends Partial<[infer headBPartial, ...infer restBPartial]>
-      ? IsIncompatible<headAPartial, headBPartial> extends true
-        ? SubtypesTuple<
+    : TupleA extends Partial<[infer headAPartial, ...infer restAPartial]>
+      ? TupleB extends Partial<[infer headBPartial, ...infer restBPartial]>
+        ? IsIncompatible<headAPartial, headBPartial> extends true
+          ? SubtypesTuple<
             Partial<restAPartial>,
             Partial<restBPartial>,
             [...Output, ...Partial<[undefined]>]
           >
         : SubtypesTuple<
-            Partial<restAPartial>,
-            Partial<restBPartial>,
-            [...Output, ...Partial<[CommonSubType<headAPartial, headBPartial>]>]
-          >
+          Partial<restAPartial>,
+          Partial<restBPartial>,
+          [...Output, ...Partial<[CommonSubType<headAPartial, headBPartial>]>]
+        >
       : never
     : never
 
-  export type CommonSubType<A, B> = [A] extends [B]
-    ? A
-    : [B] extends [A]
-    ? B
-    : A extends { 'Incompatible arguments ': true }
-    ? A
-    : B extends { 'Incompatible arguments ': true }
-    ? B
+  export type CommonSubType<A, B> = [A] extends [B] ? A
+    : [B] extends [A] ? B
+    : A extends { 'Incompatible arguments ': true } ? A
+    : B extends { 'Incompatible arguments ': true } ? B
     : A extends Record<PropertyKey, unknown>
-    ? B extends Record<PropertyKey, unknown>
-      ? Prettify<A & B>
+      ? B extends Record<PropertyKey, unknown> ? Prettify<A & B>
       : FailToCompose<A, B>
     : FailToCompose<A, B>
 }

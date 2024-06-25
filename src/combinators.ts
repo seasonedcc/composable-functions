@@ -99,7 +99,7 @@ function all<Fns extends Composable[]>(
   }
 > {
   return (async (...args) => {
-    const results = await Promise.all(fns.map((fn) => fn(...(args))))
+    const results = await Promise.all(fns.map((fn) => fn(...args)))
 
     if (results.some(({ success }) => success === false)) {
       return failure(results.map(({ errors }) => errors).flat())
@@ -139,7 +139,7 @@ function collect<Fns extends Record<string, Composable>>(
   }
 > {
   const fnsWithKey = Object.entries(fns).map(([key, cf]) =>
-    map(cf, (result) => ({ [key]: result })),
+    map(cf, (result) => ({ [key]: result }))
   )
   const allFns = all(...(fnsWithKey as any)) as Composable
   return map(allFns, mergeObjects) as Composable<
@@ -271,9 +271,8 @@ function catchFailure<
   (
     ...args: Parameters<Fn>
   ) => Awaited<ReturnType<C>> extends never[]
-    ? UnpackData<Fn> extends any[]
-      ? UnpackData<Fn>
-      : Awaited<ReturnType<C>> | UnpackData<Fn>
+    ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
+    : Awaited<ReturnType<C>> | UnpackData<Fn>
     : Awaited<ReturnType<C>> | UnpackData<Fn>
 > {
   return (async (...args: Parameters<Fn>) => {
@@ -284,9 +283,8 @@ function catchFailure<
     (
       ...args: Parameters<Fn>
     ) => Awaited<ReturnType<C>> extends never[]
-      ? UnpackData<Fn> extends any[]
-        ? UnpackData<Fn>
-        : Awaited<ReturnType<C>> | UnpackData<Fn>
+      ? UnpackData<Fn> extends any[] ? UnpackData<Fn>
+      : Awaited<ReturnType<C>> | UnpackData<Fn>
       : Awaited<ReturnType<C>> | UnpackData<Fn>
   >
 }
@@ -347,14 +345,13 @@ function trace(
 ): <P extends unknown[], Output>(
   fn: Composable<(...args: P) => Output>,
 ) => Composable<(...args: P) => Output> {
-  return ((fn) =>
-    async (...args) => {
-      const originalResult = await fn(...args)
-      const traceResult = await composable(traceFn)(originalResult, ...args)
-      if (traceResult.success) return originalResult
+  return ((fn) => async (...args) => {
+    const originalResult = await fn(...args)
+    const traceResult = await composable(traceFn)(originalResult, ...args)
+    if (traceResult.success) return originalResult
 
-      return failure(traceResult.errors)
-    }) as <P extends unknown[], Output>(
+    return failure(traceResult.errors)
+  }) as <P extends unknown[], Output>(
     fn: Composable<(...args: P) => Output>,
   ) => Composable<(...args: P) => Output>
 }

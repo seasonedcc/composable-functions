@@ -137,7 +137,11 @@ namespace PipeReturn {
 }
 
 namespace BranchReturn {
-  // TODO: FIx BranchReturn
+  type _ = Subject.BranchReturn<
+    Composable<(a: number, e?: unknown) => number>,
+    (a: number) => Composable<(a: number, e: number) => string>
+  >
+  // TODO: Fix this test
   // type testCommonCtx = Expect<
   //   Equal<
   //     Subject.BranchReturn<

@@ -85,6 +85,18 @@ describe('composable', () => {
     assertEquals(res.success, false)
     assertEquals(res.errors[0].message, 'a is 1')
   })
+
+  it('should accept another composable and make it a shallow composable', async () => {
+    const fn = composable(add)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(3))
+  })
 })
 
 describe('fromSuccess', () => {
@@ -372,7 +384,7 @@ describe('applySchema', () => {
       ),
     )
     type _R = Expect<
-      Equal<typeof handler, ComposableWithSchema<[number, number]>>
+      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
     >
 
     assertEquals(
