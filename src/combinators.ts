@@ -14,6 +14,7 @@ import type {
   UnpackData,
 } from './types.ts'
 import { composable, failure, fromSuccess, success } from './constructors.ts'
+import type { Internal } from './internal/types.ts'
 
 /**
  * Merges a list of objects into a single object.
@@ -66,10 +67,10 @@ function pipe<
   Fns extends [(...args: any[]) => any, ...Array<(...args: any[]) => any>],
 >(
   ...fns: Fns
-): PipeReturn<CanComposeInSequence<Fns>> {
+): PipeReturn<CanComposeInSequence<Internal.Composables<Fns>>> {
   const last = <T extends any[]>(arr: T): Last<T> => arr.at(-1)
   return map(sequence(...fns), last as never) as PipeReturn<
-    CanComposeInSequence<Fns>
+    CanComposeInSequence<Internal.Composables<Fns>>
   >
 }
 
@@ -96,11 +97,15 @@ function pipe<
 function all<Fns extends Array<(...args: any[]) => any>>(
   ...fns: Fns
 ): Composable<
-  (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
-    [k in keyof Fns]: UnpackData<Composable<Fns[k]>>
+  (
+    ...args: Parameters<
+      NonNullable<CanComposeInParallel<Internal.Composables<Fns>>[0]>
+    >
+  ) => {
+    [k in keyof Fns]: UnpackData<Internal.Composables<Fns>[k]>
   }
 > {
-  return (async (...args) => {
+  const callable = (async (...args) => {
     const results = await Promise.all(fns.map((fn) => composable(fn)(...args)))
 
     if (results.some(({ success }) => success === false)) {
@@ -109,10 +114,16 @@ function all<Fns extends Array<(...args: any[]) => any>>(
 
     return success((results as Success[]).map(({ data }) => data))
   }) as Composable<
-    (...args: Parameters<NonNullable<CanComposeInParallel<Fns>[0]>>) => {
-      [k in keyof Fns]: UnpackData<Composable<Fns[k]>>
+    (
+      ...args: Parameters<
+        NonNullable<CanComposeInParallel<Internal.Composables<Fns>>[0]>
+      >
+    ) => {
+      [k in keyof Fns]: UnpackData<Internal.Composables<Fns>[k]>
     }
   >
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -134,7 +145,10 @@ function collect<Fns extends Record<string, (...args: any[]) => any>>(
 ): Composable<
   (
     ...args: Parameters<
-      Exclude<CanComposeInParallel<RecordToTuple<Fns>>[0], undefined>
+      Exclude<
+        CanComposeInParallel<RecordToTuple<Internal.Composables<Fns>>>[0],
+        undefined
+      >
     >
   ) => {
     [key in keyof Fns]: UnpackData<Composable<Fns[key]>>
@@ -147,7 +161,10 @@ function collect<Fns extends Record<string, (...args: any[]) => any>>(
   return map(allFns, mergeObjects) as Composable<
     (
       ...args: Parameters<
-        Exclude<CanComposeInParallel<RecordToTuple<Fns>>[0], undefined>
+        Exclude<
+          CanComposeInParallel<RecordToTuple<Internal.Composables<Fns>>>[0],
+          undefined
+        >
       >
     ) => {
       [key in keyof Fns]: UnpackData<Composable<Fns[key]>>
@@ -174,8 +191,8 @@ function sequence<
   Fns extends [(...args: any[]) => any, ...Array<(...args: any[]) => any>],
 >(
   ...fns: Fns
-): SequenceReturn<CanComposeInSequence<Fns>> {
-  return (async (...args) => {
+): SequenceReturn<CanComposeInSequence<Internal.Composables<Fns>>> {
+  const callable = (async (...args) => {
     const [head, ...tail] = fns
 
     const res = await composable(head)(...args)
@@ -188,7 +205,9 @@ function sequence<
       result.push(res.data)
     }
     return success(result)
-  }) as SequenceReturn<CanComposeInSequence<Fns>>
+  }) as SequenceReturn<CanComposeInSequence<Internal.Composables<Fns>>>
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -214,12 +233,14 @@ function map<Fn extends (...args: any[]) => any, O>(
     ...originalInput: Parameters<Fn>
   ) => O | Promise<O>,
 ): Composable<(...args: Parameters<Fn>) => O> {
-  return (async (...args) => {
+  const callable = (async (...args) => {
     const result = await composable(fn)(...args)
     if (!result.success) return failure(result.errors)
 
     return composable(mapper)(result.data, ...args)
   }) as Composable<(...args: Parameters<Fn>) => O>
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -244,11 +265,13 @@ function mapParameters<
   fn: Fn,
   mapper: (...args: NewParameters) => Promise<MapperOutput> | MapperOutput,
 ): MapParametersReturn<Composable<Fn>, NewParameters, MapperOutput> {
-  return (async (...args) => {
+  const callable = (async (...args) => {
     const output = await composable(mapper)(...args)
     if (!output.success) return failure(output.errors)
     return composable(fn)(...output.data)
   }) as MapParametersReturn<Composable<Fn>, NewParameters, MapperOutput>
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -279,7 +302,7 @@ function catchFailure<
     : Awaited<ReturnType<C>> | UnpackData<Composable<Fn>>
     : Awaited<ReturnType<C>> | UnpackData<Composable<Fn>>
 > {
-  return (async (...args: Parameters<Fn>) => {
+  const callable = (async (...args: Parameters<Fn>) => {
     const res = await composable(fn)(...args)
     if (res.success) return success(res.data)
     return composable(catcher)(res.errors, ...(args as never))
@@ -291,6 +314,8 @@ function catchFailure<
       : Awaited<ReturnType<C>> | UnpackData<Composable<Fn>>
       : Awaited<ReturnType<C>> | UnpackData<Composable<Fn>>
   >
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -311,7 +336,7 @@ function mapErrors<Fn extends (...args: any[]) => any>(
   fn: Fn,
   mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ): Composable<Fn> {
-  return (async (...args) => {
+  const callable = (async (...args) => {
     const res = await composable(fn)(...args)
     if (res.success) return success(res.data)
     const mapped = await composable(mapper)(res.errors)
@@ -321,6 +346,8 @@ function mapErrors<Fn extends (...args: any[]) => any>(
       return failure(mapped.errors)
     }
   }) as Composable<Fn>
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -349,12 +376,16 @@ function trace(
 ): <Fn extends (...args: any[]) => any>(
   fn: Fn,
 ) => Composable<Fn> {
-  return ((fn) => async (...args) => {
-    const originalResult = await composable(fn)(...args)
-    const traceResult = await composable(traceFn)(originalResult, ...args)
-    if (traceResult.success) return originalResult
+  return ((fn) => {
+    const callable = async (...args: any) => {
+      const originalResult = await composable(fn)(...args)
+      const traceResult = await composable(traceFn)(originalResult, ...args)
+      if (traceResult.success) return originalResult
 
-    return failure(traceResult.errors)
+      return failure(traceResult.errors)
+    }
+    callable.kind = 'composable' as const
+    return callable
   }) as <Fn extends (...args: any[]) => any>(
     fn: Fn,
   ) => Composable<Fn>
@@ -382,16 +413,17 @@ function trace(
  * ```
  */
 function branch<
-  SourceComposable extends Composable,
+  SourceComposable extends (...args: any[]) => any,
   Resolver extends (
-    o: UnpackData<SourceComposable>,
+    o: UnpackData<Composable<SourceComposable>>,
   ) => Composable | null | Promise<Composable | null>,
 >(
   cf: SourceComposable,
+  // TODO: Make resolver accept plain functions
   resolver: Resolver,
-): BranchReturn<SourceComposable, Resolver> {
-  return (async (...args: Parameters<SourceComposable>) => {
-    const result = await cf(...args)
+): BranchReturn<Composable<SourceComposable>, Resolver> {
+  const callable = (async (...args: Parameters<SourceComposable>) => {
+    const result = await composable(cf)(...args)
     if (!result.success) return result
 
     return composable(async () => {
@@ -399,7 +431,9 @@ function branch<
       if (typeof nextComposable !== 'function') return result.data
       return fromSuccess(nextComposable)(result.data)
     })()
-  }) as BranchReturn<SourceComposable, Resolver>
+  }) as BranchReturn<Composable<SourceComposable>, Resolver>
+  ;(callable as any).kind = 'composable' as const
+  return callable
 }
 
 export {

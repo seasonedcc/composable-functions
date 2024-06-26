@@ -22,6 +22,18 @@ describe('map', () => {
     assertEquals(res, success(true))
   })
 
+  it('accepts plain functions', async () => {
+    const fn = map((a: number, b: number) => a + b, (a) => a + 1 === 4)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => boolean>>
+    >
+    type _R = Expect<Equal<typeof res, Result<boolean>>>
+
+    assertEquals(res, success(true))
+  })
+
   it('maps with an async function', async () => {
     const fn = map(add, (a) => Promise.resolve(a + 1 === 4))
     const res = await fn(1, 2)

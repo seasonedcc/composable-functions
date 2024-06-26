@@ -136,31 +136,26 @@ namespace PipeReturn {
   >
 }
 
-// namespace BranchReturn {
-//   type _ = Subject.BranchReturn<
-//     Composable<(a: number, e?: unknown) => number>,
-//     (a: number) => Composable<(a: number, e: number) => string>
-//   >
-//   // TODO: Fix this test
-//   // type testCommonCtx = Expect<
-//   //   Equal<
-//   //     Subject.BranchReturn<
-//   //       Composable<(a: number, e?: unknown) => number>,
-//   //       (a: number) => Composable<(a: number, e: number) => string>
-//   //     >,
-//   //     Composable<(a: number, e: number) => string>
-//   //   >
-//   // >
-//   // type test = Expect<
-//   //   Equal<
-//   //     Subject.BranchReturn<
-//   //       Composable<(a?: unknown, e?: unknown) => number>,
-//   //       (a: number) => null | Composable<(a?: unknown, e?: unknown) => string>
-//   //     >,
-//   //     Composable<(a?: unknown, e?: unknown) => string | number>
-//   //   >
-//   // >
-// }
+namespace BranchReturn {
+  type testCommonCtx = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Composable<(a: number, e?: unknown) => number>,
+        (a: number) => Composable<(a: number, e: number) => string>
+      >,
+      Composable<(a: number, e: number) => string>
+    >
+  >
+  type test = Expect<
+    Equal<
+      Subject.BranchReturn<
+        Composable<(a?: unknown, e?: unknown) => number>,
+        (a: number) => null | Composable<(a?: unknown, e?: unknown) => string>
+      >,
+      Composable<(a?: unknown, e?: unknown) => string | number>
+    >
+  >
+}
 
 namespace GetContext {
   type test1 = Expect<

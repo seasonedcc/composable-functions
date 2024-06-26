@@ -61,6 +61,17 @@ describe('composable', () => {
     type _FN = Expect<Equal<typeof fn, Composable<(a: any) => any>>>
   })
 
+  it('accepts another composable and avoids nesting it', async () => {
+    const a = composable(() => 'hey')
+    const fn = composable(a)
+    const res = await fn()
+
+    type _FN = Expect<Equal<typeof fn, Composable<() => 'hey'>>>
+    type _R = Expect<Equal<typeof res, Result<'hey'>>>
+
+    assertEquals(res, success('hey'))
+  })
+
   it('infers the types of async functions', async () => {
     const fn = composable(asyncAdd)
     const res = await fn(1, 2)
@@ -196,6 +207,24 @@ describe('withSchema', () => {
         await handler({ missingId: '1' }),
         failure([new InputError('Expected number, received nan', ['id'])]),
       )
+    })
+  })
+
+  it('accepts a composable', async () => {
+    const handler = withSchema()(composable(() => 'no input!'))
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
+
+    assertEquals(await handler(), success('no input!'))
+  })
+
+  it('defaults non-declared input to unknown', async () => {
+    const handler = withSchema()((args) => args)
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<unknown>>>
+
+    assertEquals(await handler('some input'), {
+      success: true,
+      data: 'some input',
+      errors: [],
     })
   })
 
@@ -405,6 +434,30 @@ describe('applySchema', () => {
 
     assertEquals(result, success('a'))
   })
+
+  // TODO: Accept plain functions and equalize with withSchema
+  // it('accepts a plain function', async () => {
+  //   const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+  //   const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
+
+  //   const handler = applySchema(
+  //     inputSchema,
+  //     ctxSchema,
+  //   )(
+  //     composable(
+  //       ({ id }: { id: number }, { uid }: { uid: number }) =>
+  //         [id, uid] as const,
+  //     ),
+  //   )
+  //   type _R = Expect<
+  //     Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
+  //   >
+
+  //   assertEquals(
+  //     await handler({ id: 1 }, { uid: 2 }),
+  //     success<[number, number]>([1, 2]),
+  //   )
+  // });
 
   it('fails to compose when there is an object schema with incompatible properties', async () => {
     const inputSchema = z.object({ x: z.string() })

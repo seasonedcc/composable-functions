@@ -160,4 +160,16 @@ describe('pipe', () => {
     >
     assertEquals(res, success(5))
   })
+
+  it('accepts plain functions', async () => {
+    const add = (a: number, ctx: number) => a + ctx
+    const fn = context.pipe(add, add)
+
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, ctx: number) => number>>
+    >
+    assertEquals(res, success(5))
+  })
 })

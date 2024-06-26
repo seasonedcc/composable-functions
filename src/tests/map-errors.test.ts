@@ -25,6 +25,22 @@ describe('mapErrors', () => {
     assertEquals(res, success(4))
   })
 
+  it('accepts plain functions', async () => {
+    const fn = mapErrors((a: number, b: number) => {
+      if (a === 1) throw new Error('a is 1')
+      return a + b
+    }, (errors) => errors.map(cleanError))
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors[0].message, 'a is 1!!!')
+  })
+
   it('maps over the error results of a Composable function', async () => {
     const fn = mapErrors(faultyAdd, (errors) => errors.map(cleanError))
     const res = await fn(1, 2)

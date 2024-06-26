@@ -26,6 +26,18 @@ describe('sequence', () => {
     assertEquals(res, success<[number, string]>([3, '3']))
   })
 
+  it('accepts plain functions', async () => {
+    const fn = sequence((a: number, b: number) => a + b, toString)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => [number, string]>>
+    >
+    type _R = Expect<Equal<typeof res, Result<[number, string]>>>
+
+    assertEquals(res, success<[number, string]>([3, '3']))
+  })
+
   it('type checks and composes async functions', async () => {
     const asyncProduceToIncrement = composable(() =>
       Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' })

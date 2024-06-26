@@ -23,6 +23,25 @@ describe('all', () => {
     assertEquals(res, success<[number, string, undefined]>([3, '1', undefined]))
   })
 
+  it('accepts plain functions', async () => {
+    const fn = all(
+      (a: number, b: number) => a + b,
+      (a: unknown) => `${a}`,
+      () => {},
+    )
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<
+        typeof fn,
+        Composable<(a: number, b: number) => [number, string, void]>
+      >
+    >
+    // type _R = Expect<Equal<typeof res, Result<[number, string, void]>>>>
+
+    assertEquals(res, success<[number, string, void]>([3, '1', undefined]))
+  })
+
   it('handles optional arguments', async () => {
     const fn = all(optionalAdd, toString, voidFn)
 
