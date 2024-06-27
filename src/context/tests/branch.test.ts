@@ -38,10 +38,7 @@ describe('branch', () => {
     const a = ({ id }: { id: number }, context: number) => ({
       id: id + 2 + context,
     })
-    // TODO: Make resolver accept plain functions
-    const b = composable(
-      ({ id }: { id: number }, context: number) => id - 1 + context,
-    )
+    const b = ({ id }: { id: number }, context: number) => id - 1 + context
 
     const c = context.branch(a, () => Promise.resolve(b))
     type _R = Expect<
@@ -102,6 +99,28 @@ describe('branch', () => {
     >
 
     assertEquals(await d({ id: 1 }), success({ id: 3, next: 'multiply' }))
+  })
+
+  it('should not pipe if plain function predicate returns null', async () => {
+    const a = (id: number) => ({
+      id: id + 2,
+      next: 'multiply',
+    })
+    const b = ({ id }: { id: number }) => String(id)
+    const d = context.branch(a, (output) => {
+      type _Check = Expect<Equal<typeof output, ReturnType<typeof a>>>
+      return output.next === 'multiply' ? null : b
+    })
+    type _R = Expect<
+      Equal<
+        typeof d,
+        Composable<
+          (i: number, c?: unknown) => string | { id: number; next: string }
+        >
+      >
+    >
+
+    assertEquals(await d(1), success({ id: 3, next: 'multiply' }))
   })
 
   it('should use the same context in all composed functions', async () => {

@@ -16,10 +16,24 @@ import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 
 describe('branch', () => {
   it('should pipe a composable with arbitrary types', async () => {
-    const a = composable(({ id }: { id: number }) => ({
+    const a = ({ id }: { id: number }) => ({
       id: id + 2,
-    }))
+    })
     const b = composable(({ id }: { id: number }) => id - 1)
+
+    const c = branch(a, () => Promise.resolve(b))
+    type _R = Expect<
+      Equal<typeof c, Composable<(input: { id: number }) => number>>
+    >
+
+    assertEquals(await c({ id: 1 }), success(2))
+  })
+
+  it('accepts plain resolver functions', async () => {
+    const a = ({ id }: { id: number }) => ({
+      id: id + 2,
+    })
+    const b = ({ id }: { id: number }) => id - 1
 
     const c = branch(a, () => Promise.resolve(b))
     type _R = Expect<
@@ -32,8 +46,7 @@ describe('branch', () => {
   it('accepts plain functions', async () => {
     const a = (a: number, b: number) => a + b
     const b = (a: number) => String(a - 1)
-    // TODO: Make resolver accept plain functions
-    const fn = branch(a, (a) => a === 3 ? composable(b) : null)
+    const fn = branch(a, (a) => a === 3 ? b : null)
     const res = await fn(1, 2)
 
     type _FN = Expect<

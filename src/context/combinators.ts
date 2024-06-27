@@ -82,10 +82,9 @@ function branch<
   SourceComposable extends Internal.AnyFn,
   Resolver extends (
     o: UnpackData<Composable<SourceComposable>>,
-  ) => Composable | null | Promise<Composable | null>,
+  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
 >(
   cf: SourceComposable,
-  // TODO: Make resolver accept plain functions
   resolver: Resolver,
 ): BranchReturn<Composable<SourceComposable>, Resolver> {
   const callable = (async (...args: Parameters<SourceComposable>) => {
@@ -96,7 +95,7 @@ function branch<
     return composable(async () => {
       const nextFn = await resolver(result.data)
       if (typeof nextFn !== 'function') return result.data
-      return fromSuccess(nextFn)(result.data, context)
+      return fromSuccess(composable(nextFn))(result.data, context)
     })()
   }) as BranchReturn<Composable<SourceComposable>, Resolver>
   ;(callable as any).kind = 'composable' as const
