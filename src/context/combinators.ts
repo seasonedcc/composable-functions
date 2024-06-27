@@ -32,7 +32,7 @@ function applyContextToList<
  * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends Array<(...args: any[]) => any>>(
+function pipe<Fns extends Internal.AnyFn[]>(
   ...fns: Fns
 ): PipeReturn<Internal.Composables<Fns>> {
   const callable =
@@ -62,7 +62,7 @@ function pipe<Fns extends Array<(...args: any[]) => any>>(
  * ```
  */
 
-function sequence<Fns extends Array<(...args: any[]) => any>>(
+function sequence<Fns extends Internal.AnyFn[]>(
   ...fns: Fns
 ): SequenceReturn<Internal.Composables<Fns>> {
   const callable = ((input: any, context: any) =>
@@ -79,7 +79,7 @@ function sequence<Fns extends Array<(...args: any[]) => any>>(
  * Like branch but preserving the context parameter.
  */
 function branch<
-  SourceComposable extends (...args: any[]) => any,
+  SourceComposable extends Internal.AnyFn,
   Resolver extends (
     o: UnpackData<Composable<SourceComposable>>,
   ) => Composable | null | Promise<Composable | null>,

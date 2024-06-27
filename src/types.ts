@@ -44,13 +44,13 @@ type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
 /**
  * A composable async function that catches failures.
  */
-type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> =
-  T extends { kind: 'composable' } ? T
-    :
-      & ((...args: Parameters<T>) => Promise<Result<Awaited<ReturnType<T>>>>)
-      & {
-        kind: 'composable'
-      }
+type Composable<T extends Internal.AnyFn = Internal.AnyFn> = T extends
+  { kind: 'composable' } ? T
+  :
+    & ((...args: Parameters<T>) => Promise<Result<Awaited<ReturnType<T>>>>)
+    & {
+      kind: 'composable'
+    }
 
 /**
  * A composable async function with schema validation at runtime.

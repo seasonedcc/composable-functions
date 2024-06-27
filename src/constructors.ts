@@ -1,5 +1,6 @@
 import { mapErrors } from './combinators.ts'
 import { ContextError, ErrorList, InputError } from './errors.ts'
+import type { Internal } from './internal/types.ts'
 import type {
   ApplySchemaReturn,
   Composable,
@@ -40,10 +41,10 @@ function toError(maybeError: unknown): Error {
  */
 function composable<T extends Function>(
   fn: T,
-): Composable<T extends (...args: any[]) => any ? T : never> {
+): Composable<T extends Internal.AnyFn ? T : never> {
   if ('kind' in fn && fn.kind === 'composable') {
     return fn as unknown as Composable<
-      T extends (...args: any[]) => any ? T : never
+      T extends Internal.AnyFn ? T : never
     >
   }
   const callable = async (...args: any[]) => {
@@ -59,7 +60,7 @@ function composable<T extends Function>(
     }
   }
   callable.kind = 'composable' as const
-  return callable as Composable<T extends (...args: any[]) => any ? T : never>
+  return callable as Composable<T extends Internal.AnyFn ? T : never>
 }
 
 /**
