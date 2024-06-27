@@ -9,26 +9,26 @@ importers:
   .:
     dependencies:
       arktype:
-        specifier: 2.0.0-dev.22
-        version: 2.0.0-dev.22
+        specifier: 2.0.0-dev.26
+        version: 2.0.0-dev.26
       composable-functions:
         specifier: file:../../npm
         version: file:../../npm
       typescript:
-        specifier: ^5.4.5
+        specifier: ^5.5.2
         version: 5.5.2
     devDependencies:
       tsx:
-        specifier: ^4.7.2
-        version: 4.15.6
+        specifier: ^4.15.7
+        version: 4.15.7
 
 packages:
 
-  '@arktype/schema@0.1.14':
-    resolution: {integrity: sha512-NzmWveHypg3mZgn6+B4JhtlAfpQm0/oCvDGCHULWQYKHtn6UrnypotOx+fT96QNJftfaSFfptxzkwWiKPjMTow==}
+  '@arktype/schema@0.1.18':
+    resolution: {integrity: sha512-6xMboHvnO3NtgYNP160PmghElUDpKe/aDMqH2hRRHoMb1Nh0bPilDfr9LJnXQEwfA5hDguqRM+vifOKkROtOLA==}
 
-  '@arktype/util@0.0.48':
-    resolution: {integrity: sha512-U5FO5EUAJ4LoYtLSyAMmTf6CEVgslObfSQuua2zoK5Tv2FB3aESVQ3rdLfhuz+coRhlzlynbkmimyoQWwQT+aQ==}
+  '@arktype/util@0.0.51':
+    resolution: {integrity: sha512-lukmZcbSVI27ZJ4uJA7ztCKM5OligUfdTrr0E6k+F0tzz9iSEcplS0KZbVD2WfrLL3HXNKBE6g/w3nhYMAMoqw==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -168,8 +168,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  arktype@2.0.0-dev.22:
-    resolution: {integrity: sha512-oCXXi5cFaaavqPGw0QWjYI/vdOsvHLJVrDYRyCFseZqJrR3kRE4yQNI7z0VOaXyVEgGuRjXsjVvSqs3XjUb5qg==}
+  arktype@2.0.0-dev.26:
+    resolution: {integrity: sha512-L7JkKHPkvEoDRKhtXyrCQcHast2oXFo7sOX1SZ3GSbIFJcEnTRRW12lFvH8M4fFR589CaOE9LleHMg9jZFR2TA==}
 
   composable-functions@file:../../npm:
     resolution: {directory: ../../npm, type: directory}
@@ -190,8 +190,8 @@ packages:
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
-  tsx@4.15.6:
-    resolution: {integrity: sha512-is0VQQlfNZRHEuSSTKA6m4xw74IU4AizmuB6lAYLRt9XtuyeQnyJYexhNZOPCB59SqC4JzmSzPnHGBXxf3k0hA==}
+  tsx@4.15.7:
+    resolution: {integrity: sha512-u3H0iSFDZM3za+VxkZ1kywdCeHCn+8/qHQS1MNoO2sONDgD95HlWtt8aB23OzeTmFP9IU4/8bZUdg58Uu5J4cg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -202,11 +202,11 @@ packages:
 
 snapshots:
 
-  '@arktype/schema@0.1.14':
+  '@arktype/schema@0.1.18':
     dependencies:
-      '@arktype/util': 0.0.48
+      '@arktype/util': 0.0.51
 
-  '@arktype/util@0.0.48': {}
+  '@arktype/util@0.0.51': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
@@ -277,10 +277,10 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
-  arktype@2.0.0-dev.22:
+  arktype@2.0.0-dev.26:
     dependencies:
-      '@arktype/schema': 0.1.14
-      '@arktype/util': 0.0.48
+      '@arktype/schema': 0.1.18
+      '@arktype/util': 0.0.51
 
   composable-functions@file:../../npm: {}
 
@@ -319,7 +319,7 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
-  tsx@4.15.6:
+  tsx@4.15.7:
     dependencies:
       esbuild: 0.21.5
       get-tsconfig: 4.7.5

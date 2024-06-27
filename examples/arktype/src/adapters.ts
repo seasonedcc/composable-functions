@@ -7,6 +7,7 @@ import {
   failure,
   InputError,
   ParserSchema,
+  UnpackData,
 } from 'composable-functions'
 import { type, Type } from 'arktype'
 
@@ -28,22 +29,9 @@ function adapt<T extends Type>(schema: T): ParserSchema<T['infer']> {
 /**
  * Approach 2: Create your custom `withSchema` and `applySchema` functions that will return a `Result`
  */
-function withArkSchema<I, C>(
-  inputSchema?: Type<I>,
-  contextSchema?: Type<C>,
-): <Output>(
-  handler: (input: I, context: C) => Output,
-) => ComposableWithSchema<Output> {
-  return (handler) =>
-    applyArkSchema(
-      inputSchema,
-      contextSchema,
-    )(composable(handler)) as ComposableWithSchema<any>
-}
-
 function applyArkSchema<I, C>(inputSchema?: Type<I>, contextSchema?: Type<C>) {
   return <R, Input, Context>(
-    fn: Composable<(input?: Input, context?: Context) => R>,
+    fn: Composable<(input: Input, context: Context) => R>,
   ) => {
     return function (input?: unknown, context?: unknown) {
       const ctxResult = (contextSchema ?? type('unknown'))(context)
@@ -69,6 +57,19 @@ function applyArkSchema<I, C>(inputSchema?: Type<I>, contextSchema?: Type<C>) {
       return fn(result as Input, ctxResult as Context)
     } as ApplySchemaReturn<I, C, typeof fn>
   }
+}
+
+function withArkSchema<I, C>(
+  inputSchema?: Type<I>,
+  contextSchema?: Type<C>,
+): <Fn extends (input: I, context: C) => unknown>(
+  fn: Fn,
+) => ComposableWithSchema<UnpackData<Composable<Fn>>> {
+  return (handler) =>
+    applyArkSchema(
+      inputSchema,
+      contextSchema,
+    )(composable(handler)) as ComposableWithSchema<any>
 }
 
 export { adapt, withArkSchema, applyArkSchema }
