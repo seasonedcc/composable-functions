@@ -6,7 +6,7 @@ This document will guide you through the migration process.
 ## Benefits of Migrating from `domain-functions` to `composable-functions`
 
 -	🛡️ Enhanced Type Safety: Enjoy robust **type-safety during function composition**. The improved type-checking mechanisms prevent incompatible functions from being composed, reducing runtime errors and improving code reliability.
--	🤌 Simplified Function Creation: **No need to define schemas**. Create composable functions easily and efficiently without the overhead of schema definitions.
+-	🤌 Simplified Function Creation: **No need to define schemas**. Create composable functions easily and efficiently without the overhead of schema definitions. Work with plain functions in every combinator.
 -	🕵🏽 Runtime Validation: Use the [`withSchema`](./API.md#withschema) function for optional runtime validation of inputs and context. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use [`applySchema`](./API.md#applyschema) to run your runtime validation only once **avoiding unnecessary processing**.
 -	🔀 Flexible Compositions: The new combinators, such as [`context.pipe`](./API.md#contextpipe), [`context.sequence`](./API.md#contextsequence), and [`context.branch`](./API.md#contextbranch), offer powerful ways to manage **typed context** which are contextual information across your compositions.
 -	🛠️ Incremental Migration: Seamlessly migrate your existing codebase incrementally. **Both `domain-functions` and `composable-functions` can coexist**, allowing you to transition module by module.
@@ -102,10 +102,10 @@ const result = context.pipe(fn1, fn2)(input, ctx)
 
 ## Modified combinators
 ### map
-The `map`'s mapper function now receives all the arguments given to the composable. In domain-functions the mapper would only work with the output of the first function, that limitation is gone therefore we can work with both input and output.
+The `map`'s mapper function now receives all the arguments given to the first function. In domain-functions the mapper would only work with the output of the first df, that limitation is gone therefore we can work with both input and output.
 
 ```ts
-const add = composable((a: number, b: number) => a + b)
+const add = (a: number, b: number) => a + b
 const aggregateInputAndOutput = map(add, (result, a, b) => ({ result, a, b }))
 //    ^? Composable<(a: number, b: number) => { result: number, a: number, b: number }>
 ```
@@ -148,7 +148,7 @@ const incrementWithErrorSummary = mapErrors(increment, summarizeErrors)
 The `trace` function would get a function that had `result`, `input`, and `environment` as arguments. Now the only change is that it receives all the arguments given to the function. In domain-functions the arguments were always input and environment but in composable-functions that limitation is gone therefore we can't assure it will always be the same.
 
 ```ts
-const fn = composable((a: number, b: number, c: number) => a + b + c)
+const fn = (a: number, b: number, c: number) => a + b + c
 const withTrace = trace((...args) => console.log(...args))(fn)
 const result = await withTrace(1, 2, 3)
 // This will log: [{ success: true, data: 6, errors: [] }, 1, 2, 3]
@@ -174,7 +174,7 @@ const df = collectSequence({
 })
 
 // you can do
-const fn = map(sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))
+const fn = map(sequence(nameFn, ageFn), ([name, age]) => ({ name, age }))
 ```
 
 ### merge
@@ -190,8 +190,8 @@ const df = merge(df1, df2)
 //    ^? DomainFunction<{ firstName: string, lastName: string }>
 
 // you can do
-const fn1 = composable(() => ({ firstName: 'John' }))
-const fn2 = composable(() => ({ lastName: 'Doe' }))
+const fn1 = () => ({ firstName: 'John' })
+const fn2 = () => ({ lastName: 'Doe' })
 const fn = map(all(fn1, fn2), mergeObjects)
 ```
 

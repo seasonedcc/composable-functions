@@ -45,11 +45,11 @@ npm i composable-functions
 ```tsx
 import { composable, pipe } from 'composable-functions'
 
-const faultyAdd = composable((a: number, b: number) => {
+const faultyAdd = (a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b
-})
-const show = composable(String)
+}
+const show = (a: number) => String(a)
 const addAndShow = pipe(faultyAdd, show)
 
 const result = await addAndShow(2, 2)
@@ -116,20 +116,30 @@ For more information and examples, check the [Handling external input](./with-sc
 
 A `Composable` is a function that returns a `Promise<Result<T>>` where `T` is any type you want to return. Values of the type `Result` will represent either a failure (which carries a list of errors) or a success, where the computation has returned a value within the type `T`.
 
-So we can define the `add` and the `toString` functions as a `Composable`:
+We can create a `Composable` by wrapping a function with the `composable` method:
 
 ```typescript
 import { composable } from 'composable-functions'
 
 const add = composable((a: number, b: number) => a + b)
 //    ^? Composable<(a: number, b: number) => number>
+```
 
-const toString = composable((a: unknown) => `${a}`)
-//    ^? Composable<(a: unknown) => string>
+Or we can use combinators that evaluate to both plain functions and `Composable` into another `Composable`:
+
+```typescript
+import { composable, pipe } from 'composable-functions'
+
+const add = composable((a: number, b: number) => a + b)
+//    ^? Composable<(a: number, b: number) => number>
+const toString = (a: unknown) => `${a}`
+
+const addAndReturnString = pipe(add, toString)
+//    ^? Composable<(a: number, b: number) => string>
 ```
 
 ## Sequential composition
-Now we can compose them using pipe to create `addAndReturnString`:
+We can compose the functions above using pipe to create `addAndReturnString`:
 
 ```typescript
 import { pipe } from 'composable-functions'
@@ -150,15 +160,16 @@ const addAndReturnString = pipe(toString, add)
 Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.
 The error message comes in the form of an inferred `FailToCompose` type. This failure type is not callable, therefore it will break any attempts to call `addAndReturnString`.
 
-### Using non-composables (mapping)
+### Transforming the output (mapping)
 
-Sometimes we want to use a simple function in this sort of sequential composition. Imagine that `toString` is not a composable, and you just want to apply a plain old function to the result of `add` when it succeeds.
-The function `map` can be used for this, since we are mapping over the result of a `Composable`:
+Sometimes we want to use a simple function to transform the output of another function. Imagine you want to apply a plain old function to the result of `add` when it succeeds.
+The function `map` can be used for this:
 
 ```typescript
 import { map } from 'composable-functions'
 
 const addAndReturnString = map(add, result => `${result}`)
+//    ^? Composable<(a: number, b: number) => string>
 ```
 
 ## Parallel composition
@@ -167,15 +178,26 @@ There are also compositions where all functions are excuted in parallel, like `P
 The `all` function is one way of composing in this fashion. Assuming we want to apply our `add` and multiply the two numbers returning a success only once both operations succeed:
 
 ```typescript
-import { composable, all } from 'composable-functions'
+import { all } from 'composable-functions'
 
-const add = composable((a: number, b: number) => a + b)
-const mul = composable((a: number, b: number) => a * b)
+const add = (a: number, b: number) => a + b
+const mul = (a: number, b: number) => a * b
 const addAndMul = all(add, mul)
 //    ^? Composable<(a: number, b: number) => [number, number]>
 ```
 The result of the composition comes in a tuple in the same order as the functions were passed to `all`.
 Note that the input functions will also have to type-check and all the functions have to work from the same input.
+
+If you want to work with records instead of tuples, you can use the `collect` function:
+
+```typescript
+import { collect } from 'composable-functions'
+
+const add = (a: number, b: number) => a + b
+const mul = (a: number, b: number) => a * b
+const addAndMul = collect({ add, mul })
+//    ^? Composable<(a: number, b: number) => { add: number, mul: number }>
+```
 
 ## Handling errors
 Since a `Composable` always return a type `Result<T>` that might be either a failure or a success, there are never exceptions to catch. Any exception inside a `Composable` will return as an object with the shape: `{ success: false, errors: Error[] }`.
@@ -211,7 +233,7 @@ See [the errors module](./src/errors.ts) for more details.
 You can catch an error in a `Composable` using `catchFailure`, which is similar to `map` but will run whenever the first composable fails:
 
 ```typescript
-import { composable, catchFailure } from 'composable-functions'
+import { catchFailure } from 'composable-functions'
 
 // assuming we have the definitions from the previous example
 const getOptionalUser = catchFailure(getUser, (errors, id) => {

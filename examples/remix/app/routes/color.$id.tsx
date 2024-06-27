@@ -1,13 +1,13 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
-import { applySchema, inputFromForm } from 'composable-functions'
+import { withSchema, inputFromForm } from 'composable-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/business/colors'
 import { actionResponse, loaderResponseOrThrow } from '~/lib'
 import { z } from 'zod'
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const result = await applySchema(z.object({ id: z.string() }))(getColor)(
+  const result = await withSchema(z.object({ id: z.string() }))(getColor)(
     params,
   )
   return loaderResponseOrThrow(result)
