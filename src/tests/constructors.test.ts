@@ -24,6 +24,7 @@ import {
 } from '../index.ts'
 import { applySchema } from '../index.ts'
 import type { Internal } from '../internal/types.ts'
+import { assertInstanceOf } from 'https://deno.land/std@0.206.0/assert/assert_instance_of.ts'
 
 const add = composable((a: number, b: number) => a + b)
 const asyncAdd = (a: number, b: number) => Promise.resolve(a + b)
@@ -142,6 +143,25 @@ describe('fromSuccess', () => {
     type _R = Expect<Equal<typeof c, () => Promise<1>>>
 
     assertEquals(await c(), 1)
+  })
+
+  it('allows to throw any arbitrary value', async () => {
+    const a = composable(() => {
+      throw new Error('Some error')
+    })
+
+    class CustomError {}
+    const c = fromSuccess(a, () => {
+      throw new CustomError()
+    })
+    type _R = Expect<Equal<typeof c, () => Promise<never>>>
+
+    try {
+      await c()
+      throw new Error('should have thrown on the line above')
+    } catch (e) {
+      assertInstanceOf(e, CustomError)
+    }
   })
 
   it('allows to change the errors list', () => {

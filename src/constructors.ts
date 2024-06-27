@@ -1,4 +1,3 @@
-import { mapErrors } from './combinators.ts'
 import { ContextError, ErrorList, InputError } from './errors.ts'
 import type { Internal } from './internal/types.ts'
 import type {
@@ -83,10 +82,10 @@ function fromSuccess<O, P extends any[]>(
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ): (...args: P) => Promise<O> {
   return (async (...args: P) => {
-    const result = await mapErrors(fn, onError)(...args)
+    const result = await fn(...args)
     if (result.success) return result.data
 
-    throw new ErrorList(result.errors)
+    throw new ErrorList(await onError(result.errors))
   }) as (...args: P) => Promise<O>
 }
 
