@@ -18,6 +18,8 @@ namespace Internal {
     argument2: B
   }
 
+  export type AnyFn = (...args: any[]) => any
+
   export type Prettify<T> =
     & {
       [K in keyof T]: T[K]
@@ -156,11 +158,9 @@ namespace Internal {
     : FailToCompose<A, B>
 
   export type Composables<
-    Fns extends
-      | Record<string, (...args: any[]) => any>
-      | Array<(...args: any[]) => any>,
+    Fns extends Record<string, AnyFn> | Array<AnyFn>,
   > = {
-    [K in keyof Fns]: Composable<Extract<Fns[K], (...args: any[]) => any>>
+    [K in keyof Fns]: Composable<Extract<Fns[K], AnyFn>>
   }
 }
 

@@ -95,9 +95,9 @@ type BranchContext<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
-  ) => Composable | null | Promise<Composable | null>,
-> = Awaited<ReturnType<Resolver>> extends Composable<any> ? CommonContext<
-    [SourceComposable, NonNullable<Awaited<ReturnType<Resolver>>>]
+  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
+> = Awaited<ReturnType<Resolver>> extends Internal.AnyFn ? CommonContext<
+    [SourceComposable, Composable<NonNullable<Awaited<ReturnType<Resolver>>>>]
   >
   : GetContext<Parameters<SourceComposable>>
 
@@ -105,7 +105,7 @@ type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
-  ) => Composable | null | Promise<Composable | null>,
+  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
 > = CanComposeInSequence<
   [SourceComposable, Composable<Resolver>]
 > extends Composable[]
@@ -124,8 +124,8 @@ type BranchReturn<
         >
       ) => null extends Awaited<ReturnType<Resolver>> ?
           | UnpackData<SourceComposable>
-          | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
-        : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+          | UnpackData<Composable<NonNullable<Awaited<ReturnType<Resolver>>>>>
+        : UnpackData<Composable<NonNullable<Awaited<ReturnType<Resolver>>>>>
     >
   : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
   : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>

@@ -60,7 +60,7 @@ function mergeObjects<T extends unknown[] = unknown[]>(
  * ```
  */
 function pipe<
-  Fns extends [(...args: any[]) => any, ...Array<(...args: any[]) => any>],
+  Fns extends [Internal.AnyFn, ...Internal.AnyFn[]],
 >(
   ...fns: Fns
 ): PipeReturn<CanComposeInSequence<Internal.Composables<Fns>>> {
@@ -90,7 +90,7 @@ function pipe<
  * //     ^? Composable<(id: number) => [string, number, boolean]>
  * ```
  */
-function all<Fns extends Array<(...args: any[]) => any>>(
+function all<Fns extends Internal.AnyFn[]>(
   ...fns: Fns
 ): Composable<
   (
@@ -136,7 +136,7 @@ function all<Fns extends Array<(...args: any[]) => any>>(
  * //       ^? Composable<() => { a: string, b: number }>
  * ```
  */
-function collect<Fns extends Record<string, (...args: any[]) => any>>(
+function collect<Fns extends Record<string, Internal.AnyFn>>(
   fns: Fns,
 ): Composable<
   (
@@ -184,7 +184,7 @@ function collect<Fns extends Record<string, (...args: any[]) => any>>(
  */
 
 function sequence<
-  Fns extends [(...args: any[]) => any, ...Array<(...args: any[]) => any>],
+  Fns extends [Internal.AnyFn, ...Internal.AnyFn[]],
 >(
   ...fns: Fns
 ): SequenceReturn<CanComposeInSequence<Internal.Composables<Fns>>> {
@@ -222,7 +222,7 @@ function sequence<
  * // result === '1 -> 2'
  * ```
  */
-function map<Fn extends (...args: any[]) => any, O>(
+function map<Fn extends Internal.AnyFn, O>(
   fn: Fn,
   mapper: (
     res: UnpackData<Composable<Fn>>,
@@ -254,7 +254,7 @@ function map<Fn extends (...args: any[]) => any, O>(
  * ```
  */
 function mapParameters<
-  Fn extends (...args: any[]) => any,
+  Fn extends Internal.AnyFn,
   NewParameters extends unknown[],
   const MapperOutput extends Parameters<Composable<Fn>>,
 >(
@@ -285,7 +285,7 @@ function mapParameters<
  * ```
  */
 function catchFailure<
-  Fn extends (...args: any[]) => any,
+  Fn extends Internal.AnyFn,
   C extends (err: Error[], ...originalInput: Parameters<Fn>) => any,
 >(
   fn: Fn,
@@ -328,7 +328,7 @@ function catchFailure<
  * }))
  * ```
  */
-function mapErrors<Fn extends (...args: any[]) => any>(
+function mapErrors<Fn extends Internal.AnyFn>(
   fn: Fn,
   mapper: (err: Error[]) => Error[] | Promise<Error[]>,
 ): Composable<Fn> {
@@ -369,7 +369,7 @@ function trace(
     result: Result<unknown>,
     ...originalInput: unknown[]
   ) => Promise<void> | void,
-): <Fn extends (...args: any[]) => any>(
+): <Fn extends Internal.AnyFn>(
   fn: Fn,
 ) => Composable<Fn> {
   return ((fn) => {
@@ -382,7 +382,7 @@ function trace(
     }
     callable.kind = 'composable' as const
     return callable
-  }) as <Fn extends (...args: any[]) => any>(
+  }) as <Fn extends Internal.AnyFn>(
     fn: Fn,
   ) => Composable<Fn>
 }
@@ -409,13 +409,12 @@ function trace(
  * ```
  */
 function branch<
-  SourceComposable extends (...args: any[]) => any,
+  SourceComposable extends Internal.AnyFn,
   Resolver extends (
     o: UnpackData<Composable<SourceComposable>>,
-  ) => Composable | null | Promise<Composable | null>,
+  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
 >(
   cf: SourceComposable,
-  // TODO: Make resolver accept plain functions
   resolver: Resolver,
 ): BranchReturn<Composable<SourceComposable>, Resolver> {
   const callable = (async (...args: Parameters<SourceComposable>) => {
@@ -425,7 +424,7 @@ function branch<
     return composable(async () => {
       const nextComposable = await resolver(result.data)
       if (typeof nextComposable !== 'function') return result.data
-      return fromSuccess(nextComposable)(result.data)
+      return fromSuccess(composable(nextComposable))(result.data)
     })()
   }) as BranchReturn<Composable<SourceComposable>, Resolver>
   ;(callable as any).kind = 'composable' as const

@@ -233,15 +233,9 @@ Use `branch` to add conditional logic to your compositions.
 It receives a composable and a predicate function that should return the next composable to be executed based on the previous function's output, like `pipe`.
 
 ```ts
-const getIdOrEmail = (data: { id?: number, email?: string }) => {
-  return data.id ?? data.email
-}
-const findUserById = composable((id: number) => {
-  return db.users.find({ id })
-})
-const findUserByEmail = composable((email: string) => {
-  return db.users.find({ email })
-})
+const getIdOrEmail = (data: { id?: number, email?: string }) => data.id ?? data.email
+const findUserById = (id: number) => db.users.find({ id })
+const findUserByEmail = (email: string) => db.users.find({ email })
 const findUserByIdOrEmail = branch(
   getIdOrEmail,
   (data) => (typeof data === "number" ? findUserById : findUserByEmail),
@@ -260,7 +254,7 @@ For the example above, the result will be:
 If you don't want to pipe when a certain condition is matched, you can return `null` like so:
 ```ts
 const a = () => 'a'
-const b = composable(() => 'b')
+const b = () => 'b'
 const fn = branch(a, (data) => data === 'a' ? null : b)
 //    ^? Composable<() => 'a' | 'b'>
 ```
@@ -792,18 +786,18 @@ import { context } from 'composable-functions'
 const getIdOrEmail = (data: { id?: number, email?: string }) => {
   return data.id ?? data.email
 }
-const findUserById = composable((id: number, ctx: { user: User }) => {
+const findUserById = (id: number, ctx: { user: User }) => {
   if (!ctx.user.admin) {
     throw new Error('Unauthorized')
   }
   return db.users.find({ id })
-})
-const findUserByEmail = composable((email: string, ctx: { user: User }) => {
+}
+const findUserByEmail = (email: string, ctx: { user: User }) => {
   if (!ctx.user.admin) {
     throw new Error('Unauthorized')
   }
   return db.users.find
-})
+}
 const findUserByIdOrEmail = context.branch(
   getIdOrEmail,
   (data) => (typeof data === "number" ? findUserById : findUserByEmail),

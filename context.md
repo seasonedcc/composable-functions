@@ -75,9 +75,8 @@ The context.branch function adds conditional logic to your compositions, forward
 ```ts
 import { composable, context } from 'composable-functions'
 
-const adminIncrement = composable((a: number, { user }: { user: { admin: boolean } }) =>
+const adminIncrement = (a: number, { user }: { user: { admin: boolean } }) =>
   user.admin ? a + 1 : a
-)
 const adminMakeItEven = (sum: number) => sum % 2 != 0 ? adminIncrement : null
 const incrementUntilEven = context.branch(adminIncrement, adminMakeItEven)
 

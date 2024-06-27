@@ -44,13 +44,13 @@ type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
 /**
  * A composable async function that catches failures.
  */
-type Composable<T extends (...args: any[]) => any = (...args: any[]) => any> =
-  T extends { kind: 'composable' } ? T
-    :
-      & ((...args: Parameters<T>) => Promise<Result<Awaited<ReturnType<T>>>>)
-      & {
-        kind: 'composable'
-      }
+type Composable<T extends Internal.AnyFn = Internal.AnyFn> = T extends
+  { kind: 'composable' } ? T
+  :
+    & ((...args: Parameters<T>) => Promise<Result<Awaited<ReturnType<T>>>>)
+    & {
+      kind: 'composable'
+    }
 
 /**
  * A composable async function with schema validation at runtime.
@@ -192,7 +192,7 @@ type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
-  ) => Composable | null | Promise<Composable | null>,
+  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
 > = CanComposeInSequence<
   [SourceComposable, Composable<Resolver>]
 > extends Composable[]
@@ -208,8 +208,8 @@ type BranchReturn<
         >
       ) => null extends Awaited<ReturnType<Resolver>> ?
           | UnpackData<SourceComposable>
-          | UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
-        : UnpackData<Extract<Awaited<ReturnType<Resolver>>, Composable>>
+          | UnpackData<Composable<NonNullable<Awaited<ReturnType<Resolver>>>>>
+        : UnpackData<Composable<NonNullable<Awaited<ReturnType<Resolver>>>>>
     >
   : CanComposeInSequence<[SourceComposable, Awaited<ReturnType<Resolver>>]>
   : CanComposeInSequence<[SourceComposable, Composable<Resolver>]>

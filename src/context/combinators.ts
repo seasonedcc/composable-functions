@@ -32,7 +32,7 @@ function applyContextToList<
  * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends Array<(...args: any[]) => any>>(
+function pipe<Fns extends Internal.AnyFn[]>(
   ...fns: Fns
 ): PipeReturn<Internal.Composables<Fns>> {
   const callable =
@@ -62,7 +62,7 @@ function pipe<Fns extends Array<(...args: any[]) => any>>(
  * ```
  */
 
-function sequence<Fns extends Array<(...args: any[]) => any>>(
+function sequence<Fns extends Internal.AnyFn[]>(
   ...fns: Fns
 ): SequenceReturn<Internal.Composables<Fns>> {
   const callable = ((input: any, context: any) =>
@@ -79,13 +79,12 @@ function sequence<Fns extends Array<(...args: any[]) => any>>(
  * Like branch but preserving the context parameter.
  */
 function branch<
-  SourceComposable extends (...args: any[]) => any,
+  SourceComposable extends Internal.AnyFn,
   Resolver extends (
     o: UnpackData<Composable<SourceComposable>>,
-  ) => Composable | null | Promise<Composable | null>,
+  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
 >(
   cf: SourceComposable,
-  // TODO: Make resolver accept plain functions
   resolver: Resolver,
 ): BranchReturn<Composable<SourceComposable>, Resolver> {
   const callable = (async (...args: Parameters<SourceComposable>) => {
@@ -96,7 +95,7 @@ function branch<
     return composable(async () => {
       const nextFn = await resolver(result.data)
       if (typeof nextFn !== 'function') return result.data
-      return fromSuccess(nextFn)(result.data, context)
+      return fromSuccess(composable(nextFn))(result.data, context)
     })()
   }) as BranchReturn<Composable<SourceComposable>, Resolver>
   ;(callable as any).kind = 'composable' as const
