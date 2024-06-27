@@ -51,14 +51,10 @@ function mergeObjects<T extends unknown[] = unknown[]>(
  * @example
  *
  * ```ts
- * import { composable, pipe } from 'composable-functions'
+ * import { pipe } from 'composable-functions'
  *
- * const a = composable(
- *   ({ aNumber }: { aNumber: number }) => ({ aString: String(aNumber) }),
- * )
- * const b = composable(
- *   ({ aString }: { aString: string }) => ({ aBoolean: aString == '1' }),
- * )
+ * const a = ({ aNumber }: { aNumber: number }) => ({ aString: String(aNumber) })
+ * const b = ({ aString }: { aString: string }) => ({ aBoolean: aString == '1' })
  * const d = pipe(a, b)
  * //    ^? Composable<({ aNumber }: { aNumber: number }) => { aBoolean: boolean }>
  * ```
@@ -85,11 +81,11 @@ function pipe<
  * @example
  *
  * ```ts
- * import { composable, all } from 'composable-functions'
+ * import { all } from 'composable-functions'
  *
- * const a = composable((id: number) => id + 1)
- * const b = composable(String)
- * const c = composable(Boolean)
+ * const a = (id: number) => id + 1
+ * const b = (x: unknown) => String(x)
+ * const c = (x: unknown) => Boolean(x)
  * const cf = all(a, b, c)
  * //     ^? Composable<(id: number) => [string, number, boolean]>
  * ```
@@ -132,10 +128,10 @@ function all<Fns extends Array<(...args: any[]) => any>>(
  * @example
  *
  * ```ts
- * import { composable, collect } from 'composable-functions'
+ * import { collect } from 'composable-functions'
  *
- * const a = composable(() => '1')
- * const b = composable(() => 2)
+ * const a = () => '1'
+ * const b = () => 2
  * const aComposable = collect({ a, b })
  * //       ^? Composable<() => { a: string, b: number }>
  * ```
@@ -178,10 +174,10 @@ function collect<Fns extends Record<string, (...args: any[]) => any>>(
  * @example
  *
  * ```ts
- * import { composable, sequence } from 'composable-functions'
+ * import { sequence } from 'composable-functions'
  *
- * const a = composable((aNumber: number) => String(aNumber))
- * const b = composable((aString: string) => aString === '1')
+ * const a = (aNumber: number) => String(aNumber)
+ * const b = (aString: string) => aString === '1'
  * const cf = sequence(a, b)
  * //    ^? Composable<(aNumber: number) => [string, boolean]>
  * ```
@@ -217,9 +213,9 @@ function sequence<
  * @example
  *
  * ```ts
- * import { composable, map } from 'composable-functions'
+ * import { map } from 'composable-functions'
  *
- * const increment = composable((n: number) => n + 1)
+ * const increment = (n: number) => n + 1
  * const incrementToString = map(increment, String)
  * //    ^? Composable<(n: number) => string>
  * const result = await map(increment, (result, n) => `${n} -> ${result}`)(1)
@@ -250,9 +246,9 @@ function map<Fn extends (...args: any[]) => any, O>(
  * @example
  *
  * ```ts
- * import { composable, mapParameters } from 'composable-functions'
+ * import { mapParameters } from 'composable-functions'
  *
- * const incrementId = composable(({ id }: { id: number }) => id + 1)
+ * const incrementId = ({ id }: { id: number }) => id + 1
  * const increment = mapParameters(incrementId, (id: number) => [{ id }])
  * //    ^? Composable<(id: number) => number>
  * ```
@@ -280,9 +276,9 @@ function mapParameters<
  * @example
  *
  * ```ts
- * import { composable, catchFailure } from 'composable-functions'
+ * import { catchFailure } from 'composable-functions'
  *
- * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const increment = ({ id }: { id: number }) => id + 1
  * const negativeOnError = catchFailure(increment, (result, originalInput) => (
  *  originalInput.id * -1
  * ))
@@ -324,9 +320,9 @@ function catchFailure<
  * @example
  *
  * ```ts
- * import { composable, mapErrors } from 'composable-functions'
+ * import { mapErrors } from 'composable-functions'
  *
- * const increment = composable(({ id }: { id: number }) => id + 1)
+ * const increment = ({ id }: { id: number }) => id + 1
  * const incrementWithErrorSummary = mapErrors(increment, (result) => ({
  *   errors: [{ message: 'Errors count: ' + result.errors.length }],
  * }))
@@ -358,12 +354,12 @@ function mapErrors<Fn extends (...args: any[]) => any>(
  * @example
  *
  * ```ts
- * import { composable, trace } from 'composable-functions'
+ * import { trace } from 'composable-functions'
  *
  * const trackErrors = trace((result, ...args) => {
  *   if(!result.success) sendToExternalService({ result, arguments: args })
  * })
- * const increment = composable((id: number) => id + 1)
+ * const increment = (id: number) => id + 1
  * const incrementAndTrackErrors = trackErrors(increment)
  * //    ^? Composable<(id: number) => number>
  * ```

@@ -14,9 +14,9 @@ To avoid such awkwardness we use context:
 
 ```tsx
 import { context } from 'composable-functions'
-const dangerousFunction = composable(async (input: string, { user } : { user: { name: string, admin: boolean } }) => {
+const dangerousFunction = async (input: string, { user } : { user: { name: string, admin: boolean } }) => {
   // do something that only the admin can do
-})
+}
 
 const carryUser = context.pipe(gatherInput, dangerousFunction)
 ```
@@ -32,8 +32,8 @@ The context.pipe function allows you to compose multiple functions in a sequence
 ```ts
 import { context } from 'composable-functions'
 
-const a = composable((str: string, ctx: { user: User }) => str === '1')
-const b = composable((bool: boolean, ctx: { user: User }) => bool && ctx.user.admin)
+const a = (str: string, ctx: { user: User }) => str === '1'
+const b = (bool: boolean, ctx: { user: User }) => bool && ctx.user.admin
 
 const pipeline = context.pipe(a, b)
 
@@ -53,8 +53,8 @@ The context.sequence function works similarly to pipe, but it returns a tuple co
 ```ts
 import { context } from 'composable-functions'
 
-const a = composable((str: string, ctx: { user: User }) => str === '1')
-const b = composable((bool: boolean, ctx: { user: User }) => bool && ctx.user.admin)
+const a = (str: string, ctx: { user: User }) => str === '1'
+const b = (bool: boolean, ctx: { user: User }) => bool && ctx.user.admin
 
 const sequence = context.sequence(a, b)
 
