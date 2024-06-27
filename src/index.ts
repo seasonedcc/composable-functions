@@ -64,8 +64,5 @@ export type {
 } from './types.ts'
 
 // FUNCTIONS WITH CONTEXT
-/**
- * @deprecated use `import { context }` instead
- */
-export * as environment from './context/index.ts'
+export { environment } from './context/environment.ts'
 export * as context from './context/index.ts'
