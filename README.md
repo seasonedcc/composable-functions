@@ -125,7 +125,7 @@ const add = composable((a: number, b: number) => a + b)
 //    ^? Composable<(a: number, b: number) => number>
 ```
 
-Or we can use combinators that evaluate to both plain functions and `Composable` into another `Composable`:
+Or we can use combinators work with both plain functions and `Composable` to create other composables:
 
 ```typescript
 import { composable, pipe } from 'composable-functions'
