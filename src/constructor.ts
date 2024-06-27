@@ -35,7 +35,7 @@ import * as Future from './deps.ts'
 function toComposable<R>(
   df: DomainFunction<R>,
 ): Future.Composable<(input?: unknown, environment?: unknown) => R> {
-  return (async (input?: unknown, environment?: unknown) => {
+  const callable = (async (input?: unknown, environment?: unknown) => {
     const result = await df(input, environment)
     return result.success
       ? Future.success(result.data)
@@ -45,10 +45,12 @@ function toComposable<R>(
             (e) => new Future.InputError(e.message, e.path),
           ),
           ...result.environmentErrors.map(
-            (e) => new Future.EnvironmentError(e.message, e.path),
+            (e) => new Future.ContextError(e.message, e.path),
           ),
         ] as Error[])
   }) as Future.Composable<(input?: unknown, environment?: unknown) => R>
+  callable.kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -105,7 +107,7 @@ function fromComposable<R>(
             previous.inputErrors.push(
               schemaError(current.message, current.path.join('.')),
             )
-          } else if (current instanceof Future.EnvironmentError) {
+          } else if (current instanceof Future.EnvironmentError || current instanceof Future.ContextError) {
             previous.environmentErrors.push(
               schemaError(current.message, current.path.join('.')),
             )

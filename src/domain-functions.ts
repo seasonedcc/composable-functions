@@ -29,7 +29,7 @@ const df = all(a, b, c)
 function all<Fns extends DomainFunction[]>(
   ...fns: Fns
 ): DomainFunction<UnpackAll<Fns>> {
-  return fromComposable(Future.all(...fns.map(toComposable))) as DomainFunction<
+  return fromComposable(Future.all(...fns.map(toComposable) as [Future.Composable])) as DomainFunction<
     UnpackAll<Fns>
   >
 }
