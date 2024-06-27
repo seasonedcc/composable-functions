@@ -28,6 +28,21 @@ describe('catchFailure', () => {
     assertEquals(res, success(null))
   })
 
+  it('accepts plain functions', async () => {
+    const fn = catchFailure((a: number, b: number) => {
+      if (a === 1) throw new Error('a is 1')
+      return a + b
+    }, () => null)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number | null>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number | null>>>
+
+    assertEquals(res, success(null))
+  })
+
   it('returns original type when catcher returns empty list', async () => {
     const getList = composable(() => [1, 2, 3])
     const fn = catchFailure(getList, () => [])

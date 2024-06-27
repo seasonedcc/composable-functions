@@ -96,8 +96,9 @@ type BranchContext<
   Resolver extends (
     ...args: any[]
   ) => Composable | null | Promise<Composable | null>,
-> = Awaited<ReturnType<Resolver>> extends Composable<any>
-  ? CommonContext<[SourceComposable, Awaited<ReturnType<Resolver>>]>
+> = Awaited<ReturnType<Resolver>> extends Composable<any> ? CommonContext<
+    [SourceComposable, NonNullable<Awaited<ReturnType<Resolver>>>]
+  >
   : GetContext<Parameters<SourceComposable>>
 
 type BranchReturn<

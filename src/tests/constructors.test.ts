@@ -61,6 +61,17 @@ describe('composable', () => {
     type _FN = Expect<Equal<typeof fn, Composable<(a: any) => any>>>
   })
 
+  it('accepts another composable and avoids nesting it', async () => {
+    const a = composable(() => 'hey')
+    const fn = composable(a)
+    const res = await fn()
+
+    type _FN = Expect<Equal<typeof fn, Composable<() => 'hey'>>>
+    type _R = Expect<Equal<typeof res, Result<'hey'>>>
+
+    assertEquals(res, success('hey'))
+  })
+
   it('infers the types of async functions', async () => {
     const fn = composable(asyncAdd)
     const res = await fn(1, 2)
@@ -84,6 +95,18 @@ describe('composable', () => {
 
     assertEquals(res.success, false)
     assertEquals(res.errors[0].message, 'a is 1')
+  })
+
+  it('should accept another composable and make it a shallow composable', async () => {
+    const fn = composable(add)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(3))
   })
 })
 
@@ -184,6 +207,24 @@ describe('withSchema', () => {
         await handler({ missingId: '1' }),
         failure([new InputError('Expected number, received nan', ['id'])]),
       )
+    })
+  })
+
+  it('accepts a composable', async () => {
+    const handler = withSchema()(composable(() => 'no input!'))
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
+
+    assertEquals(await handler(), success('no input!'))
+  })
+
+  it('defaults non-declared input to unknown', async () => {
+    const handler = withSchema()((args) => args)
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<unknown>>>
+
+    assertEquals(await handler('some input'), {
+      success: true,
+      data: 'some input',
+      errors: [],
     })
   })
 
@@ -372,7 +413,7 @@ describe('applySchema', () => {
       ),
     )
     type _R = Expect<
-      Equal<typeof handler, ComposableWithSchema<[number, number]>>
+      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
     >
 
     assertEquals(
@@ -394,6 +435,30 @@ describe('applySchema', () => {
     assertEquals(result, success('a'))
   })
 
+  // TODO: Accept plain functions and equalize with withSchema
+  // it('accepts a plain function', async () => {
+  //   const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+  //   const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
+
+  //   const handler = applySchema(
+  //     inputSchema,
+  //     ctxSchema,
+  //   )(
+  //     composable(
+  //       ({ id }: { id: number }, { uid }: { uid: number }) =>
+  //         [id, uid] as const,
+  //     ),
+  //   )
+  //   type _R = Expect<
+  //     Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
+  //   >
+
+  //   assertEquals(
+  //     await handler({ id: 1 }, { uid: 2 }),
+  //     success<[number, number]>([1, 2]),
+  //   )
+  // });
+
   it('fails to compose when there is an object schema with incompatible properties', async () => {
     const inputSchema = z.object({ x: z.string() })
 
@@ -401,10 +466,7 @@ describe('applySchema', () => {
       composable(({ x }: { x: 'a' }) => x),
     )
     type _R = Expect<
-      Equal<
-        typeof handler,
-        Internal.FailToCompose<{ x: string }, { x: 'a' } | undefined>
-      >
+      Equal<typeof handler, Internal.FailToCompose<{ x: string }, { x: 'a' }>>
     >
     // @ts-expect-error: { x: 'a' } is not assignable to { x: string }
     const _result = await handler({ x: 'a' })
@@ -414,9 +476,7 @@ describe('applySchema', () => {
     const inputSchema = z.string()
 
     const handler = applySchema(inputSchema)(composable((x: 'a') => x))
-    type _R = Expect<
-      Equal<typeof handler, Internal.FailToCompose<string, 'a' | undefined>>
-    >
+    type _R = Expect<Equal<typeof handler, Internal.FailToCompose<string, 'a'>>>
     // @ts-expect-error: 'a' is not assignable to 'string'
     const _result = await handler('a')
   })

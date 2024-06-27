@@ -2,11 +2,16 @@ import type { Composable, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import type { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
+import type { Internal } from '../internal/types.ts'
 
 function applyContextToList<
   Fns extends Array<(input: unknown, context: unknown) => unknown>,
 >(fns: Fns, context: unknown) {
-  return fns.map((fn) => (input) => fn(input, context)) as [Composable]
+  return fns.map((fn) => {
+    const callable = ((input) => composable(fn)(input, context)) as Composable
+    callable.kind = 'composable' as const
+    return callable
+  }) as Composable[]
 }
 
 /**
@@ -27,9 +32,19 @@ function applyContextToList<
  * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
  * ```
  */
-function pipe<Fns extends Composable[]>(...fns: Fns): PipeReturn<Fns> {
-  return ((input: any, context: any) =>
-    A.pipe(...applyContextToList(fns, context))(input)) as PipeReturn<Fns>
+function pipe<Fns extends Array<(...args: any[]) => any>>(
+  ...fns: Fns
+): PipeReturn<Internal.Composables<Fns>> {
+  const callable =
+    ((input: any, context: any) =>
+      A.pipe(...applyContextToList(fns, context) as [
+        Composable,
+        ...Composable[],
+      ])(input)) as PipeReturn<
+        Internal.Composables<Fns>
+      >
+  ;(callable as any).kind = 'composable' as const
+  return callable
 }
 
 /**
@@ -47,28 +62,35 @@ function pipe<Fns extends Composable[]>(...fns: Fns): PipeReturn<Fns> {
  * ```
  */
 
-function sequence<Fns extends Composable[]>(...fns: Fns): SequenceReturn<Fns> {
-  return ((input: any, context: any) =>
-    A.sequence(...applyContextToList(fns, context))(
+function sequence<Fns extends Array<(...args: any[]) => any>>(
+  ...fns: Fns
+): SequenceReturn<Internal.Composables<Fns>> {
+  const callable = ((input: any, context: any) =>
+    A.sequence(
+      ...applyContextToList(fns, context) as [Composable, ...Composable[]],
+    )(
       input,
-    )) as SequenceReturn<Fns>
+    )) as SequenceReturn<Internal.Composables<Fns>>
+  ;(callable as any).kind = 'composable' as const
+  return callable
 }
 
 /**
  * Like branch but preserving the context parameter.
  */
 function branch<
-  SourceComposable extends Composable,
+  SourceComposable extends (...args: any[]) => any,
   Resolver extends (
-    o: UnpackData<SourceComposable>,
+    o: UnpackData<Composable<SourceComposable>>,
   ) => Composable | null | Promise<Composable | null>,
 >(
   cf: SourceComposable,
+  // TODO: Make resolver accept plain functions
   resolver: Resolver,
-): BranchReturn<SourceComposable, Resolver> {
-  return (async (...args: Parameters<SourceComposable>) => {
+): BranchReturn<Composable<SourceComposable>, Resolver> {
+  const callable = (async (...args: Parameters<SourceComposable>) => {
     const [input, context] = args
-    const result = await cf(input, context)
+    const result = await composable(cf)(input, context)
     if (!result.success) return result
 
     return composable(async () => {
@@ -76,7 +98,9 @@ function branch<
       if (typeof nextFn !== 'function') return result.data
       return fromSuccess(nextFn)(result.data, context)
     })()
-  }) as BranchReturn<SourceComposable, Resolver>
+  }) as BranchReturn<Composable<SourceComposable>, Resolver>
+  ;(callable as any).kind = 'composable' as const
+  return callable
 }
 
 export { branch, pipe, sequence }

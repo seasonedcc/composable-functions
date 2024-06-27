@@ -4,15 +4,14 @@ import {
   catchFailure,
   Result,
   SerializableResult,
-  composable,
   serialize,
   fromSuccess,
 } from 'composable-functions'
 
 /**
- * Given a Cookie and a Request it returns the stored cookie's value as an object
+ * Given a Cookie and a Request it returns the stored cookie's value as an object, in case of failure it returns an empty object.
  */
-const strictReadCookie = composable(
+const safeReadCookie = catchFailure(
   async (request: Request, cookie: Cookie) => {
     const cookieHeader = request.headers.get('Cookie')
     const cookieObj = (await cookie.parse(cookieHeader)) as Record<
@@ -23,8 +22,8 @@ const strictReadCookie = composable(
 
     return cookieObj
   },
+  () => ({}),
 )
-const safeReadCookie = catchFailure(strictReadCookie, () => ({}))
 
 const ctxFromCookie = fromSuccess(safeReadCookie)
 

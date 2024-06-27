@@ -34,6 +34,26 @@ describe('branch', () => {
     assertEquals(await c({ id: 1 }, 0), success(2))
   })
 
+  it('accepts plain functions', async () => {
+    const a = ({ id }: { id: number }, context: number) => ({
+      id: id + 2 + context,
+    })
+    // TODO: Make resolver accept plain functions
+    const b = composable(
+      ({ id }: { id: number }, context: number) => id - 1 + context,
+    )
+
+    const c = context.branch(a, () => Promise.resolve(b))
+    type _R = Expect<
+      Equal<
+        typeof c,
+        Composable<(input: { id: number }, context: number) => number>
+      >
+    >
+
+    assertEquals(await c({ id: 1 }, 0), success(2))
+  })
+
   it('should pipe a composable with a function that returns a composable with schema', async () => {
     const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
@@ -150,8 +170,6 @@ describe('branch', () => {
   it('should not break composition with other combinators', async () => {
     const a = withSchema(
       z.object({ id: z.number() }),
-      // TODO: Why don't we have z.any or z.unknown as default for ctx?
-      z.unknown(),
     )(({ id }) => ({
       id: id + 2,
     }))

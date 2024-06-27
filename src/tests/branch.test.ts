@@ -6,7 +6,12 @@ import {
   success,
   withSchema,
 } from '../index.ts'
-import type { Composable, ComposableWithSchema, UnpackData } from '../types.ts'
+import type {
+  Composable,
+  ComposableWithSchema,
+  Result,
+  UnpackData,
+} from '../types.ts'
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 
 describe('branch', () => {
@@ -22,6 +27,21 @@ describe('branch', () => {
     >
 
     assertEquals(await c({ id: 1 }), success(2))
+  })
+
+  it('accepts plain functions', async () => {
+    const a = (a: number, b: number) => a + b
+    const b = (a: number) => String(a - 1)
+    // TODO: Make resolver accept plain functions
+    const fn = branch(a, (a) => a === 3 ? composable(b) : null)
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number | string>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number | string>>>
+
+    assertEquals(res, success('2'))
   })
 
   it('should enable conditionally choosing the next Composable with the output of first one', async () => {

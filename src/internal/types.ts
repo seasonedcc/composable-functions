@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-namespace
 
-import { Composable } from '../types.ts'
+import type { Composable } from '../types.ts'
 
 namespace Internal {
   export type IncompatibleArguments = {
@@ -154,6 +154,14 @@ namespace Internal {
       ? B extends Record<PropertyKey, unknown> ? Prettify<A & B>
       : FailToCompose<A, B>
     : FailToCompose<A, B>
+
+  export type Composables<
+    Fns extends
+      | Record<string, (...args: any[]) => any>
+      | Array<(...args: any[]) => any>,
+  > = {
+    [K in keyof Fns]: Composable<Extract<Fns[K], (...args: any[]) => any>>
+  }
 }
 
 export type { Internal }

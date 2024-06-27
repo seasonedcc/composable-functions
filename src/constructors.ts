@@ -7,6 +7,7 @@ import type {
   Failure,
   ParserSchema,
   Success,
+  UnpackData,
 } from './types.ts'
 
 /**
@@ -40,7 +41,12 @@ function toError(maybeError: unknown): Error {
 function composable<T extends Function>(
   fn: T,
 ): Composable<T extends (...args: any[]) => any ? T : never> {
-  return async (...args) => {
+  if ('kind' in fn && fn.kind === 'composable') {
+    return fn as unknown as Composable<
+      T extends (...args: any[]) => any ? T : never
+    >
+  }
+  const callable = async (...args: any[]) => {
     try {
       // deno-lint-ignore no-explicit-any
       const result = await fn(...(args as any[]))
@@ -52,6 +58,8 @@ function composable<T extends Function>(
       return failure([toError(e)])
     }
   }
+  callable.kind = 'composable' as const
+  return callable as Composable<T extends (...args: any[]) => any ? T : never>
 }
 
 /**
@@ -73,44 +81,12 @@ function fromSuccess<O, P extends any[]>(
   fn: Composable<(...a: P) => O>,
   onError: (errors: Error[]) => Error[] | Promise<Error[]> = (e) => e,
 ): (...args: P) => Promise<O> {
-  return async (...args: P) => {
+  return (async (...args: P) => {
     const result = await mapErrors(fn, onError)(...args)
     if (result.success) return result.data
 
     throw new ErrorList(result.errors)
-  }
-}
-
-/**
- * Creates a composable with unknown input and context that uses schemas to parse them into known types.
- * This allows you to code the function with arbitrary types knowinng that they will be enforced in runtime.
- * Very useful when piping data coming from any external source into your composables.
- * After giving the input and context schemas, you can pass a handler function that takes type safe input and context. That function is gonna catch any errors and always return a Result.
- * @param inputSchema the schema for the input
- * @param contextSchema the schema for the context
- * @returns a handler function that takes type safe input and context
- * @example
- * const safeFunction = withSchema(
- *  z.object({ greeting: z.string() }),
- *  z.object({
- *    user: z.object({ name: z.string() })
- *  }),
- * )
- * const safeGreet = safeFunction(({ greeting }, { user }) => ({
- *   message: `${greeting} ${user.name}`
- * })
- */
-function withSchema<I, C>(
-  inputSchema?: ParserSchema<I>,
-  contextSchema?: ParserSchema<C>,
-): <Output>(
-  hander: (input: I, context: C) => Output,
-) => ComposableWithSchema<Output> {
-  return (handler) =>
-    applySchema(
-      inputSchema,
-      contextSchema,
-    )(composable(handler)) as ComposableWithSchema<any>
+  }) as (...args: P) => Promise<O>
 }
 
 /**
@@ -139,10 +115,11 @@ function applySchema<ParsedInput, ParsedContext>(
   inputSchema?: ParserSchema<ParsedInput>,
   contextSchema?: ParserSchema<ParsedContext>,
 ) {
+  // TODO: Accept plain functions and equalize with withSchema
   return <R, Input, Context>(
-    fn: Composable<(input?: Input, context?: Context) => R>,
+    fn: Composable<(input: Input, context: Context) => R>,
   ): ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn> => {
-    return ((input?: unknown, context?: unknown) => {
+    const callable = ((input?: unknown, context?: unknown) => {
       const ctxResult = (contextSchema ?? alwaysUnknownSchema).safeParse(
         context,
       )
@@ -159,7 +136,41 @@ function applySchema<ParsedInput, ParsedContext>(
       }
       return fn(result.data as Input, ctxResult.data as Context)
     }) as ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn>
+    ;(callable as any).kind = 'composable' as const
+    return callable
   }
+}
+
+/**
+ * Creates a composable with unknown input and context that uses schemas to parse them into known types.
+ * This allows you to code the function with arbitrary types knowinng that they will be enforced in runtime.
+ * Very useful when piping data coming from any external source into your composables.
+ * After giving the input and context schemas, you can pass a handler function that takes type safe input and context. That function is gonna catch any errors and always return a Result.
+ * @param inputSchema the schema for the input
+ * @param contextSchema the schema for the context
+ * @returns a handler function that takes type safe input and context
+ * @example
+ * const safeFunction = withSchema(
+ *  z.object({ greeting: z.string() }),
+ *  z.object({
+ *    user: z.object({ name: z.string() })
+ *  }),
+ * )
+ * const safeGreet = safeFunction(({ greeting }, { user }) => ({
+ *   message: `${greeting} ${user.name}`
+ * })
+ */
+function withSchema<I, C>(
+  inputSchema?: ParserSchema<I>,
+  contextSchema?: ParserSchema<C>,
+): <Fn extends (input: I, context: C) => unknown>(
+  fn: Fn,
+) => ComposableWithSchema<UnpackData<Composable<Fn>>> {
+  return (handler) =>
+    applySchema(
+      inputSchema,
+      contextSchema,
+    )(composable(handler)) as ComposableWithSchema<any>
 }
 
 const alwaysUnknownSchema: ParserSchema<unknown> = {

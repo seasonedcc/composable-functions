@@ -20,17 +20,37 @@ const faultyAdd = composable((a: number, b: number) => {
 
 describe('collect', () => {
   it('collects the results of an object of Composables into a result with same format', async () => {
-    const fn: Composable<
-      (
-        args_0: number,
-        args_1: number,
-      ) => {
-        add: number
-        string: string
-        void: void
-      }
-    > = collect({ add: add, string: toString, void: voidFn })
+    const fn = collect({ add: add, string: toString, void: voidFn })
+    const res = await fn(1, 2)
 
+    type _FN = Expect<
+      Equal<
+        typeof fn,
+        Composable<
+          (
+            a: number,
+            b: number,
+          ) => {
+            add: number
+            string: string
+            void: void
+          }
+        >
+      >
+    >
+    type _R = Expect<
+      Equal<typeof res, Result<{ add: number; string: string; void: void }>>
+    >
+
+    assertEquals(res, success({ add: 3, string: '1', void: undefined }))
+  })
+
+  it('accepts plain functions', async () => {
+    const fn = collect({
+      add: (a: number, b: number) => a + b,
+      string: (a: unknown) => String(a),
+      void: () => {},
+    })
     const res = await fn(1, 2)
 
     type _FN = Expect<

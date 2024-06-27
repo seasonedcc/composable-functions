@@ -8,11 +8,11 @@
     "dev": "tsx src/usage.ts"
   },
   "devDependencies": {
-    "tsx": "^4.7.2"
+    "tsx": "^4.15.7"
   },
   "dependencies": {
-    "arktype": "2.0.0-dev.22",
+    "arktype": "2.0.0-dev.26",
     "composable-functions": "file:../../npm",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.2"
   }
 }

@@ -6,7 +6,7 @@ import {
   trace,
   withSchema,
 } from '../index.ts'
-import type { Composable, ComposableWithSchema } from '../index.ts'
+import type { Composable, ComposableWithSchema, Result } from '../index.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to failures', async () => {
@@ -25,6 +25,17 @@ describe('trace', () => {
     const result = await c({ id: 1 })
 
     assertIsError(result.errors[0], Error, 'Problem in tracing')
+  })
+
+  it('accepts plain functions as composable', async () => {
+    const a = (id: number) => id + 1
+    const b = trace((result) => console.log(result.success))(a)
+    const res = await b(1)
+
+    type _FN = Expect<Equal<typeof b, Composable<(id: number) => number>>>
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(2))
   })
 
   it('converts trace exceptions to failures', async () => {

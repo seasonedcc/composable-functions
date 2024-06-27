@@ -211,4 +211,15 @@ describe('sequence', () => {
 
     assertEquals(await c(1, 2), success<[number, string]>([3, '3 + 2']))
   })
+
+  it('accepts plain functions', async () => {
+    const a = (a: number, b: number) => a + b
+    const b = (a: number, b: number) => `${a} + ${b}`
+    const c = context.sequence(a, b)
+    type _R = Expect<
+      Equal<typeof c, Composable<(a: number, b: number) => [number, string]>>
+    >
+
+    assertEquals(await c(1, 2), success<[number, string]>([3, '3 + 2']))
+  })
 })

@@ -178,7 +178,7 @@ const result = await runtimeSafeAdd('1', null)
 
 # Combinators
 
-These combinators are useful for composing composables. They all return another `Composable`, thus allowing further application in more compositions.
+These combinators are useful for composing functions. They operate on either plain functions or composables. They all return a `Composable`, thus allowing further application in more compositions.
 
 ## all
 
@@ -187,9 +187,9 @@ It will pass the same arguments to each provided function.
 If __all constituent functions__ are successful, The `data` field (on the composite function's result) will be a tuple containing each function's output.
 
 ```ts
-const a = composable(({ id }: { id: number }) => String(id))
-const b = composable(({ id }: { id: number }) => id + 1)
-const c = composable(({ id }: { id: number }) => Boolean(id))
+const a = ({ id }: { id: number }) => String(id)
+const b = ({ id }: { id: number }) => id + 1
+const c = ({ id }: { id: number }) => Boolean(id)
 
 const result = await all(a, b, c)({ id: 1 })
 //    ^? Result<[string, number, boolean]>
@@ -211,9 +211,9 @@ If any of the constituent functions fail, the `errors` field (on the composite f
 const a = withSchema(z.object({ id: z.number() }))(({ id }) => {
   return String(id)
 })
-const b = composable(() => {
+const b = () => {
   throw new Error('Error')
-})
+}
 
 const result = await all(a, b)({ id: '1' })
 //    ^? Result<[string, never]>
@@ -233,9 +233,9 @@ Use `branch` to add conditional logic to your compositions.
 It receives a composable and a predicate function that should return the next composable to be executed based on the previous function's output, like `pipe`.
 
 ```ts
-const getIdOrEmail = composable((data: { id?: number, email?: string }) => {
+const getIdOrEmail = (data: { id?: number, email?: string }) => {
   return data.id ?? data.email
-})
+}
 const findUserById = composable((id: number) => {
   return db.users.find({ id })
 })
@@ -259,7 +259,7 @@ For the example above, the result will be:
 ```
 If you don't want to pipe when a certain condition is matched, you can return `null` like so:
 ```ts
-const a = composable(() => 'a')
+const a = () => 'a'
 const b = composable(() => 'b')
 const fn = branch(a, (data) => data === 'a' ? null : b)
 //    ^? Composable<() => 'a' | 'b'>
@@ -287,7 +287,7 @@ You can catch an error in a `Composable`, using `catchFailure` which is similar 
 ```typescript
 import { composable, catchFailure } from 'composable-functions'
 
-const getUser = composable((id: string) => fetchUser(id))
+const getUser = (id: string) => fetchUser(id)
 //    ^? Composable<(id: string) => User>
 const getOptionalUser = catchFailure(getUser, (errors, id) => {
   console.log(`Failed to fetch user with id ${id}`, errors)
@@ -303,9 +303,9 @@ const getOptionalUser = catchFailure(getUser, (errors, id) => {
 The motivation for this is that an object with named fields is often preferable to long tuples, when composing many composables.
 
 ```ts
-const a = composable(() => '1')
-const b = composable(() => 2)
-const c = composable(() => true)
+const a = () => '1'
+const b = () => 2
+const c = () => true
 
 const results = await collect({ a, b, c })({})
 //    ^? Result<{ a: string, b: number, c: boolean }>
@@ -330,19 +330,17 @@ When the given composable fails, its error is returned wihout changes.
 If successful, mapper will receive the output of the composable as input.
 
 ```ts
-const add = composable((a: number, b: number) => a + b)
+const add = (a: number, b: number) => a + b
 const addAndMultiplyBy2 = map(add, sum => sum * 2)
 ```
 
 This can be useful when composing functions. For example, you might need to align input/output types in a pipeline:
 
 ```ts
-const fetchAsText = composable(
-  ({ userId }: { userId: number }) =>
-    fetch(`https://reqres.in/api/users/${String(userId)}`).then((r) =>
-      r.json(),
-    ),
-)
+const fetchAsText = ({ userId }: { userId: number }) => {
+  return fetch(`https://reqres.in/api/users/${String(userId)}`)
+    .then((r) => r.json())
+}
 const fullName = withSchema(
   z.object({ first_name: z.string(), last_name: z.string() }),
 )(({ first_name, last_name }) => `${first_name} ${last_name}`)
@@ -369,7 +367,7 @@ For the example above, the result will be something like this:
 `map` will also receive the input parameters of the composable as arguments:
 
 ```ts
-const add = composable((a: number, b: number) => a + b)
+const add = (a: number, b: number) => a + b
 const aggregateInputAndOutput = map(add, (result, a, b) => ({ result, a, b }))
 //    ^? Composable<(a: number, b: number) => { result: number, a: number, b: number }>
 ```
@@ -383,12 +381,12 @@ This could be useful when adding any layer of error handling.
 In the example below, we are counting the errors but disregarding the contents:
 
 ```ts
-const increment = composable((n: number) => {
+const increment = (n: number) => {
   if (Number.isNaN(n)) {
     throw new Error('Invalid input')
   }
   return n + 1
-})
+}
 const summarizeErrors = (errors: Error[]) =>
   [new Error('Number of errors: ' + errors.length)]
 
@@ -410,12 +408,11 @@ For the example above, the `result` will be:
 It takes a Composable and a function that will map the input parameters to the expected input of the given Composable. Good to adequate the output of a composable into the input of the next composable in a composition. The function must return an array of parameters that will be passed to the Composable.
 
 ```ts
-const getUser = composable(({ id }: { id: number }) => db.users.find({ id }))
-//    ^? Composable<(input: { id: number }) => User>
+const getUser = ({ id }: { id: number }) => db.users.find({ id })
 
 const getCurrentUser = mapParameters(
   getUser,
-  (_input, user: { id: number }) => [{ id: user.id }]
+  (_input: unknown, user: { id: number }) => [{ id: user.id }]
 )
 //    ^? Composable<(input: unknown, ctx: { id: number }) => User>
 ```
@@ -427,9 +424,9 @@ It will pass the output of a function as the next function's input in left-to-ri
 The resulting data will be the output of the rightmost function.
 
 ```ts
-const a = composable((aNumber: number) => String(aNumber))
-const b = composable((aString: string) => aString == '1')
-const c = composable((aBoolean: boolean) => !aBoolean)
+const a = (aNumber: number) => String(aNumber)
+const b = (aString: string) => aString == '1'
+const c = (aBoolean: boolean) => !aBoolean
 
 const d = pipe(a, b, c)
 
@@ -455,9 +452,9 @@ If one functions fails, execution halts and the error is returned.
 Instead of the `data` field being the output of the last composable, it will be a tuple containing each intermediate output (similar to the `all` function).
 
 ```ts
-const a = composable((aNumber: number) => String(aNumber))
-const b = composable((aString: string) => aString == '1')
-const c = composable((aBoolean: boolean) => !aBoolean)
+const a = (aNumber: number) => String(aNumber)
+const b = (aString: string) => aString == '1'
+const c = (aBoolean: boolean) => !aBoolean
 
 const d = sequence(a, b, c)
 
@@ -478,8 +475,8 @@ For the example above, the result will be:
 If you'd rather have a sequential combinator that returns an object - similar to collect - instead of a tuple, you can use the `map` function like so:
 
 ```ts
-const a = composable((aNumber: number) => String(aNumber))
-const b = composable((aString: string) => aString === '1')
+const a = (aNumber: number) => String(aNumber)
+const b = (aString: string) => aString === '1'
 
 const c = map(sequence(a, b), ([a, b]) => ({ aString: a, aBoolean: b }))
 
@@ -520,7 +517,7 @@ const trackErrors = trace(async (result, ...args) => {
 # Input Resolvers
 We export some functions to help you extract values out of your requests before sending them as user input.
 
-These functions are better suited for use with `withSchema` rather than `composable` since they deal with external data and `withSchema` will ensure type-safety in runtime.
+These functions are better suited for composables with runtime validation, such as those built with `withSchema` (or `applySchema`) since they deal with external data and `withSchema` will ensure type-safety in runtime.
 
 For more details on how to structure your data, refer to this [test file](./src/tests/input-resolvers.test.ts).
 
@@ -792,9 +789,9 @@ It is the same as `branch` but it will forward the context to the next composabl
 ```ts
 import { context } from 'composable-functions'
 
-const getIdOrEmail = composable((data: { id?: number, email?: string }) => {
+const getIdOrEmail = (data: { id?: number, email?: string }) => {
   return data.id ?? data.email
-})
+}
 const findUserById = composable((id: number, ctx: { user: User }) => {
   if (!ctx.user.admin) {
     throw new Error('Unauthorized')
@@ -819,9 +816,9 @@ Similar to `pipe` but it will forward the context to the next composable.
 ```ts
 import { context } from 'composable-functions'
 
-const a = composable((aNumber: number, ctx: { user: User }) => String(aNumber))
-const b = composable((aString: string, ctx: { user: User }) => aString == '1')
-const c = composable((aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin)
+const a = (aNumber: number, ctx: { user: User }) => String(aNumber)
+const b = (aString: string, ctx: { user: User }) => aString == '1'
+const c = (aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin
 
 const d = context.pipe(a, b, c)
 
@@ -834,9 +831,9 @@ Similar to `sequence` but it will forward the context to the next composable.
 ```ts
 import { context } from 'composable-functions'
 
-const a = composable((aNumber: number, ctx: { user: User }) => String(aNumber))
-const b = composable((aString: string, ctx: { user: User }) => aString === '1')
-const c = composable((aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin)
+const a = (aNumber: number, ctx: { user: User }) => String(aNumber)
+const b = (aString: string, ctx: { user: User }) => aString === '1'
+const c = (aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin
 
 const d = context.sequence(a, b, c)
 

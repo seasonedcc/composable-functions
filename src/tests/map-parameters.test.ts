@@ -28,6 +28,24 @@ describe('mapParameters', () => {
     assertEquals(res, success(3))
   })
 
+  it('accepts plain functions', async () => {
+    const fn = mapParameters(
+      (a: number, b: number) => a + b,
+      ({ a, b }: { a: number; b: number }) => [a, b],
+    )
+    const res = await fn({ a: 1, b: 2 })
+
+    type _FN = Expect<
+      Equal<
+        typeof fn,
+        Composable<(d: { a: number; b: number }) => number>
+      >
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res, success(3))
+  })
+
   it('maps with an async function', async () => {
     const fn = mapParameters(
       add,

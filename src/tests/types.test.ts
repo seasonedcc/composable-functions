@@ -375,7 +375,7 @@ namespace BranchReturn {
 
 namespace UnpackData {
   type testExtractsDataFromPromisedResult = Expect<
-    Equal<Subject.UnpackData<() => Promise<Subject.Result<string>>>, string>
+    Equal<Subject.UnpackData<Subject.Composable<() => string>>, string>
   >
 
   const result = withSchema()(() => ({ name: 'foo' } as const))
