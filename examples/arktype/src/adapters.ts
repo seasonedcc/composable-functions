@@ -30,10 +30,11 @@ function adapt<T extends Type>(schema: T): ParserSchema<T['infer']> {
  * Approach 2: Create your custom `withSchema` and `applySchema` functions that will return a `Result`
  */
 function applyArkSchema<I, C>(inputSchema?: Type<I>, contextSchema?: Type<C>) {
+  //
   return <R, Input, Context>(
     fn: Composable<(input: Input, context: Context) => R>,
   ) => {
-    return function (input?: unknown, context?: unknown) {
+    const callable = ((input?: unknown, context?: unknown) => {
       const ctxResult = (contextSchema ?? type('unknown'))(context)
       const result = (inputSchema ?? type('unknown'))(input)
 
@@ -55,7 +56,9 @@ function applyArkSchema<I, C>(inputSchema?: Type<I>, contextSchema?: Type<C>) {
         return failure([...inputErrors, ...ctxErrors])
       }
       return fn(result as Input, ctxResult as Context)
-    } as ApplySchemaReturn<I, C, typeof fn>
+    }) as ApplySchemaReturn<I, C, typeof fn>
+    ;(callable as any).kind = 'composable' as const
+    return callable
   }
 }
 

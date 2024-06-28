@@ -8,7 +8,7 @@
     "dev": "tsx src/usage.ts"
   },
   "devDependencies": {
-    "tsx": "^4.15.7"
+    "tsx": "^4.15.8"
   },
   "dependencies": {
     "arktype": "2.0.0-dev.26",
