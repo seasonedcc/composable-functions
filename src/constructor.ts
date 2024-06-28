@@ -33,8 +33,13 @@ import * as Future from './deps.ts'
  *
  */
 function toComposable<R>(
-  df: DomainFunction<R>,
+  dfOrCf: DomainFunction<R> | Future.ComposableWithSchema<R>,
 ): Future.Composable<(input?: unknown, environment?: unknown) => R> {
+  if ('kind' in dfOrCf && dfOrCf.kind === 'composable') {
+    return dfOrCf
+  }
+  const df = dfOrCf as DomainFunction<R>
+
   const callable = (async (input?: unknown, environment?: unknown) => {
     const result = await df(input, environment)
     return result.success
@@ -107,7 +112,10 @@ function fromComposable<R>(
             previous.inputErrors.push(
               schemaError(current.message, current.path.join('.')),
             )
-          } else if (current instanceof Future.EnvironmentError || current instanceof Future.ContextError) {
+          } else if (
+            current instanceof Future.EnvironmentError ||
+            current instanceof Future.ContextError
+          ) {
             previous.environmentErrors.push(
               schemaError(current.message, current.path.join('.')),
             )
