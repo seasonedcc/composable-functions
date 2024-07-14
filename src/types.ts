@@ -46,9 +46,12 @@ type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
  * We only use this type to make the Composable type neater looking.
  * It does not need to be exported by the library.
  */
-type ComposableFunction<T extends Internal.AnyFn = Internal.AnyFn> = (
-  ...args: Parameters<T>
-) => Promise<Result<Awaited<ReturnType<T>>>>
+type ComposableFunction<T extends Internal.AnyFn = Internal.AnyFn> = {
+  (
+    ...args: Parameters<T>
+  ): Promise<Result<Awaited<ReturnType<T>>>>
+  kind: 'composable'
+}
 
 /**
  * A composable async function that catches failures.
@@ -56,10 +59,7 @@ type ComposableFunction<T extends Internal.AnyFn = Internal.AnyFn> = (
 type Composable<T extends Internal.AnyFn = Internal.AnyFn> = T extends {
   kind: 'composable'
 } ? T
-  : ComposableFunction<T> & {
-    kind: 'composable'
-  }
-
+  : ComposableFunction<T>
 /**
  * A composable async function with schema validation at runtime.
  */
