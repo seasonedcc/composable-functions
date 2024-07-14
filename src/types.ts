@@ -42,8 +42,8 @@ type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
   : output
 
 /**
- * An untagged composable async function that catches failures.
- * We only use this type to make the Composable type neater looking.
+ * A composable async function that catches failures.
+ * We only use this type to make the Composable type neater looking, use `Composable` instead.
  * It does not need to be exported by the library.
  */
 type ComposableFunction<T extends Internal.AnyFn = Internal.AnyFn> = {
@@ -270,7 +270,6 @@ export type {
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
-  ComposableFunction,
   ComposableWithSchema,
   FailToCompose,
   Failure,
