@@ -1,8 +1,8 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
-import { catchFailure, composable, success, withSchema } from '../index.ts'
+import { applySchema, catchFailure, composable, success } from '../index.ts'
 
-const schemaFaultyAdd = withSchema(
+const schemaFaultyAdd = applySchema(
   z.number(),
   z.number(),
 )((a: number, b: number) => {

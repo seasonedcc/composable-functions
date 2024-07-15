@@ -1,16 +1,16 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
 import {
+  applySchema,
   collect,
   composable,
   failure,
   InputError,
   success,
-  withSchema,
 } from '../index.ts'
 
 const voidFn = composable(() => {})
-const toString = withSchema(z.unknown(), z.any())((a) => String(a))
+const toString = applySchema(z.unknown(), z.any())((a) => String(a))
 const append = composable((a: string, b: string) => `${a}${b}`)
 const add = composable((a: number, b: number) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
@@ -130,8 +130,8 @@ describe('collect', () => {
   })
 
   it('should return error when one of the schema functions has input errors', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
-    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => id)
+    const b = applySchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = collect({ a, b })
     type _R = Expect<
@@ -150,8 +150,8 @@ describe('collect', () => {
   })
 
   it('should combine the inputError messages of both schema functions', async () => {
-    const a = withSchema(z.object({ id: z.string() }))(({ id }) => id)
-    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
+    const a = applySchema(z.object({ id: z.string() }))(({ id }) => id)
+    const b = applySchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = collect({ a, b })
     type _R = Expect<

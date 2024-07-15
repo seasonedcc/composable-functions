@@ -2,9 +2,9 @@
  * A custom error class for input errors.
  *
  * @example
- * const aComposable = withSchema()(() => {
+ * const fn = () => {
  *   throw new InputError('Invalid input', 'user.name')
- * })
+ * }
  */
 class InputError extends Error {
   /**
@@ -24,9 +24,9 @@ class InputError extends Error {
  * A custom error class for context errors.
  *
  * @example
- * const aComposable = withSchema()(() => {
+ * const fn = () => {
  *  throw new EnvironmentError('Invalid environment', 'user.name')
- * })
+ * }
  */
 class EnvironmentError extends Error {
   /**
@@ -45,9 +45,9 @@ class EnvironmentError extends Error {
  * A custom error class for context errors.
  *
  * @example
- * const aComposable = withSchema()(() => {
+ * const fn = () => {
  *  throw new ContextError('Invalid context', 'user.name')
- * })
+ * }
  */
 class ContextError extends Error {
   /**

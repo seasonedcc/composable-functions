@@ -1,10 +1,9 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import type { Composable, Result } from '../index.ts'
-import { composable, sequence, success } from '../index.ts'
-import { withSchema } from '../index.ts'
+import { applySchema, composable, sequence, success } from '../index.ts'
 
 const toString = composable((a: unknown) => `${a}`)
-const schemaAdd = withSchema(z.number(), z.number())((a, b) => a + b)
+const schemaAdd = applySchema(z.number(), z.number())((a, b) => a + b)
 const faultyAdd = composable((a: number, b: number) => {
   if (a === 1) throw new Error('a is 1')
   return a + b

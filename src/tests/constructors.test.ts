@@ -445,7 +445,7 @@ describe('applySchema', () => {
     const handler = applySchema(
       inputSchema,
       z.unknown(),
-    )(composable((x: string) => x))
+    )((x) => x)
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
     const result = await handler('a')
 

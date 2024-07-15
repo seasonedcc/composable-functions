@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
-import { withSchema } from '../index.ts'
+import { applySchema } from '../index.ts'
 import { assertEquals, describe, it } from './prelude.ts'
 import type * as Subject from '../types.ts'
 import type { Internal } from '../internal/types.ts'
@@ -378,7 +378,7 @@ namespace UnpackData {
     Equal<Subject.UnpackData<Subject.Composable<() => string>>, string>
   >
 
-  const result = withSchema()(() => ({ name: 'foo' } as const))
+  const result = applySchema()(() => ({ name: 'foo' } as const))
 
   type test = Expect<
     Equal<Subject.UnpackData<typeof result>, { readonly name: 'foo' }>

@@ -237,7 +237,8 @@ type ApplySchemaReturn<
   Fn extends Internal.AnyFn,
 > = ParsedInput extends Parameters<Fn>[0]
   ? ParsedContext extends Parameters<Fn>[1]
-    ? Awaited<ReturnType<Fn>> extends Result<infer O> ? ComposableWithSchema<O>
+    ? Awaited<ReturnType<Fn>> extends never ? ComposableWithSchema<never>
+    : Awaited<ReturnType<Fn>> extends Result<infer O> ? ComposableWithSchema<O>
     : ComposableWithSchema<Awaited<ReturnType<Fn>>>
   : FailToCompose<ParsedContext, Parameters<Fn>[1]>
   : FailToCompose<ParsedInput, Parameters<Fn>[0]>
