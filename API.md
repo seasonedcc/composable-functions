@@ -5,7 +5,6 @@
   - [failure](#failure)
   - [fromSuccess](#fromsuccess)
   - [success](#success)
-  - [withSchema](#withschema)
 - [Combinators](#combinators)
   - [all](#all)
   - [branch](#branch)
@@ -48,17 +47,17 @@
 # Constructors
 
 ## applySchema
-It takes a composable and schemas for the input and context, and returns the same composable with the schemas applied. So the types will be asserted at runtime.
+It turns a function or a composition of functions into a `ComposableWithSchema` which will have `unknown` input and context, so the types will be asserted at runtime.
 
 It is useful when dealing with external data, such as API requests, where you want to ensure the data is in the correct shape before processing it.
 
 ```ts
-const fn = composable((
+const fn = (
   { greeting }: { greeting: string },
   { user }: { user: { name: string } },
 ) => ({
    message: `${greeting} ${user.name}`
-}))
+})
 
 const safeFunction = applySchema(
   z.object({ greeting: z.string() }),
@@ -68,8 +67,10 @@ const safeFunction = applySchema(
 )(fn)
 
 type Test = typeof safeFunction
-//   ^? Composable<(input?: unknown, ctx?: unknown) => { message: string }>
+//   ^? ComposableWithSchema<{ message: string }>
 ```
+For didactit purposes: `ComposableWithSchema<T> === Composable<(i?: unknown, c?: unknown) => T>`
+
 
 ## composable
 This is the primitive function to create composable functions. It takes a function and returns a composable function.
@@ -150,32 +151,6 @@ expect(result).toEqual({
 })
 ```
 
-## withSchema
-It creates a composable with unknown input and context types, and applies the schemas to them so the arguments are assured at runtime.
-
-See `applySchema` above for more information.
-
-```ts
-import { z } from 'zod'
-
-const runtimeSafeAdd = withSchema(z.number(), z.number())((a, b) => a + b)
-//    ^? Composable<(i?: unknown, e?: unknown) => number>
-const result = await runtimeSafeAdd(1, 2)
-console.log(result.success ? result.data : result.errors)
-```
-
-If there are input or context errors, they will be returned in the `errors` property of the result.
-```ts
-const result = await runtimeSafeAdd('1', null)
-// {
-//   success: false,
-//   errors: [
-//     new InputError('Expected number, received string'),
-//     new ContextError('Expected number, received null')
-//   ],
-// }
-```
-
 # Combinators
 
 These combinators are useful for composing functions. They operate on either plain functions or composables. They all return a `Composable`, thus allowing further application in more compositions.
@@ -208,7 +183,7 @@ For the example above, the result will be:
 If any of the constituent functions fail, the `errors` field (on the composite function's result) will be an array of the concatenated errors from each failing function:
 
 ```ts
-const a = withSchema(z.object({ id: z.number() }))(({ id }) => {
+const a = applySchema(z.object({ id: z.number() }))(({ id }) => {
   return String(id)
 })
 const b = () => {
@@ -335,7 +310,7 @@ const fetchAsText = ({ userId }: { userId: number }) => {
   return fetch(`https://reqres.in/api/users/${String(userId)}`)
     .then((r) => r.json())
 }
-const fullName = withSchema(
+const fullName = applySchema(
   z.object({ first_name: z.string(), last_name: z.string() }),
 )(({ first_name, last_name }) => `${first_name} ${last_name}`)
 
@@ -511,7 +486,7 @@ const trackErrors = trace(async (result, ...args) => {
 # Input Resolvers
 We export some functions to help you extract values out of your requests before sending them as user input.
 
-These functions are better suited for composables with runtime validation, such as those built with `withSchema` (or `applySchema`) since they deal with external data and `withSchema` will ensure type-safety in runtime.
+These functions are better suited for composables with runtime validation, such as those built with `applySchema` since they deal with external data and `applySchema` will ensure type-safety in runtime.
 
 For more details on how to structure your data, refer to this [test file](./src/tests/input-resolvers.test.ts).
 
@@ -617,7 +592,7 @@ async (request: Request) => {
 
 # Error Constructors and Handlers
 The `Failure` results contain a list of errors that can be of any extended class of `Error`.
-To help with composables `withSchema` though, we provide some constructors that will help you create errors to differentiate between kinds of errors.
+However, to help with composables with schema, we provide some constructors that will help you create errors to differentiate between kinds of errors.
 
 ## ErrorList
 An `ErrorList` is a special kind of error that carries a list of errors that can be used to represent multiple errors in a single result.
@@ -645,7 +620,7 @@ An `ContextError` is a special kind of error that represents an error in the con
 It has an optional second parameter that is an array of strings representing the path to the error in the context schema.
 
 ```ts
-const fn = withSchema(
+const fn = applySchema(
   z.object({ id: z.number() }),
   z.object({
     user: z.object({ id: z.string() }),

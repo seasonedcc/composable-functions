@@ -4,21 +4,21 @@ When dealing with external data such as API requests or form submissions, it's c
 
 ## Using Schemas
 
-To ensure type safety at runtime, use the `applySchema` or `withSchema` functions to validate external inputs against defined schemas.
+To ensure type safety at runtime, use the `applySchema` function to validate external inputs against defined schemas.
 
-**Note about schema validation libraries:** Composable functions use Zod for schema validation by default. If you prefer to use another library, you can create your own `withSchema` function based on the library of your choice. For an example, see the [Arktype example](./examples/arktype/README.md).
+**Note about schema validation libraries:** Composable functions use Zod for schema validation by default. If you prefer to use another library, you can create your own `applySchema` function based on the library of your choice. For an example, see the [Arktype example](./examples/arktype/README.md).
 
 ### applySchema
 
-The `applySchema` function takes a schemas for the input and context, and a composable, applying these schemas to ensure data integrity.
+The `applySchema` function takes a schemas for the input and context, and a function, applying these schemas to ensure data integrity.
 
 ```typescript
 import { composable, applySchema } from 'composable-functions'
 import { z } from 'zod'
 
-const fn = composable(({ greeting }: { greeting: string }, { user }: { user: { name: string } }) => ({
+const fn = ({ greeting }: { greeting: string }, { user }: { user: { name: string } }) => ({
   message: `${greeting} ${user.name}`
-}))
+})
 
 const safeFunction = applySchema(
   z.object({ greeting: z.string() }),
@@ -27,27 +27,7 @@ const safeFunction = applySchema(
 const fnWithSchema = safeFunction(fn)
 
 type Test = typeof fnWithSchema
-//   ^? Composable<(input?: unknown, ctx?: unknown) => { message: string }>
-```
-
-### withSchema
-
-The withSchema function is similar to applySchema but provides a more concise syntax for creating runtime-safe composables.
-
-```ts
-import { composable, withSchema } from 'composable-functions'
-import { z } from 'zod'
-
-const runtimeSafeAdd = withSchema(z.number(), z.number())((a, b) => a + b)
-//    ^? Composable<(input?: unknown, ctx?: unknown) => number>
-const result = await runtimeSafeAdd(1, 2)
-/*
-result = {
-  success: true,
-  data: 3,
-  errors: []
-}
-*/
+//   ^? ComposableWithSchema<{ message: string }>
 ```
 
 ## Input Resolvers
@@ -115,4 +95,4 @@ const values = inputFromSearch(qs)
 ## FAQ
 
 - I want to use composable-functions in a project that does not have Zod, how can I use other schema validation libraries?
-  - We [created an example](./examples/arktype/src/) in the example folder showing how to construct your own `withSchema` functions based on other parsers.
+  - We [created an example](./examples/arktype/src/) in the example folder showing how to construct your own `applySchema` functions based on other parsers.

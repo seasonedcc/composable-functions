@@ -7,7 +7,7 @@ This document will guide you through the migration process.
 
 -	🛡️ Enhanced Type Safety: Enjoy robust **type-safety during function composition**. The improved type-checking mechanisms prevent incompatible functions from being composed, reducing runtime errors and improving code reliability.
 -	🤌 Simplified Function Creation: **No need to define schemas**. Create composable functions easily and efficiently without the overhead of schema definitions. Work with plain functions in every combinator.
--	🕵🏽 Runtime Validation: Use the [`withSchema`](./API.md#withschema) function for optional runtime validation of inputs and context. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use [`applySchema`](./API.md#applyschema) to run your runtime validation only once **avoiding unnecessary processing**.
+-	🕵🏽 Runtime Validation: Use the [`applySchema`](./API.md#applyschema) function for optional runtime validation of inputs and context. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use [`applySchema`](./API.md#applyschema) to run your runtime validation only once **avoiding unnecessary processing**.
 -	🔀 Flexible Compositions: The new combinators, such as [`context.pipe`](./API.md#contextpipe), [`context.sequence`](./API.md#contextsequence), and [`context.branch`](./API.md#contextbranch), offer powerful ways to manage **typed context** which are contextual information across your compositions.
 -	🛠️ Incremental Migration: Seamlessly migrate your existing codebase incrementally. **Both `domain-functions` and `composable-functions` can coexist**, allowing you to transition module by module.
 -	🛟 Enhanced Combinators: New and improved combinators like [`map`](./API.md#map), [`mapParameters`](./API.md#mapparameters), [`mapErrors`](./API.md#maperrors) and [`catchFailure`](./API.md#catchfailure) provide more control over error handling and transformation, making your **code more resilient**.
@@ -39,7 +39,7 @@ The first thing you want to know is that the old `DomainFunction<T>` is equivale
 
 A composable does not need a schema, but you can still use one for runtime assertion. What we used to call a Domain Function is now a Composable with [context](./context.md) and a schema.
 
-The new constructor `withSchema` will work almost exactly as `makeDomainFunction`, except for the `Result` type of the resulting function.
+The new constructor `applySchema` will work almost exactly as `makeDomainFunction`, except for the `Result` type of the resulting function.
 
 ### The new `Result` type - `Success<T> | Failure`
 We removed the inputErrors and environmentErrors from the result and represent all of them using instances of `Error`.
@@ -199,7 +199,7 @@ const fn = map(all(fn1, fn2), mergeObjects)
 You don't need to migrate the whole project at once.
 You can have both libraries in the project and migrate one module at a time.
 
-Choose a module that has fewer dependants and swipe all constructors from `makeDomainFunction` to `withSchema`.
+Choose a module that has fewer dependants and swipe all constructors from `makeDomainFunction` to `applySchema`.
 
 If your compositions are using domain functions from other modules, you'll see type errors. You can use the `toComposable` from `domain-functions@3.0` to avoid having to migrate those modules.
 
@@ -252,8 +252,7 @@ if (result.errors.some(isInputError)) {
 #### Constructors
 | Domain Functions | Composable Functions |
 |---|---|
-| `makeDomainFunction(z.string(), z.number())((input, env) => {})` | `withSchema(z.string, z.number())((input, ctx) => {})` |
-| -- | `applySchema(z.string(), z.number())(composable((input, ctx) => {}))` |
+| `makeDomainFunction(z.string(), z.number())((input, env) => {})` | `applySchema(z.string, z.number())((input, ctx) => {})` |
 | `makeSuccessResult(1)` | `success(1)` |
 | `makeErrorResult({ errors: [{ message: 'Something went wrong' }] })` | `failure([new Error('Something went wrong')])` |
 | `new InputError('required', 'user.name')` | `new InputError('required', ['user', 'name'])` |
