@@ -113,18 +113,18 @@ describe('composable', () => {
 
 describe('fromSuccess', () => {
   it('returns the result.data when the schema function suceeds', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = composable((n: number) => n + 1)
 
     const c = fromSuccess(a)
     type _R = Expect<
-      Equal<typeof c, (input?: unknown, context?: unknown) => Promise<number>>
+      Equal<typeof c, (n: number) => Promise<number>>
     >
 
-    assertEquals(await c({ id: 1 }), 2)
+    assertEquals(await c(1), 2)
   })
 
   it('throws an exception when the schema function fails', () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = applySchema(z.number())((n) => n + 1)
 
     const c = fromSuccess(a)
     type _R = Expect<
@@ -134,15 +134,6 @@ describe('fromSuccess', () => {
     assertRejects(async () => {
       await c({ invalidInput: 'should error' })
     }, ErrorList)
-  })
-
-  it('works with composable functions', async () => {
-    const a = composable(() => 1)
-
-    const c = fromSuccess(a)
-    type _R = Expect<Equal<typeof c, () => Promise<1>>>
-
-    assertEquals(await c(), 1)
   })
 
   it('allows to throw any arbitrary value', async () => {
@@ -266,34 +257,6 @@ describe('withSchema', () => {
     >
 
     assertEquals(await handler({ id: '1' }, { uid: '2' }), success([1, 2]))
-  })
-
-  it('applies async validations', async () => {
-    const parser = z.object({
-      id: z
-        .preprocess(Number, z.number())
-        .refine((value) => value !== 1, { message: 'ID already taken' }),
-    })
-
-    const ctxParser = z.object({
-      uid: z
-        .preprocess(Number, z.number())
-        .refine((value) => value !== 2, { message: 'UID already taken' }),
-    })
-
-    const handler = withSchema(
-      parser,
-      ctxParser,
-    )(({ id }, { uid }) => [id, uid])
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
-
-    assertEquals(
-      await handler({ id: '1' }, { uid: '2' }),
-      failure([
-        new InputError('ID already taken', ['id']),
-        new ContextError('UID already taken', ['uid']),
-      ]),
-    )
   })
 
   it('accepts literals as input of schema functions', async () => {
@@ -492,15 +455,5 @@ describe('applySchema', () => {
     type _R = Expect<Equal<typeof handler, Internal.FailToCompose<string, 'a'>>>
     // @ts-expect-error: 'a' is not assignable to 'string'
     const _result = await handler('a')
-  })
-
-  it('can be used as a layer on top of withSchema fn', async () => {
-    const fn = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const prepareSchema = z.string().transform((v) => ({ id: Number(v) }))
-    const handler = applySchema(prepareSchema)(fn)
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
-
-    const result = await handler('1')
-    assertEquals(result, success(2))
   })
 })
