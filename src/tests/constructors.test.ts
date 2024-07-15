@@ -427,10 +427,7 @@ describe('applySchema', () => {
       inputSchema,
       ctxSchema,
     )(
-      composable(
-        ({ id }: { id: number }, { uid }: { uid: number }) =>
-          [id, uid] as const,
-      ),
+      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
     )
     type _R = Expect<
       Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
@@ -455,29 +452,25 @@ describe('applySchema', () => {
     assertEquals(result, success('a'))
   })
 
-  // TODO: Accept plain functions and equalize with withSchema
-  // it('accepts a plain function', async () => {
-  //   const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
-  //   const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
+  it('accepts a plain function', async () => {
+    const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
-  //   const handler = applySchema(
-  //     inputSchema,
-  //     ctxSchema,
-  //   )(
-  //     composable(
-  //       ({ id }: { id: number }, { uid }: { uid: number }) =>
-  //         [id, uid] as const,
-  //     ),
-  //   )
-  //   type _R = Expect<
-  //     Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
-  //   >
+    const handler = applySchema(
+      inputSchema,
+      ctxSchema,
+    )(
+      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
+    )
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
+    >
 
-  //   assertEquals(
-  //     await handler({ id: 1 }, { uid: 2 }),
-  //     success<[number, number]>([1, 2]),
-  //   )
-  // });
+    assertEquals(
+      await handler({ id: 1 }, { uid: 2 }),
+      success<[number, number]>([1, 2]),
+    )
+  })
 
   it('fails to compose when there is an object schema with incompatible properties', async () => {
     const inputSchema = z.object({ x: z.string() })
