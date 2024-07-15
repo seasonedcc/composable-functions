@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { withSchema } from 'composable-functions'
+import { applySchema } from 'composable-functions'
 import { makeService } from 'make-service'
 
 const reqRes = makeService('https://reqres.in/api')
@@ -22,7 +22,7 @@ const getColor = async ({ id }: { id: string }) => {
   return response.json(z.object({ data: colorSchema }))
 }
 
-const mutateColor = withSchema(
+const mutateColor = applySchema(
   z.object({
     id: z.string(),
     color: z.string().min(1, 'Color is required'),

@@ -11,8 +11,8 @@
     "tsx": "^4.15.8"
   },
   "dependencies": {
-    "arktype": "2.0.0-dev.26",
+    "arktype": "2.0.0-dev.29",
     "composable-functions": "file:../../npm",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.3"
   }
 }

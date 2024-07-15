@@ -1,16 +1,16 @@
-import { composable, withSchema } from 'composable-functions'
-import { applyArkSchema, withArkSchema, adapt } from './adapters'
+import { applySchema, composable } from 'composable-functions'
+import { applyArkSchema, adapt } from './adapters'
 import { type } from 'arktype'
 
 const appliedFn = applyArkSchema(type({ a: 'number', b: 'number' }))(
   composable(({ a, b }: { a: number; b: number }) => a + b),
 )
-const withFn = withArkSchema(
+const withFn = applyArkSchema(
   type({ a: 'number' }),
   type({ b: 'number' }),
 )(({ a }, { b }) => a + b)
 
-const withAdapt = withSchema(adapt(type({ a: 'number', b: 'number' })))(
+const withAdapt = applySchema(adapt(type({ a: 'number', b: 'number' })))(
   ({ a, b }) => a + b,
 )
 
