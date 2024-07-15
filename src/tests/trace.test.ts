@@ -1,16 +1,16 @@
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
+  applySchema,
   composable,
   fromSuccess,
   success,
   trace,
-  withSchema,
 } from '../index.ts'
 import type { Composable, ComposableWithSchema, Result } from '../index.ts'
 
 describe('trace', () => {
   it('converts trace exceptions to failures', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     const c = trace(() => {
       throw new Error('Problem in tracing')
@@ -54,7 +54,7 @@ describe('trace', () => {
   })
 
   it('intercepts inputs and outputs of a given composable', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => id + 1)
 
     let contextFromFunctionA: unknown[] = []
 

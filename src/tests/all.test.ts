@@ -1,16 +1,16 @@
 import {
   all,
+  applySchema,
   composable,
   failure,
   InputError,
   success,
-  withSchema,
 } from '../index.ts'
 import type { Composable, ComposableWithSchema } from '../types.ts'
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 
 const voidFn = composable(() => {})
-const toString = withSchema(z.unknown(), z.any())(String)
+const toString = applySchema(z.unknown(), z.any())(String)
 const add = composable((a: number, b: number) => a + b)
 const optionalAdd = composable((a: number, b?: number) => a + (b ?? 1))
 
@@ -51,8 +51,8 @@ describe('all', () => {
   })
 
   it('should return error when one of the schema functions has input errors', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id)
-    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => id)
+    const b = applySchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<[number, string]>>>
@@ -78,8 +78,8 @@ describe('all', () => {
   })
 
   it('should combine the InputError messages of both schema functions', async () => {
-    const a = withSchema(z.object({ id: z.string() }))(({ id }) => id)
-    const b = withSchema(z.object({ id: z.string() }))(({ id }) => id)
+    const a = applySchema(z.object({ id: z.string() }))(({ id }) => id)
+    const b = applySchema(z.object({ id: z.string() }))(({ id }) => id)
 
     const c = all(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<[string, string]>>>

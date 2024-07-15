@@ -1,12 +1,12 @@
 import { assertEquals, assertIsError, describe, it, z } from './prelude.ts'
 import {
   all,
+  applySchema,
   composable,
   context,
   failure,
   InputError,
   success,
-  withSchema,
 } from '../../index.ts'
 import type {
   Composable,
@@ -52,10 +52,10 @@ describe('branch', () => {
   })
 
   it('should pipe a composable with a function that returns a composable with schema', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = context.branch(a, () => Promise.resolve(b))
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
@@ -64,12 +64,12 @@ describe('branch', () => {
   })
 
   it('should enable conditionally choosing the next composable with the output of first one', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
       next: 'multiply',
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const c = withSchema(z.object({ id: z.number() }))(({ id }) => id * 2)
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => String(id))
+    const c = applySchema(z.object({ id: z.number() }))(({ id }) => id * 2)
     const d = context.branch(a, (output) => output.next === 'multiply' ? c : b)
     type _R = Expect<Equal<typeof d, ComposableWithSchema<number | string>>>
 
@@ -77,11 +77,11 @@ describe('branch', () => {
   })
 
   it('should not pipe if the predicate returns null', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
       next: 'multiply',
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => String(id))
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const d = context.branch(a, (output) => {
       type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
       return output.next === 'multiply' ? null : b
@@ -143,7 +143,7 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the first function fails', async () => {
-    const a = withSchema(z.number())((id) => ({
+    const a = applySchema(z.number())((id) => ({
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
@@ -157,10 +157,10 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the second function fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: String(id),
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = context.branch(a, () => b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
@@ -187,7 +187,7 @@ describe('branch', () => {
   })
 
   it('should not break composition with other combinators', async () => {
-    const a = withSchema(
+    const a = applySchema(
       z.object({ id: z.number() }),
     )(({ id }) => ({
       id: id + 2,

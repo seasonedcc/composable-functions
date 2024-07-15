@@ -9,7 +9,7 @@ A set of types and functions to make compositions easy and safe.
 - 🏝️ Isolated Business Logic: Split your code into composable functions, making your code easier to test and maintain.
 - 🔒 End-to-End Type Safety: Achieve end-to-end type safety from the backend to the UI with serializable results, ensuring data integrity across your entire application.
 -	⚡ Parallel and Sequential Compositions: Compose functions both in parallel - with `all` and `collect` - and sequentially - with `pipe`, `branch`, and `sequence` -, to manage complex data flows optimizing your code for performance and clarity.
--	🕵️‍♂️ Runtime Validation: Use `withSchema` or `applySchema` with your favorite parser for optional runtime validation of inputs and context, enforcing data integrity only when needed.
+-	🕵️‍♂️ Runtime Validation: Use `applySchema` with your favorite parser for optional runtime validation of inputs and context, enforcing data integrity only when needed.
 -	🚑 Resilient Error Handling: Leverage enhanced combinators like `mapErrors` and `catchFailure` to transform and handle errors more effectively.
 -	📊 Traceable Compositions: Use the `trace` function to log and monitor your composable functions’ inputs and results, simplifying debugging and monitoring.
 
@@ -93,7 +93,7 @@ We can also extend the same reasoning to functions that return promises in a tra
 This library also defines several operations besides the `pipe` to compose functions in arbitrary ways, giving a powerful tool for the developer to reason about the data flow **without worrying about mistakenly connecting the wrong parameters** or **forgetting to unwrap some promise** or **handle some error** along the way.
 
 ### Adding runtime validation to the Composable
-To ensure type safety at runtime, use the `applySchema` or `withSchema` functions to validate external inputs against defined schemas. These schemas can be specified with libraries such as [Zod](https://github.com/colinhacks/zod/) or [ArkType](https://github.com/arktypeio/arktype).
+To ensure type safety at runtime, use the `applySchema` function to validate external inputs against defined schemas. These schemas can be specified with libraries such as [Zod](https://github.com/colinhacks/zod/) or [ArkType](https://github.com/arktypeio/arktype).
 
 Note that the resulting `Composable` will have unknown types for the parameters now that we rely on runtime validation.
 
@@ -105,9 +105,6 @@ const addAndReturnWithRuntimeValidation = applySchema(
   z.number(),
   z.number(),
 )(addAndReturnString)
-
-// Or you could have defined schemas and implementation in one shot:
-const add = withSchema(z.number(), z.number())((a, b) => a + b)
 ```
 
 For more information and examples, check the [Handling external input](./with-schema.md) guide.

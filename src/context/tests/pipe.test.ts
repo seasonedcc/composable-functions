@@ -1,22 +1,22 @@
 import { assertEquals, describe, it, z } from './prelude.ts'
 import {
+  applySchema,
   composable,
   context,
   ContextError,
   failure,
   InputError,
   success,
-  withSchema,
 } from '../../index.ts'
 import type { Composable, ComposableWithSchema } from '../../index.ts'
 import type { Internal } from '../../internal/types.ts'
 
 describe('pipe', () => {
   it('should compose functions from left-to-right', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
     const c = context.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
@@ -25,13 +25,13 @@ describe('pipe', () => {
   })
 
   it('should use the same context in all composed functions', async () => {
-    const a = withSchema(
+    const a = applySchema(
       z.undefined(),
       z.object({ ctx: z.number() }),
     )((_input, { ctx }) => ({
       inp: ctx + 2,
     }))
-    const b = withSchema(
+    const b = applySchema(
       z.object({ inp: z.number() }),
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => inp + ctx)
@@ -44,13 +44,13 @@ describe('pipe', () => {
 
   it('should fail on the first context parser failure', async () => {
     const ctxParser = z.object({ ctx: z.number() })
-    const a = withSchema(
+    const a = applySchema(
       z.undefined(),
       ctxParser,
     )((_input, { ctx }) => ({
       inp: ctx + 2,
     }))
-    const b = withSchema(
+    const b = applySchema(
       z.object({ inp: z.number() }),
       ctxParser,
     )(({ inp }, { ctx }) => inp + ctx)
@@ -67,13 +67,13 @@ describe('pipe', () => {
   it('should fail on the first input parser failure', async () => {
     const firstInputParser = z.undefined()
 
-    const a = withSchema(
+    const a = applySchema(
       firstInputParser,
       z.object({ ctx: z.number() }),
     )((_input, { ctx }) => ({
       inp: ctx + 2,
     }))
-    const b = withSchema(
+    const b = applySchema(
       z.object({ inp: z.number() }),
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => inp + ctx)
@@ -105,13 +105,13 @@ describe('pipe', () => {
   })
 
   it('should compose more than 2 functions', async () => {
-    const a = withSchema(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
+    const a = applySchema(z.object({ aNumber: z.number() }))(({ aNumber }) => ({
       aString: String(aNumber),
     }))
-    const b = withSchema(z.object({ aString: z.string() }))(({ aString }) => ({
+    const b = applySchema(z.object({ aString: z.string() }))(({ aString }) => ({
       aBoolean: aString == '1',
     }))
-    const c = withSchema(z.object({ aBoolean: z.boolean() }))(
+    const c = applySchema(z.object({ aBoolean: z.boolean() }))(
       ({ aBoolean }) => !aBoolean,
     )
 

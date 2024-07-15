@@ -20,16 +20,12 @@ function applyContextToList<
  * @example
  *
  * ```ts
- * import { withSchema, context } from 'composable-functions'
+ * import { context } from 'composable-functions'
  *
- * const a = withSchema(z.object({ aNumber: z.number() }))(
- *   ({ aNumber }) => ({ aString: String(aNumber) }),
- * )
- * const b = withSchema(z.object({ aString: z.string() }))(
- *   ({ aString }) => ({ aBoolean: aString == '1' }),
- * )
+ * const a = (aNumber: number) => String(aNumber)
+ * const b = (aString: string) => aString === '1'
  * const d = context.pipe(a, b)
- * //    ^? ComposableWithSchema<{ aBoolean: boolean }>
+ * //    ^? ComposableWithSchema<boolean>
  * ```
  */
 function pipe<Fns extends Internal.AnyFn[]>(
@@ -53,10 +49,10 @@ function pipe<Fns extends Internal.AnyFn[]>(
  * @example
  *
  * ```ts
- * import { withSchema, context } from 'composable-functions'
+ * import { context } from 'composable-functions'
  *
- * const a = withSchema(z.number())((aNumber) => String(aNumber))
- * const b = withSchema(z.string())((aString) => aString === '1')
+ * const a = (aNumber: number) => String(aNumber)
+ * const b = (aString: string) => aString === '1'
  * const aComposable = context.sequence(a, b)
  * //    ^? ComposableWithSchema<[string, boolean]>
  * ```

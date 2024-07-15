@@ -234,10 +234,12 @@ type BranchReturn<
 type ApplySchemaReturn<
   ParsedInput,
   ParsedContext,
-  Fn extends Composable,
+  Fn extends Internal.AnyFn,
 > = ParsedInput extends Parameters<Fn>[0]
   ? ParsedContext extends Parameters<Fn>[1]
-    ? ComposableWithSchema<UnpackData<Fn>>
+    ? Awaited<ReturnType<Fn>> extends never ? ComposableWithSchema<never>
+    : Awaited<ReturnType<Fn>> extends Result<infer O> ? ComposableWithSchema<O>
+    : ComposableWithSchema<Awaited<ReturnType<Fn>>>
   : FailToCompose<ParsedContext, Parameters<Fn>[1]>
   : FailToCompose<ParsedInput, Parameters<Fn>[0]>
 

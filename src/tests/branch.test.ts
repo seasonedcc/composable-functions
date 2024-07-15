@@ -1,10 +1,10 @@
-import { branch } from '../combinators.ts'
 import {
+  applySchema,
+  branch,
   composable,
   failure,
   InputError,
   success,
-  withSchema,
 } from '../index.ts'
 import type {
   Composable,
@@ -73,7 +73,7 @@ describe('branch', () => {
   })
 
   it('should not pipe if the predicate returns null', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
       next: 'multiply',
     }))
@@ -98,7 +98,7 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the first function fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
@@ -115,7 +115,7 @@ describe('branch', () => {
     const a = composable(({ id }: { id: number }) => ({
       id: String(id),
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = branch(a, () => b)
     type _R = Expect<Equal<typeof c, Composable<(a: { id: number }) => number>>>
 
@@ -126,10 +126,10 @@ describe('branch', () => {
   })
 
   it('should gracefully fail if the condition function fails', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => ({
+    const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,
     }))
-    const b = withSchema(z.object({ id: z.number() }))(({ id }) => id - 1)
+    const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
     const c = branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable

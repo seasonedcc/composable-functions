@@ -113,18 +113,18 @@ describe('composable', () => {
 
 describe('fromSuccess', () => {
   it('returns the result.data when the schema function suceeds', async () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = composable((n: number) => n + 1)
 
     const c = fromSuccess(a)
     type _R = Expect<
-      Equal<typeof c, (input?: unknown, context?: unknown) => Promise<number>>
+      Equal<typeof c, (n: number) => Promise<number>>
     >
 
-    assertEquals(await c({ id: 1 }), 2)
+    assertEquals(await c(1), 2)
   })
 
   it('throws an exception when the schema function fails', () => {
-    const a = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
+    const a = applySchema(z.number())((n) => n + 1)
 
     const c = fromSuccess(a)
     type _R = Expect<
@@ -134,15 +134,6 @@ describe('fromSuccess', () => {
     assertRejects(async () => {
       await c({ invalidInput: 'should error' })
     }, ErrorList)
-  })
-
-  it('works with composable functions', async () => {
-    const a = composable(() => 1)
-
-    const c = fromSuccess(a)
-    type _R = Expect<Equal<typeof c, () => Promise<1>>>
-
-    assertEquals(await c(), 1)
   })
 
   it('allows to throw any arbitrary value', async () => {
@@ -267,155 +258,6 @@ describe('withSchema', () => {
 
     assertEquals(await handler({ id: '1' }, { uid: '2' }), success([1, 2]))
   })
-
-  it('applies async validations', async () => {
-    const parser = z.object({
-      id: z
-        .preprocess(Number, z.number())
-        .refine((value) => value !== 1, { message: 'ID already taken' }),
-    })
-
-    const ctxParser = z.object({
-      uid: z
-        .preprocess(Number, z.number())
-        .refine((value) => value !== 2, { message: 'UID already taken' }),
-    })
-
-    const handler = withSchema(
-      parser,
-      ctxParser,
-    )(({ id }, { uid }) => [id, uid])
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
-
-    assertEquals(
-      await handler({ id: '1' }, { uid: '2' }),
-      failure([
-        new InputError('ID already taken', ['id']),
-        new ContextError('UID already taken', ['uid']),
-      ]),
-    )
-  })
-
-  it('accepts literals as input of schema functions', async () => {
-    const handler = withSchema(z.number(), z.string())((n) => n + 1)
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
-
-    const result = await handler(1, 'not going to be used')
-    assertEquals((result as Success<number>).data, 2)
-  })
-
-  it('accepts sync functions', async () => {
-    const handler = withSchema(z.number())((n) => n + 1)
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
-
-    const result = await handler(1)
-    assertEquals((result as Success<number>).data, 2)
-  })
-
-  it('returns error when context parsing fails', async () => {
-    const parser = z.object({ id: z.preprocess(Number, z.number()) })
-    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
-
-    const handler = withSchema(
-      parser,
-      ctxParser,
-    )(({ id }, { uid }) => [id, uid])
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
-
-    assertEquals(
-      await handler({ id: '1' }, {}),
-      failure([new ContextError('Expected number, received nan', ['uid'])]),
-    )
-  })
-
-  it('returns error when the schema function throws an Error', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw new Error('Error')
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    const {
-      errors: [err],
-    } = await handler({ id: 1 })
-    assertIsError(err, Error, 'Error')
-  })
-
-  it('preserves entire original exception when the schema function throws an Error', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw new Error('Some message', { cause: { someUnknownFields: true } })
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    const {
-      errors: [err],
-    } = await handler({ id: 1 })
-    assertIsError(err, Error, 'Some message')
-    assertEquals(err.cause, { someUnknownFields: true })
-  })
-
-  it('returns error when the schema function throws a string', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw 'Error'
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    assertEquals(await handler({ id: 1 }), failure([new Error()]))
-  })
-
-  it('returns error when the schema function throws an object with message', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw { message: 'Error' }
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    const {
-      errors: [err],
-    } = await handler({ id: 1 })
-
-    assertIsError(err, Error, JSON.stringify({ message: 'Error' }))
-  })
-
-  it('returns inputErrors when the schema function throws an InputError', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw new InputError('Custom input error', ['contact', 'id'])
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    assertEquals(
-      await handler({ id: 1 }),
-      failure([new InputError('Custom input error', ['contact', 'id'])]),
-    )
-  })
-
-  it('returns contextErrors when the schema function throws an ContextError', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw new ContextError('Custom ctx error', ['currentUser', 'role'])
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    assertEquals(
-      await handler({ id: 1 }),
-      failure([new ContextError('Custom ctx error', ['currentUser', 'role'])]),
-    )
-  })
-
-  it('returns an error result when the schema function throws an ErrorList', async () => {
-    const handler = withSchema(z.object({ id: z.number() }))(() => {
-      throw new ErrorList([
-        new InputError('Custom input error', ['contact', 'id']),
-        new ContextError('Custom ctx error', ['currentUser', 'role']),
-      ])
-    })
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
-
-    assertEquals(
-      await handler({ id: 1 }),
-      failure([
-        new InputError('Custom input error', ['contact', 'id']),
-        new ContextError('Custom ctx error', ['currentUser', 'role']),
-      ]),
-    )
-  })
 })
 
 describe('applySchema', () => {
@@ -427,10 +269,7 @@ describe('applySchema', () => {
       inputSchema,
       ctxSchema,
     )(
-      composable(
-        ({ id }: { id: number }, { uid }: { uid: number }) =>
-          [id, uid] as const,
-      ),
+      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
     )
     type _R = Expect<
       Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
@@ -448,36 +287,32 @@ describe('applySchema', () => {
     const handler = applySchema(
       inputSchema,
       z.unknown(),
-    )(composable((x: string) => x))
+    )((x) => x)
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
     const result = await handler('a')
 
     assertEquals(result, success('a'))
   })
 
-  // TODO: Accept plain functions and equalize with withSchema
-  // it('accepts a plain function', async () => {
-  //   const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
-  //   const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
+  it('accepts a plain function', async () => {
+    const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
-  //   const handler = applySchema(
-  //     inputSchema,
-  //     ctxSchema,
-  //   )(
-  //     composable(
-  //       ({ id }: { id: number }, { uid }: { uid: number }) =>
-  //         [id, uid] as const,
-  //     ),
-  //   )
-  //   type _R = Expect<
-  //     Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
-  //   >
+    const handler = applySchema(
+      inputSchema,
+      ctxSchema,
+    )(
+      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
+    )
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
+    >
 
-  //   assertEquals(
-  //     await handler({ id: 1 }, { uid: 2 }),
-  //     success<[number, number]>([1, 2]),
-  //   )
-  // });
+    assertEquals(
+      await handler({ id: 1 }, { uid: 2 }),
+      success<[number, number]>([1, 2]),
+    )
+  })
 
   it('fails to compose when there is an object schema with incompatible properties', async () => {
     const inputSchema = z.object({ x: z.string() })
@@ -501,13 +336,124 @@ describe('applySchema', () => {
     const _result = await handler('a')
   })
 
-  it('can be used as a layer on top of withSchema fn', async () => {
-    const fn = withSchema(z.object({ id: z.number() }))(({ id }) => id + 1)
-    const prepareSchema = z.string().transform((v) => ({ id: Number(v) }))
-    const handler = applySchema(prepareSchema)(fn)
+  it('accepts literals as input of schema functions', async () => {
+    const handler = applySchema(z.number(), z.string())((n) => n + 1)
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
-    const result = await handler('1')
-    assertEquals(result, success(2))
+    const result = await handler(1, 'not going to be used')
+    assertEquals((result as Success<number>).data, 2)
+  })
+
+  it('accepts sync functions', async () => {
+    const handler = applySchema(z.number())((n) => n + 1)
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
+
+    const result = await handler(1)
+    assertEquals((result as Success<number>).data, 2)
+  })
+
+  it('returns error when context parsing fails', async () => {
+    const parser = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
+
+    const handler = applySchema(
+      parser,
+      ctxParser,
+    )(({ id }, { uid }) => [id, uid])
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<number[]>>>
+
+    assertEquals(
+      await handler({ id: '1' }, {}),
+      failure([new ContextError('Expected number, received nan', ['uid'])]),
+    )
+  })
+
+  it('returns error when the schema function throws an Error', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw new Error('Error')
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+    assertIsError(err, Error, 'Error')
+  })
+
+  it('preserves entire original exception when the schema function throws an Error', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw new Error('Some message', { cause: { someUnknownFields: true } })
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+    assertIsError(err, Error, 'Some message')
+    assertEquals(err.cause, { someUnknownFields: true })
+  })
+
+  it('returns error when the schema function throws a string', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw 'Error'
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    assertEquals(await handler({ id: 1 }), failure([new Error()]))
+  })
+
+  it('returns error when the schema function throws an object with message', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw { message: 'Error' }
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    const {
+      errors: [err],
+    } = await handler({ id: 1 })
+
+    assertIsError(err, Error, JSON.stringify({ message: 'Error' }))
+  })
+
+  it('returns inputErrors when the schema function throws an InputError', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw new InputError('Custom input error', ['contact', 'id'])
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    assertEquals(
+      await handler({ id: 1 }),
+      failure([new InputError('Custom input error', ['contact', 'id'])]),
+    )
+  })
+
+  it('returns contextErrors when the schema function throws an ContextError', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw new ContextError('Custom ctx error', ['currentUser', 'role'])
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    assertEquals(
+      await handler({ id: 1 }),
+      failure([new ContextError('Custom ctx error', ['currentUser', 'role'])]),
+    )
+  })
+
+  it('returns an error result when the schema function throws an ErrorList', async () => {
+    const handler = applySchema(z.object({ id: z.number() }))(() => {
+      throw new ErrorList([
+        new InputError('Custom input error', ['contact', 'id']),
+        new ContextError('Custom ctx error', ['currentUser', 'role']),
+      ])
+    })
+    type _R = Expect<Equal<typeof handler, ComposableWithSchema<never>>>
+
+    assertEquals(
+      await handler({ id: 1 }),
+      failure([
+        new InputError('Custom input error', ['contact', 'id']),
+        new ContextError('Custom ctx error', ['currentUser', 'role']),
+      ]),
+    )
   })
 })
