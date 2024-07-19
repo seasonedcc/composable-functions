@@ -37,9 +37,14 @@ describe('all', () => {
         Composable<(a: number, b: number) => [number, string, void]>
       >
     >
-    // type _R = Expect<Equal<typeof res, Result<[number, string, void]>>>>
+    // type _R = Expect<Equal<typeof res, Result<[number, string, void]>>>
 
     assertEquals(res, success<[number, string, void]>([3, '1', undefined]))
+  })
+
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = all((a, b) => a + b)
   })
 
   it('handles optional arguments', async () => {

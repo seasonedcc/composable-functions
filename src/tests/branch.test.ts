@@ -43,6 +43,11 @@ describe('branch', () => {
     assertEquals(await c({ id: 1 }), success(2))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = branch((a) => a, () => null)
+  })
+
   it('accepts plain functions', async () => {
     const a = (a: number, b: number) => a + b
     const b = (a: number) => String(a - 1)

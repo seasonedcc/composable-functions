@@ -37,6 +37,11 @@ describe('sequence', () => {
     assertEquals(res, success<[number, string]>([3, '3']))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = sequence((a) => a, (a) => [a])
+  })
+
   it('type checks and composes async functions', async () => {
     const asyncProduceToIncrement = composable(() =>
       Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' })

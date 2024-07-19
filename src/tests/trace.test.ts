@@ -38,6 +38,11 @@ describe('trace', () => {
     assertEquals(res, success(2))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = trace(console.log)((a) => a)
+  })
+
   it('converts trace exceptions to failures', async () => {
     const a = composable(({ id }: { id: number }) => id + 1)
 

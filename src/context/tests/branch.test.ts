@@ -51,6 +51,11 @@ describe('branch', () => {
     assertEquals(await c({ id: 1 }, 0), success(2))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = context.branch((a) => a, () => null)
+  })
+
   it('should pipe a composable with a function that returns a composable with schema', async () => {
     const a = applySchema(z.object({ id: z.number() }))(({ id }) => ({
       id: id + 2,

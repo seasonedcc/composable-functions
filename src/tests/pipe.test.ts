@@ -38,6 +38,11 @@ describe('pipe', () => {
     assertEquals(res, success('3'))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = pipe((a) => a, (a) => [a])
+  })
+
   it('type checks and composes async functions', async () => {
     const asyncProduceToIncrement = composable(() =>
       Promise.resolve({ toIncrement: 1, someOtherProperty: 'test' })
