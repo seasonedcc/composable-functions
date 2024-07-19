@@ -172,4 +172,9 @@ describe('pipe', () => {
     >
     assertEquals(res, success(5))
   })
+
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = context.pipe((a) => a, (a) => [a])
+  })
 })

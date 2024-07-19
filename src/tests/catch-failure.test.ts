@@ -43,6 +43,11 @@ describe('catchFailure', () => {
     assertEquals(res, success(null))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = catchFailure((a) => a, () => null)
+  })
+
   it('returns original type when catcher returns empty list', async () => {
     const getList = composable(() => [1, 2, 3])
     const fn = catchFailure(getList, () => [])

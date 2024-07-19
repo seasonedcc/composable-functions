@@ -158,7 +158,7 @@ namespace Internal {
     : FailToCompose<A, B>
 
   export type Composables<
-    Fns extends Record<string, AnyFn> | Array<AnyFn>,
+    Fns extends Record<string, Function> | Array<Function>,
   > = {
     [K in keyof Fns]: Composable<Extract<Fns[K], AnyFn>>
   }

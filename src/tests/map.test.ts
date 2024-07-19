@@ -34,6 +34,11 @@ describe('map', () => {
     assertEquals(res, success(true))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = map((a) => a, (a) => [a])
+  })
+
   it('maps with an async function', async () => {
     const fn = map(add, (a) => Promise.resolve(a + 1 === 4))
     const res = await fn(1, 2)

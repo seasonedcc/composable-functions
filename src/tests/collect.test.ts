@@ -75,6 +75,11 @@ describe('collect', () => {
     assertEquals(res, success({ add: 3, string: '1', void: undefined }))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = collect({ any: (a) => a })
+  })
+
   it('uses the same arguments for every function', async () => {
     // The runtime will work since passing 1, 2 will be coerced to '1', '2'
     const fn = collect({

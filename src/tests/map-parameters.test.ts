@@ -46,6 +46,11 @@ describe('mapParameters', () => {
     assertEquals(res, success(3))
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = mapParameters((a) => a, (a) => [a])
+  })
+
   it('maps with an async function', async () => {
     const fn = mapParameters(
       add,

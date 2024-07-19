@@ -222,4 +222,9 @@ describe('sequence', () => {
 
     assertEquals(await c(1, 2), success<[number, string]>([3, '3 + 2']))
   })
+
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = context.sequence((a) => a, (a) => [a])
+  })
 })

@@ -41,6 +41,11 @@ describe('mapErrors', () => {
     assertEquals(res.errors[0].message, 'a is 1!!!')
   })
 
+  it('will enforce noImplicitAny', () => {
+    // @ts-expect-error: implicit any
+    const _fn = mapErrors((a) => a, (errors) => errors)
+  })
+
   it('maps over the error results of a Composable function', async () => {
     const fn = mapErrors(faultyAdd, (errors) => errors.map(cleanError))
     const res = await fn(1, 2)
