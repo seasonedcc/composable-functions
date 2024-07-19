@@ -20,11 +20,11 @@ function applyContextToList<
  * @example
  *
  * ```ts
- * import { context } from 'composable-functions'
+ * import { withContext } from 'composable-functions'
  *
  * const a = (aNumber: number) => String(aNumber)
  * const b = (aString: string) => aString === '1'
- * const d = context.pipe(a, b)
+ * const d = withContext.pipe(a, b)
  * //    ^? ComposableWithSchema<boolean>
  * ```
  */
@@ -45,16 +45,16 @@ function pipe<Fns extends Function[]>(
 }
 
 /**
- * Works like `context.pipe` but it will collect the output of every function in a tuple.
+ * Works like `withContext.pipe` but it will collect the output of every function in a tuple.
  *
  * @example
  *
  * ```ts
- * import { context } from 'composable-functions'
+ * import { withContext } from 'composable-functions'
  *
  * const a = (aNumber: number) => String(aNumber)
  * const b = (aString: string) => aString === '1'
- * const aComposable = context.sequence(a, b)
+ * const aComposable = withContext.sequence(a, b)
  * //    ^? ComposableWithSchema<[string, boolean]>
  * ```
  */

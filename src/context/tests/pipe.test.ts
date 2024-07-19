@@ -2,11 +2,11 @@ import { assertEquals, describe, it, z } from './prelude.ts'
 import {
   applySchema,
   composable,
-  context,
   ContextError,
   failure,
   InputError,
   success,
+  withContext,
 } from '../../index.ts'
 import type { Composable, ComposableWithSchema } from '../../index.ts'
 import type { Internal } from '../../internal/types.ts'
@@ -18,7 +18,7 @@ describe('pipe', () => {
     }))
     const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = context.pipe(a, b)
+    const c = withContext.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
@@ -36,7 +36,7 @@ describe('pipe', () => {
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = context.pipe(a, b)
+    const c = withContext.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c(undefined, { ctx: 1 }), success(4))
@@ -55,7 +55,7 @@ describe('pipe', () => {
       ctxParser,
     )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = context.pipe(a, b)
+    const c = withContext.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
@@ -78,7 +78,7 @@ describe('pipe', () => {
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = context.pipe(a, b)
+    const c = withContext.pipe(a, b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
@@ -93,7 +93,7 @@ describe('pipe', () => {
       ({ inp }: { inp: number }, { ctx }: { ctx: number }) => inp + ctx,
     )
 
-    const c = context.pipe(a, b)
+    const c = withContext.pipe(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -115,7 +115,7 @@ describe('pipe', () => {
       ({ aBoolean }) => !aBoolean,
     )
 
-    const d = context.pipe(a, b, c)
+    const d = withContext.pipe(a, b, c)
     type _R = Expect<Equal<typeof d, ComposableWithSchema<boolean>>>
 
     assertEquals(await d({ aNumber: 1 }), success(false))
@@ -123,7 +123,7 @@ describe('pipe', () => {
 
   it('fails to compose functions with third mandatory parameter', async () => {
     const add = composable((a: number, ctx: number) => a + ctx)
-    const fn = context.pipe(
+    const fn = withContext.pipe(
       add,
       composable((x: number, _ctx: number, _makeItFail: boolean) => x),
     )
@@ -138,7 +138,7 @@ describe('pipe', () => {
 
   it('fails to compose incompatible functions', async () => {
     const add = composable((a: number, ctx: number) => a + ctx)
-    const fn = context.pipe(
+    const fn = withContext.pipe(
       add,
       composable((x: string) => x),
     )
@@ -151,7 +151,7 @@ describe('pipe', () => {
 
   it('compose using context when piped functions requires a second parameter', async () => {
     const add = composable((a: number, ctx: number) => a + ctx)
-    const fn = context.pipe(add, add)
+    const fn = withContext.pipe(add, add)
 
     const res = await fn(1, 2)
 
@@ -163,7 +163,7 @@ describe('pipe', () => {
 
   it('accepts plain functions', async () => {
     const add = (a: number, ctx: number) => a + ctx
-    const fn = context.pipe(add, add)
+    const fn = withContext.pipe(add, add)
 
     const res = await fn(1, 2)
 
@@ -175,6 +175,6 @@ describe('pipe', () => {
 
   it('will enforce noImplicitAny', () => {
     // @ts-expect-error: implicit any
-    const _fn = context.pipe((a) => a, (a) => [a])
+    const _fn = withContext.pipe((a) => a, (a) => [a])
   })
 })

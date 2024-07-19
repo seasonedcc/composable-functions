@@ -3,10 +3,10 @@ import {
   all,
   applySchema,
   composable,
-  context,
   failure,
   InputError,
   success,
+  withContext,
 } from '../../index.ts'
 import type {
   Composable,
@@ -23,7 +23,7 @@ describe('branch', () => {
       ({ id }: { id: number }, context: number) => id - 1 + context,
     )
 
-    const c = context.branch(a, () => Promise.resolve(b))
+    const c = withContext.branch(a, () => Promise.resolve(b))
     type _R = Expect<
       Equal<
         typeof c,
@@ -40,7 +40,7 @@ describe('branch', () => {
     })
     const b = ({ id }: { id: number }, context: number) => id - 1 + context
 
-    const c = context.branch(a, () => Promise.resolve(b))
+    const c = withContext.branch(a, () => Promise.resolve(b))
     type _R = Expect<
       Equal<
         typeof c,
@@ -53,7 +53,7 @@ describe('branch', () => {
 
   it('will enforce noImplicitAny', () => {
     // @ts-expect-error: implicit any
-    const _fn = context.branch((a) => a, () => null)
+    const _fn = withContext.branch((a) => a, () => null)
   })
 
   it('should pipe a composable with a function that returns a composable with schema', async () => {
@@ -62,7 +62,7 @@ describe('branch', () => {
     }))
     const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
 
-    const c = context.branch(a, () => Promise.resolve(b))
+    const c = withContext.branch(a, () => Promise.resolve(b))
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(await c({ id: 1 }), success(2))
@@ -75,7 +75,10 @@ describe('branch', () => {
     }))
     const b = applySchema(z.object({ id: z.number() }))(({ id }) => String(id))
     const c = applySchema(z.object({ id: z.number() }))(({ id }) => id * 2)
-    const d = context.branch(a, (output) => output.next === 'multiply' ? c : b)
+    const d = withContext.branch(
+      a,
+      (output) => output.next === 'multiply' ? c : b,
+    )
     type _R = Expect<Equal<typeof d, ComposableWithSchema<number | string>>>
 
     assertEquals(await d({ id: 1 }), success(6))
@@ -87,7 +90,7 @@ describe('branch', () => {
       next: 'multiply',
     }))
     const b = applySchema(z.object({ id: z.number() }))(({ id }) => String(id))
-    const d = context.branch(a, (output) => {
+    const d = withContext.branch(a, (output) => {
       type _Check = Expect<Equal<typeof output, UnpackData<typeof a>>>
       return output.next === 'multiply' ? null : b
     })
@@ -112,7 +115,7 @@ describe('branch', () => {
       next: 'multiply',
     })
     const b = ({ id }: { id: number }) => String(id)
-    const d = context.branch(a, (output) => {
+    const d = withContext.branch(a, (output) => {
       type _Check = Expect<Equal<typeof output, ReturnType<typeof a>>>
       return output.next === 'multiply' ? null : b
     })
@@ -136,7 +139,7 @@ describe('branch', () => {
       ({ inp }: { inp: number }, { ctx }: { ctx: number }) => inp + ctx,
     )
 
-    const c = context.branch(a, () => b)
+    const c = withContext.branch(a, () => b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -152,7 +155,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
-    const c = context.branch(a, () => b)
+    const c = withContext.branch(a, () => b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
@@ -166,7 +169,7 @@ describe('branch', () => {
       id: String(id),
     }))
     const b = applySchema(z.object({ id: z.number() }))(({ id }) => id - 1)
-    const c = context.branch(a, () => b)
+    const c = withContext.branch(a, () => b)
     type _R = Expect<Equal<typeof c, ComposableWithSchema<number>>>
 
     assertEquals(
@@ -180,7 +183,7 @@ describe('branch', () => {
       id: id + 2,
     }))
     const b = composable(({ id }: { id: number }) => id - 1)
-    const c = context.branch(a, (_) => {
+    const c = withContext.branch(a, (_) => {
       throw new Error('condition function failed')
       // deno-lint-ignore no-unreachable
       return b
@@ -200,8 +203,8 @@ describe('branch', () => {
     const b = composable(({ id }: { id: number }) => id - 1)
     const c = composable((n: number, ctx: number) => ctx + n * 2)
     const d = all(
-      context.pipe(
-        context.branch(a, () => b),
+      withContext.pipe(
+        withContext.branch(a, () => b),
         c,
       ),
       a,
