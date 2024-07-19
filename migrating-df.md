@@ -8,7 +8,7 @@ This document will guide you through the migration process.
 -	🛡️ Enhanced Type Safety: Enjoy robust **type-safety during function composition**. The improved type-checking mechanisms prevent incompatible functions from being composed, reducing runtime errors and improving code reliability.
 -	🤌 Simplified Function Creation: **No need to define schemas**. Create composable functions easily and efficiently without the overhead of schema definitions. Work with plain functions in every combinator.
 -	🕵🏽 Runtime Validation: Use the [`applySchema`](./API.md#applyschema) function for optional runtime validation of inputs and context. This provides flexibility to enforce data integrity when needed without mandating it for every function. Assuming you have a big chain of composables you can use [`applySchema`](./API.md#applyschema) to run your runtime validation only once **avoiding unnecessary processing**.
--	🔀 Flexible Compositions: The new combinators, such as [`context.pipe`](./API.md#contextpipe), [`context.sequence`](./API.md#contextsequence), and [`context.branch`](./API.md#contextbranch), offer powerful ways to manage **typed context** which are contextual information across your compositions.
+-	🔀 Flexible Compositions: The new combinators, such as [`withContext.pipe`](./API.md#withcontextpipe), [`withContext.sequence`](./API.md#withcontextsequence), and [`withContext.branch`](./API.md#withcontextbranch), offer powerful ways to manage **typed context** which are contextual information across your compositions.
 -	🛠️ Incremental Migration: Seamlessly migrate your existing codebase incrementally. **Both `domain-functions` and `composable-functions` can coexist**, allowing you to transition module by module.
 -	🛟 Enhanced Combinators: New and improved combinators like [`map`](./API.md#map), [`mapParameters`](./API.md#mapparameters), [`mapErrors`](./API.md#maperrors) and [`catchFailure`](./API.md#catchfailure) provide more control over error handling and transformation, making your **code more resilient**.
 
@@ -89,16 +89,16 @@ The `environment` we used to have in domain-functions is now called `context` an
 
 When it comes to sequential compositions, however, we need special combinators to preserve the context so they work as the domain-functions' combinators.
 
-Use the sequential combinators from the namespace `context` to keep this familiar behavior.
+Use the sequential combinators from the namespace `withContext` to keep this familiar behavior.
 
 ```ts
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
-const result = context.pipe(fn1, fn2)(input, ctx)
-// same for `context.sequence` and `context.branch`
+const result = withContext.pipe(fn1, fn2)(input, ctx)
+// same for `withContext.sequence` and `withContext.branch`
 ```
 
-**Note**: The `pipe`, `sequence`, and `branch` outside of the `context` namespace will not keep the context through the composition.
+**Note**: The `pipe`, `sequence`, and `branch` outside of the `withContext` namespace will not keep the context through the composition.
 
 ## Modified combinators
 ### map
@@ -266,13 +266,13 @@ if (result.errors.some(isInputError)) {
 | `all(df1, df2)` | `all(fn1, fn2)` |
 | `collect(df1, df2)` | `collect(fn1, fn2)` |
 | `merge(df1, df2)` | `map(all(fn1, fn2), mergeObjects)` |
-| `branch(df1, (res) => res ? null : df2)` | `context.branch(fn1, (res) => res ? null : fn2)` |
+| `branch(df1, (res) => res ? null : df2)` | `withContext.branch(fn1, (res) => res ? null : fn2)` |
 | -- | `branch(fn1, (res) => res ? null : fn2)` without context |
-| `pipe(df1, df2)` | `context.pipe(fn1, fn2)` |
+| `pipe(df1, df2)` | `withContext.pipe(fn1, fn2)` |
 | -- | `pipe(fn1, fn2)` without context |
-| `sequence(df1, df2)` | `context.sequence(fn1, fn2)` |
+| `sequence(df1, df2)` | `withContext.sequence(fn1, fn2)` |
 | -- | `sequence(fn1, fn2)` without context |
-| `collectSequence({ name: nameDf, age: ageDf })` | `map(context.sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))` |
+| `collectSequence({ name: nameDf, age: ageDf })` | `map(withContext.sequence(nameDf, ageDf), ([name, age]) => ({ name, age }))` |
 | `map(df, (o) => ({ result: o }))` | `map(fn, (o) => ({ result: o }))` |
 | -- | `map(fn, (o, ...args) => ({ result: o, args }))` |
 | `first(df1, df2)` | -- * read docs above |

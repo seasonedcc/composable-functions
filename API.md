@@ -36,9 +36,9 @@
   - [Success](#success-1)
   - [UnpackData](#unpackdata)
 - [Combinators with Context](#combinators-with-context)
-  - [context.branch](#contextbranch)
-  - [context.pipe](#contextpipe)
-  - [context.sequence](#contextsequence)
+  - [withContext.branch](#withcontextbranch)
+  - [withContext.pipe](#withcontextpipe)
+  - [withContext.sequence](#withcontextsequence)
 - [Serialization](#serialization)
   - [serialize](#serialize)
   - [serializeError](#serializeerror)
@@ -459,7 +459,7 @@ The most common use case is to log failures to the console or to an external ser
 
 ```ts
 const traceToConsole = trace((result, ...args) => {
-  if(!context.result.success) {
+  if(!result.success) {
     console.trace("Composable Failure ", result, ...args)
   }
 })
@@ -748,15 +748,15 @@ The context is a concept of an argument that is passed to every functions of a s
 
 However in sequential compositions, we need a set of special combinators that will forward the context - the second parameter - to every function in the composition.
 
-Use the sequential combinators from the namespace `context` to get this behavior.
+Use the sequential combinators from the namespace `withContext` to get this behavior.
 
-For a deeper explanation check the [`context` docs](./context.md).
+For a deeper explanation check the [context docs](./context.md).
 
-## context.branch
+## withContext.branch
 It is the same as `branch` but it will forward the context to the next composable.
 
 ```ts
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
 const getIdOrEmail = (data: { id?: number, email?: string }) => {
   return data.id ?? data.email
@@ -773,38 +773,39 @@ const findUserByEmail = (email: string, ctx: { user: User }) => {
   }
   return db.users.find
 }
-const findUserByIdOrEmail = context.branch(
+const findUserByIdOrEmail = withContext.branch(
   getIdOrEmail,
   (data) => (typeof data === "number" ? findUserById : findUserByEmail),
 )
 const result = await findUserByIdOrEmail({ id: 1 }, { user: { admin: true } })
 ```
-## context.pipe
+
+## withContext.pipe
 Similar to `pipe` but it will forward the context to the next composable.
 
 ```ts
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
 const a = (aNumber: number, ctx: { user: User }) => String(aNumber)
 const b = (aString: string, ctx: { user: User }) => aString == '1'
 const c = (aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin
 
-const d = context.pipe(a, b, c)
+const d = withContext.pipe(a, b, c)
 
 const result = await d(1, { user: { admin: true } })
 ```
 
-## context.sequence
+## withContext.sequence
 Similar to `sequence` but it will forward the context to the next composable.
 
 ```ts
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
 const a = (aNumber: number, ctx: { user: User }) => String(aNumber)
 const b = (aString: string, ctx: { user: User }) => aString === '1'
 const c = (aBoolean: boolean, ctx: { user: User }) => aBoolean && ctx.user.admin
 
-const d = context.sequence(a, b, c)
+const d = withContext.sequence(a, b, c)
 
 const result = await d(1, { user: { admin: true } })
 ```

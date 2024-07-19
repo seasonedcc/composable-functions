@@ -2,11 +2,11 @@ import { assertEquals, describe, it, z } from './prelude.ts'
 import {
   applySchema,
   composable,
-  context,
   ContextError,
   failure,
   InputError,
   success,
+  withContext,
 } from '../../index.ts'
 import type { Composable } from '../../index.ts'
 
@@ -19,7 +19,7 @@ describe('sequence', () => {
       result: id - 1,
     }))
 
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -50,7 +50,7 @@ describe('sequence', () => {
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => ({ result: inp + ctx }))
 
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -85,7 +85,7 @@ describe('sequence', () => {
       ctxParser,
     )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -115,7 +115,7 @@ describe('sequence', () => {
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -143,7 +143,7 @@ describe('sequence', () => {
       z.object({ ctx: z.number() }),
     )(({ inp }, { ctx }) => inp + ctx)
 
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<
         typeof c,
@@ -172,7 +172,7 @@ describe('sequence', () => {
       }),
     )
 
-    const d = context.sequence(a, b, c)
+    const d = withContext.sequence(a, b, c)
     type _R = Expect<
       Equal<
         typeof d,
@@ -204,7 +204,7 @@ describe('sequence', () => {
   it('should properly type the context', async () => {
     const a = composable((a: number, b: number) => a + b)
     const b = composable((a: number, b: number) => `${a} + ${b}`)
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<typeof c, Composable<(a: number, b: number) => [number, string]>>
     >
@@ -215,7 +215,7 @@ describe('sequence', () => {
   it('accepts plain functions', async () => {
     const a = (a: number, b: number) => a + b
     const b = (a: number, b: number) => `${a} + ${b}`
-    const c = context.sequence(a, b)
+    const c = withContext.sequence(a, b)
     type _R = Expect<
       Equal<typeof c, Composable<(a: number, b: number) => [number, string]>>
     >
@@ -225,6 +225,6 @@ describe('sequence', () => {
 
   it('will enforce noImplicitAny', () => {
     // @ts-expect-error: implicit any
-    const _fn = context.sequence((a) => a, (a) => [a])
+    const _fn = withContext.sequence((a) => a, (a) => [a])
   })
 })

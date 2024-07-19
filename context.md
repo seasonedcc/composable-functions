@@ -13,12 +13,12 @@ The currently authenticated user would have to be propagated every time there is
 To avoid such awkwardness we use context:
 
 ```tsx
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 const dangerousFunction = async (input: string, { user } : { user: { name: string, admin: boolean } }) => {
   // do something that only the admin can do
 }
 
-const carryUser = context.pipe(gatherInput, dangerousFunction)
+const carryUser = withContext.pipe(gatherInput, dangerousFunction)
 ```
 
 ## Composing with context
@@ -27,15 +27,15 @@ These combinators are useful for composing functions with context. Note that the
 
 ### `pipe`
 
-The context.pipe function allows you to compose multiple functions in a sequence, forwarding the context to each function in the chain.
+The `withContext.pipe` function allows you to compose multiple functions in a sequence, forwarding the context to each function in the chain.
 
 ```ts
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
 const a = (str: string, ctx: { user: User }) => str === '1'
 const b = (bool: boolean, ctx: { user: User }) => bool && ctx.user.admin
 
-const pipeline = context.pipe(a, b)
+const pipeline = withContext.pipe(a, b)
 
 const result = await pipeline('1', { user: { admin: true } })
 /*
@@ -48,15 +48,15 @@ result = {
 ```
 
 ### `sequence`
-The context.sequence function works similarly to pipe, but it returns a tuple containing the result of each function in the sequence.
+The `withContext.sequence` function works similarly to pipe, but it returns a tuple containing the result of each function in the sequence.
 
 ```ts
-import { context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
 const a = (str: string, ctx: { user: User }) => str === '1'
 const b = (bool: boolean, ctx: { user: User }) => bool && ctx.user.admin
 
-const sequence = context.sequence(a, b)
+const sequence = withContext.sequence(a, b)
 
 const result = await sequence('1', { user: { admin: true } })
 /*
@@ -70,15 +70,15 @@ result = {
 
 ### `branch`
 
-The context.branch function adds conditional logic to your compositions, forwarding the context to each branch as needed.
+The `withContext.branch` function adds conditional logic to your compositions, forwarding the context to each branch as needed.
 
 ```ts
-import { composable, context } from 'composable-functions'
+import { withContext } from 'composable-functions'
 
 const adminIncrement = (a: number, { user }: { user: { admin: boolean } }) =>
   user.admin ? a + 1 : a
 const adminMakeItEven = (sum: number) => sum % 2 != 0 ? adminIncrement : null
-const incrementUntilEven = context.branch(adminIncrement, adminMakeItEven)
+const incrementUntilEven = withContext.branch(adminIncrement, adminMakeItEven)
 
 const result = await incrementUntilEven(1, { user: { admin: true } })
 /*
