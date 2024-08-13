@@ -8,6 +8,7 @@ export {
 export * from './domain-functions.ts'
 export * from './input-resolvers.ts'
 export * from './errors.ts'
+export * as Future from './deps.ts'
 export { mergeObjects } from './utils.ts'
 export type {
   AtLeastOne,

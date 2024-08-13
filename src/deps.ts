@@ -1,1 +1,1 @@
-export * from 'npm:composable-functions@^4.2.0'
+export * from 'npm:composable-functions@^4.4.0'

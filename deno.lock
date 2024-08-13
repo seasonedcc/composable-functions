@@ -3,7 +3,8 @@
   "packages": {
     "specifiers": {
       "npm:composable-functions@^4.0.0": "npm:composable-functions@4.0.0",
-      "npm:composable-functions@^4.2.0": "npm:composable-functions@4.2.0"
+      "npm:composable-functions@^4.2.0": "npm:composable-functions@4.2.0",
+      "npm:composable-functions@^4.4.0": "npm:composable-functions@4.4.0"
     },
     "npm": {
       "composable-functions@4.0.0": {
@@ -12,6 +13,10 @@
       },
       "composable-functions@4.2.0": {
         "integrity": "sha512-XSx46NTY9sHWI1kVZ3a+ZmkyayQdY65D9WYIoYgsD9SnDfPPfAcu5p0WcfYWNx1kQ4ObBwHou/sIOHapP8Kc7Q==",
+        "dependencies": {}
+      },
+      "composable-functions@4.4.0": {
+        "integrity": "sha512-+OflXIFqK2ntOV0+J/neylEQ2TB01CmuPBNkO5T7Pd7HsWQhn9ufrZGukidnrNT3W4XXtS8Hi+5CdwwnccSIFQ==",
         "dependencies": {}
       }
     }
