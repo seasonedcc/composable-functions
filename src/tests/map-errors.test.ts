@@ -59,6 +59,21 @@ describe('mapErrors', () => {
     assertEquals(res.errors[0].message, 'a is 1!!!')
   })
 
+  it('maps using the original input', async () => {
+    const fn = mapErrors(faultyAdd, (_, a, b) => {
+      throw new Error('result would be ' + (a + b))
+    })
+    const res = await fn(1, 2)
+
+    type _FN = Expect<
+      Equal<typeof fn, Composable<(a: number, b: number) => number>>
+    >
+    type _R = Expect<Equal<typeof res, Result<number>>>
+
+    assertEquals(res.success, false)
+    assertEquals(res.errors[0].message, 'result would be 3')
+  })
+
   it('accepts an async mapper', async () => {
     const fn = mapErrors(
       faultyAdd,

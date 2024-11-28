@@ -338,7 +338,7 @@ function catchFailure<
 }
 
 /**
- * Creates a new function that will apply a transformation over the list of Errors of a Failure from a given function. When the given function succeeds, its result is returned without changes.
+ * Creates a new function that will apply a transformation over the list of Errors of a Failure from a given function. When the given function succeeds, its result is returned without changes. The mapper receives the original input.
  *
  * @example
  *
@@ -346,19 +346,22 @@ function catchFailure<
  * import { mapErrors } from 'composable-functions'
  *
  * const increment = ({ id }: { id: number }) => id + 1
- * const incrementWithErrorSummary = mapErrors(increment, (result) => ({
- *   errors: [{ message: 'Errors count: ' + result.errors.length }],
+ * const incrementWithErrorSummary = mapErrors(increment, (result, {id}) => ({
+ *   errors: [{ message: 'Errors count: ' + result.errors.length + ' for id: ' + String(id) }],
  * }))
  * ```
  */
 function mapErrors<Fn extends Function>(
   fn: Fn,
-  mapper: (err: Error[]) => Error[] | Promise<Error[]>,
+  mapper: (
+    err: Error[],
+    ...originalInput: Parameters<Extract<Fn, Internal.AnyFn>>
+  ) => Error[] | Promise<Error[]>,
 ): Fn extends Internal.AnyFn ? Composable<Fn> : never {
   const callable = (async (...args) => {
     const res = await composable(fn)(...args)
     if (res.success) return success(res.data)
-    const mapped = await composable(mapper)(res.errors)
+    const mapped = await composable(mapper)(res.errors, ...(args as never))
     if (mapped.success) {
       return failure(mapped.data)
     } else {
