@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Route } from '../routes/+types/user'
 
 const getData = applySchema(
-  // We are adding runtime validation because the Remix's `Params` object is not strongly typed
+  // We are adding runtime validation to the React-Router's `Params` object
   z.object({ id: z.string() }),
 )(
   // The output of getUser will be the input of formatUser
