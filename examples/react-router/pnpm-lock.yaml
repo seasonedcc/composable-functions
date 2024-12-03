@@ -48,9 +48,6 @@ importers:
       '@react-router/dev':
         specifier: ^7.0.1
         version: 7.0.2(@react-router/serve@7.0.2(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3))(@types/node@20.14.9)(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3)(vite@5.3.3(@types/node@20.14.9))
-      '@react-router/fs-routes':
-        specifier: ^7.0.1
-        version: 7.0.2(@react-router/dev@7.0.2(@react-router/serve@7.0.2(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3))(@types/node@20.14.9)(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3)(vite@5.3.3(@types/node@20.14.9)))(typescript@5.5.3)
       '@remix-run/eslint-config':
         specifier: ^2.15.0
         version: 2.15.0(eslint@8.57.0)(react@18.3.1)(typescript@5.5.3)
@@ -537,16 +534,6 @@ packages:
     peerDependencies:
       express: ^4.17.1
       react-router: 7.0.2
-      typescript: ^5.1.0
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@react-router/fs-routes@7.0.2':
-    resolution: {integrity: sha512-XD1ag24/pLVZnmAWy7KzH2Bp8JxT4TzgdgM8WPkDXLhAzjn4bI51yr2NUQA8p70TND1Wph1O+kHH2D1tyc8v2Q==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      '@react-router/dev': ^7.0.2
       typescript: ^5.1.0
     peerDependenciesMeta:
       typescript:
@@ -3285,13 +3272,6 @@ snapshots:
       '@react-router/node': 7.0.2(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3)
       express: 4.21.1
       react-router: 7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    optionalDependencies:
-      typescript: 5.5.3
-
-  '@react-router/fs-routes@7.0.2(@react-router/dev@7.0.2(@react-router/serve@7.0.2(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3))(@types/node@20.14.9)(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3)(vite@5.3.3(@types/node@20.14.9)))(typescript@5.5.3)':
-    dependencies:
-      '@react-router/dev': 7.0.2(@react-router/serve@7.0.2(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3))(@types/node@20.14.9)(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.3)(vite@5.3.3(@types/node@20.14.9))
-      minimatch: 9.0.5
     optionalDependencies:
       typescript: 5.5.3
 
