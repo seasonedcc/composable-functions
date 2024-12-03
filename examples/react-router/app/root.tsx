@@ -5,19 +5,18 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useActionData,
-  useLoaderData,
-  useRouteError,
-} from 'react-router';
-import type { ActionFunctionArgs, LinksFunction, LoaderFunctionArgs } from 'react-router';
+} from 'react-router'
 
 import styles from './tailwind.css?url'
 
-import { actionResponse, ctxFromCookie, loaderResponseOrThrow } from '~/lib'
+import { actionResponse, ctxFromCookie } from '~/lib'
 import { agreeToGPD, cookie, getGPDInfo } from '~/business/gpd'
 import { inputFromForm } from 'composable-functions'
+import { Route } from './+types/root'
 
-export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }]
+export const links: Route.LinksFunction = () => [
+  { rel: 'stylesheet', href: styles },
+]
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -37,12 +36,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
   const result = await getGPDInfo(null, await ctxFromCookie(request, cookie))
-  return loaderResponseOrThrow(result)
+  if (!result.success) throw new Error('Internal server error')
+  return result.data
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
   const result = await agreeToGPD(await inputFromForm(request))
   if (!result.success || result.data.agreed === false) {
     return actionResponse(result)
@@ -52,9 +52,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   })
 }
 
-export default function App() {
-  const { agreed } = useLoaderData<typeof loader>()
-  const actionData = useActionData<typeof action>()
+export default function App({ loaderData, actionData }: Route.ComponentProps) {
+  const { agreed } = loaderData
   const disagreed = actionData?.success && actionData.data.agreed === false
   return (
     <main className="isolate flex w-full grow flex-col items-center justify-center">
@@ -92,8 +91,7 @@ export default function App() {
   )
 }
 
-export function ErrorBoundary() {
-  const error = useRouteError()
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   console.error(error)
   return (
     <div>

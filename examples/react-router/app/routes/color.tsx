@@ -1,27 +1,30 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { Form, Link, useActionData, useLoaderData } from 'react-router';
+import { Form, Link } from 'react-router'
 import { applySchema, inputFromForm } from 'composable-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/business/colors'
-import { actionResponse, loaderResponseOrThrow } from '~/lib'
+import { actionResponse } from '~/lib'
 import { z } from 'zod'
+import { Route } from '../routes/+types/color'
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params }: Route.LoaderArgs) => {
   const result = await applySchema(z.object({ id: z.string() }))(getColor)(
     params,
   )
-  return loaderResponseOrThrow(result)
+  if (!result.success) throw new Error('Could not load data')
+  return result.data
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
   const input = await inputFromForm(request)
   const result = await mutateColor(input)
   return actionResponse(result)
 }
 
-export default function Index() {
-  const { data } = useLoaderData<typeof loader>()
-  const actionData = useActionData<typeof action>()
+export default function Index({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const { data } = loaderData
   const color = actionData?.success ? actionData.data.color : data.color
   return (
     <>

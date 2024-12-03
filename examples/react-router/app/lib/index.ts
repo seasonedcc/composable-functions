@@ -1,5 +1,5 @@
-import type { Cookie, TypedResponse } from 'react-router';
-import { data } from 'react-router';
+import type { Cookie } from 'react-router'
+import { data } from 'react-router'
 import type { Result } from 'composable-functions'
 import { catchFailure, serialize, fromSuccess } from 'composable-functions'
 
@@ -22,20 +22,10 @@ const safeReadCookie = catchFailure(
 
 const ctxFromCookie = fromSuccess(safeReadCookie)
 
-const actionResponse = <X>(result: Result<X>, opts?: RequestInit): Result<X>  =>
-  data(serialize(result), { status: result.success ? 200 : 422, ...opts }) as unknown as Result<X>
+const actionResponse = <X>(result: Result<X>, opts?: RequestInit): Result<X> =>
+  data(serialize(result), {
+    status: result.success ? 200 : 422,
+    ...opts,
+  }) as unknown as Result<X>
 
-const loaderResponseOrThrow = <T extends Result<unknown>>(
-  result: T,
-  opts?: RequestInit,
-): T extends { data: infer X } ? TypedResponse<X> : never => {
-  if (!result.success) {
-    throw new Response(result.errors[0].message ?? 'Internal server error', {
-      status: 500,
-    })
-  }
-
-  return data(result.data, { status: 200, ...opts }) as never
-}
-
-export { ctxFromCookie, actionResponse, loaderResponseOrThrow }
+export { ctxFromCookie, actionResponse }
