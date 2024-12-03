@@ -1,5 +1,5 @@
-import { LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { LoaderFunctionArgs } from 'react-router';
+import { Link, useLoaderData } from 'react-router';
 import { applySchema, pipe } from 'composable-functions'
 import { formatUser, getUser } from '~/business/users'
 import { loaderResponseOrThrow } from '~/lib'

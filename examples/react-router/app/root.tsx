@@ -8,12 +8,8 @@ import {
   useActionData,
   useLoaderData,
   useRouteError,
-} from '@remix-run/react'
-import type {
-  ActionFunctionArgs,
-  LinksFunction,
-  LoaderFunctionArgs,
-} from '@remix-run/node'
+} from 'react-router';
+import type { ActionFunctionArgs, LinksFunction, LoaderFunctionArgs } from 'react-router';
 
 import styles from './tailwind.css?url'
 

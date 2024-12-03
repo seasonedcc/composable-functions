@@ -1,5 +1,5 @@
-import { LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData, useLocation } from '@remix-run/react'
+import { LoaderFunctionArgs } from 'react-router';
+import { Link, useLoaderData, useLocation } from 'react-router';
 import { inputFromUrl, collect, map, applySchema } from 'composable-functions'
 import { listColors } from '~/business/colors'
 import { listUsers } from '~/business/users'

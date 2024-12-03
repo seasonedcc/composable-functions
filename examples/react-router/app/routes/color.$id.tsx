@@ -1,5 +1,5 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { Form, Link, useActionData, useLoaderData } from 'react-router';
 import { applySchema, inputFromForm } from 'composable-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/business/colors'
