@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { applySchema } from 'composable-functions'
-import { createCookie } from '@remix-run/node'
+import { createCookie } from 'react-router';
 
 const cookie = createCookie('gpd', {
   maxAge: 20, // seconds

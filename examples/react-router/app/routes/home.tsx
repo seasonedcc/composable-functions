@@ -1,10 +1,9 @@
-import { LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData, useLocation } from '@remix-run/react'
+import { Link, useLocation } from 'react-router'
 import { inputFromUrl, collect, map, applySchema } from 'composable-functions'
 import { listColors } from '~/business/colors'
 import { listUsers } from '~/business/users'
-import { loaderResponseOrThrow } from '~/lib'
 import { z } from 'zod'
+import { Route } from '../routes/+types/home'
 
 const getData = applySchema(
   // We are applying a schema for runtime safety
@@ -19,14 +18,16 @@ const getData = applySchema(
     users: listUsers,
   }),
 )
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
   // inputFromUrl gets the queryString out of the request and turns it into an object
   const result = await getData(inputFromUrl(request))
-  return loaderResponseOrThrow(result)
+  if (!result.success) throw new Error('Could not load data')
+  return result.data
 }
 
-export default function Index() {
-  const { users, colors } = useLoaderData<typeof loader>()
+export default function Index({
+  loaderData: { users, colors },
+}: Route.ComponentProps) {
   const location = useLocation()
   const qs = new URLSearchParams(location.search)
   return (
