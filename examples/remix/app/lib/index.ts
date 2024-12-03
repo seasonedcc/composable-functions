@@ -1,12 +1,7 @@
 import type { Cookie, TypedResponse } from '@remix-run/node'
-import { json } from '@remix-run/node'
-import {
-  catchFailure,
-  Result,
-  SerializableResult,
-  serialize,
-  fromSuccess,
-} from 'composable-functions'
+import { data } from '@remix-run/node'
+import type { Result } from 'composable-functions'
+import { catchFailure, serialize, fromSuccess } from 'composable-functions'
 
 /**
  * Given a Cookie and a Request it returns the stored cookie's value as an object, in case of failure it returns an empty object.
@@ -27,11 +22,8 @@ const safeReadCookie = catchFailure(
 
 const ctxFromCookie = fromSuccess(safeReadCookie)
 
-const actionResponse = <X>(
-  result: Result<X>,
-  opts?: RequestInit,
-): TypedResponse<SerializableResult<X>> =>
-  json(serialize(result), { status: result.success ? 200 : 422, ...opts })
+const actionResponse = <X>(result: Result<X>, opts?: RequestInit): Result<X>  =>
+  data(serialize(result), { status: result.success ? 200 : 422, ...opts }) as unknown as Result<X>
 
 const loaderResponseOrThrow = <T extends Result<unknown>>(
   result: T,
@@ -43,7 +35,7 @@ const loaderResponseOrThrow = <T extends Result<unknown>>(
     })
   }
 
-  return json(result.data, { status: 200, ...opts }) as never
+  return data(result.data, { status: 200, ...opts }) as never
 }
 
 export { ctxFromCookie, actionResponse, loaderResponseOrThrow }

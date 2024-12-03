@@ -9,7 +9,7 @@ import {
   useLoaderData,
   useRouteError,
 } from '@remix-run/react'
-import {
+import type {
   ActionFunctionArgs,
   LinksFunction,
   LoaderFunctionArgs,
