@@ -1,12 +1,11 @@
-import { LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { Link } from 'react-router'
 import { applySchema, pipe } from 'composable-functions'
 import { formatUser, getUser } from '~/business/users'
-import { loaderResponseOrThrow } from '~/lib'
 import { z } from 'zod'
+import { Route } from '../routes/+types/user'
 
 const getData = applySchema(
-  // We are adding runtime validation because the Remix's `Params` object is not strongly typed
+  // We are adding runtime validation to the React-Router's `Params` object
   z.object({ id: z.string() }),
 )(
   // The output of getUser will be the input of formatUser
@@ -14,13 +13,13 @@ const getData = applySchema(
   pipe(getUser, formatUser),
 )
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params }: Route.LoaderArgs) => {
   const result = await getData(params)
-  return loaderResponseOrThrow(result)
+  if (!result.success) throw new Error('Could not load data')
+  return result.data
 }
 
-export default function Index() {
-  const { user } = useLoaderData<typeof loader>()
+export default function Index({ loaderData: { user } }: Route.ComponentProps) {
   return (
     <>
       <a
