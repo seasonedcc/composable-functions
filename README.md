@@ -8,14 +8,17 @@ A set of types and functions to make compositions easy and safe.
 - 🔄 Promise and Error Handling: Focus on the happy-path of your functions, eliminating the need for verbose try/catch syntax.
 - 🏝️ Isolated Business Logic: Split your code into composable functions, making your code easier to test and maintain.
 - 🔒 End-to-End Type Safety: Achieve end-to-end type safety from the backend to the UI with serializable results, ensuring data integrity across your entire application.
--	⚡ Parallel and Sequential Compositions: Compose functions both in parallel - with `all` and `collect` - and sequentially - with `pipe`, `branch`, and `sequence` -, to manage complex data flows optimizing your code for performance and clarity.
--	🕵️‍♂️ Runtime Validation: Use `applySchema` with your favorite parser for optional runtime validation of inputs and context, enforcing data integrity only when needed.
--	🚑 Resilient Error Handling: Leverage enhanced combinators like `mapErrors` and `catchFailure` to transform and handle errors more effectively.
--	📊 Traceable Compositions: Use the `trace` function to log and monitor your composable functions’ inputs and results, simplifying debugging and monitoring.
+- ⚡ Parallel and Sequential Compositions: Compose functions both in parallel - with `all` and `collect` - and sequentially - with `pipe`, `branch`, and `sequence` -, to manage complex data flows optimizing your code for performance and clarity.
+- 🕵️‍♂️ Runtime Validation: Use `applySchema` with your favorite parser for optional runtime validation of inputs and context, enforcing data integrity only when needed.
+- 🚑 Resilient Error Handling: Leverage enhanced combinators like `mapErrors` and `catchFailure` to transform and handle errors more effectively.
+- 📊 Traceable Compositions: Use the `trace` function to log and monitor your composable functions’ inputs and results, simplifying debugging and monitoring.
 
 #### Go to [API Reference](./API.md)
 
+[![Example of usage](./example.gif)](https://badge.fury.io/js/composable-functions)
+
 ## Table of contents
+
 - [Quickstart](#quickstart)
 - [Composing type-safe functions](#composing-type-safe-functions)
   - [Adding runtime validation to the Composable](#adding-runtime-validation-to-the-composable)
@@ -29,10 +32,10 @@ A set of types and functions to make compositions easy and safe.
   - [Mapping the errors](#mapping-the-errors)
 - [Unwrapping the result](#unwrapping-the-result)
 - [Guides](#guides)
-    - [Migrating from domain-functions](#migrating-from-domain-functions)
-    - [Handling external input](#handling-external-input)
-    - [Defining constants for multiple functions (context)](#defining-constants-for-multiple-functions-context)
-    - [Using custom parsers](#using-custom-parsers)
+  - [Migrating from domain-functions](#migrating-from-domain-functions)
+  - [Handling external input](#handling-external-input)
+  - [Defining constants for multiple functions (context)](#defining-constants-for-multiple-functions-context)
+  - [Using custom parsers](#using-custom-parsers)
 - [Using Deno](#using-deno)
 - [Acknowledgements](#acknowledgements)
 
@@ -70,6 +73,7 @@ failedResult = {
 ```
 
 ## Composing type-safe functions
+
 Let's say we want to compose two functions: `add: (a: number, b:number) => number` and `toString: (a: number) => string`. We also want the composition to preserve the types, so we can continue living in the happy world of type-safe coding. The result would be a function that adds and converts the result to string, something like `addAndReturnString: (a: number, b: number) => string`.
 
 Performing this operation manually is straightforward
@@ -93,6 +97,7 @@ We can also extend the same reasoning to functions that return promises in a tra
 This library also defines several operations besides the `pipe` to compose functions in arbitrary ways, giving a powerful tool for the developer to reason about the data flow **without worrying about mistakenly connecting the wrong parameters** or **forgetting to unwrap some promise** or **handle some error** along the way.
 
 ### Adding runtime validation to the Composable
+
 To ensure type safety at runtime, use the `applySchema` function to validate external inputs against defined schemas. These schemas can be specified with libraries such as [Zod](https://github.com/colinhacks/zod/) or [ArkType](https://github.com/arktypeio/arktype).
 
 Note that the resulting `Composable` will have unknown types for the parameters now that we rely on runtime validation.
@@ -136,6 +141,7 @@ const addAndReturnString = pipe(add, toString)
 ```
 
 ## Sequential composition
+
 We can compose the functions above using pipe to create `addAndReturnString`:
 
 ```typescript
@@ -182,6 +188,7 @@ const mul = (a: number, b: number) => a * b
 const addAndMul = all(add, mul)
 //    ^? Composable<(a: number, b: number) => [number, number]>
 ```
+
 The result of the composition comes in a tuple in the same order as the functions were passed to `all`.
 Note that the input functions will also have to type-check and all the functions have to work from the same input.
 
@@ -197,6 +204,7 @@ const addAndMul = collect({ add, mul })
 ```
 
 ## Handling errors
+
 Since a `Composable` always return a type `Result<T>` that might be either a failure or a success, there are never exceptions to catch. Any exception inside a `Composable` will return as an object with the shape: `{ success: false, errors: Error[] }`.
 
 Two neat consequences is that we can handle errors using functions (no need for try/catch blocks) and handle multiple errors at once.
@@ -227,6 +235,7 @@ The library defines a few custom errors out of the box but these will be more im
 See [the errors module](./src/errors.ts) for more details.
 
 ### Catching
+
 You can catch an error in a `Composable` using `catchFailure`, which is similar to `map` but will run whenever the first composable fails:
 
 ```typescript
@@ -241,6 +250,7 @@ const getOptionalUser = catchFailure(getUser, (errors, id) => {
 ```
 
 ### Mapping the errors
+
 Sometimes we just need to transform the errors into something that would make more sense for the caller. Imagine you have our `getUser` defined above, but we want a custom error type for when the ID is invalid. You can map over the failures using `mapErrors` and a function with the type `(errors: Error[]) => Error[]`.
 
 ```typescript
@@ -251,7 +261,9 @@ const getUserWithCustomError = mapErrors(getUser, (errors) =>
   errors.map((e) => e.message.includes('Invalid ID') ? new InvalidUserId() : e)
 )
 ```
+
 ## Unwrapping the result
+
 Keep in mind the `Result` type will only have a `data` property when the composable succeeds. If you want to unwrap the result, you must check for the `success` property first.
 
 ```typescript
@@ -263,6 +275,7 @@ return result.data
 ```
 
 TypeScript won't let you access the `data` property without checking for `success` first, so you can be sure that you are always handling the error case.
+
 ```ts
 const result = await getUser('123')
 // @ts-expect-error: Property 'data' does not exist on type 'Result<User>'
@@ -278,6 +291,7 @@ const fn = composable(async (id: string) => {
   return { valueA, valueB }
 })
 ```
+
 We recomend only using `fromSuccess` when you are sure the composable must succeed, like when you are testing the happy path of a composable.
 
 You can also use it within other composables whenever the composition utilities fall short. In that case, the error will be propagated as `ErrorList` and available in the caller `Result`.
@@ -295,8 +309,11 @@ const getProfile = composable(async (id: string) => {
 ## Guides
 
 #### [Migrating from domain-functions](./migrating-df.md)
+
 #### [Handling external input](./with-schema.md)
+
 #### [Defining constants for multiple functions (context)](./context.md)
+
 #### [Using custom parsers](./examples/arktype/README.md)
 
 ## Using Deno
@@ -308,7 +325,6 @@ import { composable } from "https://deno.land/x/composable_functions/mod.ts";
 ```
 
 This documentation will use Node.JS imports by convention. Just replace `composable-functions` with `https://deno.land/x/composable_functions/mod.ts` when using [Deno](https://deno.land/).
-
 
 ## Acknowledgements
 
