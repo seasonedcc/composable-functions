@@ -31,5 +31,8 @@
     "singleQuote": true,
     "proseWrap": "preserve",
     "include": ["src/"]
+  },
+  "imports": {
+    "@standard-schema/spec": "jsr:@standard-schema/spec@^1.0.0",
   }
 }
