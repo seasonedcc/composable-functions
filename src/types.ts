@@ -171,23 +171,6 @@ type SerializableResult<T> =
   | { success: false; errors: SerializableError[] }
 
 /**
- * The object used to validate either input or context when creating composables with a schema.
- */
-type ParserSchema<T extends unknown = unknown> = {
-  safeParse: (a: unknown) =>
-    | {
-      success: true
-      data: T
-    }
-    | {
-      success: false
-      error: {
-        issues: ReadonlyArray<{ path: PropertyKey[]; message: string }>
-      }
-    }
-}
-
-/**
  * Returns the last element of a tuple type.
  */
 type Last<T extends readonly unknown[]> = T extends [...infer _I, infer L] ? L
@@ -279,7 +262,6 @@ export type {
   Last,
   MapParametersReturn,
   MergeObjects,
-  ParserSchema,
   PipeReturn,
   RecordToTuple,
   Result,

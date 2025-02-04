@@ -52,7 +52,6 @@ export type {
   IncompatibleArguments,
   MapParametersReturn,
   MergeObjects,
-  ParserSchema,
   PipeReturn,
   Result,
   SequenceReturn,
