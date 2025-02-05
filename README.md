@@ -98,17 +98,18 @@ This library also defines several operations besides the `pipe` to compose funct
 
 ### Adding runtime validation to the Composable
 
-To ensure type safety at runtime, use the `applySchema` function to validate external inputs against defined schemas. These schemas can be specified with libraries such as [Zod](https://github.com/colinhacks/zod/) or [ArkType](https://github.com/arktypeio/arktype).
+To ensure type safety at runtime, use the `applySchema` function to validate external inputs against defined schemas. These schemas can be specified with any library that implements the [Standard Schema Spec](https://standardschema.dev), such as [Zod](https://github.com/colinhacks/zod/), [ArkType](https://github.com/arktypeio/arktype), [Valibot](https://valibot.dev), and etc.
 
 Note that the resulting `Composable` will have unknown types for the parameters now that we rely on runtime validation.
 
 ```ts
 import { applySchema } from 'composable-functions'
 import { z } from 'zod'
+import { type } from 'arktype'
 
 const addAndReturnWithRuntimeValidation = applySchema(
   z.number(),
-  z.number(),
+  type('number'),
 )(addAndReturnString)
 ```
 
