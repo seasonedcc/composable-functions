@@ -1,9 +1,11 @@
 import {
+  arktype,
   assertEquals,
   assertIsError,
   assertRejects,
   describe,
   it,
+  valibot,
   z,
 } from './prelude.ts'
 import type {
@@ -264,6 +266,46 @@ describe('applySchema', () => {
   it('uses zod parsers to parse the input and context turning it into a schema function', async () => {
     const inputSchema = z.object({ id: z.coerce.number() })
     const ctxSchema = z.object({ uid: z.coerce.number() })
+
+    const handler = applySchema(
+      inputSchema,
+      ctxSchema,
+    )(
+      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
+    )
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
+    >
+
+    assertEquals(
+      await handler({ id: 1 }, { uid: 2 }),
+      success<[number, number]>([1, 2]),
+    )
+  })
+
+  it('uses arktype parsers to parse the input and context turning it into a schema function', async () => {
+    const inputSchema = arktype({ id: 'number' })
+    const ctxSchema = arktype({ uid: 'number' })
+
+    const handler = applySchema(
+      inputSchema,
+      ctxSchema,
+    )(
+      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
+    )
+    type _R = Expect<
+      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
+    >
+
+    assertEquals(
+      await handler({ id: 1 }, { uid: 2 }),
+      success<[number, number]>([1, 2]),
+    )
+  })
+
+  it('uses valibot parsers to parse the input and context turning it into a schema function', async () => {
+    const inputSchema = valibot.object({ id: valibot.number() })
+    const ctxSchema = valibot.object({ uid: valibot.number() })
 
     const handler = applySchema(
       inputSchema,
