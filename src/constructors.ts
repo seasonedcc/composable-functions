@@ -1,6 +1,6 @@
 import { ContextError, ErrorList, InputError } from './errors.ts'
 import type { Internal } from './internal/types.ts'
-import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { StandardSchemaV1 as StandardSchema } from '@standard-schema/spec'
 import type {
   ApplySchemaReturn,
   Composable,
@@ -110,8 +110,8 @@ function fromSuccess<O, P extends any[]>(
  * ```
  */
 function applySchema<ParsedInput, ParsedContext>(
-  inputSchema?: StandardSchemaV1<ParsedInput>,
-  contextSchema?: StandardSchemaV1<ParsedContext>,
+  inputSchema?: StandardSchema<ParsedInput>,
+  contextSchema?: StandardSchema<ParsedContext>,
 ) {
   return <R, Input extends ParsedInput, Context extends ParsedContext>(
     fn: (input: Input, context: Context) => R,
@@ -148,13 +148,13 @@ function applySchema<ParsedInput, ParsedContext>(
  * @deprecated use `applySchema` instead
  */
 function withSchema<ParsedInput, ParsedContext>(
-  inputSchema?: StandardSchemaV1<ParsedInput>,
-  contextSchema?: StandardSchemaV1<ParsedContext>,
+  inputSchema?: StandardSchema<ParsedInput>,
+  contextSchema?: StandardSchema<ParsedContext>,
 ) {
   return applySchema(inputSchema, contextSchema)
 }
 
-const alwaysUnknownSchema: StandardSchemaV1<unknown> = {
+const alwaysUnknownSchema: StandardSchema<unknown> = {
   '~standard': {
     vendor: 'composable-functions',
     version: 1,
