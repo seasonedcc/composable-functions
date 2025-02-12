@@ -116,17 +116,17 @@ function applySchema<ParsedInput, ParsedContext>(
   return <R, Input extends ParsedInput, Context extends ParsedContext>(
     fn: (input: Input, context: Context) => R,
   ): ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn> => {
-    const callable = ((input?: unknown, context?: unknown) => {
-      const ctxResult = (contextSchema ?? alwaysUnknownSchema)['~standard']
-        .validate(
-          context,
-        )
-      const result = (inputSchema ?? alwaysUnknownSchema)['~standard'].validate(
-        input,
-      )
-      if (result instanceof Promise || ctxResult instanceof Promise) {
-        throw new TypeError('Schema validation must be synchronous')
-      }
+    const callable = (async (input?: unknown, context?: unknown) => {
+      const [ctxResult, result] = await Promise.all([
+        (contextSchema ?? alwaysUnknownSchema)['~standard']
+          .validate(
+            context,
+          ),
+        (inputSchema ?? alwaysUnknownSchema)['~standard']
+          .validate(
+            input,
+          ),
+      ])
 
       if (result.issues || ctxResult.issues) {
         const inputErrors = (result.issues ?? []).map(
