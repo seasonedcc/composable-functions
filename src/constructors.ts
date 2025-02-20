@@ -110,8 +110,8 @@ function fromSuccess<O, P extends any[]>(
  * ```
  */
 function applySchema<ParsedInput, ParsedContext>(
-  inputSchema?: StandardSchema<ParsedInput>,
-  contextSchema?: StandardSchema<ParsedContext>,
+  inputSchema?: StandardSchema<unknown, ParsedInput>,
+  contextSchema?: StandardSchema<unknown, ParsedContext>,
 ) {
   return <R, Input extends ParsedInput, Context extends ParsedContext>(
     fn: (input: Input, context: Context) => R,
@@ -148,13 +148,13 @@ function applySchema<ParsedInput, ParsedContext>(
  * @deprecated use `applySchema` instead
  */
 function withSchema<ParsedInput, ParsedContext>(
-  inputSchema?: StandardSchema<ParsedInput>,
-  contextSchema?: StandardSchema<ParsedContext>,
+  inputSchema?: StandardSchema<unknown, ParsedInput>,
+  contextSchema?: StandardSchema<unknown, ParsedContext>,
 ) {
   return applySchema(inputSchema, contextSchema)
 }
 
-const alwaysUnknownSchema: StandardSchema<unknown> = {
+const alwaysUnknownSchema: StandardSchema<unknown, unknown> = {
   '~standard': {
     vendor: 'composable-functions',
     version: 1,

@@ -196,7 +196,7 @@ describe('withSchema', () => {
 
   describe('when it has no context', () => {
     it('uses zod parser to create parse the input and call the schema function', async () => {
-      const parser = z.object({ id: z.coerce.number() })
+      const parser = z.object({ id: z.preprocess(Number, z.number()) })
 
       const handler = withSchema(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
@@ -212,7 +212,7 @@ describe('withSchema', () => {
     })
 
     it('returns error when parsing fails', async () => {
-      const parser = z.object({ id: z.coerce.number() })
+      const parser = z.object({ id: z.preprocess(Number, z.number()) })
       const handler = withSchema(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
@@ -242,8 +242,8 @@ describe('withSchema', () => {
   })
 
   it('uses zod parsers to parse the input and context and call the schema function', async () => {
-    const parser = z.object({ id: z.coerce.number() })
-    const ctxParser = z.object({ uid: z.coerce.number() })
+    const parser = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = withSchema(
       parser,
@@ -264,8 +264,8 @@ describe('withSchema', () => {
 
 describe('applySchema', () => {
   it('uses zod parsers to parse the input and context turning it into a schema function', async () => {
-    const inputSchema = z.object({ id: z.coerce.number() })
-    const ctxSchema = z.object({ uid: z.coerce.number() })
+    const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
       inputSchema,
@@ -337,8 +337,8 @@ describe('applySchema', () => {
   })
 
   it('accepts a plain function', async () => {
-    const inputSchema = z.object({ id: z.coerce.number() })
-    const ctxSchema = z.object({ uid: z.coerce.number() })
+    const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
       inputSchema,
@@ -395,8 +395,8 @@ describe('applySchema', () => {
   })
 
   it('returns error when context parsing fails', async () => {
-    const parser = z.object({ id: z.coerce.number() })
-    const ctxParser = z.object({ uid: z.coerce.number() })
+    const parser = z.object({ id: z.preprocess(Number, z.number()) })
+    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
 
     const handler = applySchema(
       parser,
