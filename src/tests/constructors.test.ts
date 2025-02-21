@@ -1,5 +1,4 @@
 import {
-  arktype,
   assertEquals,
   assertIsError,
   assertRejects,
@@ -266,26 +265,6 @@ describe('applySchema', () => {
   it('uses zod parsers to parse the input and context turning it into a schema function', async () => {
     const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
     const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
-
-    const handler = applySchema(
-      inputSchema,
-      ctxSchema,
-    )(
-      ({ id }: { id: number }, { uid }: { uid: number }) => [id, uid] as const,
-    )
-    type _R = Expect<
-      Equal<typeof handler, ComposableWithSchema<readonly [number, number]>>
-    >
-
-    assertEquals(
-      await handler({ id: 1 }, { uid: 2 }),
-      success<[number, number]>([1, 2]),
-    )
-  })
-
-  it('uses arktype parsers to parse the input and context turning it into a schema function', async () => {
-    const inputSchema = arktype({ id: 'number' })
-    const ctxSchema = arktype({ uid: 'number' })
 
     const handler = applySchema(
       inputSchema,
