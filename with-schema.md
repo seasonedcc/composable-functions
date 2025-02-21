@@ -6,7 +6,7 @@ When dealing with external data such as API requests or form submissions, it's c
 
 To ensure type safety at runtime, use the `applySchema` function to validate external inputs against defined schemas.
 
-**Note about schema validation libraries:** Composable functions use Zod for schema validation by default. If you prefer to use another library, you can create your own `applySchema` function based on the library of your choice. For an example, see the [Arktype example](./examples/arktype/README.md).
+**Note about schema validation libraries:** Composable functions uses @standard-schema validators, which means it will work with zod@3.24+, arktype@2+, valibot@1+, and the other libraries that [implement the spec](https://github.com/standard-schema/standard-schema?tab=readme-ov-file#what-schema-libraries-implement-the-spec).
 
 ### applySchema
 
@@ -91,8 +91,3 @@ qs.append('colors[]', 'blue')
 const values = inputFromSearch(qs)
 // values = { colors: ['red', 'green', 'blue'] }
 ```
-
-## FAQ
-
-- I want to use composable-functions in a project that does not have Zod, how can I use other schema validation libraries?
-  - We [created an example](./examples/arktype/src/) in the example folder showing how to construct your own `applySchema` functions based on other parsers.

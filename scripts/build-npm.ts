@@ -1,11 +1,12 @@
 // ex. scripts/build_npm.ts
-import { build, emptyDir } from 'https://deno.land/x/dnt@0.40.0/mod.ts'
+import { build, emptyDir } from '@deno/dnt'
 import pkg from '../deno.json' with { type: 'json' }
 
 await emptyDir('./npm')
 
 await build({
   scriptModule: 'cjs',
+  importMap: 'deno.json',
   typeCheck: false,
   declaration: 'separate',
   entryPoints: ['./src/index.ts'],

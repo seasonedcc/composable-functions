@@ -1,10 +1,10 @@
 import { ContextError, ErrorList, InputError } from './errors.ts'
 import type { Internal } from './internal/types.ts'
+import type { StandardSchemaV1 as StandardSchema } from '@standard-schema/spec'
 import type {
   ApplySchemaReturn,
   Composable,
   Failure,
-  ParserSchema,
   Success,
 } from './types.ts'
 
@@ -110,28 +110,34 @@ function fromSuccess<O, P extends any[]>(
  * ```
  */
 function applySchema<ParsedInput, ParsedContext>(
-  inputSchema?: ParserSchema<ParsedInput>,
-  contextSchema?: ParserSchema<ParsedContext>,
+  inputSchema?: StandardSchema<unknown, ParsedInput>,
+  contextSchema?: StandardSchema<unknown, ParsedContext>,
 ) {
   return <R, Input extends ParsedInput, Context extends ParsedContext>(
     fn: (input: Input, context: Context) => R,
   ): ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn> => {
-    const callable = ((input?: unknown, context?: unknown) => {
-      const ctxResult = (contextSchema ?? alwaysUnknownSchema).safeParse(
-        context,
-      )
-      const result = (inputSchema ?? alwaysUnknownSchema).safeParse(input)
+    const callable = (async (input?: unknown, context?: unknown) => {
+      const [ctxResult, result] = await Promise.all([
+        (contextSchema ?? alwaysUnknownSchema)['~standard']
+          .validate(
+            context,
+          ),
+        (inputSchema ?? alwaysUnknownSchema)['~standard']
+          .validate(
+            input,
+          ),
+      ])
 
-      if (!result.success || !ctxResult.success) {
-        const inputErrors = result.success ? [] : result.error.issues.map(
+      if (result.issues || ctxResult.issues) {
+        const inputErrors = (result.issues ?? []).map(
           (error) => new InputError(error.message, error.path as string[]),
         )
-        const ctxErrors = ctxResult.success ? [] : ctxResult.error.issues.map(
+        const ctxErrors = (ctxResult.issues ?? []).map(
           (error) => new ContextError(error.message, error.path as string[]),
         )
         return Promise.resolve(failure([...inputErrors, ...ctxErrors]))
       }
-      return composable(fn)(result.data as Input, ctxResult.data as Context)
+      return composable(fn)(result.value as Input, ctxResult.value as Context)
     }) as ApplySchemaReturn<ParsedInput, ParsedContext, typeof fn>
     ;(callable as any).kind = 'composable' as const
     return callable
@@ -142,14 +148,20 @@ function applySchema<ParsedInput, ParsedContext>(
  * @deprecated use `applySchema` instead
  */
 function withSchema<ParsedInput, ParsedContext>(
-  inputSchema?: ParserSchema<ParsedInput>,
-  contextSchema?: ParserSchema<ParsedContext>,
+  inputSchema?: StandardSchema<unknown, ParsedInput>,
+  contextSchema?: StandardSchema<unknown, ParsedContext>,
 ) {
   return applySchema(inputSchema, contextSchema)
 }
 
-const alwaysUnknownSchema: ParserSchema<unknown> = {
-  safeParse: (data: unknown) => ({ success: true, data }),
+const alwaysUnknownSchema: StandardSchema<unknown, unknown> = {
+  '~standard': {
+    vendor: 'composable-functions',
+    version: 1,
+    validate(value) {
+      return { value }
+    },
+  },
 }
 
 export { applySchema, composable, failure, fromSuccess, success, withSchema }
