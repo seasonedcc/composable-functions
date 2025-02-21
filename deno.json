@@ -33,6 +33,7 @@
     "include": ["src/"]
   },
   "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
     "@standard-schema/spec": "jsr:@standard-schema/spec@^1.0.0",
     "arktype": "npm:arktype@^2.0.4",
     "valibot": "npm:valibot@^1.0.0-beta.15",
