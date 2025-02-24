@@ -1,7 +1,7 @@
 {
   "name": "@seasonedcc/composable-functions",
   "exports": "./mod.ts",
-  "version": "4.5.0",
+  "version": "5.0.0",
   "tasks": {
     "test": "deno test --allow-env --allow-net src",
     "publish": "deno task build-npm && cd npm/ && npm publish",
@@ -21,7 +21,9 @@
     }
   },
   "compilerOptions": {
-    "types": ["./src/test.d.ts"]
+    "types": [
+      "./src/test.d.ts"
+    ]
   },
   "fmt": {
     "useTabs": false,
@@ -30,7 +32,9 @@
     "semiColons": false,
     "singleQuote": true,
     "proseWrap": "preserve",
-    "include": ["src/"]
+    "include": [
+      "src/"
+    ]
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
