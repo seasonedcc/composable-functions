@@ -20,28 +20,6 @@ class InputError extends Error {
 }
 
 /**
- * @deprecated Use `ContextError` instead
- * A custom error class for context errors.
- *
- * @example
- * const fn = () => {
- *  throw new EnvironmentError('Invalid environment', 'user.name')
- * }
- */
-class EnvironmentError extends Error {
-  /**
-   * Path of context attribute that originated the error.
-   */
-  path: string[]
-
-  constructor(message: string, path: string[] = []) {
-    super(message)
-    this.name = 'EnvironmentError'
-    this.path = path
-  }
-}
-
-/**
  * A custom error class for context errors.
  *
  * @example
@@ -88,24 +66,10 @@ function isInputError(e: { name: string; message: string }): boolean {
 }
 
 /**
- * @deprecated Use `isContextError` instead
- * A function to check if an `Error` or a `SerializableError` is a ContextError
- */
-const isEnvironmentError = isContextError
-
-/**
  * A function to check if an `Error` or a `SerializableError` is a ContextError
  */
 function isContextError(e: { name: string; message: string }): boolean {
-  return e.name === 'EnvironmentError' || e.name === 'ContextError'
+  return e.name === 'ContextError'
 }
 
-export {
-  ContextError,
-  EnvironmentError,
-  ErrorList,
-  InputError,
-  isContextError,
-  isEnvironmentError,
-  isInputError,
-}
+export { ContextError, ErrorList, InputError, isContextError, isInputError }

@@ -33,11 +33,9 @@ export type {
 export { serialize, serializeError } from './serializer.ts'
 export {
   ContextError,
-  EnvironmentError,
   ErrorList,
   InputError,
   isContextError,
-  isEnvironmentError,
   isInputError,
 } from './errors.ts'
 export type {
