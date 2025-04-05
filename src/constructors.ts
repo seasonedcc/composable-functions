@@ -144,16 +144,6 @@ function applySchema<ParsedInput, ParsedContext>(
   }
 }
 
-/**
- * @deprecated use `applySchema` instead
- */
-function withSchema<ParsedInput, ParsedContext>(
-  inputSchema?: StandardSchema<unknown, ParsedInput>,
-  contextSchema?: StandardSchema<unknown, ParsedContext>,
-) {
-  return applySchema(inputSchema, contextSchema)
-}
-
 const alwaysUnknownSchema: StandardSchema<unknown, unknown> = {
   '~standard': {
     vendor: 'composable-functions',
@@ -164,4 +154,4 @@ const alwaysUnknownSchema: StandardSchema<unknown, unknown> = {
   },
 }
 
-export { applySchema, composable, failure, fromSuccess, success, withSchema }
+export { applySchema, composable, failure, fromSuccess, success }

@@ -4,7 +4,6 @@ export {
   failure,
   fromSuccess,
   success,
-  withSchema,
 } from './constructors.ts'
 export {
   all,
