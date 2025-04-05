@@ -61,6 +61,4 @@ export type {
 } from './types.ts'
 
 // FUNCTIONS WITH CONTEXT
-export { environment } from './context/environment.ts'
-export { context } from './context/context.ts'
 export * as withContext from './context/index.ts'
