@@ -2,13 +2,13 @@ import { Link, useLocation } from 'react-router'
 import { inputFromUrl, collect, map, applySchema } from 'composable-functions'
 import { listColors } from '~/business/colors'
 import { listUsers } from '~/business/users'
-import { z } from 'zod'
+import { z } from '@zod/mini'
 import { Route } from '../routes/+types/home'
 
 const getData = applySchema(
   // We are applying a schema for runtime safety
   // By not defining schemas for every composable we avoid unnecessary processing
-  z.object({ page: z.string().optional() }),
+  z.interface({ 'page?': z.string() }),
 )(
   // We'll run these 2 composables in parallel with Promise.all
   collect({
