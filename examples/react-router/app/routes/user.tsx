@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { applySchema, pipe } from 'composable-functions'
 import { formatUser, getUser } from '~/business/users'
-import { z } from 'zod'
+import { z } from '@zod/mini'
 import { Route } from '../routes/+types/user'
 
 const getData = applySchema(

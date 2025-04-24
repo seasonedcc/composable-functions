@@ -3,7 +3,7 @@ import { applySchema, inputFromForm } from 'composable-functions'
 import tinycolor from 'tinycolor2'
 import { getColor, mutateColor } from '~/business/colors'
 import { actionResponse } from '~/lib'
-import { z } from 'zod'
+import { z } from '@zod/mini'
 import { Route } from '../routes/+types/color'
 
 export const loader = async ({ params }: Route.LoaderArgs) => {

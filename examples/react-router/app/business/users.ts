@@ -1,4 +1,4 @@
-import * as z from 'zod'
+import { z } from '@zod/mini'
 import { makeService } from 'make-service'
 
 const jsonPlaceholder = makeService('https://jsonplaceholder.typicode.com')
