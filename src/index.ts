@@ -4,7 +4,6 @@ export {
   failure,
   fromSuccess,
   success,
-  withSchema,
 } from './constructors.ts'
 export {
   all,
@@ -33,11 +32,9 @@ export type {
 export { serialize, serializeError } from './serializer.ts'
 export {
   ContextError,
-  EnvironmentError,
   ErrorList,
   InputError,
   isContextError,
-  isEnvironmentError,
   isInputError,
 } from './errors.ts'
 export type {
@@ -63,6 +60,4 @@ export type {
 } from './types.ts'
 
 // FUNCTIONS WITH CONTEXT
-export { environment } from './context/environment.ts'
-export { context } from './context/context.ts'
 export * as withContext from './context/index.ts'

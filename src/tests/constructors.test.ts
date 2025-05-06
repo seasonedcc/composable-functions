@@ -21,7 +21,6 @@ import {
   fromSuccess,
   InputError,
   success,
-  withSchema,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
 import type { Internal } from '../internal/types.ts'
@@ -172,17 +171,17 @@ describe('fromSuccess', () => {
   })
 })
 
-describe('withSchema', () => {
+describe('applySchema', () => {
   describe('when it has no input', () => {
     it('uses zod parser to create parse the input and call the schema function', async () => {
-      const handler = withSchema()(() => 'no input!')
+      const handler = applySchema()(() => 'no input!')
       type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
 
       assertEquals(await handler(), success('no input!'))
     })
 
     it('defaults non-declared input to unknown', async () => {
-      const handler = withSchema()((args) => args)
+      const handler = applySchema()((args) => args)
       type _R = Expect<Equal<typeof handler, ComposableWithSchema<unknown>>>
 
       assertEquals(await handler('some input'), {
@@ -194,17 +193,8 @@ describe('withSchema', () => {
   })
 
   describe('when it has no context', () => {
-    it('uses zod parser to create parse the input and call the schema function', async () => {
-      const parser = z.object({ id: z.preprocess(Number, z.number()) })
-
-      const handler = withSchema(parser)(({ id }) => id)
-      type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
-
-      assertEquals(await handler({ id: '1' }), success(1))
-    })
-
     it('fails gracefully if gets something other than empty record', async () => {
-      const handler = withSchema()(() => 'no input!')
+      const handler = applySchema()(() => 'no input!')
       type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
 
       assertEquals(await handler(undefined, ''), success('no input!'))
@@ -212,7 +202,7 @@ describe('withSchema', () => {
 
     it('returns error when parsing fails', async () => {
       const parser = z.object({ id: z.preprocess(Number, z.number()) })
-      const handler = withSchema(parser)(({ id }) => id)
+      const handler = applySchema(parser)(({ id }) => id)
       type _R = Expect<Equal<typeof handler, ComposableWithSchema<number>>>
 
       assertEquals(
@@ -223,45 +213,12 @@ describe('withSchema', () => {
   })
 
   it('accepts a composable', async () => {
-    const handler = withSchema()(composable(() => 'no input!'))
+    const handler = applySchema()(composable(() => 'no input!'))
     type _R = Expect<Equal<typeof handler, ComposableWithSchema<string>>>
 
     assertEquals(await handler(), success('no input!'))
   })
 
-  it('defaults non-declared input to unknown', async () => {
-    const handler = withSchema()((args) => args)
-    type _R = Expect<Equal<typeof handler, ComposableWithSchema<unknown>>>
-
-    assertEquals(await handler('some input'), {
-      success: true,
-      data: 'some input',
-      errors: [],
-    })
-  })
-
-  it('uses zod parsers to parse the input and context and call the schema function', async () => {
-    const parser = z.object({ id: z.preprocess(Number, z.number()) })
-    const ctxParser = z.object({ uid: z.preprocess(Number, z.number()) })
-
-    const handler = withSchema(
-      parser,
-      ctxParser,
-    )(({ id }, { uid }) => [id, uid] as const)
-    type _R = Expect<
-      Equal<
-        typeof handler,
-        Composable<
-          (input?: unknown, context?: unknown) => readonly [number, number]
-        >
-      >
-    >
-
-    assertEquals(await handler({ id: '1' }, { uid: '2' }), success([1, 2]))
-  })
-})
-
-describe('applySchema', () => {
   it('uses zod parsers to parse the input and context turning it into a schema function', async () => {
     const inputSchema = z.object({ id: z.preprocess(Number, z.number()) })
     const ctxSchema = z.object({ uid: z.preprocess(Number, z.number()) })
