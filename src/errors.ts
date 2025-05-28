@@ -17,6 +17,10 @@ class InputError extends Error {
     this.name = 'InputError'
     this.path = path
   }
+
+  override toString(): string {
+    return `${this.name}: ${this.message} (path: ${this.path.join('.')})`
+  }
 }
 
 /**
@@ -39,6 +43,10 @@ class EnvironmentError extends Error {
     this.name = 'EnvironmentError'
     this.path = path
   }
+
+  override toString(): string {
+    return `${this.name}: ${this.message} (path: ${this.path.join('.')})`
+  }
 }
 
 /**
@@ -60,6 +68,10 @@ class ContextError extends Error {
     this.name = 'ContextError'
     this.path = path
   }
+
+  override toString(): string {
+    return `${this.name}: ${this.message} (path: ${this.path.join('.')})`
+  }
 }
 
 /**
@@ -77,6 +89,12 @@ class ErrorList extends Error {
     super('ErrorList')
     this.name = 'ErrorList'
     this.list = errors
+  }
+
+  override toString(): string {
+    return `${this.name}: [\n  ${
+      this.list.map((err) => err.toString()).join(',\n  ')
+    }\n]`
   }
 }
 
