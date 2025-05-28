@@ -36,12 +36,12 @@ function toError(maybeError: unknown): Error {
  * That function is gonna catch any errors and always return a Result.
  * @param fn a function to be used as a Composable
  */
-function composable<T extends Function>(
+function composable<T extends (...args: any[]) => any>(
   fn: T,
-): Composable<T extends Internal.AnyFn ? T : never> {
+): Composable<(...args: Parameters<T>) => Awaited<ReturnType<T>>> {
   if ('kind' in fn && fn.kind === 'composable') {
     return fn as unknown as Composable<
-      T extends Internal.AnyFn ? T : never
+      (...args: Parameters<T>) => Awaited<ReturnType<T>>
     >
   }
   const callable = async (...args: any[]) => {
@@ -57,7 +57,9 @@ function composable<T extends Function>(
     }
   }
   callable.kind = 'composable' as const
-  return callable as Composable<T extends Internal.AnyFn ? T : never>
+  return callable as Composable<
+    (...args: Parameters<T>) => Awaited<ReturnType<T>>
+  >
 }
 
 /**
