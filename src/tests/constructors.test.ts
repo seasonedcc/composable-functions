@@ -81,6 +81,9 @@ describe('composable', () => {
     type _FN = Expect<
       Equal<typeof fn, Composable<(a: number, b: number) => number>>
     >
+    type _FN2 = Expect<
+      Unequal<typeof fn, Composable<(a: number, b: number) => Promise<number>>>
+    >
     type _R = Expect<Equal<typeof res, Result<number>>>
 
     assertEquals(res, success(3))
