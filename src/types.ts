@@ -26,6 +26,11 @@ type Success<T = void> = {
 type Result<T = void> = Success<T> | Failure
 
 /**
+ * An efficient way to merge two objects. By @ahejlsberg himself.
+ */
+type Merge<T, U> = keyof T & keyof U extends never ? T & U
+  : Omit<T, keyof T & keyof U> & U
+/**
  * Merges the data types of a list of objects.
  * @example
  * type MyObjs = [
@@ -38,7 +43,7 @@ type Result<T = void> = Success<T> | Failure
 type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
   infer first,
   ...infer rest,
-] ? MergeObjects<rest, Internal.Prettify<Omit<output, keyof first> & first>>
+] ? MergeObjects<rest, Merge<output, first>>
   : output
 
 /**

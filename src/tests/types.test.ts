@@ -21,23 +21,6 @@ namespace Last {
   type test3 = Expect<Equal<Subject.Last<[]>, never>>
 }
 
-namespace MergeObjects {
-  const obj1 = { a: 1, b: 2 } as const
-  const obj2 = {}
-  const obj3 = { c: 3, d: 4 } as const
-
-  type Result = Subject.MergeObjects<[typeof obj1, typeof obj2, typeof obj3]>
-
-  type test1 = Expect<Equal<keyof Result, 'a' | 'b' | 'c' | 'd'>>
-  type test2 = Expect<Equal<Result[keyof Result], 1 | 2 | 3 | 4>>
-}
-
-namespace Last {
-  type test1 = Expect<Equal<Subject.Last<[1, 2, 3]>, 3>>
-  type test2 = Expect<Equal<Subject.Last<[1]>, 1>>
-  type test3 = Expect<Equal<Subject.Last<[]>, never>>
-}
-
 namespace PipeReturn {
   type test = Expect<
     Equal<
