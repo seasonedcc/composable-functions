@@ -1,8 +1,7 @@
-import type { Composable, UnpackData } from '../types.ts'
+import type { AnyFn, Composable, Composables, UnpackData } from '../types.ts'
 import * as A from '../combinators.ts'
 import { composable, fromSuccess } from '../constructors.ts'
 import type { BranchReturn, PipeReturn, SequenceReturn } from './types.ts'
-import type { Internal } from '../internal/types.ts'
 
 function applyContextToList<
   Fns extends Array<(input: unknown, context: unknown) => unknown>,
@@ -30,15 +29,15 @@ function applyContextToList<
  */
 function pipe<Fns extends Function[]>(
   ...fns: Fns
-): PipeReturn<Internal.Composables<Fns>> {
+): PipeReturn<Composables<Fns>> {
   const callable = ((input: any, context: any) =>
     A.pipe(
-      ...applyContextToList(fns as unknown as Internal.AnyFn[], context) as [
+      ...applyContextToList(fns as unknown as AnyFn[], context) as [
         Composable,
         ...Composable[],
       ],
     )(input)) as PipeReturn<
-      Internal.Composables<Fns>
+      Composables<Fns>
     >
   ;(callable as any).kind = 'composable' as const
   return callable
@@ -61,16 +60,16 @@ function pipe<Fns extends Function[]>(
 
 function sequence<Fns extends Function[]>(
   ...fns: Fns
-): SequenceReturn<Internal.Composables<Fns>> {
+): SequenceReturn<Composables<Fns>> {
   const callable = ((input: any, context: any) =>
     A.sequence(
-      ...applyContextToList(fns as unknown as Internal.AnyFn[], context) as [
+      ...applyContextToList(fns as unknown as AnyFn[], context) as [
         Composable,
         ...Composable[],
       ],
     )(
       input,
-    )) as SequenceReturn<Internal.Composables<Fns>>
+    )) as SequenceReturn<Composables<Fns>>
   ;(callable as any).kind = 'composable' as const
   return callable
 }
@@ -81,16 +80,16 @@ function sequence<Fns extends Function[]>(
 function branch<
   SourceComposable extends Function,
   Resolver extends (
-    o: UnpackData<Composable<Extract<SourceComposable, Internal.AnyFn>>>,
-  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
+    o: UnpackData<Composable<Extract<SourceComposable, AnyFn>>>,
+  ) => AnyFn | null | Promise<AnyFn | null>,
 >(
   cf: SourceComposable,
   resolver: Resolver,
-): SourceComposable extends Internal.AnyFn
+): SourceComposable extends AnyFn
   ? BranchReturn<Composable<SourceComposable>, Resolver>
   : never {
   const callable =
-    (async (...args: Parameters<Extract<SourceComposable, Internal.AnyFn>>) => {
+    (async (...args: Parameters<Extract<SourceComposable, AnyFn>>) => {
       const [input, context] = args
       const result = await composable(cf)(input, context)
       if (!result.success) return result
@@ -100,7 +99,7 @@ function branch<
         if (typeof nextFn !== 'function') return result.data
         return fromSuccess(composable(nextFn))(result.data, context)
       })()
-    }) as SourceComposable extends Internal.AnyFn
+    }) as SourceComposable extends AnyFn
       ? BranchReturn<Composable<SourceComposable>, Resolver>
       : never
   ;(callable as any).kind = 'composable' as const

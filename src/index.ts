@@ -41,11 +41,13 @@ export {
   isInputError,
 } from './errors.ts'
 export type {
+  AnyFn,
   ApplySchemaReturn,
   BranchReturn,
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
+  Composables,
   ComposableWithSchema,
   FailToCompose,
   Failure,
@@ -53,11 +55,13 @@ export type {
   MapParametersReturn,
   MergeObjects,
   PipeReturn,
+  RecordValuesFromKeysTuple,
   Result,
   SequenceReturn,
   SerializableError,
   SerializableResult,
   Success,
+  UnionToTuple,
   UnpackAll,
   UnpackData,
 } from './types.ts'

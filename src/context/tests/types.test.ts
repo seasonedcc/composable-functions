@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-namespace
 
-import type { Internal } from '../../internal/types.ts'
-import type { Composable } from '../../types.ts'
+import type { Composable, FailToCompose } from '../../types.ts'
 import type * as Subject from '../types.ts'
 
 namespace CommonContext {
@@ -65,7 +64,7 @@ namespace CommonContext {
           Composable<(y: number, ctx: string) => boolean>,
         ]
       >,
-      Internal.FailToCompose<[number], [string]>
+      FailToCompose<[number], [string]>
     >
   >
 

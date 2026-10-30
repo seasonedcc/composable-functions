@@ -1,24 +1,18 @@
 // deno-lint-ignore-file no-namespace
 
-import type { Composable } from '../types.ts'
+import type {
+  Composable,
+  FailToCompose,
+  IncompatibleArguments,
+  UnionToTuple,
+} from '../types.ts'
 
 namespace Internal {
-  export type IncompatibleArguments = {
-    'Incompatible arguments ': true
-  }
-
   export type IsIncompatible<A, B> = Internal.CommonSubType<
     A,
     B
   > extends IncompatibleArguments ? true
     : false
-
-  export type FailToCompose<A, B> = IncompatibleArguments & {
-    argument1: A
-    argument2: B
-  }
-
-  export type AnyFn = (...args: any[]) => any
 
   export type Prettify<T> =
     & {
@@ -44,30 +38,7 @@ namespace Internal {
     >
     : Output
 
-  // Thanks to https://github.com/tjjfvi
-  // UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
-  // This will not preserve union order but we don't care since this is for Composable paralel application
-  export type UnionToTuple<T> = (
-    (T extends any ? (t: T) => T : never) extends infer U
-      ? (U extends any ? (u: U) => any : never) extends (v: infer V) => any ? V
-      : never
-      : never
-  ) extends (_: any) => infer W ? [...UnionToTuple<Exclude<T, W>>, W]
-    : []
-
   export type Keys<R extends Record<string, any>> = UnionToTuple<keyof R>
-
-  export type RecordValuesFromKeysTuple<
-    R extends Record<string, unknown>,
-    K extends unknown[],
-    ValuesTuple extends unknown[] = [],
-  > = K extends [infer Head, ...infer rest]
-    ? Head extends string
-      ? rest extends string[]
-        ? RecordValuesFromKeysTuple<R, rest, [...ValuesTuple, R[Head]]>
-      : never
-    : ValuesTuple
-    : ValuesTuple
 
   export type Zip<
     K extends unknown[],
@@ -156,12 +127,6 @@ namespace Internal {
       ? B extends Record<PropertyKey, unknown> ? Prettify<A & B>
       : FailToCompose<A, B>
     : FailToCompose<A, B>
-
-  export type Composables<
-    Fns extends Record<string, Function> | Array<Function>,
-  > = {
-    [K in keyof Fns]: Composable<Extract<Fns[K], AnyFn>>
-  }
 }
 
 export type { Internal }

@@ -1,6 +1,9 @@
 import type { Internal } from '../internal/types.ts'
 import type {
+  AnyFn,
   Composable,
+  FailToCompose,
+  IncompatibleArguments,
   PipeReturn as BasePipeReturn,
   SequenceReturn as BaseSequenceReturn,
   UnpackData,
@@ -16,7 +19,7 @@ type CommonContext<
   ]
     ? GetContext<CParameters> extends [unknown?]
       ? Internal.IsIncompatible<Ctx, GetContext<CParameters>> extends true
-        ? Internal.FailToCompose<Ctx, GetContext<CParameters>>
+        ? FailToCompose<Ctx, GetContext<CParameters>>
       : CommonContext<
         Extract<RestFns, Composable[]>,
         Extract<
@@ -27,21 +30,29 @@ type CommonContext<
     : never
   : never
 
+/**
+ * The return type of the withContext.sequence function.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
 type SequenceReturn<Fns extends Composable[]> = BaseSequenceReturn<
   CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
-  ? CommonContext<Fns> extends Internal.IncompatibleArguments
-    ? CommonContext<Fns>
+  ? CommonContext<Fns> extends IncompatibleArguments ? CommonContext<Fns>
   : Composable<
     (...args: SetContext<Parameters<Fns[0]>, CommonContext<Fns>>) => CReturn
   >
   : CanComposeInSequence<Fns>
 
+/**
+ * The return type of the withContext.pipe function.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
 type PipeReturn<Fns extends Composable[]> = BasePipeReturn<
   CanComposeInSequence<Fns>
 > extends Composable<(...args: any[]) => infer CReturn>
-  ? CommonContext<Fns> extends Internal.IncompatibleArguments
-    ? CommonContext<Fns>
+  ? CommonContext<Fns> extends IncompatibleArguments ? CommonContext<Fns>
   : Composable<
     (...args: SetContext<Parameters<Fns[0]>, CommonContext<Fns>>) => CReturn
   >
@@ -62,7 +73,7 @@ type CanComposeInSequence<
     ...unknown[],
   ]
     ? Internal.IsNever<Awaited<OA>> extends true
-      ? Internal.FailToCompose<never, FirstBParameter>
+      ? FailToCompose<never, FirstBParameter>
     : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
         ? CanComposeInSequence<
@@ -70,7 +81,7 @@ type CanComposeInSequence<
           [...Arguments, Composable<(...a: PA) => OA>]
         >
       : Internal.EveryElementTakes<PB, undefined>
-    : Internal.FailToCompose<Awaited<OA>, FirstBParameter>
+    : FailToCompose<Awaited<OA>, FirstBParameter>
   : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
@@ -83,6 +94,11 @@ type GetContext<Params extends unknown[]> = Params extends [
   : Params extends [...infer AnyArg] ? [AnyArg[1]]
   : never
 
+/**
+ * Replaces the context parameter in a list of parameters.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
 type SetContext<
   Params extends unknown[],
   Ctx extends [unknown?] = [unknown?],
@@ -95,17 +111,22 @@ type BranchContext<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
-  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
-> = Awaited<ReturnType<Resolver>> extends Internal.AnyFn ? CommonContext<
+  ) => AnyFn | null | Promise<AnyFn | null>,
+> = Awaited<ReturnType<Resolver>> extends AnyFn ? CommonContext<
     [SourceComposable, Composable<NonNullable<Awaited<ReturnType<Resolver>>>>]
   >
   : GetContext<Parameters<SourceComposable>>
 
+/**
+ * The return type of the withContext.branch function.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
 type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
-  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
+  ) => AnyFn | null | Promise<AnyFn | null>,
 > = CanComposeInSequence<
   [SourceComposable, Composable<Resolver>]
 > extends Composable[]

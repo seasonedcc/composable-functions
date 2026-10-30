@@ -1,37 +1,14 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
 import { Composable } from '../index.ts'
 import { assertEquals, describe, it } from '../tests/prelude.ts'
+import type { FailToCompose } from '../types.ts'
 import type { Internal } from './types.ts'
-
-namespace UnionToTuple {
-  type WithStringUnion = Expect<
-    Equal<Internal.UnionToTuple<'a' | 'b'>, ['a', 'b']>
-  >
-
-  type WithStringAndNumber = Expect<
-    Equal<Internal.UnionToTuple<'a' | 1>, ['a', 1]>
-  >
-
-  type WithRecords = Expect<
-    Equal<
-      Internal.UnionToTuple<{ a: boolean } | { b?: { name: string } }>,
-      [{ a: boolean }, { b?: { name: string } }]
-    >
-  >
-
-  type WithFunctions = Expect<
-    Equal<
-      Internal.UnionToTuple<((a: boolean) => void) | (() => Promise<number>)>,
-      [(a: boolean) => void, () => Promise<number>]
-    >
-  >
-}
 
 namespace CommonSubType {
   type WithNoCompatibility = Expect<
     Equal<
       Internal.CommonSubType<number, string>,
-      Internal.FailToCompose<number, string>
+      FailToCompose<number, string>
     >
   >
 
@@ -101,7 +78,7 @@ namespace SubtypesTuple {
         Parameters<(a: number, b: string) => void>,
         []
       >,
-      Internal.FailToCompose<string, number>
+      FailToCompose<string, number>
     >
   >
 
@@ -199,7 +176,7 @@ namespace EveryElementTakes {
   type WithSomeDefined = Expect<
     Equal<
       Internal.EveryElementTakes<[undefined, 'foo', undefined], undefined>,
-      Internal.FailToCompose<undefined, 'foo'>
+      FailToCompose<undefined, 'foo'>
     >
   >
 }
@@ -219,19 +196,6 @@ namespace Zip {
   >
   type WithExtraKeys = Expect<
     Equal<Internal.Zip<['a', 'b'], [1, 2, 3]>, { a: 1; b: 2 }>
-  >
-}
-
-namespace RecordValuesFromKeysTuple {
-  type WithEmpty = Expect<Equal<Internal.RecordValuesFromKeysTuple<{}, []>, []>>
-  type WithSingle = Expect<
-    Equal<Internal.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a']>, [1]>
-  >
-  type WithMultiple = Expect<
-    Equal<
-      Internal.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a', 'b']>,
-      [1, 2]
-    >
   >
 }
 
