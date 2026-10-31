@@ -1,7 +1,7 @@
 import { ContextError, ErrorList, InputError } from './errors.ts'
-import type { Internal } from './internal/types.ts'
 import type { StandardSchemaV1 as StandardSchema } from '@standard-schema/spec'
 import type {
+  AnyFn,
   ApplySchemaReturn,
   Composable,
   Failure,
@@ -38,10 +38,10 @@ function toError(maybeError: unknown): Error {
  */
 function composable<T extends Function>(
   fn: T,
-): Composable<T extends Internal.AnyFn ? T : never> {
+): Composable<T extends AnyFn ? T : never> {
   if ('kind' in fn && fn.kind === 'composable') {
     return fn as unknown as Composable<
-      T extends Internal.AnyFn ? T : never
+      T extends AnyFn ? T : never
     >
   }
   const callable = async (...args: any[]) => {
@@ -57,7 +57,7 @@ function composable<T extends Function>(
     }
   }
   callable.kind = 'composable' as const
-  return callable as Composable<T extends Internal.AnyFn ? T : never>
+  return callable as Composable<T extends AnyFn ? T : never>
 }
 
 /**

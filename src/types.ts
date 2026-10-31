@@ -42,11 +42,18 @@ type MergeObjects<Objs extends unknown[], output = {}> = Objs extends [
   : output
 
 /**
+ * Any function.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
+type AnyFn = (...args: any[]) => any
+
+/**
  * A composable async function that catches failures.
  * We only use this type to make the Composable type neater looking, use `Composable` instead.
  * It does not need to be exported by the library.
  */
-type ComposableFunction<T extends Internal.AnyFn = Internal.AnyFn> = {
+type ComposableFunction<T extends AnyFn = AnyFn> = {
   (
     ...args: Parameters<T>
   ): Promise<Result<Awaited<ReturnType<T>>>>
@@ -56,10 +63,22 @@ type ComposableFunction<T extends Internal.AnyFn = Internal.AnyFn> = {
 /**
  * A composable async function that catches failures.
  */
-type Composable<T extends Internal.AnyFn = Internal.AnyFn> = T extends {
+type Composable<T extends AnyFn = AnyFn> = T extends {
   kind: 'composable'
 } ? T
   : ComposableFunction<T>
+
+/**
+ * Maps a list or record of functions to their Composable versions.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
+type Composables<
+  Fns extends Record<string, Function> | Array<Function>,
+> = {
+  [K in keyof Fns]: Composable<Extract<Fns[K], AnyFn>>
+}
+
 /**
  * A composable async function with schema validation at runtime.
  */
@@ -118,7 +137,7 @@ type CanComposeInSequence<
     ...unknown[],
   ]
     ? Internal.IsNever<Awaited<OA>> extends true
-      ? Internal.FailToCompose<never, FirstBParameter>
+      ? FailToCompose<never, FirstBParameter>
     : Awaited<OA> extends FirstBParameter
       ? Internal.EveryElementTakes<PB, undefined> extends true
         ? CanComposeInSequence<
@@ -126,7 +145,7 @@ type CanComposeInSequence<
           [...Arguments, Composable<(...a: PA) => OA>]
         >
       : Internal.EveryElementTakes<PB, undefined>
-    : Internal.FailToCompose<Awaited<OA>, FirstBParameter>
+    : FailToCompose<Awaited<OA>, FirstBParameter>
   : [...Arguments, Composable<(...a: PA) => OA>]
   : never
 
@@ -143,15 +162,48 @@ type CanComposeInParallel<
         [Composable<(...args: MergedP) => OB>, ...restB],
         OriginalFns
       >
-    : Internal.FailToCompose<PA, PB>
+    : FailToCompose<PA, PB>
   : Internal.ApplyArgumentsToFns<OriginalFns, PA>
   : never
+
+// Thanks to https://github.com/tjjfvi
+// UnionToTuple code lifted from this thread: https://github.com/microsoft/TypeScript/issues/13298#issuecomment-707364842
+// This will not preserve union order but we don't care since this is for Composable paralel application
+/**
+ * Transforms a union into a tuple. The order of the union is not preserved.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
+type UnionToTuple<T> = (
+  (T extends any ? (t: T) => T : never) extends infer U
+    ? (U extends any ? (u: U) => any : never) extends (v: infer V) => any ? V
+    : never
+    : never
+) extends (_: any) => infer W ? [...UnionToTuple<Exclude<T, W>>, W]
+  : []
+
+/**
+ * Extracts the values of a record into a tuple, following the order of a tuple of keys.
+ * It is only exported so generated declaration files can reference it.
+ * It is an implementation detail: avoid using it directly, as it may change without notice.
+ */
+type RecordValuesFromKeysTuple<
+  R extends Record<string, unknown>,
+  K extends unknown[],
+  ValuesTuple extends unknown[] = [],
+> = K extends [infer Head, ...infer rest]
+  ? Head extends string
+    ? rest extends string[]
+      ? RecordValuesFromKeysTuple<R, rest, [...ValuesTuple, R[Head]]>
+    : never
+  : ValuesTuple
+  : ValuesTuple
 
 /**
  * Transforms a record of Composables into a tuple of their return types.
  */
 type RecordToTuple<T extends Record<string, (...args: any) => any>> =
-  Internal.RecordValuesFromKeysTuple<T, Internal.Keys<T>>
+  RecordValuesFromKeysTuple<T, Internal.Keys<T>>
 
 /**
  * A serializable error object.
@@ -183,7 +235,7 @@ type BranchReturn<
   SourceComposable extends Composable,
   Resolver extends (
     ...args: any[]
-  ) => Internal.AnyFn | null | Promise<Internal.AnyFn | null>,
+  ) => AnyFn | null | Promise<AnyFn | null>,
 > = CanComposeInSequence<
   [SourceComposable, Composable<Resolver>]
 > extends Composable[]
@@ -217,7 +269,7 @@ type BranchReturn<
 type ApplySchemaReturn<
   ParsedInput,
   ParsedContext,
-  Fn extends Internal.AnyFn,
+  Fn extends AnyFn,
 > = ParsedInput extends Parameters<Fn>[0]
   ? ParsedContext extends Parameters<Fn>[1]
     ? Awaited<ReturnType<Fn>> extends never ? ComposableWithSchema<never>
@@ -239,22 +291,29 @@ type MapParametersReturn<
   ) => Internal.IsNever<O> extends true ? never : UnpackData<Fn>
 >
 
-// Re-exporting internal types
 /**
  * A type that represents an error when composing functions with incompatible arguments.
  */
-type IncompatibleArguments = Internal.IncompatibleArguments
+type IncompatibleArguments = {
+  'Incompatible arguments ': true
+}
+
 /**
  * This is IncompatibleArguments supertype where we include the arguments that caused the incompatibility.
  */
-type FailToCompose<A, B> = Internal.FailToCompose<A, B>
+type FailToCompose<A, B> = IncompatibleArguments & {
+  argument1: A
+  argument2: B
+}
 
 export type {
+  AnyFn,
   ApplySchemaReturn,
   BranchReturn,
   CanComposeInParallel,
   CanComposeInSequence,
   Composable,
+  Composables,
   ComposableWithSchema,
   FailToCompose,
   Failure,
@@ -264,11 +323,13 @@ export type {
   MergeObjects,
   PipeReturn,
   RecordToTuple,
+  RecordValuesFromKeysTuple,
   Result,
   SequenceReturn,
   SerializableError,
   SerializableResult,
   Success,
+  UnionToTuple,
   UnpackAll,
   UnpackData,
 }

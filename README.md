@@ -158,7 +158,7 @@ Note that trying to compose pipe flipping the arguments will not type-check:
 import { pipe } from 'composable-functions'
 
 const addAndReturnString = pipe(toString, add)
-//    ^? Internal.FailToCompose<string, number>
+//    ^? FailToCompose<string, number>
 ```
 
 Since pipe will compose from left to right, the only `string` output from `toString` will not fit into the first argument of `add` which is a `number`.

@@ -1,8 +1,9 @@
 // deno-lint-ignore-file no-namespace ban-ts-comment
 import { applySchema } from '../index.ts'
 import { assertEquals, describe, it } from './prelude.ts'
+import type * as Root from '../index.ts'
 import type * as Subject from '../types.ts'
-import type { Internal } from '../internal/types.ts'
+import type * as ContextSubject from '../context/types.ts'
 
 namespace MergeObjects {
   const obj1 = { a: 1, b: 2 } as const
@@ -98,7 +99,7 @@ namespace CanComposeInSequence {
           Subject.Composable<(y: number, willBeUndefined: string) => boolean>,
         ]
       >,
-      Internal.FailToCompose<undefined, string>
+      Subject.FailToCompose<undefined, string>
     >
   >
   type testFailureToCompose = Expect<
@@ -109,7 +110,7 @@ namespace CanComposeInSequence {
           Subject.Composable<(y: number) => boolean>,
         ]
       >,
-      Internal.FailToCompose<void, number>
+      Subject.FailToCompose<void, number>
     >
   >
   type testFailureToComposeOnThirdElement = Expect<
@@ -121,7 +122,7 @@ namespace CanComposeInSequence {
           Subject.Composable<(z: boolean) => void>,
         ]
       >,
-      Internal.FailToCompose<string, boolean>
+      Subject.FailToCompose<string, boolean>
     >
   >
 }
@@ -244,7 +245,7 @@ namespace CanComposeInParallel {
           Subject.Composable<(x: 'foo', y: number) => void>,
         ]
       >,
-      Internal.FailToCompose<[x: string, y: string], [x: 'foo', y: number]>
+      Subject.FailToCompose<[x: string, y: string], [x: 'foo', y: number]>
     >
   >
 }
@@ -262,7 +263,7 @@ namespace BranchReturn {
         Subject.Composable<() => number>,
         (i: string) => null
       >,
-      Internal.FailToCompose<number, string>
+      Subject.FailToCompose<number, string>
     >
   >
   type resolverWithParamsThatCompose = Expect<
@@ -290,7 +291,7 @@ namespace BranchReturn {
         Subject.Composable<() => number>,
         (i: number) => Subject.Composable<(i: string) => number>
       >,
-      Internal.FailToCompose<number, string>
+      Subject.FailToCompose<number, string>
     >
   >
 
@@ -304,7 +305,7 @@ namespace BranchReturn {
           | Subject.Composable<(i: string) => number>
           | Subject.Composable<(i: number) => boolean>
       >,
-      Internal.FailToCompose<number, never>
+      Subject.FailToCompose<number, never>
     >
   >
 
@@ -392,6 +393,110 @@ namespace UnpackData {
 namespace UnpackAll {
   type testExtractsDataFromPromisedResult = Expect<
     Equal<Subject.UnpackAll<[Subject.Composable<() => string>]>, [string]>
+  >
+}
+
+namespace UnionToTuple {
+  type WithStringUnion = Expect<
+    Equal<Subject.UnionToTuple<'a' | 'b'>, ['a', 'b']>
+  >
+
+  type WithStringAndNumber = Expect<
+    Equal<Subject.UnionToTuple<'a' | 1>, ['a', 1]>
+  >
+
+  type WithRecords = Expect<
+    Equal<
+      Subject.UnionToTuple<{ a: boolean } | { b?: { name: string } }>,
+      [{ a: boolean }, { b?: { name: string } }]
+    >
+  >
+
+  type WithFunctions = Expect<
+    Equal<
+      Subject.UnionToTuple<((a: boolean) => void) | (() => Promise<number>)>,
+      [(a: boolean) => void, () => Promise<number>]
+    >
+  >
+}
+
+namespace RecordValuesFromKeysTuple {
+  type WithEmpty = Expect<Equal<Subject.RecordValuesFromKeysTuple<{}, []>, []>>
+  type WithSingle = Expect<
+    Equal<Subject.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a']>, [1]>
+  >
+  type WithMultiple = Expect<
+    Equal<
+      Subject.RecordValuesFromKeysTuple<{ a: 1; b: 2 }, ['a', 'b']>,
+      [1, 2]
+    >
+  >
+}
+
+namespace AnyFn {
+  type testAcceptsAnyFunction = Expect<
+    Equal<Subject.AnyFn, (...args: any[]) => any>
+  >
+}
+
+namespace Composables {
+  type testWrapsArrayOfFunctions = Expect<
+    Equal<
+      Subject.Composables<[() => 1, (a: string) => 2]>,
+      [Subject.Composable<() => 1>, Subject.Composable<(a: string) => 2>]
+    >
+  >
+  type testWrapsRecordOfFunctions = Expect<
+    Equal<
+      Subject.Composables<{ a: () => 1 }>,
+      { a: Subject.Composable<() => 1> }
+    >
+  >
+}
+
+namespace PublicExports {
+  type testAnyFn = Expect<Equal<Root.AnyFn, Subject.AnyFn>>
+  type testComposables = Expect<
+    Equal<Root.Composables<[() => 1]>, Subject.Composables<[() => 1]>>
+  >
+  type testUnionToTuple = Expect<
+    Equal<Root.UnionToTuple<'a' | 'b'>, Subject.UnionToTuple<'a' | 'b'>>
+  >
+  type testRecordValuesFromKeysTuple = Expect<
+    Equal<
+      Root.RecordValuesFromKeysTuple<{ a: 1 }, ['a']>,
+      Subject.RecordValuesFromKeysTuple<{ a: 1 }, ['a']>
+    >
+  >
+  type testContextPipeReturn = Expect<
+    Equal<
+      Root.withContext.PipeReturn<[Subject.Composable<() => 1>]>,
+      ContextSubject.PipeReturn<[Subject.Composable<() => 1>]>
+    >
+  >
+  type testContextSequenceReturn = Expect<
+    Equal<
+      Root.withContext.SequenceReturn<[Subject.Composable<() => 1>]>,
+      ContextSubject.SequenceReturn<[Subject.Composable<() => 1>]>
+    >
+  >
+  type testFailToCompose = Expect<
+    Equal<Root.FailToCompose<1, 2>, Subject.FailToCompose<1, 2>>
+  >
+  type testIncompatibleArguments = Expect<
+    Equal<Root.IncompatibleArguments, Subject.IncompatibleArguments>
+  >
+  type testContextBranchReturn = Expect<
+    Equal<
+      Root.withContext.BranchReturn<Subject.Composable<() => 1>, () => null>,
+      ContextSubject.BranchReturn<Subject.Composable<() => 1>, () => null>
+    >
+  >
+  type testContextSetContext = Expect<
+    Equal<
+      Root.withContext.SetContext<[string], [number]>,
+      ContextSubject.SetContext<[string], [number]>
+    >
   >
 }
 

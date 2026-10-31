@@ -10,6 +10,7 @@ import {
 import type {
   Composable,
   ComposableWithSchema,
+  FailToCompose,
   Result,
   Success,
 } from '../index.ts'
@@ -24,7 +25,6 @@ import {
   withSchema,
 } from '../index.ts'
 import { applySchema } from '../index.ts'
-import type { Internal } from '../internal/types.ts'
 import { assertInstanceOf } from 'https://deno.land/std@0.206.0/assert/assert_instance_of.ts'
 
 const add = composable((a: number, b: number) => a + b)
@@ -342,7 +342,7 @@ describe('applySchema', () => {
       composable(({ x }: { x: 'a' }) => x),
     )
     type _R = Expect<
-      Equal<typeof handler, Internal.FailToCompose<{ x: string }, { x: 'a' }>>
+      Equal<typeof handler, FailToCompose<{ x: string }, { x: 'a' }>>
     >
     // @ts-expect-error: { x: 'a' } is not assignable to { x: string }
     const _result = await handler({ x: 'a' })
@@ -352,7 +352,7 @@ describe('applySchema', () => {
     const inputSchema = z.string()
 
     const handler = applySchema(inputSchema)(composable((x: 'a') => x))
-    type _R = Expect<Equal<typeof handler, Internal.FailToCompose<string, 'a'>>>
+    type _R = Expect<Equal<typeof handler, FailToCompose<string, 'a'>>>
     // @ts-expect-error: 'a' is not assignable to 'string'
     const _result = await handler('a')
   })

@@ -8,8 +8,11 @@ import {
   success,
   withContext,
 } from '../../index.ts'
-import type { Composable, ComposableWithSchema } from '../../index.ts'
-import type { Internal } from '../../internal/types.ts'
+import type {
+  Composable,
+  ComposableWithSchema,
+  FailToCompose,
+} from '../../index.ts'
 
 describe('pipe', () => {
   it('should compose functions from left-to-right', async () => {
@@ -132,7 +135,7 @@ describe('pipe', () => {
     const _res = await fn(1, 2)
 
     type _FN = Expect<
-      Equal<typeof fn, Internal.FailToCompose<undefined, boolean>>
+      Equal<typeof fn, FailToCompose<undefined, boolean>>
     >
   })
 
@@ -146,7 +149,7 @@ describe('pipe', () => {
     // @ts-expect-error composition will fail
     const _res = await fn(1, 2)
 
-    type _FN = Expect<Equal<typeof fn, Internal.FailToCompose<number, string>>>
+    type _FN = Expect<Equal<typeof fn, FailToCompose<number, string>>>
   })
 
   it('compose using context when piped functions requires a second parameter', async () => {
