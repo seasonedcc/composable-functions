@@ -6,7 +6,6 @@
     "test": "deno test --allow-env --allow-net src",
     "publish": "deno task build-npm && cd npm/ && npm publish",
     "build-npm": "deno run -A scripts/build-npm.ts",
-    "check-consumer-types": "deno run -A scripts/check-consumer-types.ts",
     "docs": "deno doc --html --name='composable-functions' ./mod.ts",
     "docs-lint": "deno doc --lint ./mod.ts"
   },

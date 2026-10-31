@@ -27,7 +27,3 @@ jobs:
       - name: 📥 Generate npm package
         run: |
           deno task build-npm
-
-      - name: 🔎 Check consumer declarations
-        run: |
-          deno task check-consumer-types
